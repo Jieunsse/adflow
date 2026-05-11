@@ -19,6 +19,10 @@ function LoginContent() {
   const error = searchParams.get("error")
   const errorMessage = error ? (ERROR_MESSAGES[error] ?? ERROR_MESSAGES.Default) : null
 
+  if (error) {
+    console.error("[AdFlow][login] NextAuth error code:", error, "| URL:", window.location.href)
+  }
+
   return (
     <div
       style={{
@@ -107,6 +111,9 @@ function LoginContent() {
               >
                 <p style={{ margin: 0, fontSize: "var(--text-xs)", color: "#b91c1c", lineHeight: 1.6 }}>
                   {errorMessage}
+                </p>
+                <p style={{ margin: "4px 0 0", fontSize: "var(--text-xs)", color: "#b91c1c", opacity: 0.6 }}>
+                  에러 코드: {error}
                 </p>
               </div>
             )}

@@ -21,6 +21,14 @@ async function exchangeForLongLivedToken(shortLivedToken: string): Promise<strin
 }
 
 export const authOptions: AuthOptions = {
+  logger: {
+    error(code, metadata) {
+      console.error("[NextAuth][error]", code, JSON.stringify(metadata, null, 2))
+    },
+    warn(code) {
+      console.warn("[NextAuth][warn]", code)
+    },
+  },
   providers: [
     FacebookProvider({
       clientId: process.env.META_CLIENT_ID!,

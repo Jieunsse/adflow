@@ -8,6 +8,7 @@
 import { useState } from "react";
 import { useGenerateImage } from "../_hooks/useGenerateImage";
 import type { ReferenceImage } from "../_hooks/useGenerateImage";
+import { useSuggestImagePrompt } from "../_hooks/useSuggestImagePrompt";
 import { useCreative } from "./CreativeProvider";
 import { useToast } from "./Toast";
 
@@ -34,7 +35,20 @@ export default function GeneratedImagesBlock() {
   const [refs, setRefs] = useState<string[]>([]); // DataURL 목록
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
   const gen = useGenerateImage();
+  const suggest = useSuggestImagePrompt();
   const showToast = useToast();
+
+  const hasCopy = !!state.primaryText;
+
+  const handleSuggestPrompt = () => {
+    suggest.mutate(
+      { headline: state.headline, primaryText: state.primaryText, tone: state.tone },
+      {
+        onSuccess: (data) => setPrompt(data.prompt),
+        onError: () => showToast("프롬프트 제안에 실패했어요, 다시 시도해주세요"),
+      },
+    );
+  };
 
   const handleAddRefs = async (files: FileList | null) => {
     if (!files) return;
@@ -80,6 +94,27 @@ export default function GeneratedImagesBlock() {
         AI 이미지 생성{" "}
         <span className="badge badge--neutral" style={{ marginLeft: 6 }}>실험</span>
       </h3>
+
+      {hasCopy ? (
+        <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)", marginBottom: "var(--space-2)" }}>
+          <button
+            type="button"
+            className="btn btn--ghost"
+            disabled={suggest.isPending}
+            onClick={handleSuggestPrompt}
+            style={{ whiteSpace: "nowrap" }}
+          >
+            {suggest.isPending ? "제안 중…" : "✦ 카피로 프롬프트 제안받기"}
+          </button>
+          <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
+            방금 생성한 광고 카피를 기반으로 AI가 이미지 프롬프트를 써드려요
+          </span>
+        </div>
+      ) : (
+        <p style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: "var(--space-2)" }}>
+          카피를 먼저 만들면 AI가 이미지 프롬프트를 자동으로 제안해 드려요 (선택사항)
+        </p>
+      )}
 
       <textarea
         className="textarea"

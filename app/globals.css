@@ -1,11 +1,17 @@
 @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
 
+/* New Wanted-DS-based design (login + setup + workspace shell). Everything in these
+   files is scoped under `.adflow`, so it does not collide with the legacy
+   AdFlow styles below — those are still used by /legacy-create. */
+@import "./styles/design-system.css";
+@import "./styles/adflow.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 /* ============================================================
-   AdFlow Design System
+   AdFlow Design System (legacy — used by /legacy-create)
    "AI가 일하는 느낌" — Dark, focused workspace for marketers
    ============================================================ */
 

@@ -1,5 +1,4 @@
-// axhub Hub API 헬퍼 (Server-side 전용 — Server Component / Route Handler / Server Action)
-// 클라이언트 컴포넌트에서 import 하지 말 것. APPHUB_API_KEY 가 노출돼요.
+// Server-side only — do not import from client components; APPHUB_API_KEY would be exposed.
 
 const apiUrl = process.env.APPHUB_API_URL ?? "";
 const apiKey = process.env.APPHUB_API_KEY ?? "";

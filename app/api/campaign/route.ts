@@ -1,14 +1,47 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { metaAds } from '@/lib/meta-ads'
+import { metaAds, type MetaObjectiveParam, type BidStrategyParam, type PlacementsParam, type PlatformsParam } from '@/lib/meta-ads'
 import { withRouteHandler, ValidationError } from '@/lib/route-handler'
-import { CTA_META_TYPE, type CtaId } from '@/lib/creative-options'
-import { COUNTRY_CODES } from '@/lib/geo-options'
+import { CTA_META_TYPE, type CtaId } from '@entities/creative/options'
+import { COUNTRY_CODES } from '@shared/lib/geo-options'
 
 const MIN_DAILY_BUDGET_KRW = 10_000
-// 3MB 이미지를 base64 로 인코딩하면 약 4MB — data URL prefix 포함 여유분
+// base64-encoded 3 MB image ≈ 4 MB with data URL prefix overhead
 const MAX_IMAGE_DATA_URL_LEN = 4_300_000
+// Meta can't crawl images from sites that block its bot; proxy the og:image ourselves
+const MAX_OG_IMAGE_BYTES = 3 * 1024 * 1024
+
+async function fetchOgImageAsDataUrl(pageUrl: string): Promise<string | undefined> {
+  try {
+    const pageRes = await fetch(pageUrl, {
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; AdFlowBot/1.0)' },
+      signal: AbortSignal.timeout(6000),
+    })
+    if (!pageRes.ok) return undefined
+    const html = await pageRes.text()
+    const m =
+      html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i) ??
+      html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i)
+    if (!m?.[1]) return undefined
+    const imageUrl = new URL(m[1], pageUrl).href
+    const imgRes = await fetch(imageUrl, { signal: AbortSignal.timeout(6000) })
+    if (!imgRes.ok) return undefined
+    const buf = await imgRes.arrayBuffer()
+    if (buf.byteLength > MAX_OG_IMAGE_BYTES) return undefined
+    const mime = imgRes.headers.get('content-type')?.split(';')[0] ?? 'image/jpeg'
+    return `data:${mime};base64,${Buffer.from(buf).toString('base64')}`
+  } catch {
+    return undefined
+  }
+}
+
+const VALID_OBJECTIVES: ReadonlySet<MetaObjectiveParam> = new Set(['OUTCOME_TRAFFIC', 'OUTCOME_AWARENESS', 'OUTCOME_ENGAGEMENT'])
+const VALID_BID_STRATEGIES: ReadonlySet<BidStrategyParam> = new Set(['LOWEST_COST_WITHOUT_CAP', 'LOWEST_COST_WITH_BID_CAP', 'COST_CAP'])
+const VALID_PLATFORMS: ReadonlySet<PlatformsParam> = new Set(['both', 'facebook', 'instagram'])
+const VALID_PLACEMENT_POSITIONS = new Set([
+  'facebook_feed', 'instagram_feed', 'instagram_stories', 'audience_network', 'messenger',
+])
 
 type CampaignRequestBody = {
   headline?: string
@@ -24,6 +57,13 @@ type CampaignRequestBody = {
   cta?: CtaId
   status?: 'ACTIVE' | 'PAUSED'
   imageDataUrl?: string
+  objective?: string
+  mode?: 'simple' | 'detailed'
+  bidStrategy?: string
+  bidAmount?: number
+  placements?: { mode: 'auto' } | { mode: 'manual'; positions: string[] }
+  platforms?: string
+  skipAdCreation?: boolean
 }
 
 export async function POST(req: NextRequest) {
@@ -34,10 +74,16 @@ export async function POST(req: NextRequest) {
       { status: 401 },
     )
   }
-  const { accessToken, adAccountId, pageId } = session
+  const { accessToken, adAccountId, pageId, pixelId } = session
   return withRouteHandler(true, '', async () => {
       const body = (await req.json()) as CampaignRequestBody
       const { headline, primaryText, dailyBudget, startDate, endDate, ageMin, ageMax, linkUrl, cta, imageDataUrl } = body
+
+      const skipAdCreation = body.skipAdCreation === true
+      if (skipAdCreation && process.env.NEXT_PUBLIC_META_APP_MODE !== 'development') {
+        throw new ValidationError('이 기능은 Meta App 개발 모드 환경에서만 사용할 수 있어요.')
+      }
+
       const genders = Array.isArray(body.genders)
         ? Array.from(new Set(body.genders.filter((g) => g === 1 || g === 2)))
         : []
@@ -48,25 +94,33 @@ export async function POST(req: NextRequest) {
         throw new ValidationError('타겟 지역(국가)을 최소 한 곳 선택해주세요.')
       }
 
-      if (!headline || !primaryText || !dailyBudget || !startDate || !endDate || !linkUrl) {
+      if (!headline || !dailyBudget || !startDate || !endDate) {
         throw new ValidationError('필수 필드가 누락됐어요.')
       }
-
-      let parsedUrl: URL
-      try {
-        parsedUrl = new URL(linkUrl)
-      } catch {
-        throw new ValidationError('랜딩 URL 형식이 올바르지 않아요.')
-      }
-      if (parsedUrl.protocol !== 'https:') {
-        throw new ValidationError('랜딩 URL 은 https:// 로 시작해야 해요.')
+      // Ad Creative 단계에서만 쓰이는 필드 — skip 모드에선 검증 생략
+      if (!skipAdCreation) {
+        if (!primaryText || !linkUrl) {
+          throw new ValidationError('필수 필드가 누락됐어요.')
+        }
+        let parsedUrl: URL
+        try {
+          parsedUrl = new URL(linkUrl)
+        } catch {
+          throw new ValidationError('랜딩 URL 형식이 올바르지 않아요.')
+        }
+        if (parsedUrl.protocol !== 'https:') {
+          throw new ValidationError('랜딩 URL 은 https:// 로 시작해야 해요.')
+        }
       }
 
       if (typeof dailyBudget !== 'number' || !Number.isFinite(dailyBudget) || dailyBudget < MIN_DAILY_BUDGET_KRW) {
         throw new ValidationError(`일일 예산은 최소 ₩${MIN_DAILY_BUDGET_KRW.toLocaleString('ko-KR')} 이상이어야 해요.`)
       }
 
-      const status = body.status === 'ACTIVE' ? 'ACTIVE' : 'PAUSED'
+      // skip 모드는 Ad Creative 가 없으므로 ACTIVE 가 무의미 — PAUSED 강제
+      const status = skipAdCreation
+        ? 'PAUSED'
+        : body.status === 'ACTIVE' ? 'ACTIVE' : 'PAUSED'
       if (status === 'ACTIVE') {
         const today = new Date().toISOString().slice(0, 10)
         if (startDate < today) {
@@ -83,12 +137,43 @@ export async function POST(req: NextRequest) {
         }
       }
 
+      // skip 모드는 og:image fetch 도 불필요 — Ad Creative 가 안 만들어짐
+      const resolvedImageDataUrl = skipAdCreation
+        ? undefined
+        : imageDataUrl ?? (linkUrl ? await fetchOgImageAsDataUrl(linkUrl) : undefined)
+
       const ctaType = (cta && CTA_META_TYPE[cta]) || 'LEARN_MORE'
+
+      // Invalid detail-mode values fall through to defaults rather than rejecting the whole request.
+      const isSimple = body.mode === 'simple'
+      const objective: MetaObjectiveParam = isSimple
+        ? 'OUTCOME_TRAFFIC'
+        : body.objective && VALID_OBJECTIVES.has(body.objective as MetaObjectiveParam)
+          ? (body.objective as MetaObjectiveParam)
+          : 'OUTCOME_TRAFFIC'
+      const bidStrategy: BidStrategyParam =
+        body.bidStrategy && VALID_BID_STRATEGIES.has(body.bidStrategy as BidStrategyParam)
+          ? (body.bidStrategy as BidStrategyParam)
+          : 'LOWEST_COST_WITHOUT_CAP'
+      const bidAmount =
+        bidStrategy !== 'LOWEST_COST_WITHOUT_CAP' && typeof body.bidAmount === 'number' && Number.isFinite(body.bidAmount) && body.bidAmount > 0
+          ? body.bidAmount
+          : undefined
+      let placements: PlacementsParam | undefined
+      if (body.placements?.mode === 'manual' && Array.isArray(body.placements.positions)) {
+        const positions = body.placements.positions.filter((p) => typeof p === 'string' && VALID_PLACEMENT_POSITIONS.has(p))
+        placements = positions.length > 0 ? { mode: 'manual', positions } : { mode: 'auto' }
+      } else {
+        placements = { mode: 'auto' }
+      }
+      const platforms: PlatformsParam = !isSimple && body.platforms && VALID_PLATFORMS.has(body.platforms as PlatformsParam)
+        ? (body.platforms as PlatformsParam)
+        : 'both'
 
       const result = await metaAds.createCampaign(
         {
           headline,
-          primaryText,
+          primaryText: primaryText ?? '',
           dailyBudget,
           startDate,
           endDate,
@@ -96,10 +181,18 @@ export async function POST(req: NextRequest) {
           ageMax: ageMax ?? 65,
           genders,
           countries,
-          linkUrl,
+          linkUrl: linkUrl ?? '',
           ctaType,
           status,
-          imageDataUrl,
+          imageDataUrl: resolvedImageDataUrl,
+          objective,
+          bidStrategy,
+          bidAmount,
+          placements,
+          platforms,
+          pixelId,
+          mode: body.mode,
+          skipAdCreation,
         },
         accessToken,
         adAccountId,

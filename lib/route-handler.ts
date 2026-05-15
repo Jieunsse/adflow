@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 
 export class ValidationError extends Error {}
 export class QuotaExceededError extends Error {}
-// Meta 토큰 만료/무효 등 재인증이 필요한 경우
+// Thrown when the Meta token is expired/invalid and the user must re-authenticate.
 export class AuthError extends Error {}
 
 export function withRouteHandler(

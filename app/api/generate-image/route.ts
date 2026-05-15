@@ -1,18 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { geminiImage, type GenerateImageParams, type ReferenceImage } from '@/lib/gemini-image'
+import { geminiImage, sanitizeRefs, type GenerateImageParams } from '@/lib/gemini-image'
 import { withRouteHandler, ValidationError } from '@/lib/route-handler'
-
-const MAX_REFERENCE_IMAGES = 6
-
-function sanitizeRefs(raw: unknown): ReferenceImage[] | undefined {
-  if (!Array.isArray(raw)) return undefined
-  const refs = raw
-    .filter((r): r is ReferenceImage =>
-      !!r && typeof (r as ReferenceImage).mimeType === 'string' && typeof (r as ReferenceImage).dataBase64 === 'string',
-    )
-    .slice(0, MAX_REFERENCE_IMAGES)
-  return refs.length ? refs : undefined
-}
 
 export async function POST(req: NextRequest) {
   return withRouteHandler(
@@ -21,10 +9,11 @@ export async function POST(req: NextRequest) {
     async () => {
       const body = (await req.json()) as Partial<GenerateImageParams>
       const prompt = typeof body.prompt === 'string' ? body.prompt.trim() : ''
-      if (!prompt) throw new ValidationError('이미지 프롬프트를 입력해주세요.')
+      const refs = sanitizeRefs(body.referenceImages)
+      if (!prompt && !refs?.length) throw new ValidationError('프롬프트 또는 레퍼런스 이미지를 입력해주세요.')
       const result = await geminiImage.generate({
         prompt,
-        referenceImages: sanitizeRefs(body.referenceImages),
+        referenceImages: refs,
         count: typeof body.count === 'number' ? body.count : undefined,
       })
       return NextResponse.json(result)

@@ -11,10 +11,10 @@ export async function GET() {
   }
 
   const res = await fetch(
-    `${GRAPH}/me/accounts?fields=id,name&access_token=${session.accessToken}`
+    `${GRAPH}/me/accounts?fields=id,name,instagram_business_account{id,username}&access_token=${session.accessToken}`
   )
   const data = (await res.json()) as {
-    data?: { id: string; name: string }[]
+    data?: { id: string; name: string; instagram_business_account?: { id: string; username?: string } }[]
     error?: { message: string }
   }
 
@@ -22,5 +22,12 @@ export async function GET() {
     return NextResponse.json({ error: data.error.message }, { status: 502 })
   }
 
-  return NextResponse.json({ pages: data.data ?? [] })
+  const pages = (data.data ?? []).map(p => ({
+    id: p.id,
+    name: p.name,
+    igUserId: p.instagram_business_account?.id ?? null,
+    igUsername: p.instagram_business_account?.username ?? null,
+  }))
+
+  return NextResponse.json({ pages })
 }

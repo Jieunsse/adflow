@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession, signIn, signOut } from "next-auth/react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Icon, { type IconName } from "@shared/ui/Icon";
 import { useToast } from "@shared/ui/Toast";
 import ConfirmModal from "@shared/ui/ConfirmModal";
@@ -18,11 +18,26 @@ async function fetchAccount(): Promise<AccountInfo> {
   return data as AccountInfo;
 }
 
-type PickerKind = "account" | "page";
-type PickerItem = { id: string; name: string; currency?: string; status?: "active" | "disabled" };
+type ProfilePictures = { pagePicture: string | null; igPicture: string | null };
+
+async function fetchProfilePictures(): Promise<ProfilePictures> {
+  const res = await fetch("/api/connect/profile-pictures");
+  if (!res.ok) return { pagePicture: null, igPicture: null };
+  return res.json();
+}
+
+type PickerKind = "account" | "page" | "pixel";
+type PickerItem = {
+  id: string;
+  name: string;
+  currency?: string;
+  status?: "active" | "disabled";
+  igUserId?: string | null;
+  igUsername?: string | null;
+};
 
 async function fetchPickerList(kind: PickerKind): Promise<PickerItem[]> {
-  const url = kind === "account" ? "/api/setup/ad-accounts" : "/api/setup/pages";
+  const url = kind === "account" ? "/api/setup/ad-accounts" : kind === "page" ? "/api/setup/pages" : "/api/setup/pixels";
   const res = await fetch(url);
   const data = await res.json();
   if (!res.ok || data?.error) throw new Error(data?.error ?? "목록을 불러오지 못했어요");
@@ -31,13 +46,19 @@ async function fetchPickerList(kind: PickerKind): Promise<PickerItem[]> {
       id: a.id, name: a.name, currency: a.currency, status: a.account_status === 1 ? "active" : "disabled",
     }));
   }
-  return ((data.pages ?? []) as { id: string; name: string }[]).map((p) => ({ id: p.id, name: p.name }));
+  if (kind === "pixel") {
+    return ((data.pixels ?? []) as { id: string; name: string }[]).map((p) => ({ id: p.id, name: p.name }));
+  }
+  return ((data.pages ?? []) as { id: string; name: string; igUserId: string | null; igUsername: string | null }[]).map((p) => ({
+    id: p.id, name: p.name, igUserId: p.igUserId, igUsername: p.igUsername,
+  }));
 }
 
 export default function ConnectPage() {
   const router = useRouter();
   const showToast = useToast();
   const { data: session, update } = useSession();
+  const queryClient = useQueryClient();
   const [permsOpen, setPermsOpen] = useState(false);
   const [pickerOpen, setPickerOpen] = useState<PickerKind | null>(null);
   const [confirmDisconnect, setConfirmDisconnect] = useState(false);
@@ -47,6 +68,12 @@ export default function ConnectPage() {
   const isExploring = !!session?.browseMode && !connected;
 
   const accountQ = useQuery({ queryKey: ["account"], queryFn: fetchAccount, enabled: connected });
+  const picturesQ = useQuery({
+    queryKey: ["profile-pictures", session?.pageId, session?.igUserId],
+    queryFn: fetchProfilePictures,
+    enabled: connected,
+    staleTime: 5 * 60 * 1000,
+  });
   const tokenExpired = (accountQ.error as { code?: number } | null)?.code === 401;
   const accountStatus: "active" | "disabled" = accountQ.data && accountQ.data.connected === false ? "disabled" : "active";
 
@@ -57,6 +84,10 @@ export default function ConnectPage() {
   const currency = accountQ.data?.currency ?? "—";
   const pageName = session?.pageName ?? "—";
   const pageId = session?.pageId ?? "—";
+  const pixelName = session?.pixelName ?? null;
+  const pixelId = session?.pixelId ?? null;
+  const igUserId = session?.igUserId || null;
+  const igUsername = session?.igUsername || null;
 
   const handleReauth = () => { setReauthing(true); signIn("facebook", { callbackUrl: "/connect" }); };
   const handleDisconnect = () => { signOut({ callbackUrl: "/login" }); };
@@ -68,7 +99,17 @@ export default function ConnectPage() {
     accountQ.refetch();
   };
   const pickPage = async (it: PickerItem) => {
-    await update?.({ pageId: it.id, pageName: it.name });
+    await update?.({
+      pageId: it.id,
+      pageName: it.name,
+      igUserId: it.igUserId ?? "",
+      igUsername: it.igUsername ?? "",
+    });
+    setPickerOpen(null);
+    showToast(`'${it.name}'(으)로 변경했어요`);
+  };
+  const pickPixel = async (it: PickerItem) => {
+    await update?.({ pixelId: it.id, pixelName: it.name });
     setPickerOpen(null);
     showToast(`'${it.name}'(으)로 변경했어요`);
   };
@@ -107,7 +148,19 @@ export default function ConnectPage() {
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           <FacebookCard memberName={memberName} memberImage={memberImage} tokenExpired={tokenExpired} reauthing={reauthing} onReauth={handleReauth} />
           <AdAccountCard name={accountName} id={accountId} currency={currency} status={tokenExpired ? null : accountStatus} disabled={tokenExpired} onChange={() => setPickerOpen("account")} />
-          <PageCard name={pageName} id={pageId} disabled={tokenExpired} onChange={() => setPickerOpen("page")} />
+          <PageCard name={pageName} id={pageId} picture={picturesQ.data?.pagePicture ?? null} disabled={tokenExpired} onChange={() => setPickerOpen("page")} />
+          <InstagramCard
+            username={igUsername}
+            id={igUserId}
+            picture={picturesQ.data?.igPicture ?? null}
+            pageId={session?.pageId ?? null}
+            disabled={tokenExpired}
+            onReload={() => {
+              queryClient.invalidateQueries({ queryKey: ["picker-list", "page"] });
+              setPickerOpen("page");
+            }}
+          />
+          <PixelCard name={pixelName} id={pixelId} disabled={tokenExpired} onChange={() => setPickerOpen("pixel")} />
 
           <PermissionsDisclosure open={permsOpen} onToggle={() => setPermsOpen((o) => !o)} />
 
@@ -128,6 +181,9 @@ export default function ConnectPage() {
       )}
       {pickerOpen === "page" && (
         <PickerModal kind="page" title="페이스북 페이지 변경" subtitle="광고가 어느 페이지 명의로 게재될지 골라주세요." currentId={session?.pageId} onClose={() => setPickerOpen(null)} onPick={pickPage} />
+      )}
+      {pickerOpen === "pixel" && (
+        <PickerModal kind="pixel" title="Facebook Pixel 선택" subtitle="광고 성과 추적에 사용할 Pixel을 골라주세요. 없으면 건너뛰어도 돼요." currentId={session?.pixelId} onClose={() => setPickerOpen(null)} onPick={pickPixel} />
       )}
       {confirmDisconnect && (
         <ConfirmModal
@@ -226,10 +282,46 @@ function AdAccountCard({ name, id, currency, status, disabled, onChange }: {
   );
 }
 
-function PageCard({ name, id, disabled, onChange }: { name: string; id: string; disabled: boolean; onChange: () => void }) {
+function PixelCard({ name, id, disabled, onChange }: { name: string | null; id: string | null; disabled: boolean; onChange: () => void }) {
   return (
     <div className={"conn-card conn-card--" + (disabled ? "muted" : "neutral")}>
-      <div className="conn-card__icon conn-card__icon--page"><Icon name="doc" size={20} /></div>
+      <div className="conn-card__icon conn-card__icon--page"><Icon name="chart" size={20} /></div>
+      <div className="conn-card__body">
+        <div className="conn-card__row">
+          <div style={{ minWidth: 0 }}>
+            <div className="w-overline" style={{ color: "var(--w-fg-alternative)", marginBottom: 6 }}>
+              Facebook Pixel <span style={{ font: "500 11px/1 var(--w-font-sans)", color: "var(--w-fg-neutral)", verticalAlign: "middle" }}>(선택)</span>
+            </div>
+            <div className="conn-card__title">{name ?? "선택 안 됨"}</div>
+            {id && <div className="conn-card__id-row"><span className="conn-card__id">{id}</span></div>}
+            <div style={{ font: "500 12.5px/1.5 var(--w-font-sans)", color: "var(--w-fg-neutral)", marginTop: 10 }}>
+              {name ? "광고 클릭 후 사이트 방문을 이 Pixel로 추적해요." : "선택하면 광고 클릭 후 사이트 방문을 추적할 수 있어요. 없으면 건너뛰어도 돼요."}
+            </div>
+          </div>
+          <div className="conn-card__right">
+            {!disabled && <button className="btn btn--ghost btn--sm" type="button" onClick={onChange}>{name ? "Pixel 변경" : "Pixel 선택"}</button>}
+          </div>
+        </div>
+        {disabled && (
+          <div className="alert-bar alert-bar--muted">
+            <Icon name="lock" size={13} />
+            <span>재인증 후 확인할 수 있어요.</span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function PageCard({ name, id, picture, disabled, onChange }: { name: string; id: string; picture: string | null; disabled: boolean; onChange: () => void }) {
+  return (
+    <div className={"conn-card conn-card--" + (disabled ? "muted" : "neutral")}>
+      {picture ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={picture} alt="" className="conn-card__icon" style={{ objectFit: "cover", background: "var(--w-bg-alternative)" }} />
+      ) : (
+        <div className="conn-card__icon conn-card__icon--page"><Icon name="doc" size={20} /></div>
+      )}
       <div className="conn-card__body">
         <div className="conn-card__row">
           <div style={{ minWidth: 0 }}>
@@ -253,10 +345,73 @@ function PageCard({ name, id, disabled, onChange }: { name: string; id: string; 
   );
 }
 
+function InstagramCard({ username, id, picture, pageId, disabled, onReload }: {
+  username: string | null; id: string | null; picture: string | null; pageId: string | null; disabled: boolean; onReload: () => void;
+}) {
+  const linked = !!id;
+  const linkInstagramUrl = pageId
+    ? `https://www.facebook.com/${pageId}/settings/?tab=linked_accounts`
+    : "https://accountscenter.facebook.com/connected_experiences";
+  return (
+    <div className={"conn-card conn-card--" + (disabled ? "muted" : linked ? "neutral" : "warn")}>
+      {linked && picture ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={picture} alt="" className="conn-card__icon" style={{ objectFit: "cover", background: "var(--w-bg-alternative)" }} />
+      ) : (
+        <div className="conn-card__icon conn-card__icon--page"><Icon name="image" size={20} /></div>
+      )}
+      <div className="conn-card__body">
+        <div className="conn-card__row">
+          <div style={{ minWidth: 0 }}>
+            <div className="w-overline" style={{ color: "var(--w-fg-alternative)", marginBottom: 6 }}>
+              Instagram 비즈니스 계정
+            </div>
+            <div className="conn-card__title">{linked ? `@${username}` : "연결되지 않음"}</div>
+            {id && <div className="conn-card__id-row"><span className="conn-card__id">{id}</span></div>}
+            <div style={{ font: "500 12.5px/1.5 var(--w-font-sans)", color: "var(--w-fg-neutral)", marginTop: 10 }}>
+              {linked
+                ? "선택한 페이스북 페이지에 연결된 Instagram 계정의 인사이트를 보여드려요."
+                : "선택한 페이스북 페이지에 Instagram 비즈니스 계정이 연결돼 있지 않아요. 페이지 설정에서 Instagram 계정을 연결한 뒤 아래 [다시 불러오기]를 눌러주세요."}
+            </div>
+          </div>
+          <div className="conn-card__right">
+            {linked
+              ? <span className="status-badge status-badge--active"><span className="status-dot" /> 연결됨</span>
+              : <span className="status-badge-warn"><Icon name="warn" size={12} /> 미연결</span>}
+            {!linked && !disabled && (
+              <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+                <a
+                  className="btn btn--primary btn--sm"
+                  href={linkInstagramUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Icon name="link" size={13} /> Instagram 연결하기
+                </a>
+                <button className="btn btn--ghost btn--sm" type="button" onClick={onReload}>
+                  <Icon name="refresh" size={13} /> 다시 불러오기
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+        {disabled && (
+          <div className="alert-bar alert-bar--muted">
+            <Icon name="lock" size={13} />
+            <span>재인증 후 확인할 수 있어요.</span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 const PERMS: { code: string; label: string }[] = [
   { code: "ads_management", label: "광고 생성·게재·일시정지·예산 제어를 할 수 있어요" },
   { code: "ads_read", label: "노출·클릭·CTR·지출 등 성과 데이터를 조회해요" },
   { code: "pages_show_list", label: "연결할 페이스북 페이지 목록을 가져와요" },
+  { code: "instagram_basic", label: "연결된 Instagram 비즈니스 계정의 기본 프로필을 읽어요" },
+  { code: "instagram_manage_insights", label: "Instagram 게시물·계정의 인사이트를 조회해요" },
 ];
 
 function PermissionsDisclosure({ open, onToggle }: { open: boolean; onToggle: () => void }) {
@@ -373,11 +528,11 @@ function PickerModal({ kind, title, subtitle, currentId, onClose, onPick }: {
           ) : items.length === 0 ? (
             <div style={{ padding: "32px 18px 20px", textAlign: "center" }}>
               <div style={{ width: 48, height: 48, borderRadius: 14, margin: "0 auto 12px", background: "var(--w-bg-alternative)", color: "var(--w-fg-neutral)", display: "grid", placeItems: "center" }}>
-                <Icon name={kind === "account" ? "wallet" : "doc"} size={22} />
+                <Icon name={kind === "account" ? "wallet" : kind === "pixel" ? "chart" : "doc"} size={22} />
               </div>
-              <div style={{ font: "700 14.5px/1.35 var(--w-font-display)", color: "var(--w-fg-strong)" }}>{kind === "account" ? "연결된 광고 계정이 없어요" : "관리 중인 페이스북 페이지가 없어요"}</div>
+              <div style={{ font: "700 14.5px/1.35 var(--w-font-display)", color: "var(--w-fg-strong)" }}>{kind === "pixel" ? "이 광고 계정에 Pixel이 없어요" : kind === "account" ? "연결된 광고 계정이 없어요" : "관리 중인 페이스북 페이지가 없어요"}</div>
               <p style={{ font: "500 12.5px/1.55 var(--w-font-sans)", color: "var(--w-fg-neutral)", maxWidth: 320, margin: "10px auto 0" }}>
-                {kind === "account" ? "Meta Business Manager에서 광고 계정을 먼저 만들어주세요." : "페이지 권한이 없거나 페이지가 없어요. 다른 계정으로 다시 로그인하면 권한을 다시 요청해요."}
+                {kind === "pixel" ? "Meta Events Manager에서 Pixel을 먼저 만들어주세요." : kind === "account" ? "Meta Business Manager에서 광고 계정을 먼저 만들어주세요." : "페이지 권한이 없거나 페이지가 없어요. 다른 계정으로 다시 로그인하면 권한을 다시 요청해요."}
               </p>
               <div style={{ marginTop: 16, display: "flex", gap: 8, justifyContent: "center" }}>
                 {kind === "page" && <button className="btn btn--ghost btn--sm" type="button" onClick={() => signOut({ callbackUrl: "/login" })}><Icon name="refresh" size={13} /> 다른 계정으로 다시 로그인</button>}
@@ -390,7 +545,7 @@ function PickerModal({ kind, title, subtitle, currentId, onClose, onPick }: {
                 const current = it.id === currentId;
                 return (
                   <button key={it.id} className={"picker-row" + (current ? " picker-row--current" : "")} type="button" disabled={!!picking} onClick={() => handlePick(it)}>
-                    <div className={"picker-row__icon picker-row__icon--" + kind}><Icon name={kind === "account" ? "wallet" : "doc"} size={16} /></div>
+                    <div className={"picker-row__icon picker-row__icon--" + kind}><Icon name={kind === "account" ? "wallet" : kind === "pixel" ? "chart" : "doc"} size={16} /></div>
                     <div style={{ flex: 1, minWidth: 0, textAlign: "left" }}>
                       <div className="picker-row__title">
                         {it.name}

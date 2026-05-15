@@ -6,15 +6,15 @@ const GRAPH = "https://graph.facebook.com/v20.0"
 
 export async function GET() {
   const session = await getServerSession(authOptions)
-  if (!session?.accessToken) {
+  if (!session?.accessToken || !session?.adAccountId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
   const res = await fetch(
-    `${GRAPH}/me/accounts?fields=id,name,instagram_business_account{id,username}&access_token=${session.accessToken}`
+    `${GRAPH}/${session.adAccountId}/adspixels?fields=id,name&access_token=${session.accessToken}`
   )
   const data = (await res.json()) as {
-    data?: { id: string; name: string; instagram_business_account?: { id: string; username?: string } }[]
+    data?: { id: string; name: string }[]
     error?: { message: string }
   }
 
@@ -22,12 +22,5 @@ export async function GET() {
     return NextResponse.json({ error: data.error.message }, { status: 502 })
   }
 
-  const pages = (data.data ?? []).map(p => ({
-    id: p.id,
-    name: p.name,
-    igUserId: p.instagram_business_account?.id ?? null,
-    igUsername: p.instagram_business_account?.username ?? null,
-  }))
-
-  return NextResponse.json({ pages })
+  return NextResponse.json({ pixels: data.data ?? [] })
 }

@@ -14,6 +14,8 @@ interface AdAccount {
 interface FbPage {
   id: string;
   name: string;
+  igUserId: string | null;
+  igUsername: string | null;
 }
 
 type Phase = "account" | "page";
@@ -132,7 +134,13 @@ export default function SetupPage() {
 
   async function selectPage(page: FbPage) {
     setSelecting(page.id);
-    await update({ pageId: page.id, pageName: page.name, browseMode: false });
+    await update({
+      pageId: page.id,
+      pageName: page.name,
+      igUserId: page.igUserId ?? "",
+      igUsername: page.igUsername ?? "",
+      browseMode: false,
+    });
     window.location.href = "/dashboard";
   }
 
@@ -216,7 +224,7 @@ export default function SetupPage() {
                   key={page.id}
                   kind="page"
                   title={page.name}
-                  meta={[page.id]}
+                  meta={page.igUsername ? [page.id, `IG @${page.igUsername}`] : [page.id]}
                   busy={selecting === page.id}
                   dimmed={!!selecting && selecting !== page.id}
                   disabled={!!selecting}

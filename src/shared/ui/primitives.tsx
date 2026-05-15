@@ -10,15 +10,17 @@ export function Badge({
   kind = "neutral",
   live,
   dot,
+  size,
   children,
 }: {
   kind?: BadgeKind;
   live?: boolean;
   dot?: boolean;
+  size?: "sm";
   children: ReactNode;
 }) {
   return (
-    <span className={`badge badge--${kind}`}>
+    <span className={`badge badge--${kind}${size ? ` badge--${size}` : ""}`}>
       {dot && <span className={"badge__dot" + (live ? " badge__dot--live" : "")} />}
       {children}
     </span>

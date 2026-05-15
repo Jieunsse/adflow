@@ -1,20 +1,22 @@
 import { useState, useEffect } from "react";
 
 export function useSessionStorage(key: string, initialValue: string) {
-  const [value, setValue] = useState<string>(() => {
-    if (typeof window === "undefined") return initialValue;
-    try {
-      return sessionStorage.getItem(key) ?? initialValue;
-    } catch {
-      return initialValue;
-    }
-  });
+  // SSR과 첫 클라이언트 렌더가 동일하게 initialValue를 사용해야 hydration 불일치 방지
+  const [value, setValue] = useState(initialValue);
 
   useEffect(() => {
     try {
-      sessionStorage.setItem(key, value);
+      const stored = sessionStorage.getItem(key);
+      if (stored !== null) setValue(stored);
     } catch {}
-  }, [key, value]);
+  }, [key]);
 
-  return [value, setValue] as const;
+  const setAndPersist = (newValue: string) => {
+    setValue(newValue);
+    try {
+      sessionStorage.setItem(key, newValue);
+    } catch {}
+  };
+
+  return [value, setAndPersist] as const;
 }

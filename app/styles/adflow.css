@@ -94,6 +94,13 @@
   color: var(--w-primary-press);
 }
 .adflow .side__link--on:hover { background: var(--w-primary-soft); color: var(--w-primary-press); }
+.adflow .side__link--sub {
+  height: 34px;
+  padding-left: 36px;
+  font-size: 12.5px;
+  color: var(--w-fg-neutral);
+}
+.adflow .side__link--sub .side__link-icon { width: 16px; height: 16px; }
 .adflow .side__link-icon {
   width: 18px; height: 18px;
   display: grid; place-items: center;
@@ -170,6 +177,21 @@
 }
 .adflow .side__user-name { font: 600 13px/1.2 var(--w-font-sans); color: var(--w-fg-strong); }
 .adflow .side__user-meta { font: 500 11px/1.2 var(--w-font-sans); color: var(--w-fg-neutral); margin-top: 2px; }
+.adflow .side__role-badge {
+  display: inline-flex; align-items: center;
+  padding: 2px 7px;
+  border-radius: 20px;
+  font: 600 10px/1.4 var(--w-font-sans);
+  margin-top: 4px;
+}
+.adflow .side__role-badge--lead {
+  background: color-mix(in srgb, var(--w-primary-normal) 12%, transparent);
+  color: var(--w-primary-normal);
+}
+.adflow .side__role-badge--member {
+  background: var(--w-bg-neutral);
+  color: var(--w-fg-neutral);
+}
 
 .adflow .page {
   padding: 36px 48px 64px;
@@ -269,6 +291,14 @@
   box-shadow: 0 0 0 4px rgba(0,102,255,0.14);
 }
 .adflow .textarea { resize: vertical; min-height: 88px; line-height: 1.6; }
+.adflow .select {
+  appearance: none;
+  padding-right: 36px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2370737c' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  cursor: pointer;
+}
 .adflow .input--lg { padding: 14px 16px; font-size: 15px; }
 .adflow .input--addon { display: flex; align-items: stretch; border: 1px solid var(--w-line-normal); border-radius: 12px; overflow: hidden; background: var(--w-bg-elevated); }
 .adflow .input--addon:focus-within { border-color: var(--w-primary-normal); box-shadow: 0 0 0 4px rgba(0,102,255,0.14); }
@@ -298,15 +328,18 @@
   transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
   letter-spacing: 0.004em;
 }
-.adflow .chip:hover { background: var(--w-bg-neutral); }
+.adflow .chip:hover { background: rgba(112,115,124,0.12); border-color: var(--w-line-normal); color: #121212; }
+[data-theme="dark"] .adflow .chip:hover { background: rgba(255,255,255,0.10); border-color: var(--w-line-normal); }
 .adflow .chip--on {
   background: var(--w-fg-strong);
   color: var(--w-bg-elevated);
   border-color: var(--w-fg-strong);
 }
-.adflow .chip--on:hover { background: var(--w-fg-strong); }
+.adflow .chip--on:hover { background: var(--w-fg-strong); color: var(--w-bg-elevated); opacity: 0.85; }
+[data-theme="dark"] .adflow .chip--on:hover { opacity: 1; background: var(--w-fg-strong); }
 .adflow .chip--accent { border-color: var(--w-primary-normal); color: var(--w-primary-press); background: var(--w-primary-soft); }
 .adflow .chip--small { padding: 5px 10px; font-size: 12px; }
+.adflow .chip--disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
 
 .adflow .seg { display: inline-flex; gap: 2px; padding: 3px; background: var(--w-bg-alternative); border-radius: 10px; }
 .adflow .seg button {
@@ -1029,18 +1062,22 @@
 
 .adflow .badge {
   display: inline-flex; align-items: center; gap: 5px;
+  align-self: flex-start;
   padding: 4px 9px;
   border-radius: 999px;
   font: 600 11.5px/1 var(--w-font-sans);
   letter-spacing: 0.008em;
+  border: 1px solid transparent;
 }
 .adflow .badge--neutral { background: var(--w-bg-alternative); color: var(--w-fg-neutral); }
 .adflow .badge--accent { background: var(--w-primary-soft); color: var(--w-primary-press); }
 .adflow .badge--success { background: rgba(0,191,64,0.10); color: #008a2e; }
-.adflow .badge--warn { background: rgba(255,146,0,0.12); color: #b06700; }
+.adflow .badge--warn { background: rgba(255,146,0,0.10); color: #b06700; border-color: rgba(255,146,0,0.35); }
 .adflow .badge--neg { background: rgba(255,66,66,0.10); color: #c52d2d; }
 .adflow .badge--violet { background: var(--w-accent-violet-soft); color: var(--w-accent-violet); }
 .adflow .badge--inverse { background: var(--w-fg-strong); color: var(--w-bg-elevated); }
+.adflow .badge--sm { padding: 2px 7px; font-size: 10.5px; gap: 4px; }
+.adflow .badge--sm .badge__dot { width: 5px; height: 5px; }
 .adflow .badge__dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 .adflow .badge__dot--live {
   background: var(--w-status-positive);
@@ -1108,11 +1145,11 @@
 .adflow .stepper__step--done .stepper__num { background: var(--w-primary-soft); color: var(--w-primary-press); border-color: transparent; }
 .adflow .stepper__step--on  .stepper__num { background: #fff; color: var(--w-fg-strong); border-color: transparent; }
 .adflow .stepper__meta { min-width: 0; }
-.adflow .stepper__label-sm { font: 500 10.5px/1 var(--w-font-sans); letter-spacing: 0.04em; text-transform: uppercase; color: var(--w-fg-alternative); }
+.adflow .stepper__label-sm { font: 500 10.5px/1 var(--w-font-sans); letter-spacing: 0.04em; text-transform: uppercase; color: var(--w-fg-neutral); }
 .adflow .stepper__step--on .stepper__label-sm { color: rgba(255,255,255,0.6); }
 .adflow .stepper__label { font: 600 13.5px/1.2 var(--w-font-sans); color: var(--w-fg-strong); margin-top: 4px; letter-spacing: -0.006em; }
 .adflow .stepper__step--on .stepper__label { color: #fff; }
-.adflow .stepper__arrow { color: var(--w-fg-assistive); }
+.adflow .stepper__arrow { color: var(--w-fg-neutral); }
 
 .adflow .row { display: flex; align-items: center; gap: 10px; }
 .adflow .between { display: flex; align-items: center; justify-content: space-between; gap: 12px; }

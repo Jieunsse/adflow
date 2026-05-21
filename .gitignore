@@ -42,4 +42,11 @@ next-env.d.ts
 
 # etc
 .agents/*
-docs/*
+.document/*
+.jayden/*
+.claude/*
+
+# adflow local secrets (Meta 자격증명 암호화 저장)
+.adflow/
+# axhub quality state (local-only)
+.axhub-state/

@@ -38,26 +38,46 @@ Next.js 16 (App Router · RSC · Server Actions) · React 19 · TypeScript stric
 - DO NOT 사용자 동의 없이 destructive git (`reset --hard`, `push --force`, `branch -D`).
 - DO NOT 새 npm 패키지 사용자 확인 없이 설치.
 - DO NOT 빌드/타입/린트 명령 사용자가 묻기 전에 실행.
+- DO NOT 코드가 스스로 설명하는 내용을 주석으로 반복. 주석은 "왜"가 비자명할 때만 (숨은 제약·workaround·놀라운 동작).
 
 ## axhub.ts 신뢰 모델 (1-line)
 
 이 (Next.js) 템플릿은 **server-side**. axhub 헬퍼 = `axhub.fetch/data/slug/isConfigured` (6개 템플릿 동일 외부 API).
 Transport: `Authorization: Bearer ${process.env.APPHUB_API_KEY}` from server. 풀 비교 표는 [examples README](../README.md#axhubts-신뢰-모델-모든-템플릿) 참고.
 
+## Meta 앱 BYOA (Bring Your Own App)
+
+납품 모델 — 각 고객사가 자기 Meta 앱을 직접 소유. AdFlow 는 자격증명을 env 또는 마법사로 받아요.
+
+- 자격증명 저장: `lib/meta-credentials.ts` (server-side only). 우선순위: 로컬 암호화 파일(`.adflow/`) > `META_CLIENT_ID/SECRET` env 폴백.
+- 마법사 진입점: `/install` (Phase A: 즉시 셋업, Phase B: App Review). 자격증명 없으면 `middleware.ts` 가 강제 리디렉트.
+- 권한: 첫 셋업은 누구나, 자격증명 교체·삭제는 팀장만. 변경 이력은 audit log 자동 기록.
+- NextAuth: 14곳에서 import 하는 `authOptions` 는 정적(Facebook provider 없음, 세션 검증용). `app/api/auth/[...nextauth]/route.ts` 만 `getAuthOptionsForNextAuth()` 로 동적 빌드 — 자격증명 교체 시 5분 캐시 후 자동 반영.
+- 향후: Axhub Data plane 스펙 확정되면 `lib/meta-credentials.ts` 에 어댑터 추가 (현재 로컬 파일 어댑터와 갈아끼우기).
+
 ## 배포
 
 `/axhub:deploy` (Claude Code) 또는 `axhub deploy create --app <slug> --branch main`. 사용자 명시 요청 후에만.
+
+## Testing
+
+회귀 안전망 목적의 단위 테스트만. 자세한 결정은 [ADR-002](./.document/adr/ADR-002-testing-strategy.md).
+
+- 도구: Vitest. 위치: co-located `*.test.ts` (모듈 옆).
+- 스킬 정렬: **외부 인터페이스만** 테스트. internal seam (file-local 함수) 은 export 하지 말고 외부 인터페이스 + fetch/IO stub 으로 우회 검증.
+- 새 deep module / pure fn 추출 시 — `*.test.ts` 후보를 같이 제안. 판단 기준: 조건 분기 ≥2 / 외부 입력→내부 결정 매핑 / 한 줄 setter 아님 — 셋 중 둘 이상이면 권장.
+- `npm test` 는 사용자가 의식적으로 실행. AI 는 묻기 전 자동 실행 금지 (위 §"DO NOT 빌드/타입/린트" 와 동일).
 
 ## Agent skills
 
 ### Issue tracker
 
-이슈는 `.scratch/<feature>/` 아래 로컬 마크다운 파일로 관리해요. `docs/agents/issue-tracker.md` 참고.
+이슈는 `.scratch/<feature>/` 아래 로컬 마크다운 파일로 관리해요. `.document/agents/issue-tracker.md` 참고.
 
 ### Triage labels
 
-기본 라벨 사용 (needs-triage, needs-info, ready-for-agent, ready-for-human, wontfix). `docs/agents/triage-labels.md` 참고.
+기본 라벨 사용 (needs-triage, needs-info, ready-for-agent, ready-for-human, wontfix). `.document/agents/triage-labels.md` 참고.
 
 ### Domain docs
 
-단일 컨텍스트: 루트에 `CONTEXT.md` + `docs/adr/` 하나. `docs/agents/domain.md` 참고.
+단일 컨텍스트: 루트에 `CONTEXT.md` + `.document/adr/` 하나. `.document/agents/domain.md` 참고.

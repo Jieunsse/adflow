@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { metaAds, type MetaObjectiveParam, type BidStrategyParam, type PlacementsParam, type PlatformsParam } from '@/lib/meta-ads'
+import { metaAds, type MetaObjectiveParam, type BidStrategyParam, type PlacementsParam, type PlatformsParam, type AbTestAxisParam, type AbTestVariantBParam } from '@/lib/meta-ads'
+import { resolveAdAccountId, resolveAccessToken } from '@/lib/env'
 import { withRouteHandler, ValidationError } from '@/lib/route-handler'
-import { CTA_META_TYPE, type CtaId } from '@entities/creative/options'
+import { CTA_META_TYPE, OBJECTIVES_PHASE1, type CtaId, type ObjectivePhase1Id } from '@entities/creative/options'
 import { COUNTRY_CODES } from '@shared/lib/geo-options'
 
 const MIN_DAILY_BUDGET_KRW = 10_000
@@ -36,7 +37,9 @@ async function fetchOgImageAsDataUrl(pageUrl: string): Promise<string | undefine
   }
 }
 
-const VALID_OBJECTIVES: ReadonlySet<MetaObjectiveParam> = new Set(['OUTCOME_TRAFFIC', 'OUTCOME_AWARENESS', 'OUTCOME_ENGAGEMENT'])
+// PRD §13 — leads_call goal 추가로 OUTCOME_LEADS 도 합법 objective.
+const VALID_OBJECTIVES: ReadonlySet<MetaObjectiveParam> = new Set(['OUTCOME_TRAFFIC', 'OUTCOME_AWARENESS', 'OUTCOME_ENGAGEMENT', 'OUTCOME_LEADS'])
+const VALID_GOAL_IDS: ReadonlySet<string> = new Set(OBJECTIVES_PHASE1.map((g) => g.id))
 const VALID_BID_STRATEGIES: ReadonlySet<BidStrategyParam> = new Set(['LOWEST_COST_WITHOUT_CAP', 'LOWEST_COST_WITH_BID_CAP', 'COST_CAP'])
 const VALID_PLATFORMS: ReadonlySet<PlatformsParam> = new Set(['both', 'facebook', 'instagram'])
 const VALID_PLACEMENT_POSITIONS = new Set([
@@ -58,13 +61,20 @@ type CampaignRequestBody = {
   status?: 'ACTIVE' | 'PAUSED'
   imageDataUrl?: string
   objective?: string
+  goalId?: string
   mode?: 'simple' | 'detailed'
   bidStrategy?: string
   bidAmount?: number
   placements?: { mode: 'auto' } | { mode: 'manual'; positions: string[] }
   platforms?: string
+  // PRD-ab-testing.md §4 — A/B 축 + 변형. Phase 1 = headline 만 실제 분기.
+  abTestEnabled?: boolean
+  abTestAxis?: string
+  abTestVariantB?: { axis?: string; headline?: string; primaryText?: string; imageDataUrl?: string }
   skipAdCreation?: boolean
 }
+
+const VALID_AB_AXES: ReadonlySet<AbTestAxisParam> = new Set(['headline', 'primary_text', 'image'])
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions)
@@ -74,7 +84,9 @@ export async function POST(req: NextRequest) {
       { status: 401 },
     )
   }
-  const { accessToken, adAccountId, pageId, pixelId } = session
+  const { pageId, pixelId } = session
+  const accessToken = resolveAccessToken(session.accessToken)
+  const adAccountId = resolveAdAccountId(session.adAccountId)
   return withRouteHandler(true, '', async () => {
       const body = (await req.json()) as CampaignRequestBody
       const { headline, primaryText, dailyBudget, startDate, endDate, ageMin, ageMax, linkUrl, cta, imageDataUrl } = body
@@ -146,6 +158,9 @@ export async function POST(req: NextRequest) {
 
       // Invalid detail-mode values fall through to defaults rather than rejecting the whole request.
       const isSimple = body.mode === 'simple'
+      // PRD §13 — goalId 가 있으면 meta-ads 가 OBJECTIVES_PHASE1 entry 에서 derive. 없거나 invalid 면 objective 폴백.
+      const goalId: ObjectivePhase1Id | undefined =
+        body.goalId && VALID_GOAL_IDS.has(body.goalId) ? (body.goalId as ObjectivePhase1Id) : undefined
       const objective: MetaObjectiveParam = isSimple
         ? 'OUTCOME_TRAFFIC'
         : body.objective && VALID_OBJECTIVES.has(body.objective as MetaObjectiveParam)
@@ -170,6 +185,33 @@ export async function POST(req: NextRequest) {
         ? (body.platforms as PlatformsParam)
         : 'both'
 
+      // PRD-ab-testing.md §4 — A/B 시험. 축 일반화 (Phase 1 = headline 만 실제 분기).
+      // v0.2 Q4 (§7.5) — !skipAdCreation 게이트 제거. 개발모드에서도 A/B 분기 활성화, route 가 fake adIds 합성.
+      // Invalid 입력은 ValidationError — silent fall-through 안 함.
+      let abTestAxis: AbTestAxisParam | undefined
+      let abTestVariantB: AbTestVariantBParam | undefined
+      const abTestEnabled = !isSimple && body.abTestEnabled === true
+      if (abTestEnabled) {
+        const axisRaw = typeof body.abTestAxis === 'string' ? body.abTestAxis : 'headline'
+        if (!VALID_AB_AXES.has(axisRaw as AbTestAxisParam)) {
+          throw new ValidationError('A/B 시험 축 값이 올바르지 않아요.')
+        }
+        const axis = axisRaw as AbTestAxisParam
+        if (axis !== 'headline') {
+          throw new ValidationError(`A/B 시험 축 '${axis}' 은 아직 지원되지 않아요 (현재는 헤드라인만).`)
+        }
+        const variantB = body.abTestVariantB
+        const variantBHeadline = typeof variantB?.headline === 'string' ? variantB.headline.trim() : ''
+        if (!variantBHeadline || variantB?.axis !== 'headline') {
+          throw new ValidationError('A/B 시험을 켜면 B안 헤드라인이 필요해요.')
+        }
+        if (variantBHeadline === headline.trim()) {
+          throw new ValidationError('A/B 시험의 두 헤드라인이 같아요. B안을 다른 헤드라인으로 골라주세요.')
+        }
+        abTestAxis = axis
+        abTestVariantB = { axis: 'headline', headline: variantBHeadline }
+      }
+
       const result = await metaAds.createCampaign(
         {
           headline,
@@ -186,10 +228,14 @@ export async function POST(req: NextRequest) {
           status,
           imageDataUrl: resolvedImageDataUrl,
           objective,
+          goalId,
           bidStrategy,
           bidAmount,
           placements,
           platforms,
+          abTestEnabled: abTestEnabled || undefined,
+          abTestAxis,
+          abTestVariantB,
           pixelId,
           mode: body.mode,
           skipAdCreation,
@@ -198,6 +244,14 @@ export async function POST(req: NextRequest) {
         adAccountId,
         pageId,
       )
+
+      // PRD-ab-testing.md §7.5 — 개발모드 + A/B 활성 시 fake adIds 두 개 합성.
+      // lib/meta-ads.ts 는 skipAdCreation 시 adSet 까지만 만들고 끝. route 가 mock_ad_{campaignId}_a/b 발급.
+      // getMockInsights 가 이 prefix 로 광고별 시드 진입.
+      if (abTestEnabled && skipAdCreation && !result.adIds) {
+        const fakeAdIds: [string, string] = [`mock_ad_${result.campaignId}_a`, `mock_ad_${result.campaignId}_b`]
+        return NextResponse.json({ ...result, adIds: fakeAdIds })
+      }
       return NextResponse.json(result)
     })
 }

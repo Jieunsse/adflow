@@ -203,7 +203,7 @@ export default function AiImageBlock({
       headline: state.headline,
       primaryText: state.primaryText,
       tone: state.tone,
-      outcomeChip: state.outcomeChips[0] ?? null,
+      outcomeChip: state.outcome ?? null,
       scenesCount: scenes.length,
       hasLogo: !!logo,
       aspect,

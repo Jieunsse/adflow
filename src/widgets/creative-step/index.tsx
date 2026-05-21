@@ -3,8 +3,9 @@
 // STEP 01 소재 작성 widget — ADR-001 §deepening ③.
 // 2칼럼 레이아웃 오케스트레이터. 왼쪽 InputForm + 오른쪽 ResultPanel.
 // page.tsx 는 step 진행·세션스토리지 입력값·generate mutation 결과를 props 로 전달.
+// PRD §13.10 — outcome 선택은 intro 페이지가 담당. STEP 01 은 SelectedGoalCard 만 노출.
 
-import { type ToneId, type CtaId, type ObjectiveId } from "@entities/creative/options";
+import { type ToneId } from "@entities/creative/options";
 import InputForm from "./InputForm";
 import ResultPanel from "./ResultPanel";
 
@@ -13,14 +14,10 @@ interface Props {
   setBrand: (v: string) => void;
   target: string;
   setTarget: (v: string) => void;
-  goal: string;
-  setGoal: (v: string) => void;
   tone: ToneId;
   setTone: (id: ToneId) => void;
-  outcomeChips: ObjectiveId[];
-  setOutcomeChip: (id: ObjectiveId) => void;
-  outcomeHint: string;
-  setOutcomeHint: (v: string) => void;
+  /** SelectedGoalCard 의 "광고 목표 변경" → intro 복귀. page.tsx 가 outcome=null dispatch. */
+  onChangeOutcome: () => void;
   generating: boolean;
   generated: boolean;
   headlines: string[] | null;
@@ -46,14 +43,9 @@ export default function CreativeStep(p: Props) {
         setBrand={p.setBrand}
         target={p.target}
         setTarget={p.setTarget}
-        goal={p.goal}
-        setGoal={p.setGoal}
         tone={p.tone}
         setTone={p.setTone}
-        outcomeChips={p.outcomeChips}
-        setOutcomeChip={p.setOutcomeChip}
-        outcomeHint={p.outcomeHint}
-        setOutcomeHint={p.setOutcomeHint}
+        onChangeOutcome={p.onChangeOutcome}
         generating={p.generating}
         onGenerate={p.onGenerate}
       />

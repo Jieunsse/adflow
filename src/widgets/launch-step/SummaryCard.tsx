@@ -7,7 +7,7 @@ import { useSession } from "next-auth/react";
 import Icon from "@shared/ui/Icon";
 import { Badge } from "@shared/ui/primitives";
 import { fmtKRW } from "@shared/lib/format";
-import { OBJECTIVES_PHASE1 } from "@entities/creative/options";
+import { OBJECTIVES_PHASE1, OBJECTIVES_PHASE2 } from "@entities/creative/options";
 import { useCreativeDraft } from "@entities/creative/model";
 import { useLaunchDraft } from "@entities/campaign/model";
 
@@ -28,9 +28,14 @@ export default function SummaryCard() {
     return Math.max(1, Math.round((b.getTime() - a.getTime()) / 86400000) + 1);
   })();
 
-  const objectiveLabel = creative.state.objective
-    ? OBJECTIVES_PHASE1.find((o) => o.metaObjective === creative.state.objective)?.label ?? "트래픽"
-    : "트래픽";
+  // PRD §13.10 — goal 단위 라벨. outcome chip 이 SSOT. metaObjective N:1 매핑이라 chip id 로 찾아야 정확.
+  const selectedGoal = creative.state.outcome
+    ? [...OBJECTIVES_PHASE1, ...OBJECTIVES_PHASE2].find((o) => o.id === creative.state.outcome)
+    : null;
+  const goalLabel = selectedGoal?.label ?? "미선택";
+  const goalSub = selectedGoal
+    ? `${selectedGoal.metaObjective.replace(/^OUTCOME_/, "")} · ${selectedGoal.optimizationGoal}`
+    : undefined;
   const bidStrategyLabel: Record<typeof launch.state.bidStrategy, string> = {
     LOWEST_COST_WITHOUT_CAP: "최저 비용",
     LOWEST_COST_WITH_BID_CAP: "대상 비용",
@@ -49,11 +54,7 @@ export default function SummaryCard() {
     <div className="card">
       <h3 className="section-title" style={{ marginBottom: 14 }}>집행 요약</h3>
       <div>
-        <SumRow
-          label="캠페인 목표"
-          value={objectiveLabel}
-          sub={creative.state.objective ? creative.state.objective.replace(/^OUTCOME_/, "") : undefined}
-        />
+        <SumRow label="캠페인 목표" value={goalLabel} sub={goalSub} />
         <SumRow label="구매 유형" value="경매(Auction)" />
         <SumRow label="광고 플랫폼" value={platformsLabel} />
         <SumRow label="게재 위치" value={placementLabel} />
@@ -67,7 +68,11 @@ export default function SummaryCard() {
               value={bidStrategyLabel[launch.state.bidStrategy]}
               sub={launch.state.bidAmount ? `bid ₩${launch.state.bidAmount.toLocaleString("ko-KR")}` : undefined}
             />
-            <SumRow label="A/B 소재 시험" value={launch.state.abTestEnabled ? "켜짐 (곧 연동)" : "꺼짐"} />
+            <SumRow
+              label="A/B 소재 시험"
+              value={launch.state.abTestEnabled ? "켜짐" : "꺼짐"}
+              sub={launch.state.abTestEnabled && launch.state.abTestVariantB?.axis === "headline" ? `B안: ${launch.state.abTestVariantB.headline}` : undefined}
+            />
             <SumRow label="자동 광고중단" value={launch.state.autoPauseGuardrailEnabled ? "켜짐 (곧 연동)" : "꺼짐"} />
           </>
         )}

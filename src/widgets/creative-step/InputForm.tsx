@@ -1,80 +1,87 @@
 "use client";
 
-// STEP 01 소재 정보 입력 카드 — outcome 칩, 브랜드/타겟/목표 입력, 톤 선택, AI 카피 생성 버튼.
+// STEP 01 소재 정보 입력 카드 — 브랜드/타겟 입력, 톤 선택, AI 카피 생성.
+// PRD §13.10 — 광고 목표 카드 grid 와 outcomeHint 는 intro 페이지로 이관. STEP 01 에선
+// SelectedGoalCard 로 선택한 목표만 read-only 노출하고 "변경" 시 intro 로 복귀.
 
 import Icon from "@shared/ui/Icon";
 import { Badge } from "@shared/ui/primitives";
-import { Select } from "@shared/ui/Select";
-import { TONES, OBJECTIVES_PHASE1, OBJECTIVES_PHASE2, type ToneId, type ObjectiveId } from "@entities/creative/options";
-
-const GOAL_OPTIONS = [
-  { value: "브랜드 인지도 높이기", label: "브랜드 인지도 높이기" },
-  { value: "웹사이트 방문 유도",    label: "웹사이트 방문 유도" },
-  { value: "구매 전환",             label: "구매 전환" },
-];
+import { OBJECTIVES_PHASE1, TONES, type ToneId } from "@entities/creative/options";
+import SelectedGoalCard from "@entities/creative/ui/SelectedGoalCard";
+import { useCreativeDraft } from "@entities/creative/model";
 
 interface Props {
   brand: string;
   setBrand: (v: string) => void;
   target: string;
   setTarget: (v: string) => void;
-  goal: string;
-  setGoal: (v: string) => void;
   tone: ToneId;
   setTone: (id: ToneId) => void;
-  outcomeChips: ObjectiveId[];
-  setOutcomeChip: (id: ObjectiveId) => void;
-  outcomeHint: string;
-  setOutcomeHint: (v: string) => void;
+  /** outcome 변경(→ intro 복귀) 콜백. SelectedGoalCard 의 "광고 목표 변경" 버튼이 호출. */
+  onChangeOutcome: () => void;
   generating: boolean;
   onGenerate: () => void;
 }
 
 export default function InputForm(p: Props) {
+  // PRD §13.10 — outcomeHint 는 STEP 01 에서 (intro 에서 이관). 컨텍스트로 직접 접근.
+  const creative = useCreativeDraft();
+
+  // PRD-objective-aware-launch §5.2 — outcome 변경 후 STEP 01 복귀 시 stale 카피 안내.
+  const prevOutcome = creative.state.previousOutcome;
+  const hasCopy = creative.state.headlineCandidates !== null;
+  const showStaleBanner = prevOutcome !== null && hasCopy;
+  const prevLabel = prevOutcome ? OBJECTIVES_PHASE1.find((o) => o.id === prevOutcome)?.label ?? prevOutcome : "";
+
   return (
     <div className="card card--lg">
       <div className="between" style={{ marginBottom: 4 }}>
         <h2 className="section-title">소재 정보 입력</h2>
         <Badge kind="neutral">필수</Badge>
       </div>
-      <p className="section-sub">아래 정보를 토대로 AI가 카피를 만들어요.</p>
-      <hr className="divider" />
+      <p className="section-sub" style={{ marginBottom: 22 }}>선택한 광고 목표에 맞춰 AI가 카피를 만들어요.</p>
+
+      <SelectedGoalCard onChange={p.onChangeOutcome} />
+
+      {showStaleBanner && (
+        <div className="callout callout--warn" style={{ marginBottom: 16, alignItems: "flex-start" }}>
+          <Icon name="info" size={16} />
+          <div style={{ flex: 1 }}>
+            <div style={{ font: "600 13px/1.4 var(--w-font-sans)", color: "var(--w-fg-strong)" }}>
+              이 카피는 이전 목표 &lsquo;{prevLabel}&rsquo; 기준이에요
+            </div>
+            <p style={{ font: "500 12.5px/1.55 var(--w-font-sans)", color: "var(--w-fg-normal)", margin: "4px 0 0" }}>
+              새 목표에 맞게 다시 만드는 걸 추천해요.
+            </p>
+            <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+              <button
+                className="btn btn--primary btn--sm"
+                type="button"
+                onClick={p.onGenerate}
+                disabled={p.generating || !p.brand.trim() || !p.target.trim()}
+              >
+                <Icon name="sparkles" size={12} /> 다시 생성
+              </button>
+              <button
+                className="btn btn--ghost btn--sm"
+                type="button"
+                onClick={() => creative.dispatch({ type: "CLEAR_PREVIOUS_OUTCOME" })}
+              >
+                그대로 둘게요
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
-        {/* PRD §4 — outcome 칩 (Phase 1 3개) + 자연어 보조. 칩 미선택 시 AI 카피 생성 차단. */}
         <div className="field">
-          <label className="field__label">이 광고로 뭘 이루고 싶나요?</label>
-          <div className="chips" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", justifyItems: "stretch" }}>
-            {OBJECTIVES_PHASE1.map((o) => (
-              <button
-                key={o.id}
-                type="button"
-                className={"chip" + (p.outcomeChips.includes(o.id) ? " chip--on" : "")}
-                style={{ justifyContent: "center" }}
-                onClick={() => p.setOutcomeChip(o.id)}
-                title={o.copyTone}
-              >
-                {o.outcomeLabel}
-              </button>
-            ))}
-            {OBJECTIVES_PHASE2.map((o) => (
-              <button
-                key={o.id}
-                type="button"
-                className={"chip" + (p.outcomeChips.includes(o.id) ? " chip--on" : "")}
-                style={{ justifyContent: "center" }}
-                onClick={() => p.setOutcomeChip(o.id)}
-              >
-                {o.outcomeLabel}
-              </button>
-            ))}
-          </div>
+          <label className="field__label">강조하고 싶은 포인트 (선택)</label>
           <input
             className="input"
-            style={{ marginTop: 10 }}
-            value={p.outcomeHint ?? ""}
-            onChange={(e) => p.setOutcomeHint(e.target.value)}
-            placeholder="강조하고 싶은 포인트나 분위기를 자유롭게 적어주세요"
+            value={creative.state.outcomeHint ?? ""}
+            onChange={(e) => creative.dispatch({ type: "SET_OUTCOME_HINT", hint: e.target.value })}
+            placeholder="예) 5월 신상 한정 할인 강조"
           />
         </div>
         <div className="field">
@@ -96,10 +103,6 @@ export default function InputForm(p: Props) {
           />
         </div>
         <div className="field">
-          <label className="field__label">이 광고로 무엇을 얻고 싶나요?</label>
-          <Select value={p.goal} onChange={p.setGoal} options={GOAL_OPTIONS} />
-        </div>
-        <div className="field">
           <label className="field__label">광고 느낌</label>
           <div className="chips">
             {TONES.map((t) => (
@@ -117,8 +120,7 @@ export default function InputForm(p: Props) {
             className="btn btn--primary"
             type="button"
             onClick={p.onGenerate}
-            disabled={p.generating || p.outcomeChips.length === 0 || !p.brand.trim() || !p.target.trim()}
-            title={p.outcomeChips.length === 0 ? "원하는 결과(outcome)를 먼저 골라주세요" : undefined}
+            disabled={p.generating || !p.brand.trim() || !p.target.trim()}
           >
             {p.generating ? (
               <><div className="spinner" style={{ width: 14, height: 14, borderWidth: 2 }} /> 생성 중…</>

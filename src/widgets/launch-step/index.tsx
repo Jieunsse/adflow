@@ -9,30 +9,41 @@
 //   - goSettings → /setup (계정 연결 페이지)
 //   - goCreative → STEP 01 로 (카피 부합성 callout 의 링크용)
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { useQuery } from "@tanstack/react-query";
 import Icon from "@shared/ui/Icon";
 import AgeRange from "@shared/ui/AgeRange";
 import { fmt } from "@shared/lib/format";
 import { fmtBudget } from "@shared/lib/launch-utils";
 import { COUNTRIES } from "@shared/lib/geo-options";
-import { useLaunchCampaign } from "@widgets/launch-step/useLaunchCampaign";
+import { useApiMutation } from "@shared/lib/api/useApiMutation";
 import { useCreativeDraft } from "@entities/creative/model";
-import { useLaunchDraft } from "@entities/campaign/model";
-import { gendersToUi, uiToGenders, type Gender } from "@shared/lib/meta/targeting";
+import { useLaunchDraft, type LaunchParams, type LaunchResponse } from "@entities/campaign/model";
+import { saveLaunchedCampaign } from "@entities/campaign/launched-storage";
+import { OBJECTIVES_PHASE1, type ObjectivePhase1Id } from "@entities/creative/options";
+import { LAUNCH_PROFILES } from "@entities/launch-objective/profile";
+import { type Gender } from "@shared/lib/meta/targeting";
 import { calcDaysBetween, estimateImpressionRange } from "@entities/insights/budget-estimates";
 import { addNotification } from "@shared/lib/notifications";
 import { useToast } from "@shared/ui/Toast";
+import { validateAdImage, buildLaunchParams, buildLaunchedCampaign, launchSuccessMessage } from "@features/launch-campaign/build";
 
 import DatePicker from "@shared/ui/DatePicker";
 import SubHead from "./SubHead";
 import ModeToggle from "./ModeToggle";
 import ObjectivePicker from "./ObjectivePicker";
 import DetailKnobs from "./DetailKnobs";
+import DestinationField from "./DestinationField";
 import CreativePreview from "./CreativePreview";
 import SummaryCard from "./SummaryCard";
 import LaunchStatusPanel from "./LaunchStatusPanel";
+import CallScheduleSection from "./CallScheduleSection";
+import MessagesAutoReplyCallout from "./MessagesAutoReplyCallout";
+import PageActivityCallout from "./PageActivityCallout";
+import PreLaunchSafetyModal from "./PreLaunchSafetyModal";
+import { validateLaunch, type ValidationIssue } from "@features/launch-validation";
 
 const GENDER_OPTS: [Gender, string][] = [["all", "전체"], ["male", "남성"], ["female", "여성"]];
 
@@ -55,99 +66,126 @@ export default function LaunchStep({ onNext, goSettings, goCreative }: Props) {
   const state = launch.state;
   const dispatch = launch.dispatch;
 
-  // STEP 02 진입 시 — STEP 01 AI 가 채운 타겟팅으로 연령·성별 기본값을 한 번만 prefill.
+  // STEP 02 진입 시 — STEP 01 AI 가 채운 타겟팅으로 연령·성별 prefill. 매핑 규칙은 LaunchDraft reducer.
   const targeting = creative.state.targeting;
   useEffect(() => {
     if (!targeting) return;
-    dispatch({ type: "SET_AGE_RANGE", min: targeting.ageMin, max: targeting.ageMax });
-    dispatch({ type: "SET_GENDER", value: gendersToUi(targeting.genders) });
+    dispatch({ type: "APPLY_CREATIVE_TARGETING", targeting });
   }, [targeting, dispatch]);
 
   // 외부 정보 — 세션·집행 mutation.
   const router = useRouter();
   const { data: session } = useSession();
   const accountConnected = !!(session?.adAccountId && session?.pageId);
-  const { mutation: launchMutation } = useLaunchCampaign();
+  const launchMutation = useApiMutation<LaunchParams, LaunchResponse>("/api/campaign");
   const showToast = useToast();
 
-  // Meta App 개발 모드 호환 — env flag 가 development 일 때만 callout 노출 + skip 버튼 활성화
-  const devSkipEnabled = process.env.NEXT_PUBLIC_META_APP_MODE === "development";
+  // PRD §13.10 — single-select. outcome 의 goal entry. STEP 02 link prefill + 전화 받기 page phone 검증 source.
+  const outcomeChip = creative.state.outcome;
+  const goalDef = outcomeChip ? OBJECTIVES_PHASE1.find((g) => g.id === outcomeChip) : null;
+  const profile = outcomeChip && outcomeChip in LAUNCH_PROFILES
+    ? LAUNCH_PROFILES[outcomeChip as ObjectivePhase1Id]
+    : null;
+
+  // PRD-objective-aware-launch §5.2 — 목표 변경 시 호환 보존·종속 리셋 + toast.
+  // outcome 이 *바뀐 시점만* 트리거 (마운트 시 ref 가 첫 값 캡쳐).
+  const prevOutcomeRef = useRef(outcomeChip);
+  useEffect(() => {
+    const prev = prevOutcomeRef.current;
+    if (prev === outcomeChip) return;
+    prevOutcomeRef.current = outcomeChip;
+    if (prev === null || outcomeChip === null) return;
+    dispatch({ type: "MIGRATE_FOR_OBJECTIVE_CHANGE" });
+    const prevLabel = OBJECTIVES_PHASE1.find((o) => o.id === prev)?.label ?? prev;
+    const nextLabel = OBJECTIVES_PHASE1.find((o) => o.id === outcomeChip)?.label ?? outcomeChip;
+    showToast(`목표 변경됨: ${prevLabel} → ${nextLabel}. URL·고유 설정이 새 목표에 맞게 초기화됐어요.`);
+  }, [outcomeChip, dispatch, showToast]);
+
+  // 페이지 목록 — 활성 페이지의 phone 확인 (leads_call goal 사전 차단용).
+  const { data: pagesData } = useQuery({
+    queryKey: ["setup-pages"],
+    queryFn: async (): Promise<{ pages: { id: string; name: string; phone: string | null }[] }> => {
+      const res = await fetch("/api/setup/pages");
+      if (!res.ok) throw new Error("페이지 조회 실패");
+      return res.json();
+    },
+    enabled: !!session?.pageId,
+  });
+  const activePage = pagesData?.pages.find((p) => p.id === session?.pageId);
+  const phoneMissingForCall = goalDef?.id === "leads_call" && activePage !== undefined && !activePage.phone;
+
+  // PRD-objective-aware-launch §3 — profile.url.mode === 'prefilled_locked' 면 자동 채움.
+  // 유저가 이미 입력했으면 덮어쓰지 않음. defaultLink 가 page_url/messenger 인지로 URL 형태 분기.
+  useEffect(() => {
+    if (!goalDef || !profile || !session?.pageId) return;
+    if (state.landingUrl.trim() !== "") return;
+    if (profile.url.mode !== "prefilled_locked") return;
+    if (goalDef.defaultLink === "page_url") {
+      dispatch({ type: "SET_LANDING_URL", value: `https://www.facebook.com/${session.pageId}` });
+    } else if (goalDef.defaultLink === "messenger") {
+      dispatch({ type: "SET_LANDING_URL", value: `https://m.me/${session.pageId}` });
+    }
+  }, [goalDef, profile, session?.pageId, state.landingUrl, dispatch]);
+
+  // Meta App 개발 모드 호환 — env flag 가 development 일 때만 callout 노출.
+  // 테스트 광고 계정이 셋팅돼있으면 전체 플로우(Creative/Ad 포함) 가 실호출되니
+  // skip 버튼은 숨기고 안내 메시지만 표시.
+  const devModeOn = process.env.NEXT_PUBLIC_META_APP_MODE === "development";
+  const testAccountId = process.env.NEXT_PUBLIC_META_TEST_AD_ACCOUNT_ID?.trim();
+  const testAccountActive = devModeOn && !!testAccountId;
 
   const runLaunch = async (skipAdCreation: boolean) => {
     if (!skipAdCreation && state.imageDataUrl) {
-      try {
-        const { width, height } = await new Promise<{ width: number; height: number }>((resolve, reject) => {
-          const img = new window.Image();
-          img.onload = () => resolve({ width: img.naturalWidth, height: img.naturalHeight });
-          img.onerror = () => reject();
-          img.src = state.imageDataUrl!;
-        });
-        if (width < 600 || height < 314) {
-          showToast(`이미지 크기가 너무 작아요 (${width}×${height}px). Meta 최소 요건은 600×314px예요. 더 큰 이미지로 교체해주세요.`);
-          return;
-        }
-      } catch {
-        // 크기 확인 실패 시 경고 없이 진행
+      const result = await validateAdImage(state.imageDataUrl);
+      if (!result.ok) {
+        showToast(result.reason);
+        return;
       }
     }
-
-    const dailyBudget = parseInt(state.budget.replace(/[^\d]/g, ""), 10) || 0;
-    const effectiveStatus: "ACTIVE" | "PAUSED" = skipAdCreation ? "PAUSED" : state.delivery;
-    launchMutation.mutate(
-      {
-        headline: creative.state.headline,
-        primaryText: creative.state.primaryText,
-        dailyBudget,
-        startDate: state.dateStart,
-        endDate: state.dateEnd,
-        ageMin: state.ageMin,
-        ageMax: state.ageMax,
-        genders: uiToGenders(state.gender),
-        countries: state.countries,
-        linkUrl: state.landingUrl.trim(),
-        cta: creative.state.cta,
-        status: effectiveStatus,
-        imageDataUrl: state.imageDataUrl ?? undefined,
-        // PRD §5.5 — 디테일 모드면 state의 값을, 간단 모드면 기본값 전송
-        objective: creative.state.objective ?? "OUTCOME_TRAFFIC",
-        mode: state.mode,
-        bidStrategy: state.mode === "detailed" ? state.bidStrategy : undefined,
-        bidAmount: state.mode === "detailed" ? (state.bidAmount ?? undefined) : undefined,
-        placements: state.mode === "detailed" ? state.placements : undefined,
-        platforms: state.platforms,
-        skipAdCreation: skipAdCreation || undefined,
+    const params = buildLaunchParams(creative.state, state, { skipAdCreation });
+    launchMutation.mutate(params, {
+      onSuccess: (data) => {
+        const launched = buildLaunchedCampaign(data, params);
+        dispatch({ type: "SET_LAUNCHED_CAMPAIGN", value: launched });
+        saveLaunchedCampaign(launched);
+        addNotification({ type: "launch", message: launchSuccessMessage(params) });
       },
-      {
-        onSuccess: (data) => {
-          dispatch({
-            type: "SET_LAUNCHED_CAMPAIGN",
-            value: {
-              campaignId: data.campaignId,
-              adSetId: data.adSetId,
-              adId: data.adId,
-              dailyBudget,
-              startDate: state.dateStart,
-              endDate: state.dateEnd,
-              status: effectiveStatus,
-              objective: creative.state.objective ?? "OUTCOME_TRAFFIC",
-              skipped: skipAdCreation || undefined,
-            },
-          });
-          addNotification({
-            type: "launch",
-            message: skipAdCreation
-              ? "Meta 개발 모드 호환 — 캠페인 + 광고 세트만 생성됐어요."
-              : effectiveStatus === "ACTIVE"
-                ? "광고가 Meta에 게재 요청됐어요. 검토 통과 후 노출이 시작돼요."
-                : "광고가 일시중지 상태로 등록됐어요.",
-          });
-        },
-      },
-    );
+    });
   };
 
-  const handleLaunch = () => runLaunch(false);
-  const handleSkipAdLaunch = () => runLaunch(true);
+  // PRD-objective-aware-launch §5.1 — 게재 직전 검증. 이슈 있으면 모달, 없으면 바로 launch.
+  const [safetyIssues, setSafetyIssues] = useState<ValidationIssue[]>([]);
+  const [pendingSkipAd, setPendingSkipAd] = useState(false);
+  const modalOpen = safetyIssues.length > 0;
+
+  const attemptLaunch = (skipAdCreation: boolean) => {
+    const phaseObjective = outcomeChip && profile ? (outcomeChip as ObjectivePhase1Id) : null;
+    const issues = validateLaunch({
+      objective: phaseObjective,
+      callSchedule: state.callSchedule,
+      page: {
+        pageId: session?.pageId ?? null,
+        pageName: session?.pageName ?? null,
+        phone: activePage?.phone ?? null,
+      },
+    });
+    if (issues.length === 0) {
+      runLaunch(skipAdCreation);
+      return;
+    }
+    setSafetyIssues(issues);
+    setPendingSkipAd(skipAdCreation);
+  };
+
+  // 간단 설정 = Ad Creative · Ad 없이 캠페인 + 세트만 생성. 디테일은 풀 플로우 유지.
+  const skipAd = state.mode === "simple";
+  const handleLaunch = () => attemptLaunch(skipAd);
+  const handleSkipAdLaunch = () => attemptLaunch(true);
+  const handleSafetyConfirm = () => {
+    setSafetyIssues([]);
+    runLaunch(pendingSkipAd);
+  };
+  const handleSafetyClose = () => setSafetyIssues([]);
 
   // 파생값 — UI 표시·집행 가능 조건.
   const budgetNum = parseInt(state.budget.replace(/[^\d]/g, ""), 10) || 0;
@@ -155,9 +193,12 @@ export default function LaunchStep({ onNext, goSettings, goCreative }: Props) {
   const { min: impMin, max: impMax } = estimateImpressionRange(budgetNum, days);
   const httpsOk = state.landingUrl.trim().startsWith("https://");
   const hasCreative = creative.state.headline.trim().length > 0;
-  const canLaunch = accountConnected && hasCreative && httpsOk && state.countries.length > 0 && !launchMutation.isPending && !state.launchedCampaign;
-  // skip 모드는 Ad Creative 가 없으므로 랜딩 URL(httpsOk) 검증 불필요
-  const canSkipLaunch = accountConnected && hasCreative && state.countries.length > 0 && !launchMutation.isPending && !state.launchedCampaign;
+  const baseLaunchOk = accountConnected && hasCreative && state.countries.length > 0 && !launchMutation.isPending && !state.launchedCampaign;
+  // PRD-objective-aware-launch §3·§5.1 — URL https 만 inline 게이트. 나머지(phone·시간대·메신저·페이지 활성도)는 PreLaunchSafetyModal 에서.
+  // hidden 인 목표(awareness, leads_call) 는 URL 형식 검증 불필요. user_input/prefilled_locked 는 https 필수.
+  const urlRequired = profile?.url.mode !== "hidden";
+  const canLaunch = baseLaunchOk && (skipAd || !urlRequired || httpsOk);
+  const canSkipLaunch = baseLaunchOk;
 
   const [subStep, setSubStep] = useState<1 | 2 | 3>(1);
 
@@ -213,25 +254,30 @@ export default function LaunchStep({ onNext, goSettings, goCreative }: Props) {
         </div>
         <hr className="divider" style={{ margin: "0 0 20px" }} />
 
-        {/* 1단계: 소재 확인 */}
+        {/* 1단계: 소재 확인 — destination + 목표별 고유 섹션 */}
         {subStep === 1 && (
           <>
             <ModeToggle />
             <CreativePreview />
             <hr className="divider" />
-            <SubHead title="광고 클릭 시 보여줄 페이지" subtitle="광고를 누른 사용자가 이동할 URL 이에요." />
-            <input
-              className="input"
-              value={state.landingUrl}
-              onChange={(e) => dispatch({ type: "SET_LANDING_URL", value: e.target.value })}
-              placeholder="https://example.com/landing"
-              type="url"
-              inputMode="url"
-            />
-            {!httpsOk && (
-              <div className="field__hint field__hint--err" style={{ marginTop: 8 }}>
-                https:// 로 시작해야 해요.
-              </div>
+            <DestinationField />
+            {profile?.uniqueSections.includes("call_schedule") && (
+              <>
+                <hr className="divider" />
+                <CallScheduleSection />
+              </>
+            )}
+            {profile?.uniqueSections.includes("messages_auto_reply") && (
+              <>
+                <hr className="divider" />
+                <MessagesAutoReplyCallout />
+              </>
+            )}
+            {profile?.uniqueSections.includes("page_activity") && (
+              <>
+                <hr className="divider" />
+                <PageActivityCallout />
+              </>
             )}
             <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 24 }}>
               <button className="btn btn--primary" type="button" onClick={() => setSubStep(2)}>
@@ -440,7 +486,30 @@ export default function LaunchStep({ onNext, goSettings, goCreative }: Props) {
               </div>
             </div>
 
-            {devSkipEnabled && (
+            {devModeOn && testAccountActive && (
+              <div
+                className="card"
+                style={{
+                  marginTop: 24,
+                  padding: 16,
+                  borderStyle: "dashed",
+                  background: "var(--w-bg-alternative)",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                  <Icon name="info" size={14} />
+                  <span style={{ font: "600 13px/1.4 var(--w-font-sans)", color: "var(--w-fg-strong)" }}>
+                    Meta 테스트 광고 계정 활성화
+                  </span>
+                </div>
+                <p style={{ font: "500 12.5px/1.55 var(--w-font-sans)", color: "var(--w-fg-normal)", margin: 0 }}>
+                  위 게재 버튼이 <strong>{testAccountId}</strong> 로 Campaign → AdSet → AdCreative → Ad 까지 전체 호출돼요.
+                  실제 노출·과금은 없어요. 인사이트는 0 으로 반환돼요.
+                </p>
+              </div>
+            )}
+
+            {devModeOn && !testAccountActive && (
               <div
                 className="card"
                 style={{
@@ -459,6 +528,10 @@ export default function LaunchStep({ onNext, goSettings, goCreative }: Props) {
                 <p style={{ font: "500 12.5px/1.55 var(--w-font-sans)", color: "var(--w-fg-normal)", margin: "0 0 12px" }}>
                   개발 모드 앱에선 광고 크리에이티브 생성이 막혀요 (subcode 1885183).
                   Ad Creative · Ad 단계를 건너뛰고 <strong>캠페인 + 광고 세트까지만</strong> 만들어요. PAUSED 상태로 고정돼요.
+                  <br />
+                  <span style={{ color: "var(--w-fg-neutral)" }}>
+                    💡 전체 플로우 검증은 <code>NEXT_PUBLIC_META_TEST_AD_ACCOUNT_ID</code> 셋팅으로 가능해요.
+                  </span>
                 </p>
                 <button
                   className="btn btn--secondary btn--sm"
@@ -483,6 +556,14 @@ export default function LaunchStep({ onNext, goSettings, goCreative }: Props) {
         <LaunchStatusPanel mutation={launchMutation} onNext={onNext} />
         <SummaryCard />
       </div>
+
+      {modalOpen && (
+        <PreLaunchSafetyModal
+          issues={safetyIssues}
+          onClose={handleSafetyClose}
+          onConfirm={handleSafetyConfirm}
+        />
+      )}
     </div>
   );
 }

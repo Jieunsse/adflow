@@ -29,7 +29,7 @@ export default function BriefForm({
   onAddScenes, onRemoveScene, onClearScenes, onSetLogo, onRemoveLogo,
   onAspectChange, onNotesChange, onGenerate, onZoom,
 }: {
-  state: { headline: string; primaryText: string; tone: ToneId; outcomeChips: ObjectiveId[] };
+  state: { headline: string; primaryText: string; tone: ToneId; outcome: ObjectiveId | null };
   scenes: string[];
   logo: string | null;
   aspect: AspectId;
@@ -46,7 +46,7 @@ export default function BriefForm({
   onZoom: (src: string) => void;
 }) {
   const toneLabel = TONES.find((t) => t.id === state.tone)?.label ?? state.tone;
-  const outcomeDef = state.outcomeChips[0] ? OBJECTIVES_ALL.find((o) => o.id === state.outcomeChips[0]) : null;
+  const outcomeDef = state.outcome ? OBJECTIVES_ALL.find((o) => o.id === state.outcome) : null;
   const hasCopy = !!state.headline?.trim();
   const hasMaterials = scenes.length > 0 || !!logo;
 

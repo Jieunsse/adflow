@@ -1,60 +1,39 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import Icon from "@shared/ui/Icon";
-import { Badge, KpiCard, Sparkline } from "@shared/ui/primitives";
-import { fmt, fmtKRW } from "@shared/lib/format";
+import { useQuery } from "@tanstack/react-query";
+import Icon, { type IconName } from "@shared/ui/Icon";
+import { Badge, EmptyState, KpiCard } from "@shared/ui/primitives";
+import { fmt, fmtKRW, campaignDateInfo, timeAgo } from "@shared/lib/format";
+import BillingAlertWidget from "@widgets/billing-alert";
+import type { Billing } from "@entities/billing/types";
+import type { CampaignStatusBucket, CampaignSummary } from "@/lib/meta-ads";
 
-type CampaignStatus = "live" | "paused" | "review";
-interface MockCampaign {
-  id: string;
-  name: string;
-  status: CampaignStatus;
-  days: string;
-  impressions: number;
-  clicks: number;
-  ctr: number;
-  spend: number;
-  dailyBudget: number;
-  trend: number[];
+async function fetchBilling(): Promise<Billing> {
+  const res = await fetch("/api/billing");
+  if (!res.ok) throw new Error("결제 정보를 불러오지 못했어요");
+  return res.json();
 }
 
-const MOCK_CAMPAIGNS: MockCampaign[] = [
-  {
-    id: "cmp_120207641834", name: "여름 시즌 한정 — 트로피컬 아이스티",
-    status: "live", days: "5월 8일 – 5월 21일",
-    impressions: 184320, clicks: 4926, ctr: 2.67, spend: 482000, dailyBudget: 50000,
-    trend: [120, 145, 162, 180, 175, 210, 225, 240, 268, 254, 285, 312, 340, 365],
-  },
-  {
-    id: "cmp_120207641709", name: "신상 런칭 — 콜드브루 오리지널",
-    status: "live", days: "5월 3일 – 5월 17일",
-    impressions: 98140, clicks: 2104, ctr: 2.14, spend: 268500, dailyBudget: 30000,
-    trend: [80, 95, 110, 102, 118, 124, 132, 145, 148, 162, 170, 168, 175, 188],
-  },
-  {
-    id: "cmp_120207639518", name: "수험생 응원 — 에너지 패키지",
-    status: "paused", days: "4월 25일 – 5월 9일",
-    impressions: 62480, clicks: 1287, ctr: 2.06, spend: 158000, dailyBudget: 25000,
-    trend: [90, 102, 95, 88, 78, 70, 64, 58, 52, 48, 40, 38, 34, 30],
-  },
-  {
-    id: "cmp_120207638203", name: "어버이날 특별 패키지 (예시)",
-    status: "review", days: "5월 4일 – 5월 12일",
-    impressions: 0, clicks: 0, ctr: 0, spend: 0, dailyBudget: 40000,
-    trend: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-  },
-];
+async function fetchCampaigns(): Promise<CampaignSummary[]> {
+  const res = await fetch("/api/campaigns?period=all");
+  if (res.status === 401) return [];
+  const data = await res.json();
+  if (!res.ok) throw new Error(data?.error ?? "캠페인을 불러오지 못했어요");
+  return (data.campaigns ?? []) as CampaignSummary[];
+}
 
-const STATUS_CHIP: Record<CampaignStatus, { variant: string; label: string }> = {
+const STATUS_CHIP: Record<CampaignStatusBucket, { variant: string; label: string }> = {
   live: { variant: "live", label: "게재 중" },
   paused: { variant: "paused", label: "일시정지" },
   review: { variant: "review", label: "검토 중" },
+  ended: { variant: "ended", label: "종료" },
+  issue: { variant: "issue", label: "문제 있음" },
 };
 
-function StatusChip({ status }: { status: CampaignStatus }) {
+function StatusChip({ status }: { status: CampaignStatusBucket }) {
   const s = STATUS_CHIP[status];
   if (!s) return null;
   return (
@@ -64,6 +43,8 @@ function StatusChip({ status }: { status: CampaignStatus }) {
     </span>
   );
 }
+
+const DASHBOARD_LIST_LIMIT = 5;
 
 type RangeKey = "day" | "week" | "month" | "custom";
 const RANGE_LABELS: Record<RangeKey, string> = { day: "오늘", week: "이번 주", month: "이번 달", custom: "기간 지정" };
@@ -77,10 +58,30 @@ export default function DashboardPage() {
   const name = session?.user?.name?.trim();
   const goCreate = () => router.push("/create");
   const goConnect = () => router.push("/setup");
+  const goCampaigns = () => router.push("/campaigns");
+  const goCampaignDetail = (id: string) => router.push(`/campaigns/${id}`);
 
-  const totalImpressions = MOCK_CAMPAIGNS.reduce((s, c) => s + c.impressions, 0);
-  const totalClicks = MOCK_CAMPAIGNS.reduce((s, c) => s + c.clicks, 0);
-  const totalSpend = MOCK_CAMPAIGNS.reduce((s, c) => s + c.spend, 0);
+  // PRD-billing §6 — billing 페이지와 동일 queryKey 로 캐시 공유 (staleTime 60s).
+  const billingQ = useQuery({
+    queryKey: ["billing"],
+    queryFn: fetchBilling,
+    enabled: !!session?.adAccountId,
+    staleTime: 60_000,
+  });
+
+  // /campaigns 페이지 기본 period('all')과 동일 queryKey 로 캐시 공유.
+  const campaignsQ = useQuery({
+    queryKey: ["campaigns", "all"],
+    queryFn: fetchCampaigns,
+    enabled: !!session?.adAccountId || !!session?.browseMode,
+    staleTime: 60_000,
+  });
+  const campaigns = campaignsQ.data ?? [];
+  const visibleCampaigns = campaigns.slice(0, DASHBOARD_LIST_LIMIT);
+
+  const totalImpressions = campaigns.reduce((s, c) => s + c.impressions, 0);
+  const totalClicks = campaigns.reduce((s, c) => s + c.clicks, 0);
+  const totalSpend = campaigns.reduce((s, c) => s + c.spend, 0);
   const avgCtr = totalImpressions ? (totalClicks / totalImpressions) * 100 : 0;
 
   return (
@@ -113,6 +114,9 @@ export default function DashboardPage() {
         </div>
       )}
 
+      <BillingAlertWidget billing={billingQ.data} mode="top" />
+
+
       <div>
         <div className="between" style={{ marginBottom: 14 }}>
           <h2 className="section-title">전체 성과 요약</h2>
@@ -137,30 +141,50 @@ export default function DashboardPage() {
               <h2 className="section-title">집행한 캠페인</h2>
               <p className="section-sub">캠페인을 클릭하면 상세 성과를 볼 수 있어요.</p>
             </div>
-            <button className="btn btn--ghost btn--sm" type="button">전체 보기 <Icon name="arrow-right" size={14} /></button>
+            <button className="btn btn--ghost btn--sm" type="button" onClick={goCampaigns}>전체 보기 <Icon name="arrow-right" size={14} /></button>
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {MOCK_CAMPAIGNS.map((c) => <CampaignRow key={c.id} c={c} onClick={goCreate} />)}
-          </div>
+          {campaignsQ.isLoading ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {[0, 1, 2].map((i) => (
+                <div key={i} className="skel" style={{ height: 76, borderRadius: 12 }} />
+              ))}
+            </div>
+          ) : visibleCampaigns.length === 0 ? (
+            <EmptyState
+              icon={<Icon name="megaphone" size={26} />}
+              title={accountConnected ? "아직 집행한 캠페인이 없어요" : "광고 계정을 연결하면 캠페인이 표시돼요"}
+              desc={accountConnected ? "AI가 만든 소재로 첫 광고를 시작해 보세요." : undefined}
+              action={
+                <button className="btn btn--primary btn--sm" type="button" onClick={accountConnected ? goCreate : goConnect}>
+                  <Icon name={accountConnected ? "plus" : "link"} size={14} /> {accountConnected ? "첫 캠페인 만들기" : "계정 연결하러 가기"}
+                </button>
+              }
+            />
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {visibleCampaigns.map((c) => <CampaignRow key={c.id} c={c} onClick={() => goCampaignDetail(c.id)} />)}
+            </div>
+          )}
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-          <HintsCard onCreate={goCreate} />
-          <ActivityCard />
+          <HintsCard campaigns={campaigns} onCreate={goCreate} />
+          <ActivityCard campaigns={campaigns} />
         </div>
       </div>
     </div>
   );
 }
 
-function CampaignRow({ c, onClick }: { c: MockCampaign; onClick: () => void }) {
+function CampaignRow({ c, onClick }: { c: CampaignSummary; onClick: () => void }) {
+  const { daysLine } = campaignDateInfo(c.startDate, c.endDate, c.status);
   return (
     <button
       onClick={onClick}
       type="button"
       style={{
         display: "grid",
-        gridTemplateColumns: "1fr 88px 88px 96px 100px 80px",
+        gridTemplateColumns: "1fr 88px 88px 88px 100px 110px",
         alignItems: "center",
         gap: 12,
         padding: "14px 14px",
@@ -180,14 +204,14 @@ function CampaignRow({ c, onClick }: { c: MockCampaign; onClick: () => void }) {
           <StatusChip status={c.status} />
           <span style={{ font: "500 11.5px/1 var(--w-font-mono)", color: "var(--w-fg-alternative)" }}>{c.id.slice(-10)}</span>
         </div>
-        <div style={{ font: "600 14.5px/1.4 var(--w-font-sans)", color: "var(--w-fg-strong)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.name}</div>
-        <div style={{ font: "500 12px/1 var(--w-font-sans)", color: "var(--w-fg-neutral)", marginTop: 4 }}>{c.days}</div>
+        <div style={{ font: "600 14.5px/1.4 var(--w-font-sans)", color: "var(--w-fg-strong)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.headline}</div>
+        <div style={{ font: "500 12px/1 var(--w-font-sans)", color: "var(--w-fg-neutral)", marginTop: 4 }}>{daysLine}</div>
       </div>
       <Metric label="노출" value={c.impressions ? fmt(c.impressions) : "—"} />
       <Metric label="클릭" value={c.clicks ? fmt(c.clicks) : "—"} />
       <Metric label="CTR" value={c.ctr ? c.ctr.toFixed(2) + "%" : "—"} />
       <Metric label="지출" value={c.spend ? fmtKRW(c.spend) : "—"} />
-      <Sparkline data={c.trend} color={c.status === "paused" ? "var(--w-status-cautionary)" : "var(--w-primary-normal)"} fill />
+      <Metric label="일일예산" value={c.dailyBudget != null ? fmtKRW(c.dailyBudget) : "—"} />
     </button>
   );
 }
@@ -201,34 +225,111 @@ function Metric({ label, value }: { label: string; value: string }) {
   );
 }
 
-function ActivityCard() {
-  const items = [
-    { text: "여름 시즌 한정 캠페인이 게재되기 시작했어요", time: "12분 전", icon: "megaphone", color: "var(--w-primary-normal)" },
-    { text: "콜드브루 캠페인 CTR이 2.14%로 올라갔어요", time: "1시간 전", icon: "trend-up", color: "var(--w-status-positive)" },
-    { text: "에너지 패키지 캠페인이 일시정지됐어요", time: "어제", icon: "pause", color: "var(--w-status-cautionary)" },
-    { text: "어버이날 특별 패키지 소재 3건이 생성됐어요", time: "2일 전", icon: "sparkles", color: "var(--w-accent-violet)" },
-  ] as const;
+type ActivityItem = { text: string; ts: number; icon: IconName; color: string };
+
+function startTs(startDate: string | null): number | null {
+  if (!startDate) return null;
+  const ts = new Date(`${startDate}T00:00:00+09:00`).getTime();
+  return Number.isFinite(ts) ? ts : null;
+}
+
+function buildActivityItems(campaigns: CampaignSummary[]): ActivityItem[] {
+  const items: ActivityItem[] = [];
+  for (const c of campaigns) {
+    const ts = startTs(c.startDate);
+    if (ts == null) continue;
+    switch (c.status) {
+      case "live":
+        items.push(
+          c.impressions >= 1000 && c.ctr >= 2
+            ? { text: `${c.headline} 캠페인 CTR이 ${c.ctr.toFixed(2)}%로 호조예요`, ts, icon: "trend-up", color: "var(--w-status-positive)" }
+            : { text: `${c.headline} 캠페인이 게재되고 있어요`, ts, icon: "megaphone", color: "var(--w-primary-normal)" },
+        );
+        break;
+      case "paused":
+        items.push({ text: `${c.headline} 캠페인이 일시정지됐어요`, ts, icon: "pause", color: "var(--w-status-cautionary)" });
+        break;
+      case "ended":
+        items.push({ text: `${c.headline} 캠페인이 종료됐어요`, ts, icon: "check", color: "var(--w-fg-alternative)" });
+        break;
+      case "review":
+        items.push({ text: `${c.headline} 캠페인이 Meta 검토 중이에요`, ts, icon: "clock", color: "var(--w-accent-violet)" });
+        break;
+      case "issue":
+        items.push({ text: `${c.headline} 캠페인에 문제가 있어요`, ts, icon: "warn", color: "var(--w-status-cautionary)" });
+        break;
+    }
+  }
+  items.sort((a, b) => b.ts - a.ts);
+  return items.slice(0, 4);
+}
+
+function ActivityCard({ campaigns }: { campaigns: CampaignSummary[] }) {
+  const items = useMemo(() => buildActivityItems(campaigns), [campaigns]);
   return (
     <div className="card">
       <h2 className="section-title" style={{ marginBottom: 14 }}>최근 활동</h2>
-      <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-        {items.map((it, i) => (
-          <div key={i} style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
-            <div style={{ width: 28, height: 28, borderRadius: 8, background: "var(--w-bg-alternative)", color: it.color, display: "grid", placeItems: "center", flex: "0 0 auto" }}>
-              <Icon name={it.icon} size={14} />
+      {items.length === 0 ? (
+        <div style={{ font: "500 13px/1.5 var(--w-font-sans)", color: "var(--w-fg-neutral)" }}>
+          아직 활동이 없어요. 첫 캠페인을 만들면 여기 표시돼요.
+        </div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          {items.map((it, i) => (
+            <div key={i} style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
+              <div style={{ width: 28, height: 28, borderRadius: 8, background: "var(--w-bg-alternative)", color: it.color, display: "grid", placeItems: "center", flex: "0 0 auto" }}>
+                <Icon name={it.icon} size={14} />
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ font: "500 13px/1.45 var(--w-font-sans)", color: "var(--w-fg-normal)" }}>{it.text}</div>
+                <div style={{ font: "500 11.5px/1 var(--w-font-sans)", color: "var(--w-fg-alternative)", marginTop: 4 }}>{timeAgo(it.ts)}</div>
+              </div>
             </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ font: "500 13px/1.45 var(--w-font-sans)", color: "var(--w-fg-normal)" }}>{it.text}</div>
-              <div style={{ font: "500 11.5px/1 var(--w-font-sans)", color: "var(--w-fg-alternative)", marginTop: 4 }}>{it.time}</div>
-            </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
 
-function HintsCard({ onCreate }: { onCreate: () => void }) {
+type Hint = { title: ReactNode; desc: string; cta: string };
+const MIN_HINT_IMPRESSIONS = 1000;
+const LOW_HINT_CTR = 0.8;
+
+function deriveHint(campaigns: CampaignSummary[]): Hint {
+  if (campaigns.length === 0) {
+    return {
+      title: <>첫 광고를 만들면 AI가 다음 광고를 위한 제안을 시작해요.</>,
+      desc: "광고 성과가 쌓이면 가장 반응 좋은 소재·타겟·시간대를 분석해 다음 광고에 반영해드릴게요.",
+      cta: "첫 광고 만들기",
+    };
+  }
+  const ready = campaigns.filter((c) => c.impressions >= MIN_HINT_IMPRESSIONS);
+  if (ready.length === 0) {
+    const totalImpr = campaigns.reduce((s, c) => s + c.impressions, 0);
+    return {
+      title: <>데이터를 모으는 중 — 누적 노출 <span style={{ color: "var(--w-primary-press)" }}>{fmt(totalImpr)}회</span></>,
+      desc: `광고당 노출이 ${fmt(MIN_HINT_IMPRESSIONS)}회를 넘으면 어떤 소재·타겟이 잘 통하는지 분석해드릴 수 있어요.`,
+      cta: "광고 추가로 만들기",
+    };
+  }
+  const best = ready.reduce((a, b) => (b.ctr > a.ctr ? b : a));
+  if (best.ctr < LOW_HINT_CTR) {
+    return {
+      title: <>최근 광고가 평균보다 클릭이 적어요 — 가장 높은 CTR <span style={{ color: "var(--w-primary-press)" }}>{best.ctr.toFixed(2)}%</span></>,
+      desc: "트래픽 광고 평균(1~2%) 아래예요. 새 소재나 더 좁은 타겟으로 한 번 더 시도해보세요.",
+      cta: "새 광고 만들기",
+    };
+  }
+  return {
+    title: <><span style={{ color: "var(--w-primary-press)" }}>{best.headline}</span> 캠페인이 CTR {best.ctr.toFixed(2)}%로 가장 반응이 좋아요.</>,
+    desc: "비슷한 소재·타겟으로 다음 광고를 만들면 AI가 자동으로 이 성공 패턴을 반영해드릴게요.",
+    cta: "다음 광고 만들기",
+  };
+}
+
+function HintsCard({ campaigns, onCreate }: { campaigns: CampaignSummary[]; onCreate: () => void }) {
+  const hint = useMemo(() => deriveHint(campaigns), [campaigns]);
   return (
     <div className="card" style={{ background: "linear-gradient(135deg, rgba(0,102,255,0.04), rgba(101,65,242,0.06))", borderColor: "transparent" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
@@ -236,13 +337,13 @@ function HintsCard({ onCreate }: { onCreate: () => void }) {
         <span className="w-overline" style={{ color: "var(--w-accent-violet)" }}>AI 제안</span>
       </div>
       <div style={{ font: "600 15px/1.4 var(--w-font-sans)", color: "var(--w-fg-strong)", letterSpacing: "-0.008em" }}>
-        지난주 성과를 보면 <span style={{ color: "var(--w-primary-press)" }}>20–30대 여성</span> 타겟이 가장 반응이 좋았어요.
+        {hint.title}
       </div>
       <p style={{ font: "500 13px/1.6 var(--w-font-sans)", color: "var(--w-fg-neutral)", margin: "10px 0 16px" }}>
-        다음 광고를 만들 때 AI가 자동으로 이 정보를 반영해 카피와 타겟팅을 추천할게요.
+        {hint.desc}
       </p>
       <button className="btn btn--inverse btn--sm" type="button" onClick={onCreate}>
-        <Icon name="sparkles" size={14} /> 다음 광고 만들기
+        <Icon name="sparkles" size={14} /> {hint.cta}
       </button>
     </div>
   );

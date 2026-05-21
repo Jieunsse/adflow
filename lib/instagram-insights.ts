@@ -20,7 +20,7 @@ export type IgAccountInsights = {
   mock: boolean
 }
 
-const MOCK: IgAccountInsights = {
+export const IG_MOCK_GOOD: IgAccountInsights = {
   followers: 12400,
   reach: 45200,
   profileViews: 1830,
@@ -28,11 +28,27 @@ const MOCK: IgAccountInsights = {
   igUsername: "brand_account",
   mock: true,
   posts: [
-    { id: "m1", mediaUrl: "", caption: "새로운 시즌 컬렉션 출시! ✨", likeCount: 847, commentCount: 63, savedCount: 124, timestamp: "2026-05-10T09:00:00Z" },
-    { id: "m2", mediaUrl: "", caption: "고객 인터뷰 — 브랜드를 선택한 이유", likeCount: 612, commentCount: 41, savedCount: 89, timestamp: "2026-05-07T11:30:00Z" },
-    { id: "m3", mediaUrl: "", caption: "제품 뒷이야기 🎬", likeCount: 1024, commentCount: 78, savedCount: 201, timestamp: "2026-05-03T14:00:00Z" },
-    { id: "m4", mediaUrl: "", caption: "주말 이벤트 안내", likeCount: 398, commentCount: 29, savedCount: 55, timestamp: "2026-04-28T10:00:00Z" },
-    { id: "m5", mediaUrl: "", caption: "팔로워 Q&A 정리", likeCount: 723, commentCount: 112, savedCount: 167, timestamp: "2026-04-22T13:00:00Z" },
+    { id: "ig1", mediaUrl: "", caption: "새로운 시즌 컬렉션 출시! ✨", likeCount: 847, commentCount: 63, savedCount: 124, timestamp: "2026-05-10T09:00:00Z" },
+    { id: "ig2", mediaUrl: "", caption: "고객 인터뷰 — 브랜드를 선택한 이유", likeCount: 612, commentCount: 41, savedCount: 89, timestamp: "2026-05-07T11:30:00Z" },
+    { id: "ig3", mediaUrl: "", caption: "제품 뒷이야기 🎬", likeCount: 1024, commentCount: 78, savedCount: 201, timestamp: "2026-05-03T14:00:00Z" },
+    { id: "ig4", mediaUrl: "", caption: "주말 이벤트 안내", likeCount: 398, commentCount: 29, savedCount: 55, timestamp: "2026-04-28T10:00:00Z" },
+    { id: "ig5", mediaUrl: "", caption: "팔로워 Q&A 정리", likeCount: 723, commentCount: 112, savedCount: 167, timestamp: "2026-04-22T13:00:00Z" },
+  ],
+}
+
+export const IG_MOCK_POOR: IgAccountInsights = {
+  followers: 3200,
+  reach: 8100,
+  profileViews: 290,
+  engagementRate: 0.6,
+  igUsername: "brand_account",
+  mock: true,
+  posts: [
+    { id: "ip1", mediaUrl: "", caption: "신제품 안내", likeCount: 28, commentCount: 2, savedCount: 3, timestamp: "2026-05-10T09:00:00Z" },
+    { id: "ip2", mediaUrl: "", caption: "이번 주 소식", likeCount: 19, commentCount: 1, savedCount: 1, timestamp: "2026-05-07T11:30:00Z" },
+    { id: "ip3", mediaUrl: "", caption: "할인 이벤트", likeCount: 34, commentCount: 3, savedCount: 4, timestamp: "2026-05-03T14:00:00Z" },
+    { id: "ip4", mediaUrl: "", caption: "브랜드 소개", likeCount: 12, commentCount: 0, savedCount: 2, timestamp: "2026-04-28T10:00:00Z" },
+    { id: "ip5", mediaUrl: "", caption: "5월 프로모션", likeCount: 21, commentCount: 1, savedCount: 1, timestamp: "2026-04-22T13:00:00Z" },
   ],
 }
 
@@ -56,24 +72,81 @@ async function getIgUserId(pageId: string, pageToken: string): Promise<string | 
   }
 }
 
+export type IgInsightsDebug = {
+  pageId: string
+  hasUserToken: boolean
+  pageTokenObtained: boolean
+  igUserId: string | null
+  tokenScopes?: string[]
+  tokenIsValid?: boolean
+  tokenAppId?: string
+  tokenUserId?: string
+  tokenExpiresAt?: number
+  tokenDebugError?: string
+  accountStatus?: number
+  accountBody?: unknown
+  insightsStatus?: number
+  insightsBody?: unknown
+  mediaStatus?: number
+  mediaBody?: unknown
+  caught?: string
+}
+
+export async function debugInstagramInsights(
+  pageId: string | undefined,
+  userToken: string | undefined,
+  igUserIdHint?: string,
+): Promise<IgInsightsDebug> {
+  const debug: IgInsightsDebug = {
+    pageId: pageId ?? "(empty)",
+    hasUserToken: !!userToken,
+    pageTokenObtained: false,
+    igUserId: null,
+  }
+  if (!pageId || !userToken) return debug
+  try {
+    const pageToken = await getPageToken(pageId, userToken)
+    debug.pageTokenObtained = !!pageToken
+    if (!pageToken) return debug
+    const igUserId = igUserIdHint || (await getIgUserId(pageId, pageToken))
+    debug.igUserId = igUserId
+    if (!igUserId) return debug
+    const accountRes = await fetch(`${GRAPH}/${igUserId}?fields=followers_count,username&access_token=${pageToken}`)
+    debug.accountStatus = accountRes.status
+    debug.accountBody = await accountRes.json()
+    const insightsRes = await fetch(`${GRAPH}/${igUserId}/insights?metric=reach,profile_views&period=days_28&access_token=${pageToken}`)
+    debug.insightsStatus = insightsRes.status
+    debug.insightsBody = await insightsRes.json()
+    const mediaRes = await fetch(`${GRAPH}/${igUserId}/media?fields=id,caption,media_url,thumbnail_url,like_count,comments_count,timestamp&limit=5&access_token=${pageToken}`)
+    debug.mediaStatus = mediaRes.status
+    debug.mediaBody = await mediaRes.json()
+  } catch (e) {
+    debug.caught = e instanceof Error ? e.message : String(e)
+  }
+  return debug
+}
+
 export async function getInstagramInsights(
   pageId: string | undefined,
   userToken: string | undefined,
   igUserIdHint?: string,
 ): Promise<IgAccountInsights> {
-  if (!pageId || !userToken) return MOCK
+  if (!pageId || !userToken) return IG_MOCK_GOOD
   try {
     const pageToken = await getPageToken(pageId, userToken)
-    if (!pageToken) return MOCK
+    if (!pageToken) return IG_MOCK_GOOD
 
     const igUserId = igUserIdHint || (await getIgUserId(pageId, pageToken))
-    if (!igUserId) return MOCK
+    if (!igUserId) return IG_MOCK_GOOD
 
     const [accountRes, insightsRes, mediaRes] = await Promise.all([
       fetch(`${GRAPH}/${igUserId}?fields=followers_count,username&access_token=${pageToken}`),
       fetch(`${GRAPH}/${igUserId}/insights?metric=reach,profile_views&period=days_28&access_token=${pageToken}`),
       fetch(`${GRAPH}/${igUserId}/media?fields=id,caption,media_url,thumbnail_url,like_count,comments_count,timestamp&limit=5&access_token=${pageToken}`),
     ])
+
+    // account 가 실패하면 IG 계정 식별 자체가 안 된 거라 mock 으로 떨어뜨림. media/insights 만 실패는 부분 데이터 유지 (followers·username 은 실데이터).
+    if (!accountRes.ok) return IG_MOCK_GOOD
 
     const account = await accountRes.json() as { followers_count?: number; username?: string }
     const insightsData = await insightsRes.json() as {
@@ -107,6 +180,6 @@ export async function getInstagramInsights(
 
     return { followers, reach, profileViews, engagementRate, igUsername: account.username, posts, mock: false }
   } catch {
-    return MOCK
+    return IG_MOCK_GOOD
   }
 }

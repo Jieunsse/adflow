@@ -1,15 +1,26 @@
-/* ── Instagram 오가닉 최적화 ─────────────────────────────────────── */
+/* ── 채널 오가닉 최적화 (Instagram · Facebook) ──────────────────── */
+
+export type ChannelKind = "instagram" | "facebook";
+
+export type ChannelOptInput = {
+  followers: number;
+  engagementRate: number;       // %
+  reach?: number;               // IG 전용 (28일 오가닉 도달)
+  postCount28d?: number;        // FB 전용 (28일 게시물 수)
+  posts: Array<{ engagement: number }>; // 채널 무관 합산 (IG=좋아요+댓글+저장, FB=반응+댓글+공유)
+};
 
 export type IgOptInput = {
   followers: number;
-  reach: number;        // 28일 오가닉 도달
-  engagementRate: number; // %
+  reach: number;
+  engagementRate: number;
   posts: Array<{ likeCount: number; commentCount: number; savedCount: number }>;
 };
 
-const LOW_IG_ENGAGEMENT = 1.0;    // 1% 미만 = 부진
-const GOOD_IG_ENGAGEMENT = 3.0;   // 3% 이상 = 우수
-const LOW_REACH_RATE = 30;        // 도달/팔로워 30% 미만 = 낮음
+const LOW_ENGAGEMENT = 1.0;   // 1% 미만 = 부진
+const GOOD_ENGAGEMENT = 3.0;  // 3% 이상 = 우수
+const LOW_REACH_RATE = 30;    // IG: 도달/팔로워 30% 미만 = 낮음
+const LOW_FB_POST_FREQ = 4;   // FB: 28일 게시물 4개 미만 = 주 1회 미만
 const LOW_FOLLOWER_COUNT = 1000;
 
 function fmtK(n: number): string {
@@ -18,95 +29,145 @@ function fmtK(n: number): string {
   return String(n);
 }
 
-export function suggestIgOptimizations(input: IgOptInput): Suggestion[] {
-  const { followers, reach, engagementRate, posts } = input;
+export function suggestChannelOptimizations(
+  channel: ChannelKind,
+  input: ChannelOptInput,
+): Suggestion[] {
+  const { followers, engagementRate, posts } = input;
   const out: Suggestion[] = [];
 
-  // 1. 인게이지먼트율
-  if (engagementRate < LOW_IG_ENGAGEMENT) {
+  // 1. 공통 — 인게이지먼트율
+  if (engagementRate < LOW_ENGAGEMENT) {
     out.push({
       kind: "note",
       severity: "warn",
       title: "인게이지먼트율이 낮아요",
-      detail: [
-        `현재 ${engagementRate.toFixed(1)}%로 비즈니스 계정 평균(1~3%) 아래예요.`,
-        `정보성(팁·인포그래픽), 참여 유도(질문·투표), 뒷이야기 콘텐츠가 반응을 높이는 데 효과적이에요.`,
-        `스토리 설문·퀴즈를 활용하면 알고리즘 노출도 함께 높아져요.`,
-      ],
+      detail: channel === "instagram"
+        ? [
+            `현재 ${engagementRate.toFixed(1)}%로 비즈니스 계정 평균(1~3%) 아래예요.`,
+            `정보성(팁·인포그래픽), 참여 유도(질문·투표), 뒷이야기 콘텐츠가 반응을 높이는 데 효과적이에요.`,
+            `스토리 설문·퀴즈를 활용하면 알고리즘 노출도 함께 높아져요.`,
+          ]
+        : [
+            `현재 ${engagementRate.toFixed(1)}%로 페이지 평균(1~3%) 아래예요.`,
+            `짧은 영상(60초 이하)·라이브가 페이지 알고리즘 노출을 높이는 데 효과적이에요.`,
+            `질문 던지기·투표 게시물로 댓글을 유도하면 자연 도달이 함께 올라가요.`,
+          ],
     });
-  } else if (engagementRate >= GOOD_IG_ENGAGEMENT) {
+  } else if (engagementRate >= GOOD_ENGAGEMENT) {
     out.push({
       kind: "note",
       severity: "info",
       title: "인게이지먼트율이 좋아요",
-      detail: [
-        `${engagementRate.toFixed(1)}%로 평균(1~3%)보다 높아요.`,
-        `성과 좋은 게시물의 포맷·주제·시간대를 파악해 비슷한 콘텐츠를 더 올려보세요.`,
-        `협업 게시물(Collab post)이나 릴스 확장을 고려해볼 좋은 시점이에요.`,
-      ],
+      detail: channel === "instagram"
+        ? [
+            `${engagementRate.toFixed(1)}%로 평균(1~3%)보다 높아요.`,
+            `성과 좋은 게시물의 포맷·주제·시간대를 파악해 비슷한 콘텐츠를 더 올려보세요.`,
+            `협업 게시물(Collab post)이나 릴스 확장을 고려해볼 좋은 시점이에요.`,
+          ]
+        : [
+            `${engagementRate.toFixed(1)}%로 평균(1~3%)보다 높아요.`,
+            `성과 좋은 게시물의 포맷·주제·시간대를 파악해 비슷한 콘텐츠를 더 올려보세요.`,
+            `라이브·짧은 영상을 시리즈로 늘리면 도달이 안정적으로 커져요.`,
+          ],
     });
   } else {
     out.push({
       kind: "note",
       severity: "info",
       title: "인게이지먼트율이 안정적이에요",
-      detail: [
-        `${engagementRate.toFixed(1)}%로 평균 범위 안에 있어요.`,
-        `저장 수가 높은 게시물이 오가닉 도달에 가장 효과적이에요 — '저장하고 싶은' 정보성 콘텐츠를 늘려보세요.`,
-      ],
+      detail: channel === "instagram"
+        ? [
+            `${engagementRate.toFixed(1)}%로 평균 범위 안에 있어요.`,
+            `저장 수가 높은 게시물이 오가닉 도달에 가장 효과적이에요 — '저장하고 싶은' 정보성 콘텐츠를 늘려보세요.`,
+          ]
+        : [
+            `${engagementRate.toFixed(1)}%로 평균 범위 안에 있어요.`,
+            `공유 수가 높은 게시물이 자연 도달을 키워요 — '공유하고 싶은' 정보성·감정적 콘텐츠를 늘려보세요.`,
+          ],
     });
   }
 
-  // 2. 도달률 (reach / followers)
-  if (followers > 0) {
-    const reachRate = (reach / followers) * 100;
-    if (reachRate < LOW_REACH_RATE) {
+  // 2. 채널 전용 — IG: 도달률 / FB: 게시 빈도
+  if (channel === "instagram") {
+    const reach = input.reach ?? 0;
+    if (followers > 0 && reach > 0) {
+      const reachRate = (reach / followers) * 100;
+      if (reachRate < LOW_REACH_RATE) {
+        out.push({
+          kind: "note",
+          severity: "warn",
+          title: "오가닉 도달이 팔로워 대비 낮아요",
+          detail: [
+            `28일 도달(${fmtK(reach)})이 팔로워(${fmtK(followers)}) 대비 ${reachRate.toFixed(0)}%예요.`,
+            `팔로워 활동이 많은 시간대(보통 저녁 7~9시)에 맞춰 게시하고, 인기 해시태그 3~5개를 활용해보세요.`,
+            `릴스는 피드보다 알고리즘 노출이 높아요 — 기존 콘텐츠를 릴스로 리패키징해보세요.`,
+          ],
+        });
+      }
+    }
+  } else {
+    const postCount = input.postCount28d ?? 0;
+    if (postCount < LOW_FB_POST_FREQ) {
       out.push({
         kind: "note",
         severity: "warn",
-        title: "오가닉 도달이 팔로워 대비 낮아요",
+        title: "게시 빈도가 낮아요",
         detail: [
-          `28일 도달(${fmtK(reach)})이 팔로워(${fmtK(followers)}) 대비 ${reachRate.toFixed(0)}%예요.`,
-          `팔로워 활동이 많은 시간대(보통 저녁 7~9시)에 맞춰 게시하고, 인기 해시태그 3~5개를 활용해보세요.`,
-          `릴스는 피드보다 알고리즘 노출이 높아요 — 기존 콘텐츠를 릴스로 리패키징해보세요.`,
+          `최근 28일 게시물이 ${postCount}개로 주 1회 미만이에요.`,
+          `페이지 알고리즘은 꾸준한 게시 활동을 선호해요 — 주 2~3회 페이스를 권해요.`,
+          `짧은 영상·라이브·이미지 카드 등 포맷을 섞으면 같은 주제도 다르게 보여줄 수 있어요.`,
         ],
       });
     }
   }
 
-  // 3. 최고 성과 게시물 인사이트
+  // 3. 공통 — 최고 성과 게시물 힌트
   if (posts.length > 0) {
-    const best = [...posts].sort(
-      (a, b) => (b.likeCount + b.commentCount + b.savedCount) - (a.likeCount + a.commentCount + a.savedCount),
-    )[0];
-    if (best.likeCount + best.commentCount + best.savedCount > 0) {
+    const best = [...posts].sort((a, b) => b.engagement - a.engagement)[0];
+    if (best.engagement > 0) {
       out.push({
         kind: "note",
         severity: "info",
         title: "최고 성과 게시물에서 힌트를 얻어보세요",
         detail: [
-          `가장 반응이 좋은 게시물: 좋아요 ${fmtK(best.likeCount)} · 댓글 ${fmtK(best.commentCount)} · 저장 ${fmtK(best.savedCount)}.`,
+          `가장 반응이 좋은 게시물의 총 반응 ${fmtK(best.engagement)}회.`,
           `이 게시물의 포맷·주제·표현 방식을 분석해 비슷한 콘텐츠를 기획해보세요.`,
         ],
       });
     }
   }
 
-  // 4. 초기 성장 단계 조언
+  // 4. 공통 — 초기 성장 단계 조언
   if (followers < LOW_FOLLOWER_COUNT) {
     out.push({
       kind: "note",
       severity: "info",
       title: "팔로워 성장이 중요한 단계예요",
-      detail: [
-        `팔로워 ${fmtK(followers)}명으로 초기 성장 단계예요.`,
-        `광고 집행과 오가닉 콘텐츠를 병행하면 팔로워 확보 속도를 높일 수 있어요.`,
-        `프로필 바이오와 하이라이트를 정리해 첫 방문자의 팔로우 전환율을 높여보세요.`,
-      ],
+      detail: channel === "instagram"
+        ? [
+            `팔로워 ${fmtK(followers)}명으로 초기 성장 단계예요.`,
+            `광고 집행과 오가닉 콘텐츠를 병행하면 팔로워 확보 속도를 높일 수 있어요.`,
+            `프로필 바이오와 하이라이트를 정리해 첫 방문자의 팔로우 전환율을 높여보세요.`,
+          ]
+        : [
+            `팔로워 ${fmtK(followers)}명으로 초기 성장 단계예요.`,
+            `광고 집행과 오가닉 콘텐츠를 병행하면 팔로워 확보 속도를 높일 수 있어요.`,
+            `페이지 CTA 버튼(메시지·문의·예약)이 명확히 설정돼 있는지 점검해보세요.`,
+          ],
     });
   }
 
   return out;
+}
+
+export function suggestIgOptimizations(input: IgOptInput): Suggestion[] {
+  return suggestChannelOptimizations("instagram", {
+    followers: input.followers,
+    engagementRate: input.engagementRate,
+    reach: input.reach,
+    posts: input.posts.map(p => ({ engagement: p.likeCount + p.commentCount + p.savedCount })),
+  });
 }
 
 /* ── 광고 성과 최적화 ─────────────────────────────────────────────── */
@@ -126,6 +187,10 @@ export type OptimizationInsights = {
 };
 
 export type OptimizationObjective = "OUTCOME_TRAFFIC" | "OUTCOME_AWARENESS" | "OUTCOME_ENGAGEMENT" | "OUTCOME_LEADS" | "OUTCOME_SALES" | "OUTCOME_APP_PROMOTION";
+
+// PRD §13 — 신규 4 goal 은 별도 룰 없음. 일반 안내만 반환.
+// 기존 3 goal(awareness/traffic/engagement_post) 은 Meta objective 단위 룰을 그대로 사용.
+const NEW_GOAL_IDS = new Set(["traffic_page_visit", "engagement_page_likes", "engagement_messages", "leads_call"]);
 
 export type Suggestion =
   | {
@@ -173,8 +238,23 @@ export function suggestOptimizations(
   ins: OptimizationInsights,
   currentDailyBudget: number,
   objective: OptimizationObjective = "OUTCOME_TRAFFIC",
+  goalId?: string,
 ): Suggestion[] {
   const out: Suggestion[] = [];
+
+  // PRD §13 — 신규 4 goal 은 KPI 가 달라서 기존 룰 잘못 적용 위험. 데이터 누적 안내만 반환.
+  if (goalId && NEW_GOAL_IDS.has(goalId)) {
+    out.push({
+      kind: "note",
+      severity: "info",
+      title: "데이터를 모으는 중이에요",
+      detail: [
+        `이 광고 목표(${goalId})의 자동 최적화 룰은 다음 업데이트에서 추가돼요.`,
+        `우선은 KPI 카드의 추세와 일일 표를 보고 직접 조정해주세요.`,
+      ],
+    });
+    return out;
+  }
 
   if (ins.impressions < MIN_IMPRESSIONS_FOR_JUDGEMENT) {
     out.push({
@@ -368,7 +448,12 @@ export function assessAutomationReadiness(
   ins: OptimizationInsights,
   daysOfData: number,
   objective: OptimizationObjective = "OUTCOME_TRAFFIC",
+  goalId?: string,
 ): AutomationReadiness {
+  // PRD §13 — 신규 goal 의 자동화 룰은 미정. 사용자 직접 판단 권유.
+  if (goalId && NEW_GOAL_IDS.has(goalId)) {
+    return { ready: false, reason: "이 광고 목표의 자동 판단 룰은 곧 추가돼요. 우선은 KPI 추세를 보고 직접 조정해주세요." };
+  }
   const gaps: string[] = [];
   if (ins.impressions < AUTOMATION_MIN_IMPRESSIONS) {
     gaps.push(`노출 ${ins.impressions.toLocaleString("ko-KR")}회 (목표 ${AUTOMATION_MIN_IMPRESSIONS.toLocaleString("ko-KR")}회)`);

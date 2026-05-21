@@ -14,7 +14,7 @@ type ApprovalsFilter = "all" | "review" | "issue";
 const FILTER_LABEL: Record<ApprovalsFilter, string> = {
   all: "전체",
   review: "검토 중",
-  issue: "이슈 발생",
+  issue: "이슈",
 };
 
 function sortPending(a: CampaignSummary, b: CampaignSummary): number {
@@ -195,7 +195,7 @@ function ReasonCell({ status, reason, onOpen }: { status: string; reason: Campai
 function StatusChip({ status }: { status: string }) {
   const def: Record<string, { label: string; cls: string }> = {
     review: { label: "검토 중", cls: "chip--review" },
-    issue: { label: "이슈 발생", cls: "chip--issue" },
+    issue: { label: "이슈", cls: "chip--issue" },
   };
   const d = def[status] ?? { label: status, cls: "chip--neutral" };
   return (

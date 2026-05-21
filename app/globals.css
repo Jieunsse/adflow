@@ -514,7 +514,7 @@ body::before {
   white-space: nowrap;
 }
 
-.chip:hover {
+.chip:not([class*="chip--"]):hover {
   color: var(--text-primary);
   border-color: var(--text-muted);
 }

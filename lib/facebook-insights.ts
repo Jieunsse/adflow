@@ -30,11 +30,11 @@ export const FB_MOCK_GOOD: FbPageInsights = {
   pageUsername: "brand.a",
   mock: true,
   posts: [
-    { id: "fg1", mediaUrl: "", caption: "이번 주말 한정 프로모션 시작!", reactionsCount: 218, commentsCount: 34, sharesCount: 27, timestamp: "2026-05-10T09:00:00Z" },
-    { id: "fg2", mediaUrl: "", caption: "오프라인 매장 라이브 — 신제품 첫 공개", reactionsCount: 412, commentsCount: 89, sharesCount: 56, timestamp: "2026-05-07T11:30:00Z" },
-    { id: "fg3", mediaUrl: "", caption: "고객 후기 모음 (5월)", reactionsCount: 167, commentsCount: 23, sharesCount: 19, timestamp: "2026-05-03T14:00:00Z" },
-    { id: "fg4", mediaUrl: "", caption: "브랜드 스토리 — 창업 비하인드", reactionsCount: 298, commentsCount: 47, sharesCount: 38, timestamp: "2026-04-28T10:00:00Z" },
-    { id: "fg5", mediaUrl: "", caption: "팔로워 Q&A 라이브 다시보기", reactionsCount: 184, commentsCount: 52, sharesCount: 21, timestamp: "2026-04-22T13:00:00Z" },
+    { id: "fg1", mediaUrl: "https://picsum.photos/seed/fg1/200/200", caption: "이번 주말 한정 프로모션 시작!", reactionsCount: 218, commentsCount: 34, sharesCount: 27, timestamp: "2026-05-10T09:00:00Z" },
+    { id: "fg2", mediaUrl: "https://picsum.photos/seed/fg2/200/200", caption: "오프라인 매장 라이브 — 신제품 첫 공개", reactionsCount: 412, commentsCount: 89, sharesCount: 56, timestamp: "2026-05-07T11:30:00Z" },
+    { id: "fg3", mediaUrl: "https://picsum.photos/seed/fg3/200/200", caption: "고객 후기 모음 (5월)", reactionsCount: 167, commentsCount: 23, sharesCount: 19, timestamp: "2026-05-03T14:00:00Z" },
+    { id: "fg4", mediaUrl: "https://picsum.photos/seed/fg4/200/200", caption: "브랜드 스토리 — 창업 비하인드", reactionsCount: 298, commentsCount: 47, sharesCount: 38, timestamp: "2026-04-28T10:00:00Z" },
+    { id: "fg5", mediaUrl: "https://picsum.photos/seed/fg5/200/200", caption: "팔로워 Q&A 라이브 다시보기", reactionsCount: 184, commentsCount: 52, sharesCount: 21, timestamp: "2026-04-22T13:00:00Z" },
   ],
 }
 
@@ -47,11 +47,11 @@ export const FB_MOCK_POOR: FbPageInsights = {
   pageUsername: "brand.a",
   mock: true,
   posts: [
-    { id: "fp1", mediaUrl: "", caption: "신제품 안내", reactionsCount: 14, commentsCount: 1, sharesCount: 0, timestamp: "2026-05-10T09:00:00Z" },
-    { id: "fp2", mediaUrl: "", caption: "공지사항", reactionsCount: 8, commentsCount: 0, sharesCount: 0, timestamp: "2026-05-07T11:30:00Z" },
-    { id: "fp3", mediaUrl: "", caption: "이벤트 안내", reactionsCount: 12, commentsCount: 2, sharesCount: 1, timestamp: "2026-05-03T14:00:00Z" },
-    { id: "fp4", mediaUrl: "", caption: "브랜드 소개", reactionsCount: 7, commentsCount: 0, sharesCount: 0, timestamp: "2026-04-28T10:00:00Z" },
-    { id: "fp5", mediaUrl: "", caption: "5월 프로모션", reactionsCount: 10, commentsCount: 1, sharesCount: 0, timestamp: "2026-04-22T13:00:00Z" },
+    { id: "fp1", mediaUrl: "https://picsum.photos/seed/fp1/200/200", caption: "신제품 안내", reactionsCount: 14, commentsCount: 1, sharesCount: 0, timestamp: "2026-05-10T09:00:00Z" },
+    { id: "fp2", mediaUrl: "https://picsum.photos/seed/fp2/200/200", caption: "공지사항", reactionsCount: 8, commentsCount: 0, sharesCount: 0, timestamp: "2026-05-07T11:30:00Z" },
+    { id: "fp3", mediaUrl: "https://picsum.photos/seed/fp3/200/200", caption: "이벤트 안내", reactionsCount: 12, commentsCount: 2, sharesCount: 1, timestamp: "2026-05-03T14:00:00Z" },
+    { id: "fp4", mediaUrl: "https://picsum.photos/seed/fp4/200/200", caption: "브랜드 소개", reactionsCount: 7, commentsCount: 0, sharesCount: 0, timestamp: "2026-04-28T10:00:00Z" },
+    { id: "fp5", mediaUrl: "https://picsum.photos/seed/fp5/200/200", caption: "5월 프로모션", reactionsCount: 10, commentsCount: 1, sharesCount: 0, timestamp: "2026-04-22T13:00:00Z" },
   ],
 }
 

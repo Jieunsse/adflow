@@ -28,11 +28,11 @@ export const IG_MOCK_GOOD: IgAccountInsights = {
   igUsername: "brand_account",
   mock: true,
   posts: [
-    { id: "ig1", mediaUrl: "", caption: "새로운 시즌 컬렉션 출시! ✨", likeCount: 847, commentCount: 63, savedCount: 124, timestamp: "2026-05-10T09:00:00Z" },
-    { id: "ig2", mediaUrl: "", caption: "고객 인터뷰 — 브랜드를 선택한 이유", likeCount: 612, commentCount: 41, savedCount: 89, timestamp: "2026-05-07T11:30:00Z" },
-    { id: "ig3", mediaUrl: "", caption: "제품 뒷이야기 🎬", likeCount: 1024, commentCount: 78, savedCount: 201, timestamp: "2026-05-03T14:00:00Z" },
-    { id: "ig4", mediaUrl: "", caption: "주말 이벤트 안내", likeCount: 398, commentCount: 29, savedCount: 55, timestamp: "2026-04-28T10:00:00Z" },
-    { id: "ig5", mediaUrl: "", caption: "팔로워 Q&A 정리", likeCount: 723, commentCount: 112, savedCount: 167, timestamp: "2026-04-22T13:00:00Z" },
+    { id: "ig1", mediaUrl: "https://picsum.photos/seed/ig1/200/200", caption: "새로운 시즌 컬렉션 출시! ✨", likeCount: 847, commentCount: 63, savedCount: 124, timestamp: "2026-05-10T09:00:00Z" },
+    { id: "ig2", mediaUrl: "https://picsum.photos/seed/ig2/200/200", caption: "고객 인터뷰 — 브랜드를 선택한 이유", likeCount: 612, commentCount: 41, savedCount: 89, timestamp: "2026-05-07T11:30:00Z" },
+    { id: "ig3", mediaUrl: "https://picsum.photos/seed/ig3/200/200", caption: "제품 뒷이야기 🎬", likeCount: 1024, commentCount: 78, savedCount: 201, timestamp: "2026-05-03T14:00:00Z" },
+    { id: "ig4", mediaUrl: "https://picsum.photos/seed/ig4/200/200", caption: "주말 이벤트 안내", likeCount: 398, commentCount: 29, savedCount: 55, timestamp: "2026-04-28T10:00:00Z" },
+    { id: "ig5", mediaUrl: "https://picsum.photos/seed/ig5/200/200", caption: "팔로워 Q&A 정리", likeCount: 723, commentCount: 112, savedCount: 167, timestamp: "2026-04-22T13:00:00Z" },
   ],
 }
 
@@ -44,11 +44,11 @@ export const IG_MOCK_POOR: IgAccountInsights = {
   igUsername: "brand_account",
   mock: true,
   posts: [
-    { id: "ip1", mediaUrl: "", caption: "신제품 안내", likeCount: 28, commentCount: 2, savedCount: 3, timestamp: "2026-05-10T09:00:00Z" },
-    { id: "ip2", mediaUrl: "", caption: "이번 주 소식", likeCount: 19, commentCount: 1, savedCount: 1, timestamp: "2026-05-07T11:30:00Z" },
-    { id: "ip3", mediaUrl: "", caption: "할인 이벤트", likeCount: 34, commentCount: 3, savedCount: 4, timestamp: "2026-05-03T14:00:00Z" },
-    { id: "ip4", mediaUrl: "", caption: "브랜드 소개", likeCount: 12, commentCount: 0, savedCount: 2, timestamp: "2026-04-28T10:00:00Z" },
-    { id: "ip5", mediaUrl: "", caption: "5월 프로모션", likeCount: 21, commentCount: 1, savedCount: 1, timestamp: "2026-04-22T13:00:00Z" },
+    { id: "ip1", mediaUrl: "https://picsum.photos/seed/ip1/200/200", caption: "신제품 안내", likeCount: 28, commentCount: 2, savedCount: 3, timestamp: "2026-05-10T09:00:00Z" },
+    { id: "ip2", mediaUrl: "https://picsum.photos/seed/ip2/200/200", caption: "이번 주 소식", likeCount: 19, commentCount: 1, savedCount: 1, timestamp: "2026-05-07T11:30:00Z" },
+    { id: "ip3", mediaUrl: "https://picsum.photos/seed/ip3/200/200", caption: "할인 이벤트", likeCount: 34, commentCount: 3, savedCount: 4, timestamp: "2026-05-03T14:00:00Z" },
+    { id: "ip4", mediaUrl: "https://picsum.photos/seed/ip4/200/200", caption: "브랜드 소개", likeCount: 12, commentCount: 0, savedCount: 2, timestamp: "2026-04-28T10:00:00Z" },
+    { id: "ip5", mediaUrl: "https://picsum.photos/seed/ip5/200/200", caption: "5월 프로모션", likeCount: 21, commentCount: 1, savedCount: 1, timestamp: "2026-04-22T13:00:00Z" },
   ],
 }
 

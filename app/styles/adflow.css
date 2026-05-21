@@ -328,14 +328,14 @@
   transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
   letter-spacing: 0.004em;
 }
-/* 인터랙티브 피커 칩 전용 hover. 상태/목표 배지(chip--issue/review/live/paused/ended/neutral/obj-*)
-   와 선택된 chip--on 은 자체 색을 보존해야 하므로 hover 회색 처리에서 제외해요. */
-.adflow .chip:not(.chip--on, .chip--issue, .chip--review, .chip--live, .chip--paused, .chip--ended, .chip--neutral, .chip--obj-traffic, .chip--obj-conversion, .chip--obj-awareness, .chip--obj-leads, .chip--obj-engagement, .chip--obj-install):hover {
+/* 인터랙티브 피커 칩 전용 hover. button 엘리먼트 칩만 대상 — span/div 배지 칩은
+   엘리먼트 타입으로 자동 제외되므로 새 variant 추가해도 목록 수정 불필요. */
+.adflow button.chip:not([class*="chip--"]):hover {
   background: rgba(112,115,124,0.12);
   border-color: var(--w-line-normal);
   color: #121212;
 }
-[data-theme="dark"] .adflow .chip:not(.chip--on, .chip--issue, .chip--review, .chip--live, .chip--paused, .chip--ended, .chip--neutral, .chip--obj-traffic, .chip--obj-conversion, .chip--obj-awareness, .chip--obj-leads, .chip--obj-engagement, .chip--obj-install):hover {
+[data-theme="dark"] .adflow button.chip:not([class*="chip--"]):hover {
   background: rgba(255,255,255,0.10);
   border-color: var(--w-line-normal);
 }

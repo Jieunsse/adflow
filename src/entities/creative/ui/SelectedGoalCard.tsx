@@ -56,14 +56,9 @@ export default function SelectedGoalCard({ onChange, changeLabel = "광고 목�
         <div style={{ font: "700 16px/1.3 var(--w-font-sans)", color: "var(--w-fg-strong)" }}>
           {goal ? goal.label : "선택 안 됨"}
         </div>
-        {goal && (
-          <div style={{ font: "500 11px/1.2 var(--w-font-mono)", color: "var(--w-fg-alternative)", marginTop: 4 }}>
-            {goal.metaObjective} · {goal.optimizationGoal}
-          </div>
-        )}
       </div>
       <button className="btn btn--ghost btn--sm" type="button" onClick={onChange}>
-        {changeLabel} <Icon name="arrow-right" size={13} />
+        {changeLabel}
       </button>
     </div>
   );

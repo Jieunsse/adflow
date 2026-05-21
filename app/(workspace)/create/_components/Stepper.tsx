@@ -4,7 +4,7 @@ import Icon from "@shared/ui/Icon";
 const STEPS = [
   { label: "01", title: "소재 만들기" },
   { label: "02", title: "광고 집행" },
-  { label: "03", title: "성과 확인" },
+  { label: "03", title: "마무리 점검" },
 ];
 
 export default function Stepper({

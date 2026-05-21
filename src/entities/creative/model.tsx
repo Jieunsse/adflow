@@ -22,6 +22,8 @@ export type CreativeState = {
   // Gemini 가 만든 raw 헤드라인 후보 3개 — STEP 02 디테일 A/B 시험의 B안 풀로 사용.
   // headline 은 그중 1개 선택 결과.
   headlineCandidates: string[] | null;
+  // Gemini 가 만든 primaryText 후보 3개 — STEP 02 카피문구 A/B 시험의 B안 풀로 사용.
+  primaryTextCandidates: string[] | null;
   // PRD-objective-aware-launch §5.2 — outcome 변경 시 직전 outcome 을 stash.
   // STEP 01 카피 stale 배너에서 사용. 새 카피 생성 시 또는 원위치 복귀 시 null 로 clear.
   previousOutcome: OutcomeChip | null;
@@ -39,6 +41,7 @@ export type CreativeAction =
   | { type: "SET_OUTCOME"; outcome: OutcomeChip | null }
   | { type: "SET_OUTCOME_HINT"; hint: string }
   | { type: "SET_HEADLINE_CANDIDATES"; candidates: string[] | null }
+  | { type: "SET_PRIMARY_TEXT_CANDIDATES"; candidates: string[] | null }
   | { type: "CLEAR_PREVIOUS_OUTCOME" }
   | { type: "RESET" };
 
@@ -55,6 +58,7 @@ export const INITIAL_CREATIVE_STATE: CreativeState = {
   outcomeHint: "",
   objective: null,
   headlineCandidates: null,
+  primaryTextCandidates: null,
   previousOutcome: null,
 };
 const INITIAL_STATE = INITIAL_CREATIVE_STATE;
@@ -79,6 +83,7 @@ function reducer(state: CreativeState, action: CreativeAction): CreativeState {
     case "SET_OUTCOME_HINT":     return { ...state, outcomeHint: action.hint };
     // 새 카피 생성 = stale 해제 — SET_HEADLINE_CANDIDATES 시점에 previousOutcome 자동 clear.
     case "SET_HEADLINE_CANDIDATES": return { ...state, headlineCandidates: action.candidates, previousOutcome: null };
+    case "SET_PRIMARY_TEXT_CANDIDATES": return { ...state, primaryTextCandidates: action.candidates };
     case "CLEAR_PREVIOUS_OUTCOME": return { ...state, previousOutcome: null };
     case "RESET":                return INITIAL_STATE;
     default:                     return state;

@@ -12,6 +12,9 @@ interface Props {
   headlines: string[] | null;
   headlineIdx: number;
   onSelectHeadline: (i: number) => void;
+  primaryTexts: [string, string, string] | null;
+  primaryTextIdx: number;
+  onSelectPrimaryText: (i: number) => void;
   primaryText: string;
   setPrimaryText: (v: string) => void;
   elapsed: number;
@@ -82,8 +85,37 @@ export default function ResultPanel(p: Props) {
             </div>
           </div>
           <div className="field" style={{ marginBottom: 18 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-              <label className="field__label">기본 텍스트</label>
+            <label className="field__label">{p.primaryTexts ? "기본 텍스트 — 1개 선택" : "기본 텍스트"}</label>
+            {p.primaryTexts && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 10 }}>
+                {p.primaryTexts.map((t, i) => (
+                  <div
+                    key={i}
+                    className={"radio-card" + (p.primaryTextIdx === i ? " radio-card--on" : "")}
+                    onClick={() => p.onSelectPrimaryText(i)}
+                    role="radio"
+                    aria-checked={p.primaryTextIdx === i}
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === " " || e.key === "Enter") {
+                        e.preventDefault();
+                        p.onSelectPrimaryText(i);
+                      }
+                    }}
+                  >
+                    <div className="radio-card__indicator" />
+                    <div style={{ flex: 1 }}>
+                      <div className="radio-card__num">VER 0{i + 1}</div>
+                      <div className="radio-card__text">{t}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 4 }}>
+              <span style={{ font: "500 11.5px/1 var(--w-font-sans)", color: "var(--w-fg-neutral)" }}>
+                {p.primaryTexts ? "선택 후 직접 편집할 수 있어요" : ""}
+              </span>
               <span style={{ font: "500 11.5px/1 var(--w-font-mono)", color: "var(--w-fg-neutral)" }}>{p.primaryText.length} / 200자</span>
             </div>
             <textarea className="textarea" value={p.primaryText} onChange={(e) => p.setPrimaryText(e.target.value)} style={{ minHeight: 120 }} />

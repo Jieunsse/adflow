@@ -17,6 +17,7 @@ const baseCreative: CreativeState = {
   outcomeHint: "",
   objective: "OUTCOME_TRAFFIC",
   headlineCandidates: null,
+  primaryTextCandidates: null,
   previousOutcome: null,
 };
 

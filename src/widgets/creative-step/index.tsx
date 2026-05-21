@@ -23,6 +23,9 @@ interface Props {
   headlines: string[] | null;
   headlineIdx: number;
   onSelectHeadline: (i: number) => void;
+  primaryTexts: [string, string, string] | null;
+  primaryTextIdx: number;
+  onSelectPrimaryText: (i: number) => void;
   primaryText: string;
   setPrimaryText: (v: string) => void;
   elapsed: number;
@@ -55,6 +58,9 @@ export default function CreativeStep(p: Props) {
         headlines={p.headlines}
         headlineIdx={p.headlineIdx}
         onSelectHeadline={p.onSelectHeadline}
+        primaryTexts={p.primaryTexts}
+        primaryTextIdx={p.primaryTextIdx}
+        onSelectPrimaryText={p.onSelectPrimaryText}
         primaryText={p.primaryText}
         setPrimaryText={p.setPrimaryText}
         elapsed={p.elapsed}

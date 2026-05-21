@@ -58,7 +58,7 @@ export default function LaunchSuccessCard({ onNext }: { onNext: () => void }) {
         ))}
       </div>
       <button className="btn btn--primary btn--block" type="button" style={{ marginTop: 14 }} onClick={onNext}>
-        성과 확인하러 가기 <Icon name="arrow-right" size={14} />
+        마무리 점검하러 가기 <Icon name="arrow-right" size={14} />
       </button>
     </div>
   );

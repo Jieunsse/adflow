@@ -20,7 +20,7 @@ import Stepper from "./_components/Stepper";
 import GoalIntro from "@widgets/goal-intro";
 import CreativeStep from "@widgets/creative-step";
 import LaunchStep from "@widgets/launch-step";
-import PerformanceStep from "@widgets/performance-step";
+import PostLaunchChecklist from "@widgets/post-launch-checklist";
 import { autoModeFromObjective } from "@features/switch-mode/objective-routing";
 
 const GRADIENTS = [
@@ -34,11 +34,11 @@ const DEMO_BRAND = "예) 20대 여성을 위한 비건 스킨케어 브랜드 '�
 const DEMO_TARGET = "타겟의 직업·나이·관심사·라이프스타일을 적어주세요";
 const DEMO_OUTCOME_HINT = "신제품 홍보 및 신제품 특별할인";
 
-const TITLES = ["AI로 소재를 만들어 봐요", "어떻게 집행할지 정해 봐요", "성과를 확인해 봐요"];
+const TITLES = ["AI로 소재를 만들어 봐요", "어떻게 집행할지 정해 봐요", "마무리 점검을 해봐요"];
 const SUBS = [
   "제품과 타겟 정보를 알려주세요. Gemini가 카피·헤드라인·타겟팅을 제안해 드려요.",
   "예산, 기간, 타겟을 확인하고 Meta에 광고를 집행하세요.",
-  "노출·클릭·CTR·지출을 한눈에 확인하고, 다음 단계를 결정하세요.",
+  "광고를 정상적으로 생성했어요. 결과를 받기 전에 최종적으로 점검해봐요.",
 ];
 
 export default function CreatePage() {
@@ -123,6 +123,8 @@ export default function CreatePage() {
   const [target, setTarget] = useSessionStorage("adflow_target", "");
   const [displayedHeadlines, setDisplayedHeadlines] = useState<string[] | null>(null);
   const [headlineIdx, setHeadlineIdx] = useState(0);
+  const [displayedPrimaryTexts, setDisplayedPrimaryTexts] = useState<[string, string, string] | null>(null);
+  const [primaryTextIdx, setPrimaryTextIdx] = useState(0);
   const [elapsed, setElapsed] = useState(0);
   const [savedId, setSavedId] = useState<string | null>(null);
   const generateMutation = useApiMutation<GenerateCreativeParams, GenerateCreativeResult>('/api/generate-creative');
@@ -183,10 +185,13 @@ export default function CreatePage() {
         onSuccess: (data) => {
           setDisplayedHeadlines(data.headlines);
           setHeadlineIdx(0);
+          setDisplayedPrimaryTexts(data.primaryTexts);
+          setPrimaryTextIdx(0);
           creative.dispatch({ type: "SET_HEADLINE", headline: data.headlines[0] });
           // PRD §5.4.2 (5) — STEP 02 디테일 A/B 시험 B안 풀로 사용. 재생성 시 후보 교체 → DetailKnobs 의 sync useEffect 가 B안 reset.
           creative.dispatch({ type: "SET_HEADLINE_CANDIDATES", candidates: data.headlines });
-          creative.dispatch({ type: "SET_PRIMARY_TEXT", primaryText: data.primaryText });
+          creative.dispatch({ type: "SET_PRIMARY_TEXT_CANDIDATES", candidates: data.primaryTexts });
+          creative.dispatch({ type: "SET_PRIMARY_TEXT", primaryText: data.primaryTexts[0] });
           creative.dispatch({ type: "SET_TARGETING", targeting: data.targeting });
           setElapsed(Math.round((Date.now() - startedAt) / 100) / 10);
         },
@@ -201,6 +206,11 @@ export default function CreatePage() {
   const handleSelectHeadline = (i: number) => {
     setHeadlineIdx(i);
     if (displayedHeadlines) creative.dispatch({ type: "SET_HEADLINE", headline: displayedHeadlines[i] });
+  };
+
+  const handleSelectPrimaryText = (i: number) => {
+    setPrimaryTextIdx(i);
+    if (displayedPrimaryTexts) creative.dispatch({ type: "SET_PRIMARY_TEXT", primaryText: displayedPrimaryTexts[i] });
   };
 
   const handleSaveToLibrary = () => {
@@ -233,6 +243,8 @@ export default function CreatePage() {
     generateMutation.reset();
     setDisplayedHeadlines(null);
     setHeadlineIdx(0);
+    setDisplayedPrimaryTexts(null);
+    setPrimaryTextIdx(0);
     setSavedId(null);
     setElapsed(0);
     setStep(0);
@@ -360,6 +372,9 @@ export default function CreatePage() {
               headlines={displayedHeadlines}
               headlineIdx={headlineIdx}
               onSelectHeadline={handleSelectHeadline}
+              primaryTexts={displayedPrimaryTexts}
+              primaryTextIdx={primaryTextIdx}
+              onSelectPrimaryText={handleSelectPrimaryText}
               primaryText={creative.state.primaryText}
               setPrimaryText={(v: string) => creative.dispatch({ type: "SET_PRIMARY_TEXT", primaryText: v })}
               elapsed={elapsed}
@@ -385,7 +400,7 @@ export default function CreatePage() {
             />
           )}
 
-          {step === 2 && <PerformanceStep onRestart={handleRestart} />}
+          {step === 2 && <PostLaunchChecklist onRestart={handleRestart} />}
         </>
       )}
     </div>

@@ -26,7 +26,7 @@ export interface ExtractedTargeting {
 
 export interface GenerateCreativeResult {
   headlines: [string, string, string];
-  primaryText: string;
+  primaryTexts: [string, string, string];
   targeting: ExtractedTargeting;
 }
 
@@ -78,7 +78,11 @@ const PROMPT = (p: GenerateCreativeParams) => {
 다음 JSON 형식으로 응답하세요:
 {
   "headlines": ["헤드라인1 (25자 이내)", "헤드라인2 (25자 이내)", "헤드라인3 (25자 이내)"],
-  "primaryText": "본문 (150~200자, 공감→문제→해결→증거→CTA 구조)",
+  "primaryTexts": [
+    "본문1 (150~200자, 공감→문제→해결→증거→CTA 구조)",
+    "본문2 (다른 감성·각도로 150~200자)",
+    "본문3 (또 다른 접근 150~200자)"
+  ],
   "targeting": {
     "ageMin": 최소연령(18~65 정수),
     "ageMax": 최대연령(18~65 정수),
@@ -168,7 +172,7 @@ export const geminiCreative = {
 
     let parsed: {
       headlines: string[];
-      primaryText: string;
+      primaryTexts: string[];
       targeting?: unknown;
     };
     try {
@@ -183,8 +187,11 @@ export const geminiCreative = {
       parsed.headlines
         .slice(0, 3)
         .some((h: unknown) => typeof h !== "string" || !h) ||
-      typeof parsed.primaryText !== "string" ||
-      !parsed.primaryText
+      !Array.isArray(parsed.primaryTexts) ||
+      parsed.primaryTexts.length < 3 ||
+      parsed.primaryTexts
+        .slice(0, 3)
+        .some((t: unknown) => typeof t !== "string" || !t)
     ) {
       throw new Error("AI 응답 형식이 올바르지 않아요. 다시 시도해주세요.");
     }
@@ -195,7 +202,11 @@ export const geminiCreative = {
         stripHanja(parsed.headlines[1]),
         stripHanja(parsed.headlines[2]),
       ],
-      primaryText: stripHanja(parsed.primaryText),
+      primaryTexts: [
+        stripHanja(parsed.primaryTexts[0]),
+        stripHanja(parsed.primaryTexts[1]),
+        stripHanja(parsed.primaryTexts[2]),
+      ],
       targeting: sanitizeTargeting(parsed.targeting),
     };
   },

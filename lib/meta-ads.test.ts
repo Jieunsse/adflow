@@ -455,14 +455,21 @@ describe("metaAds.createCampaign — A/B headline test", () => {
     expect(result.adIds).toBeUndefined();
   });
 
-  it("Phase 1 — axis='primary_text' 는 아직 지원 X (에러 throw)", async () => {
+  it("Phase 1.5 — axis='primary_text' → AdCreative 2개, primaryText 만 갈리고 headline 공유", async () => {
     mockMetaApi();
-    await expect(
-      metaAds.createCampaign(
-        { ...baseParams, abTestEnabled: true, abTestAxis: "primary_text", abTestVariantB: { axis: "primary_text", primaryText: "다른 카피" } },
-        "tok", "act_1", "page_1",
-      ),
-    ).rejects.toThrow(/아직 지원되지 않/);
+    const result = await metaAds.createCampaign(
+      { ...baseParams, abTestEnabled: true, abTestAxis: "primary_text", abTestVariantB: { axis: "primary_text", primaryText: "다른 카피" } },
+      "tok", "act_1", "page_1",
+    );
+    const creatives = findAllCallBodies("adcreatives");
+    expect(creatives).toHaveLength(2);
+    const linkA = (creatives[0].object_story_spec as { link_data: { name: string; message: string } }).link_data;
+    const linkB = (creatives[1].object_story_spec as { link_data: { name: string; message: string } }).link_data;
+    expect(linkA.name).toBe("Test Headline");
+    expect(linkB.name).toBe("Test Headline");
+    expect(linkA.message).toBe("Body text");
+    expect(linkB.message).toBe("다른 카피");
+    expect(result.adIds).toHaveLength(2);
   });
 });
 

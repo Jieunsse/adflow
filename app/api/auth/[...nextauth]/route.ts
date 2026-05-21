@@ -7,7 +7,6 @@ async function handler(
   ctx: { params: Promise<{ nextauth: string[] }> },
 ): Promise<Response> {
   const authOptions = await getAuthOptionsForNextAuth()
-  // @ts-expect-error — NextAuth v4 의 App Router 핸들러는 (req, ctx) 시그니처를 받지만 타입이 엄격하지 않음.
   return NextAuth(authOptions)(req, ctx)
 }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Icon from "@shared/ui/Icon";
 
@@ -466,7 +466,7 @@ function AllDone({ onGo }: { onGo: () => void }) {
   );
 }
 
-export default function InstallPage() {
+function InstallPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const preview = searchParams?.get("preview") === "1";
@@ -578,5 +578,26 @@ export default function InstallPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function InstallPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="adflow">
+          <div className="setup-shell" data-screen-label="AdFlow 설치">
+            <div className="setup-card install-card">
+              <div className="setup-loading">
+                <div className="spinner" />
+                <span>로딩 중…</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+    >
+      <InstallPageInner />
+    </Suspense>
   );
 }

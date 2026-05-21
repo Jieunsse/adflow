@@ -12,7 +12,7 @@ import { fmt } from "@shared/lib/format";
 import BillingAlertWidget from "@widgets/billing-alert";
 import type { Billing } from "@entities/billing/types";
 import { accountStatusLabel, fundingSourceTypeLabel } from "@entities/billing/labels";
-import { BILLING_HELP_LINKS } from "@/.document/links/billing-help-links";
+import { BILLING_HELP_LINKS } from "@entities/billing/help-links";
 
 const META_BILLING_HUB = "https://business.facebook.com/billing_hub";
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Icon, { type IconName } from "@shared/ui/Icon";
 import { useNotifications, type Notification } from "@shared/lib/notifications";
 
@@ -17,6 +18,7 @@ const TYPE_ICON: Record<string, IconName> = {
   opt: "sparkles",
   perf: "message",
   weekly: "doc",
+  "ad-status": "bell",
 };
 
 export default function NotificationBell() {
@@ -25,6 +27,14 @@ export default function NotificationBell() {
   const btnRef = useRef<HTMLButtonElement>(null);
   const [popupPos, setPopupPos] = useState({ bottom: 0, left: 0 });
   const { notifs, readSet, unreadCount, markAllRead } = useNotifications();
+  const router = useRouter();
+
+  const handleNotifClick = (n: Notification) => {
+    if (n.type === "ad-status" && n.campaignId) {
+      setOpen(false);
+      router.push(`/campaigns/${n.campaignId}`);
+    }
+  };
 
   useEffect(() => {
     if (!open) return;
@@ -120,7 +130,7 @@ export default function NotificationBell() {
           ) : (
             <div style={{ maxHeight: 320, overflowY: "auto" }}>
               {notifs.map((n) => (
-                <NotifRow key={n.id} notif={n} isRead={readSet.has(n.id)} />
+                <NotifRow key={n.id} notif={n} isRead={readSet.has(n.id)} onClick={() => handleNotifClick(n)} />
               ))}
             </div>
           )}
@@ -130,13 +140,17 @@ export default function NotificationBell() {
   );
 }
 
-function NotifRow({ notif, isRead }: { notif: Notification; isRead: boolean }) {
+function NotifRow({ notif, isRead, onClick }: { notif: Notification; isRead: boolean; onClick?: () => void }) {
+  const clickable = notif.type === "ad-status" && !!notif.campaignId;
   return (
-    <div style={{
-      display: "flex", gap: 10, padding: "10px 16px",
-      borderBottom: "1px solid var(--w-line-alternative)",
-      background: isRead ? "transparent" : "var(--w-primary-soft)",
-    }}>
+    <div
+      onClick={clickable ? onClick : undefined}
+      style={{
+        display: "flex", gap: 10, padding: "10px 16px",
+        borderBottom: "1px solid var(--w-line-alternative)",
+        background: isRead ? "transparent" : "var(--w-primary-soft)",
+        cursor: clickable ? "pointer" : "default",
+      }}>
       <div style={{
         width: 32, height: 32, borderRadius: 8, flexShrink: 0,
         background: "var(--w-bg-alternative)", color: "var(--w-fg-normal)",

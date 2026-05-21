@@ -1,12 +1,15 @@
 import { useState, useEffect, useCallback } from "react";
 
-export type NotifType = "launch" | "opt" | "perf" | "weekly";
+export type NotifType = "launch" | "opt" | "perf" | "weekly" | "ad-status";
 
 export interface Notification {
   id: string;
   type: NotifType;
   message: string;
   ts: number;
+  adId?: string;
+  campaignId?: string;
+  transition?: string;
 }
 
 export type NotifSettings = {
@@ -14,6 +17,7 @@ export type NotifSettings = {
   perf: boolean;
   weekly: boolean;
   opt: boolean;
+  adStatus: boolean;
 };
 
 const NOTIF_KEY = "adflow_notifications_v1";
@@ -26,6 +30,7 @@ export const DEFAULT_NOTIF_SETTINGS: NotifSettings = {
   perf: true,
   weekly: false,
   opt: true,
+  adStatus: true,
 };
 
 function loadNotifs(): Notification[] {
@@ -47,16 +52,27 @@ function loadReadIds(): Set<string> {
   catch { return new Set(); }
 }
 
-export function addNotification(notif: Omit<Notification, "id" | "ts">) {
+const TYPE_TO_SETTING: Record<NotifType, keyof NotifSettings> = {
+  launch: "launch",
+  opt: "opt",
+  perf: "perf",
+  weekly: "weekly",
+  "ad-status": "adStatus",
+};
+
+export function addNotification(notif: Omit<Notification, "id" | "ts"> & { id?: string; ts?: number }) {
   const settings = loadNotifSettings();
-  if (!settings[notif.type]) return;
+  if (!settings[TYPE_TO_SETTING[notif.type]]) return;
+  const { id, ts, ...rest } = notif;
   const n: Notification = {
-    ...notif,
-    id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-    ts: Date.now(),
+    ...rest,
+    id: id ?? `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    ts: ts ?? Date.now(),
   };
   try {
-    const next = [n, ...loadNotifs()].slice(0, MAX_NOTIFS);
+    const existing = loadNotifs();
+    if (existing.some((p) => p.id === n.id)) return;
+    const next = [n, ...existing].slice(0, MAX_NOTIFS);
     localStorage.setItem(NOTIF_KEY, JSON.stringify(next));
   } catch {}
   window.dispatchEvent(new CustomEvent("adflow:notification"));

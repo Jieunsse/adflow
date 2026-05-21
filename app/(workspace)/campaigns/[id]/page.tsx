@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
@@ -11,13 +11,36 @@ import { fmt, fmtKRW, shortDate, campaignDateInfo, campaignGradient } from "@sha
 import { useApiMutation } from "@shared/lib/api/useApiMutation";
 import { useToast } from "@shared/ui/Toast";
 import { suggestOptimizations, assessAutomationReadiness, type Suggestion } from "@entities/insights/optimization";
+import { abVariantLabel, type AbTestAxis } from "@entities/campaign/model";
+import { loadLaunchedCampaign } from "@entities/campaign/launched-storage";
+import { judgeAbTest, rowToKpi } from "@entities/insights/ab-verdict";
+import { getMockCampaignAdIds, seedMockAdRows, MOCK_CAMPAIGN_SUMMARIES } from "@/lib/mock-campaigns";
+import AbTestResultCard from "@widgets/performance-step/AbTestResultCard";
 import type { CampaignSummary, InsightsPeriod } from "@/lib/meta-ads";
+import type { AdInsightsRow } from "@entities/insights/types";
 
 
 type Period = "all" | InsightsPeriod;
-type Insights = { impressions: number; clicks: number; ctr: number; spend: number; daily: { date: string; clicks: number; ctr: number; spend: number }[] };
+// PRD-ab-testing.md §7.2 — Insights 응답에 광고별 row 추가 가능.
+type Insights = {
+  impressions: number;
+  clicks: number;
+  ctr: number;
+  spend: number;
+  daily: { date: string; clicks: number; ctr: number; spend: number }[];
+  ads?: [AdInsightsRow, AdInsightsRow];
+};
 type ControlParams = { campaignId: string; adSetId?: string; adId?: string; action: "pause" | "resume" | "set-daily-budget"; dailyBudget?: number };
 type ControlResult = { ok: true };
+
+// PRD-ab-testing.md §5 — 두 화면 공유 AbTestResultCard 의 입력. 사용자 생성(launched) vs mock 시연 두 경로에서 도출.
+type AbInfo = {
+  adIds: [string, string];
+  axis: AbTestAxis;
+  variantA: string;
+  variantB: string;
+  startDate: string;
+};
 
 const STATUS_CHIP: Record<string, { label: string; chip: string }> = {
   live: { label: "게재 중", chip: "live" }, review: { label: "검토 중", chip: "review" },
@@ -42,13 +65,47 @@ export default function CampaignDetailPage() {
 
   const initialPeriod = (searchParams.get("period") ?? "all") as Period;
   const [period, setPeriod] = useState<Period>(initialPeriod === "7d" || initialPeriod === "30d" ? initialPeriod : "all");
+  const initialTab = searchParams.get("tab") === "ab-test" ? "ab-test" : "performance";
+  const [activeTab, setActiveTab] = useState<"performance" | "ab-test">(initialTab as "performance" | "ab-test");
+
+  // PRD-ab-testing.md §5.1 — 사용자 생성 캠페인은 adflow:launched:{id} 에서 A/B 정보. 1회 load (SSR-safe).
+  const [launchedSnapshot] = useState(() => (typeof window !== "undefined" ? loadLaunchedCampaign(id) : null));
 
   const metaQ = useQuery({ queryKey: ["campaign-meta", id], queryFn: () => fetchJson<{ campaign: CampaignSummary }>(`/api/campaign/${id}`).then((d) => d.campaign) });
-  const insQ = useQuery({ queryKey: ["insights", id, period], queryFn: () => fetchJson<Insights>(`/api/insights/${id}?period=${period}`) });
-  const control = useApiMutation<ControlParams, ControlResult>("/api/campaign/control");
 
   const c = metaQ.data;
   const metaUnauthorized = (metaQ.error as { code?: number } | null)?.code === 401;
+
+  // launched-storage(사용자 생성) → mock 시연 entry 순으로 A/B 정보 도출.
+  const abInfo = useMemo<AbInfo | null>(() => {
+    if (launchedSnapshot?.adIds && launchedSnapshot.abTestAxis && launchedSnapshot.abTestVariantA && launchedSnapshot.abTestVariantB && launchedSnapshot.startDate) {
+      return {
+        adIds: launchedSnapshot.adIds,
+        axis: launchedSnapshot.abTestAxis,
+        variantA: launchedSnapshot.abTestVariantA,
+        variantB: abVariantLabel(launchedSnapshot.abTestVariantB),
+        startDate: launchedSnapshot.startDate,
+      };
+    }
+    if (c?.abTestEnabled && c.abTestAxis && c.abTestVariantA && c.abTestVariantB && c.startDate) {
+      const mockAdIds = getMockCampaignAdIds(id);
+      if (!mockAdIds) return null;
+      return { adIds: mockAdIds, axis: c.abTestAxis, variantA: c.abTestVariantA, variantB: c.abTestVariantB, startDate: c.startDate };
+    }
+    return null;
+  }, [launchedSnapshot, c, id]);
+
+  const adIdsParam = abInfo ? `&adIds=${abInfo.adIds[0]},${abInfo.adIds[1]}` : "";
+  const insQ = useQuery({ queryKey: ["insights", id, period, abInfo?.adIds?.join(",")], queryFn: () => fetchJson<Insights>(`/api/insights/${id}?period=${period}${adIdsParam}`) });
+  const control = useApiMutation<ControlParams, ControlResult>("/api/campaign/control");
+
+  // PRD-ab-testing.md §7.5 — fake adIds 면 server 가 ads 비움. client 가 startDate 로 합성.
+  const insightsWithAds = useMemo<Insights | undefined>(() => {
+    if (!insQ.data || !abInfo) return insQ.data;
+    if (insQ.data.ads) return insQ.data;
+    const ads = seedMockAdRows(id, abInfo.startDate, abInfo.adIds);
+    return { ...insQ.data, ads };
+  }, [insQ.data, abInfo, id]);
 
   const applyControl = (p: Omit<ControlParams, "campaignId">, msg: string) => {
     control.mutate({ campaignId: id, ...p }, {
@@ -80,7 +137,17 @@ export default function CampaignDetailPage() {
         </div>
       </div>
 
-      {metaUnauthorized ? (
+      <div className="seg" style={{ marginBottom: 16 }}>
+        <button type="button" className={activeTab === "performance" ? "on" : ""} onClick={() => setActiveTab("performance")}>성과</button>
+        <button type="button" className={activeTab === "ab-test" ? "on" : ""} onClick={() => setActiveTab("ab-test")}>
+          A/B 테스트
+          {abInfo && <span style={{ marginLeft: 6, width: 6, height: 6, borderRadius: "50%", background: "var(--w-primary-normal)", display: "inline-block", verticalAlign: "middle" }} />}
+        </button>
+      </div>
+
+      {activeTab === "ab-test" ? (
+        <AbTestTab abInfo={abInfo} insightsWithAds={insightsWithAds} campaignId={id} onCreateWithWinner={() => router.push(`/create?prefill=campaign:${id}`)} />
+      ) : metaUnauthorized ? (
         <DetailErrorCard icon="link" title="광고 계정을 먼저 연결해주세요" reason="Meta 광고 계정과 페이지를 연결해야 캠페인을 볼 수 있어요." ctaLabel="계정 연결로 가기" onAction={() => router.push("/setup")} />
       ) : metaQ.isError ? (
         <DetailErrorCard title="캠페인 정보를 불러오지 못했어요" reason={metaQ.error instanceof Error ? metaQ.error.message : "잠시 후 다시 시도해 주세요"} ctaLabel="다시 시도" onAction={() => metaQ.refetch()} />
@@ -126,7 +193,20 @@ export default function CampaignDetailPage() {
               <button className="btn btn--secondary" type="button" onClick={() => insQ.refetch()}><Icon name="refresh" size={14} /> 성과 새로고침</button>
             </div>
           ) : (
-            <DetailBody c={c} data={insQ.data} period={period} busy={control.isPending} adsManagerUrl={adsManagerUrl} onApply={applyControl} onRemake={() => router.push("/create")} />
+            <>
+              {/* PRD-ab-testing.md §5.1 — KpiCard 행 위에 결과 카드. */}
+              {abInfo && insightsWithAds?.ads && (
+                <AbTestResultCard
+                  axis={abInfo.axis}
+                  variantA={abInfo.variantA}
+                  variantB={abInfo.variantB}
+                  verdict={judgeAbTest(rowToKpi(insightsWithAds.ads[0]), rowToKpi(insightsWithAds.ads[1]))}
+                  onCreateWithWinner={() => router.push(`/create?prefill=campaign:${id}`)}
+                  demoMode={process.env.NEXT_PUBLIC_META_APP_MODE === "development"}
+                />
+              )}
+              <DetailBody c={c} data={insQ.data} period={period} busy={control.isPending} adsManagerUrl={adsManagerUrl} onApply={applyControl} onRemake={() => router.push("/create")} />
+            </>
           )}
         </>
       )}
@@ -287,6 +367,262 @@ function OptCard({ icon, good, title, lines, children }: { icon: IconName; good:
         {lines.map((l, j) => <div key={j} style={{ font: "500 12.5px/1.55 var(--w-font-sans)", color: "var(--w-fg-neutral)", marginTop: 4 }}>{l}</div>)}
       </div>
       {children && <div style={{ flex: "0 0 auto", alignSelf: "center" }}>{children}</div>}
+    </div>
+  );
+}
+
+const MOCK_AB_DEMO = (() => {
+  const mc = MOCK_CAMPAIGN_SUMMARIES.find((c) => c.abTestEnabled && c.abTestAxis && c.abTestVariantA && c.abTestVariantB && c.startDate);
+  if (!mc) return null;
+  const adIds = getMockCampaignAdIds(mc.id);
+  if (!adIds) return null;
+  const ads = seedMockAdRows(mc.id, mc.startDate!, adIds);
+  return {
+    abInfo: { adIds, axis: mc.abTestAxis as AbTestAxis, variantA: mc.abTestVariantA!, variantB: mc.abTestVariantB!, startDate: mc.startDate! },
+    ads,
+  };
+})();
+
+const AXIS_LABEL: Record<string, string> = { headline: "헤드라인", primary_text: "광고 문구", image: "이미지" };
+
+type CreateMode = null | "existing" | "new";
+
+function AbTestTab({
+  abInfo, insightsWithAds, campaignId, onCreateWithWinner,
+}: {
+  abInfo: AbInfo | null;
+  insightsWithAds: Insights | undefined;
+  campaignId: string;
+  onCreateWithWinner: () => void;
+}) {
+  const router = useRouter();
+  const [createMode, setCreateMode] = useState<CreateMode>(null);
+
+  // A/B 테스트 있을 때: 실험 설정 + 결과 카드
+  if (abInfo) {
+    return (
+      <>
+        <div className="card" style={{ marginBottom: 16 }}>
+          <h3 className="section-title">실험 설정</h3>
+          <hr className="divider" />
+          <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: "10px 16px", font: "500 13px/1.5 var(--w-font-sans)" }}>
+            <span style={{ color: "var(--w-fg-alternative)" }}>비교 축</span>
+            <span style={{ color: "var(--w-fg-strong)", fontWeight: 600 }}>{AXIS_LABEL[abInfo.axis] ?? abInfo.axis}</span>
+            <span style={{ color: "var(--w-fg-alternative)" }}>A안</span>
+            <span style={{ color: "var(--w-fg-neutral)" }}>{abInfo.variantA}</span>
+            <span style={{ color: "var(--w-fg-alternative)" }}>B안</span>
+            <span style={{ color: "var(--w-fg-neutral)" }}>{abInfo.variantB}</span>
+            <span style={{ color: "var(--w-fg-alternative)" }}>시작일</span>
+            <span style={{ color: "var(--w-fg-neutral)" }}>{abInfo.startDate}</span>
+          </div>
+        </div>
+        {insightsWithAds?.ads ? (
+          <AbTestResultCard
+            axis={abInfo.axis}
+            variantA={abInfo.variantA}
+            variantB={abInfo.variantB}
+            verdict={judgeAbTest(rowToKpi(insightsWithAds.ads[0]), rowToKpi(insightsWithAds.ads[1]))}
+            onCreateWithWinner={onCreateWithWinner}
+            demoMode={process.env.NEXT_PUBLIC_META_APP_MODE === "development"}
+          />
+        ) : (
+          <div className="card" style={{ padding: "32px", display: "flex", flexDirection: "column", alignItems: "center", gap: 10, textAlign: "center" }}>
+            <div className="spinner" style={{ width: 24, height: 24 }} />
+            <div style={{ font: "500 13px/1.3 var(--w-font-sans)", color: "var(--w-fg-neutral)" }}>성과 데이터를 불러오는 중…</div>
+          </div>
+        )}
+      </>
+    );
+  }
+
+  // A/B 테스트 없을 때: 생성 UI + 예시 섹션
+  return (
+    <>
+      {/* 생성 섹션 */}
+      <div className="card" style={{ marginBottom: 16 }}>
+        <h3 className="section-title">A/B 테스트 시작하기</h3>
+        <p className="section-sub">같은 캠페인에서 두 가지 소재를 비교해 더 좋은 광고를 찾아요.</p>
+        <hr className="divider" />
+
+        {createMode === null && (
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            <CreateOptionCard
+              icon="folder"
+              title="기존 광고 두 개로 비교"
+              desc="이미 집행 중이거나 저장된 광고 두 개를 A안·B안으로 지정해요."
+              onClick={() => setCreateMode("existing")}
+            />
+            <CreateOptionCard
+              icon="sparkles"
+              title="새 광고 만들면서 시작"
+              desc="광고 만들기 STEP 02에서 A/B 테스트 옵션을 켜고 두 가지 소재를 설정해요."
+              onClick={() => setCreateMode("new")}
+            />
+          </div>
+        )}
+
+        {createMode === "existing" && (
+          <ExistingAdsForm campaignId={campaignId} onCancel={() => setCreateMode(null)} />
+        )}
+
+        {createMode === "new" && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            <div style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: 14, borderRadius: 10, background: "var(--w-bg-alternative)" }}>
+              <div style={{ width: 36, height: 36, borderRadius: 10, background: "var(--w-primary-soft)", color: "var(--w-primary-normal)", display: "grid", placeItems: "center", flex: "0 0 auto" }}>
+                <Icon name="sparkles" size={18} />
+              </div>
+              <div>
+                <div style={{ font: "600 14px/1.3 var(--w-font-sans)", color: "var(--w-fg-strong)", marginBottom: 4 }}>광고 만들기로 이동해요</div>
+                <p style={{ font: "500 13px/1.55 var(--w-font-sans)", color: "var(--w-fg-neutral)", margin: 0 }}>
+                  STEP 02 → "A/B 시험으로 집행" 체크 → 비교 축(헤드라인 / 카피 / 이미지) 선택 → STEP 03에서 집행하면 자동으로 A/B 테스트가 등록돼요.
+                </p>
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button className="btn btn--primary" type="button" onClick={() => router.push(`/create?prefill=campaign:${campaignId}`)}>
+                <Icon name="sparkles" size={14} /> 광고 만들기로 이동
+              </button>
+              <button className="btn btn--ghost" type="button" onClick={() => setCreateMode(null)}>취소</button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* 예시 섹션 */}
+      {MOCK_AB_DEMO && (
+        <>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", borderRadius: 8, background: "var(--w-bg-alternative)", marginBottom: 12 }}>
+            <Icon name="eye" size={14} style={{ color: "var(--w-fg-alternative)" }} />
+            <span style={{ font: "500 12.5px/1.4 var(--w-font-sans)", color: "var(--w-fg-neutral)" }}>아래는 A/B 테스트 결과 예시예요.</span>
+          </div>
+          <div className="card" style={{ marginBottom: 16, opacity: 0.85 }}>
+            <h3 className="section-title">실험 설정 (예시)</h3>
+            <hr className="divider" />
+            <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: "10px 16px", font: "500 13px/1.5 var(--w-font-sans)" }}>
+              <span style={{ color: "var(--w-fg-alternative)" }}>비교 축</span>
+              <span style={{ color: "var(--w-fg-strong)", fontWeight: 600 }}>{AXIS_LABEL[MOCK_AB_DEMO.abInfo.axis]}</span>
+              <span style={{ color: "var(--w-fg-alternative)" }}>A안</span>
+              <span style={{ color: "var(--w-fg-neutral)" }}>{MOCK_AB_DEMO.abInfo.variantA}</span>
+              <span style={{ color: "var(--w-fg-alternative)" }}>B안</span>
+              <span style={{ color: "var(--w-fg-neutral)" }}>{MOCK_AB_DEMO.abInfo.variantB}</span>
+            </div>
+          </div>
+          <AbTestResultCard
+            axis={MOCK_AB_DEMO.abInfo.axis}
+            variantA={MOCK_AB_DEMO.abInfo.variantA}
+            variantB={MOCK_AB_DEMO.abInfo.variantB}
+            verdict={judgeAbTest(rowToKpi(MOCK_AB_DEMO.ads[0]), rowToKpi(MOCK_AB_DEMO.ads[1]))}
+            onCreateWithWinner={onCreateWithWinner}
+            demoMode
+          />
+        </>
+      )}
+    </>
+  );
+}
+
+function CreateOptionCard({ icon, title, desc, onClick }: { icon: IconName; title: string; desc: string; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="card"
+      style={{ textAlign: "left", cursor: "pointer", padding: "18px 16px", display: "flex", flexDirection: "column", gap: 10, border: "1.5px solid var(--w-line-alternative)", transition: "border-color 160ms" }}
+    >
+      <div style={{ width: 40, height: 40, borderRadius: 10, background: "var(--w-primary-soft)", color: "var(--w-primary-normal)", display: "grid", placeItems: "center" }}>
+        <Icon name={icon} size={20} />
+      </div>
+      <div>
+        <div style={{ font: "600 14px/1.4 var(--w-font-sans)", color: "var(--w-fg-strong)", marginBottom: 4 }}>{title}</div>
+        <p style={{ font: "500 12.5px/1.55 var(--w-font-sans)", color: "var(--w-fg-neutral)", margin: 0 }}>{desc}</p>
+      </div>
+      <div style={{ display: "flex", alignItems: "center", gap: 4, font: "600 12.5px/1 var(--w-font-sans)", color: "var(--w-primary-normal)", marginTop: 4 }}>
+        선택하기 <Icon name="arrow-right" size={13} />
+      </div>
+    </button>
+  );
+}
+
+const AXIS_OPTIONS: { id: string; label: string }[] = [
+  { id: "headline", label: "헤드라인" },
+  { id: "primary_text", label: "카피 문구" },
+  { id: "image", label: "이미지" },
+];
+
+function ExistingAdsForm({ campaignId, onCancel }: { campaignId: string; onCancel: () => void }) {
+  const [axis, setAxis] = useState("headline");
+  const [adA, setAdA] = useState("");
+  const [adB, setAdB] = useState("");
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <div>
+        <div style={{ font: "600 13px/1.3 var(--w-font-sans)", color: "var(--w-fg-strong)", marginBottom: 8 }}>비교 축</div>
+        <div style={{ display: "flex", gap: 8 }}>
+          {AXIS_OPTIONS.map((o) => (
+            <button
+              key={o.id}
+              type="button"
+              onClick={() => setAxis(o.id)}
+              style={{
+                padding: "6px 14px", borderRadius: 8,
+                border: axis === o.id ? "1.5px solid var(--w-primary-normal)" : "1.5px solid var(--w-line-alternative)",
+                background: axis === o.id ? "var(--w-primary-soft)" : "var(--w-bg-normal)",
+                color: axis === o.id ? "var(--w-primary-press)" : "var(--w-fg-neutral)",
+                font: "600 12.5px/1 var(--w-font-sans)", cursor: "pointer",
+              }}
+            >
+              {o.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+        <div>
+          <div style={{ font: "600 13px/1.3 var(--w-font-sans)", color: "var(--w-fg-strong)", marginBottom: 6 }}>A안 — 광고 ID</div>
+          <input
+            type="text"
+            className="input"
+            placeholder="예: act_123456789"
+            value={adA}
+            onChange={(e) => setAdA(e.target.value)}
+            style={{ width: "100%" }}
+          />
+        </div>
+        <div>
+          <div style={{ font: "600 13px/1.3 var(--w-font-sans)", color: "var(--w-fg-strong)", marginBottom: 6 }}>B안 — 광고 ID</div>
+          <input
+            type="text"
+            className="input"
+            placeholder="예: act_987654321"
+            value={adB}
+            onChange={(e) => setAdB(e.target.value)}
+            style={{ width: "100%" }}
+          />
+        </div>
+      </div>
+
+      <div style={{ padding: "10px 14px", borderRadius: 8, background: "rgba(255,146,0,0.08)", border: "1px solid rgba(255,146,0,0.25)" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <Icon name="info" size={14} style={{ color: "var(--w-status-cautionary)", flex: "0 0 auto" }} />
+          <span style={{ font: "500 12.5px/1.4 var(--w-font-sans)", color: "var(--w-fg-neutral)" }}>
+            실제 집행은 Meta 광고 관리자에서 이루어져요. 광고 ID 입력 후 결과 추적만 AdFlow에서 해요.
+          </span>
+        </div>
+      </div>
+
+      <div style={{ display: "flex", gap: 8 }}>
+        <button
+          className="btn btn--primary"
+          type="button"
+          disabled={!adA.trim() || !adB.trim()}
+          title="추후 지원 예정"
+        >
+          <Icon name="chart" size={14} /> 결과 추적 시작 (준비 중)
+        </button>
+        <button className="btn btn--ghost" type="button" onClick={onCancel}>취소</button>
+      </div>
     </div>
   );
 }

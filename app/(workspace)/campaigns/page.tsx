@@ -171,9 +171,6 @@ export default function CampaignsPage() {
           <p className="page__sub">집행 중인 캠페인을 한눈에 확인하고, 성과를 깊게 살펴보세요.</p>
         </div>
         <div style={{ display: "inline-flex", gap: 8 }}>
-          <button className="btn btn--secondary" type="button" onClick={() => q.refetch()} disabled={q.isFetching}>
-            <Icon name="refresh" size={14} /> {q.isFetching ? "불러오는 중…" : "새로고침"}
-          </button>
           <button className="btn btn--primary" type="button" onClick={() => router.push("/create")}>
             <Icon name="plus" size={14} /> 새 캠페인 만들기
           </button>
@@ -197,7 +194,7 @@ export default function CampaignsPage() {
         />
       ) : (
         <>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", border: "1px solid var(--w-line-alternative)", borderRadius: 14, background: "var(--w-bg-elevated)", overflow: "hidden", marginBottom: 16 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", border: "1px solid var(--w-line-normal)", borderRadius: 14, background: "var(--w-bg-elevated)", overflow: "hidden", marginBottom: 16 }}>
             <SummaryItem label="총 캠페인" value={fmt(summary.total)} />
             <SummaryItem label="게재 중" value={fmt(summary.live)} dot="#00bf40" />
             <SummaryItem label="검토 중" value={fmt(summary.review)} dot="#0066ff" />
@@ -348,7 +345,7 @@ export default function CampaignsPage() {
 
 function SummaryItem({ label, value, mono, dot, last }: { label: string; value: string; mono?: boolean; dot?: string; last?: boolean }) {
   return (
-    <div style={{ padding: "14px 16px", borderRight: last ? "none" : "1px solid var(--w-line-alternative)" }}>
+    <div style={{ padding: "14px 16px", borderRight: last ? "none" : "1px solid var(--w-line-normal)" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 6, font: "500 11px/1 var(--w-font-sans)", color: "var(--w-fg-alternative)", letterSpacing: "0.04em", textTransform: "uppercase", marginBottom: 8 }}>
         {dot && <span style={{ width: 6, height: 6, borderRadius: "50%", background: dot }} />}
         {label}

@@ -5,7 +5,7 @@
 import Icon from "@shared/ui/Icon";
 import DualChart, { ChartLegend } from "@shared/ui/DualChart";
 import { fmt, fmtKRW, shortDate } from "@shared/lib/format";
-import type { Insights } from "./_types";
+import type { Insights } from "@entities/insights/types";
 
 interface Props {
   data: Insights;

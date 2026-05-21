@@ -3,13 +3,13 @@
 // STEP 03 성과 확인 widget — ADR-001 §deepening ③.
 // useCreative legacy shim 대신 useLaunchDraft + useCreativeDraft 직접 구독.
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import Icon from "@shared/ui/Icon";
 import { useApiMutation } from "@shared/lib/api/useApiMutation";
 import { useCreativeDraft } from "@entities/creative/model";
-import { useLaunchDraft } from "@entities/campaign/model";
+import { abVariantLabel, useLaunchDraft } from "@entities/campaign/model";
 import { useToast } from "@shared/ui/Toast";
 import { suggestOptimizations, assessAutomationReadiness } from "@entities/insights/optimization";
 import { addNotification } from "@shared/lib/notifications";
@@ -20,7 +20,10 @@ import ExampleBanner from "./ExampleBanner";
 import KpiGrid from "./KpiGrid";
 import OptimizationPanel from "./OptimizationPanel";
 import DailyTrend from "./DailyTrend";
-import type { Insights, CampaignObjective } from "./_types";
+import AbTestResultCard from "./AbTestResultCard";
+import type { Insights, CampaignObjective, AdInsightsRow } from "@entities/insights/types";
+import { judgeAbTest, rowToKpi } from "@entities/insights/ab-verdict";
+import { seedMockAdRows } from "@/lib/mock-campaigns";
 
 type ControlParams = {
   campaignId: string; adSetId: string; adId?: string;
@@ -58,18 +61,32 @@ export default function PerformanceStep({ onRestart }: { onRestart: () => void }
   const exampleMode = !launched;
   const [scenario, setScenario] = useState<"good" | "poor">("good");
   const objective: CampaignObjective = launched?.objective ?? "OUTCOME_TRAFFIC";
+  // PRD §13 — goal 단위 인사이트. launched 캠페인에 goalId 가 저장됐으면 그것으로, 아니면 objective 폴백.
+  const goalId = launched?.goalId;
 
+  // PRD-ab-testing.md §7.2 — adIds 있으면 ?adIds=a,b 로 광고별 row 동반.
+  const adIdsParam = launched?.adIds ? `&adIds=${launched.adIds[0]},${launched.adIds[1]}` : "";
   const q = useQuery<Insights>({
-    queryKey: ["insights", launched?.campaignId, objective],
+    queryKey: ["insights", launched?.campaignId, objective, goalId, launched?.adIds?.join(",")],
     enabled: !!launched,
     queryFn: async () => {
-      const url = `/api/insights/${launched!.campaignId}?objective=${objective}`;
+      const url = `/api/insights/${launched!.campaignId}?objective=${objective}${goalId ? `&goal=${goalId}` : ""}${adIdsParam}`;
       const res = await fetch(url);
       const data = await res.json();
       if (!res.ok) throw new Error((data as { error?: string }).error ?? "성과를 불러오지 못했어요");
       return data as Insights;
     },
   });
+
+  // PRD-ab-testing.md §7.5 — server 가 fake adIds 면 ads 비워줌. client 가 launched.startDate 로 광고별 row 합성.
+  const insightsWithAds = useMemo<Insights | undefined>(() => {
+    if (!q.data || !launched?.adIds) return q.data;
+    if (q.data.ads) return q.data;
+    const isFakeAd = launched.adIds.every((a) => a.startsWith("mock_ad_"));
+    if (!isFakeAd) return q.data;
+    const ads = seedMockAdRows(launched.campaignId, launched.startDate, launched.adIds);
+    return { ...q.data, ads };
+  }, [q.data, launched]);
 
   const control = useApiMutation<ControlParams, ControlResult>("/api/campaign/control");
 
@@ -182,8 +199,8 @@ export default function PerformanceStep({ onRestart }: { onRestart: () => void }
     reach: data.reach, frequency: data.frequency, cpm: data.cpm,
     postEngagement: data.postEngagement, postReaction: data.postReaction, postComment: data.postComment, postShare: data.postShare,
   };
-  const suggestions = suggestOptimizations(ins, dailyBudget, objective);
-  const readiness = assessAutomationReadiness(ins, data.daily.length, objective);
+  const suggestions = suggestOptimizations(ins, dailyBudget, objective, goalId);
+  const readiness = assessAutomationReadiness(ins, data.daily.length, objective, goalId);
 
   const notifiedOptRef = useRef(false);
   useEffect(() => {
@@ -192,13 +209,55 @@ export default function PerformanceStep({ onRestart }: { onRestart: () => void }
     addNotification({ type: "opt", message: `AI 최적화 제안이 ${suggestions.length}개 있어요. 성과 탭에서 확인해보세요.` });
   }, [launched, exampleMode, suggestions.length]);
 
+  // 예시 모드 A/B 결과 카드 — 사용자가 STEP 02 에서 입력한 A/B 정보 + 시나리오별 가상 광고별 KPI 시드.
+  // launched 가 없거나 launched.adIds 가 비어있을 때 (실광고 미게재) 사용자가 미리 결과 카드를 둘러볼 수 있게.
+  const exampleAbInputs = useMemo<null | { variantA: string; variantB: string; ads: [AdInsightsRow, AdInsightsRow] }>(() => {
+    const variantB = launchState.abTestVariantB;
+    if (!launchState.abTestEnabled || variantB?.axis !== "headline") return null;
+    if (launched?.adIds) return null; // 실광고 카드가 이미 mount
+    const variantA = creativeState.headline;
+    if (!variantA || variantA === variantB.headline) return null;
+    const goodAds: [AdInsightsRow, AdInsightsRow] = [
+      { adId: "example_a", impressions: 20000, clicks: 200, ctr: 1.0, spend: 50000 },
+      { adId: "example_b", impressions: 20000, clicks: 300, ctr: 1.5, spend: 50000 },
+    ];
+    const poorAds: [AdInsightsRow, AdInsightsRow] = [
+      { adId: "example_a", impressions: 400, clicks: 2, ctr: 0.5, spend: 8000 },
+      { adId: "example_b", impressions: 500, clicks: 3, ctr: 0.6, spend: 8500 },
+    ];
+    return { variantA, variantB: variantB.headline, ads: scenario === "good" ? goodAds : poorAds };
+  }, [launchState.abTestEnabled, launchState.abTestVariantB, creativeState.headline, launched?.adIds, scenario]);
+
   return (
     <>
       {campaignBar}
 
       {exampleMode && <ExampleBanner scenario={scenario} setScenario={setScenario} />}
 
-      <KpiGrid objective={objective} data={data} exampleMode={exampleMode} scenario={scenario} clicks={clicks} ctrs={ctrs} />
+      {/* PRD-ab-testing.md §5.1 — A/B 시험 결과 카드. adIds + axis + variantA + variantB + ads 다 있을 때만. */}
+      {launched && launched.adIds && launched.abTestAxis && launched.abTestVariantA && launched.abTestVariantB && insightsWithAds?.ads && (
+        <AbTestResultCard
+          axis={launched.abTestAxis}
+          variantA={launched.abTestVariantA}
+          variantB={abVariantLabel(launched.abTestVariantB)}
+          verdict={judgeAbTest(rowToKpi(insightsWithAds.ads[0]), rowToKpi(insightsWithAds.ads[1]))}
+          onCreateWithWinner={() => router.push(`/create?prefill=campaign:${launched.campaignId}`)}
+          demoMode={process.env.NEXT_PUBLIC_META_APP_MODE === "development"}
+        />
+      )}
+
+      {/* 예시 모드 — launched 없을 때 STEP 02 에서 켠 A/B 시험을 시나리오별 가상 KPI 로 미리보기. */}
+      {exampleAbInputs && (
+        <AbTestResultCard
+          axis="headline"
+          variantA={exampleAbInputs.variantA}
+          variantB={exampleAbInputs.variantB}
+          verdict={judgeAbTest(rowToKpi(exampleAbInputs.ads[0]), rowToKpi(exampleAbInputs.ads[1]))}
+          demoMode
+        />
+      )}
+
+      <KpiGrid goalId={goalId} objective={objective} data={data} exampleMode={exampleMode} scenario={scenario} clicks={clicks} ctrs={ctrs} />
 
       <OptimizationPanel
         isPaused={isPaused}

@@ -12,7 +12,6 @@ import { AD_COPYWRITER_SYSTEM_PROMPT } from "@/lib/prompts/ad-copywriter";
 export interface GenerateCreativeParams {
   brand: string;
   target: string;
-  goal: string;
   tone: ToneId;
   outcome: ObjectiveId;
   hint?: string;
@@ -72,7 +71,6 @@ const PROMPT = (p: GenerateCreativeParams) => {
 
 브랜드/제품: ${p.brand}
 타겟 오디언스: ${p.target}
-광고 목표: ${p.goal}
 톤앤매너: ${TONE_PROMPT_DESC[p.tone]}
 원하는 결과: ${outcomeDef.outcomeLabel} (Meta ${outcomeDef.metaObjective})
 카피 방향: ${outcomeDef.copyTone}${hintLine}

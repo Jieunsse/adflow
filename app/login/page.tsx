@@ -2,6 +2,7 @@
 
 import { Suspense, useState } from "react";
 import { signIn } from "next-auth/react";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import Icon from "@shared/ui/Icon";
 
@@ -37,6 +38,11 @@ function LoginContent() {
   function handleLogin() {
     setLoading(true);
     signIn("facebook", { callbackUrl: "/dashboard" });
+  }
+
+  function handleBrowse() {
+    setLoading(true);
+    signIn("guest", { callbackUrl: "/dashboard" });
   }
 
   return (
@@ -110,6 +116,9 @@ function LoginContent() {
                   {loading ? <Icon name="spinner" size={16} /> : <Icon name="facebook" size={16} />}
                   {loading ? "Facebook에 연결 중…" : "Facebook으로 로그인"}
                 </button>
+                <button className="btn btn--secondary btn--lg btn--block" type="button" onClick={handleBrowse} disabled={loading} style={{ marginTop: 10 }}>
+                  로그인 없이 서비스 둘러보기
+                </button>
                 <p style={{ font: "500 12px/1.6 var(--w-font-sans)", color: "var(--w-fg-neutral)", margin: "16px 0 0", textAlign: "center" }}>
                   광고 계정 관리 · 페이지 정보 · 광고 게재 권한을 사용해요.<br />
                   필요한 권한 외에는 요청하지 않아요.
@@ -120,8 +129,8 @@ function LoginContent() {
             <div style={{ display: "flex", gap: 14, marginTop: 32, font: "500 12px/1 var(--w-font-sans)", color: "var(--w-fg-neutral)" }}>
               <span>© 2026 AdFlow</span>
               <span>·</span>
-              <span>이용약관</span>
-              <span>개인정보처리방침</span>
+              <Link href="/terms" style={{ color: "inherit", textDecoration: "underline", textUnderlineOffset: 3 }}>이용약관</Link>
+              <Link href="/privacy" style={{ color: "inherit", textDecoration: "underline", textUnderlineOffset: 3 }}>개인정보처리방침</Link>
               <span>고객지원</span>
             </div>
           </div>

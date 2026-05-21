@@ -55,6 +55,16 @@ export function campaignDateInfo(
   return { daysLine, progressLine };
 }
 
+export function maskId(id: string | null | undefined, visible: number = 4): string {
+  if (!id) return "—";
+  if (id.length <= visible) return "•".repeat(id.length);
+  const tail = id.slice(-visible);
+  const head = id.slice(0, id.length - visible);
+  const prefix = head.match(/^[A-Za-z]+_/)?.[0] ?? "";
+  const dotsLen = head.length - prefix.length;
+  return prefix + "•".repeat(dotsLen) + tail;
+}
+
 export function timeAgo(ts: number): string {
   const diff = Math.max(0, Date.now() - ts);
   const m = Math.floor(diff / 60000);

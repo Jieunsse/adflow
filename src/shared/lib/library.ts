@@ -1,9 +1,19 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+// Library Entry — STEP 01 Creative 를 localStorage 에 영구 저장. 도메인 어휘는 .document/CONTEXT.md §Library Entry.
+// 저장소 sync/hydrate 는 useScopedStorage primitive 가 담당. 여기선 도메인 형태(id 생성·prepend) 만.
+
+import { useCallback, useMemo } from "react";
+import { useScopedStorage } from "./storage/useScopedStorage";
 
 const LIBRARY_KEY = "adflow_library_v1";
-const LIBRARY_EVENT = "adflow:library";
+
+function newLibraryId(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return "cre_" + crypto.randomUUID();
+  }
+  return "cre_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 10);
+}
 
 export interface LibraryItem {
   id: string;
@@ -23,44 +33,29 @@ export interface LibraryItem {
 
 export type NewLibraryItem = Omit<LibraryItem, "id" | "savedAt">;
 
-function readLibrary(): LibraryItem[] {
-  if (typeof window === "undefined") return [];
-  try {
-    return JSON.parse(localStorage.getItem(LIBRARY_KEY) || "[]") as LibraryItem[];
-  } catch {
-    return [];
-  }
-}
-
-function writeLibrary(list: LibraryItem[]) {
-  if (typeof window === "undefined") return;
-  localStorage.setItem(LIBRARY_KEY, JSON.stringify(list));
-  window.dispatchEvent(new CustomEvent(LIBRARY_EVENT));
-}
-
 export function useLibrary() {
-  const [list, setList] = useState<LibraryItem[]>([]);
+  const [rawList, setList] = useScopedStorage<LibraryItem[]>("local", LIBRARY_KEY, []);
 
-  useEffect(() => {
-    const sync = () => setList(readLibrary());
-    sync();
-    window.addEventListener(LIBRARY_EVENT, sync);
-    window.addEventListener("storage", sync);
-    return () => {
-      window.removeEventListener(LIBRARY_EVENT, sync);
-      window.removeEventListener("storage", sync);
-    };
-  }, []);
+  const list = useMemo(() => {
+    const seen = new Set<string>();
+    return rawList.filter((x) => (seen.has(x.id) ? false : (seen.add(x.id), true)));
+  }, [rawList]);
 
-  const save = useCallback((item: NewLibraryItem): string => {
-    const id = "cre_" + Math.random().toString(36).slice(2, 10);
-    writeLibrary([{ id, savedAt: Date.now(), ...item }, ...readLibrary()]);
-    return id;
-  }, []);
+  const save = useCallback(
+    (item: NewLibraryItem): string => {
+      const id = newLibraryId();
+      setList((prev) => [{ id, savedAt: Date.now(), ...item }, ...prev]);
+      return id;
+    },
+    [setList],
+  );
 
-  const remove = useCallback((id: string) => {
-    writeLibrary(readLibrary().filter((x) => x.id !== id));
-  }, []);
+  const remove = useCallback(
+    (id: string) => {
+      setList((prev) => prev.filter((x) => x.id !== id));
+    },
+    [setList],
+  );
 
   return { list, save, remove };
 }

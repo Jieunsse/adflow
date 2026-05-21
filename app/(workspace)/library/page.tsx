@@ -2,11 +2,13 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import Icon, { type IconName } from "@shared/ui/Icon";
 import { EmptyState } from "@shared/ui/primitives";
 import { fmt, timeAgo } from "@shared/lib/format";
 import { useLibrary, type LibraryItem } from "@shared/lib/library";
 import { useToast } from "@shared/ui/Toast";
+import { getMockLibraryItems } from "@/lib/mock-library";
 
 type SortKey = "recent" | "oldest" | "az";
 type View = "grid" | "list";
@@ -16,12 +18,22 @@ const TONE_LABEL: Record<string, string> = { warm: "감성적", pro: "전문적"
 export default function LibraryPage() {
   const router = useRouter();
   const showToast = useToast();
-  const { list, remove } = useLibrary();
+  const { list: savedList, remove } = useLibrary();
+  const { data: session } = useSession();
+  const browseMode = !!session?.browseMode;
   const [query, setQuery] = useState("");
   const [toneFilter, setToneFilter] = useState<string>("all");
   const [sort, setSort] = useState<SortKey>("recent");
   const [view, setView] = useState<View>("grid");
   const [previewId, setPreviewId] = useState<string | null>(null);
+  // 둘러보기 데모 항목은 localStorage 를 오염시키지 않도록 메모리에서만 숨김 처리해요. 새로고침하면 다시 등장.
+  const [hiddenMockIds, setHiddenMockIds] = useState<Set<string>>(() => new Set());
+
+  const mockList = useMemo(
+    () => (browseMode ? getMockLibraryItems().filter((x) => !hiddenMockIds.has(x.id)) : []),
+    [browseMode, hiddenMockIds],
+  );
+  const list = useMemo(() => [...mockList, ...savedList], [mockList, savedList]);
 
   const tones = useMemo(() => Array.from(new Set(list.map((x) => x.tone).filter(Boolean))), [list]);
 
@@ -46,7 +58,7 @@ export default function LibraryPage() {
     try {
       sessionStorage.setItem("adflow_brand", item.brand ?? "");
       sessionStorage.setItem("adflow_target", item.target ?? "");
-      sessionStorage.setItem("adflow_goal", item.goal ?? "");
+      // PRD §13.10 — adflow_goal sessionStorage 키 폐기. item.goal 은 LibraryItem 호환 목적만.
       sessionStorage.setItem("adflow_loaded_creative", JSON.stringify({ headline: item.headline, primary: item.primary, ctaId: item.ctaId, tone: item.tone }));
     } catch {
       /* sessionStorage 사용 불가 — 입력값 없이 이동 */
@@ -55,7 +67,19 @@ export default function LibraryPage() {
     router.push("/create");
   };
 
-  const onDelete = (id: string) => { remove(id); showToast("소재가 삭제되었어요"); };
+  const onDelete = (id: string) => {
+    if (id.startsWith("cre_demo_")) {
+      setHiddenMockIds((prev) => {
+        const next = new Set(prev);
+        next.add(id);
+        return next;
+      });
+      showToast("둘러보기 데모 소재는 새로고침하면 다시 보여요");
+      return;
+    }
+    remove(id);
+    showToast("소재가 삭제되었어요");
+  };
 
   return (
     <div className="page" data-screen-label="소재 라이브러리">

@@ -9,12 +9,11 @@ export interface ScopedStorageSerde<T> {
   stringify(value: T): string;
 }
 
-function jsonSerde<T>(): ScopedStorageSerde<T> {
-  return {
-    parse: (raw) => JSON.parse(raw) as T,
-    stringify: (value) => JSON.stringify(value),
-  };
-}
+// 모듈 상수 — render 마다 새 객체를 만들면 setValue identity 가 churn 되어 caller 의 useCallback/useEffect 가 의도와 다르게 동작.
+const JSON_SERDE: ScopedStorageSerde<unknown> = {
+  parse: (raw) => JSON.parse(raw) as unknown,
+  stringify: (value) => JSON.stringify(value),
+};
 
 function getStorage(area: StorageArea): Storage | null {
   if (typeof window === "undefined") return null;
@@ -42,22 +41,20 @@ function emitChange(area: StorageArea, key: string) {
   );
 }
 
+// hook 바깥에서 storage 를 직접 비우거나 쓴 뒤 같은 페이지 다른 hook 인스턴스를 동기화하고 싶을 때.
+export function notifyScopedStorageChange(area: StorageArea, key: string) {
+  emitChange(area, key);
+}
+
 export function useScopedStorage<T>(
   area: StorageArea,
   key: string,
   defaultValue: T,
-  serde: ScopedStorageSerde<T> = jsonSerde<T>(),
+  serde: ScopedStorageSerde<T> = JSON_SERDE as ScopedStorageSerde<T>,
 ): [T, (next: T | ((prev: T) => T)) => void, () => void] {
-  const [value, setValueState] = useState<T>(() => {
-    const storage = getStorage(area);
-    if (!storage) return defaultValue;
-    try {
-      const raw = storage.getItem(key);
-      return raw !== null ? serde.parse(raw) : defaultValue;
-    } catch {
-      return defaultValue;
-    }
-  });
+  // SSR 안전 — 첫 렌더는 항상 defaultValue (서버 HTML 과 일치).
+  // 실제 storage 값은 mount 후 useEffect 에서 hydrate.
+  const [value, setValueState] = useState<T>(defaultValue);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -72,6 +69,8 @@ export function useScopedStorage<T>(
         setValueState(defaultValue);
       }
     };
+
+    sync(); // mount 시 1회 hydrate
 
     const onScopedChange = (e: Event) => {
       const detail = (e as CustomEvent<ScopedStorageEventDetail>).detail;

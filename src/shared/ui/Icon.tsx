@@ -7,7 +7,8 @@ export type IconName =
   | "image" | "upload" | "calendar" | "globe" | "users" | "target" | "megaphone"
   | "chart" | "trend-up" | "trend-down" | "pause" | "play" | "info" | "warn" | "lock"
   | "bell" | "facebook" | "x" | "doc" | "wallet" | "link" | "dots" | "chev-down"
-  | "message" | "clock" | "folder" | "asterisk";
+  | "message" | "clock" | "folder" | "asterisk" | "eye" | "eye-off"
+  | "phone" | "heart";
 
 interface IconProps extends Omit<SVGProps<SVGSVGElement>, "name"> {
   name: IconName;
@@ -43,6 +44,10 @@ export default function Icon({ name, size = 18, strokeWidth = 1.75, spin, style,
     case "logout": return <svg {...props}><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" /></svg>;
     case "check": return <svg {...props}><path d="M5 12l5 5L20 7" /></svg>;
     case "copy": return <svg {...props}><rect x="9" y="9" width="12" height="12" rx="2" /><path d="M5 15V5a2 2 0 0 1 2-2h10" /></svg>;
+    case "eye": return <svg {...props}><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" /><circle cx="12" cy="12" r="3" /></svg>;
+    case "eye-off": return <svg {...props}><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c6.5 0 10 7 10 7a13.16 13.16 0 0 1-2.55 3.39M6.61 6.61A13.5 13.5 0 0 0 2 12s3.5 7 10 7a9.74 9.74 0 0 0 5.39-1.61M14.12 14.12a3 3 0 1 1-4.24-4.24" /><path d="M2 2l20 20" /></svg>;
+    case "phone": return <svg {...props}><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" /></svg>;
+    case "heart": return <svg {...props}><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" /></svg>;
     case "refresh": return <svg {...props}><path d="M3 12a9 9 0 0 1 15.5-6.3L21 8" /><path d="M21 3v5h-5" /><path d="M21 12a9 9 0 0 1-15.5 6.3L3 16" /><path d="M3 21v-5h5" /></svg>;
     case "arrow-right": return <svg {...props}><path d="M5 12h14M13 5l7 7-7 7" /></svg>;
     case "arrow-left": return <svg {...props}><path d="M19 12H5M11 5l-7 7 7 7" /></svg>;

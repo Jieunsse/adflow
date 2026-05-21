@@ -1,12 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import Icon from "@shared/ui/Icon";
+import IdField from "@shared/ui/IdField";
 import { Badge } from "@shared/ui/primitives";
 import { useToast } from "@shared/ui/Toast";
 import { useNotifSettings } from "@shared/lib/notifications";
+import { notifyScopedStorageChange } from "@shared/lib/storage/useScopedStorage";
 
 type Tab = "account" | "notif" | "danger";
 const TABS: [Tab, string][] = [["account", "계정 연결"], ["notif", "알림"], ["danger", "계정 관리"]];
@@ -42,13 +44,44 @@ function AccountTab() {
   const connected = !!(session?.adAccountId && session?.pageId);
   const browseMode = !!session?.browseMode;
 
+  const statusIconBg = connected
+    ? "var(--w-primary-soft)"
+    : browseMode
+      ? "rgba(255,146,0,0.14)"
+      : "rgba(255,66,66,0.10)";
+  const statusIconFg = connected
+    ? "var(--w-primary-press)"
+    : browseMode
+      ? "var(--w-status-cautionary)"
+      : "var(--w-status-negative)";
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <div className="card card--lg">
-        <h2 className="section-title">연결 상태</h2>
-        <p className="section-sub">
-          {connected ? "Meta 광고 계정과 페이스북 페이지가 연결되어 있어요." : "아직 광고 계정·페이지가 연결되지 않았어요."}
-        </p>
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          <div style={{ width: 48, height: 48, borderRadius: 12, background: statusIconBg, color: statusIconFg, display: "grid", placeItems: "center", flex: "0 0 auto" }}>
+            <Icon name={connected ? "check" : "link"} size={22} />
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+              <h2 className="section-title">연결 상태</h2>
+              {connected ? (
+                <Badge kind="success" size="sm" dot live>연결됨</Badge>
+              ) : browseMode ? (
+                <Badge kind="warn" size="sm">둘러보기</Badge>
+              ) : (
+                <Badge kind="neg" size="sm">미연결</Badge>
+              )}
+            </div>
+            <p className="section-sub">
+              {connected
+                ? "Meta 광고 계정과 페이스북 페이지가 연결되어 있어요."
+                : browseMode
+                  ? "예시 데이터로 화면과 흐름을 살펴보는 중이에요. 광고 집행은 연결 후에 가능해요."
+                  : "아직 광고 계정·페이지가 연결되지 않았어요."}
+            </p>
+          </div>
+        </div>
         <hr className="divider" />
         {connected ? (
           <>
@@ -60,6 +93,7 @@ function AccountTab() {
                   <div className="list-row__sub">{session?.adAccountId}</div>
                 </div>
               </div>
+              <Badge kind="success" size="sm" dot>활성</Badge>
             </div>
             <div className="list-row">
               <div style={{ display: "flex", alignItems: "center", gap: 14, minWidth: 0 }}>
@@ -69,6 +103,7 @@ function AccountTab() {
                   <div className="list-row__sub">{session?.pageId}</div>
                 </div>
               </div>
+              <Badge kind="success" size="sm" dot>활성</Badge>
             </div>
             <hr className="divider" />
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10 }}>
@@ -80,56 +115,58 @@ function AccountTab() {
           <div className="list-row" style={{ borderStyle: "dashed" }}>
             <div>
               <div className="list-row__title">광고 계정이 연결되지 않았어요</div>
-              <div className="list-row__sub">{browseMode ? "둘러보기 모드예요. 광고를 집행하려면 Meta 광고 계정·페이지를 연결해주세요." : "Meta 광고 계정·페이지를 연결하면 광고를 만들고 집행할 수 있어요."}</div>
+              <div className="list-row__sub">{browseMode ? "광고를 집행하려면 Meta 광고 계정·페이지를 연결해주세요." : "Meta 광고 계정·페이지를 연결하면 광고를 만들고 집행할 수 있어요."}</div>
             </div>
             <button className="btn btn--primary btn--sm" type="button" onClick={() => router.push("/connect")}><Icon name="link" size={14} /> 계정 연결하기</button>
           </div>
         )}
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 20 }}>
-        {connected ? (
-          <div className="card" style={{ background: "linear-gradient(135deg, rgba(0,102,255,0.04), rgba(101,65,242,0.05))", borderColor: "transparent" }}>
-            <Badge kind="success" dot live>연결됨</Badge>
-            <div style={{ font: "700 18px/1.3 var(--w-font-sans)", color: "var(--w-fg-strong)", marginTop: 12, letterSpacing: "-0.012em" }}>광고를 만들 수 있어요</div>
-            <p style={{ font: "500 13px/1.55 var(--w-font-sans)", color: "var(--w-fg-neutral)", margin: "10px 0 16px" }}>바로 광고 만들기 화면으로 이동해 첫 캠페인을 시작해보세요.</p>
-            <button className="btn btn--primary btn--sm" type="button" onClick={() => router.push("/create")}><Icon name="sparkles" size={14} /> 광고 만들기로 이동</button>
+      {connected && (
+        <div className="card" style={{ background: "linear-gradient(135deg, rgba(0,102,255,0.04), rgba(101,65,242,0.05))", borderColor: "transparent", display: "flex", alignItems: "center", gap: 18, flexWrap: "wrap" }}>
+          <div style={{ width: 52, height: 52, borderRadius: 14, background: "var(--w-primary-soft)", color: "var(--w-primary-press)", display: "grid", placeItems: "center", flex: "0 0 auto" }}>
+            <Icon name="sparkles" size={22} />
           </div>
-        ) : (
-          <div className="card" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            <Badge kind="warn" dot size="sm">둘러보기</Badge>
-            <div style={{ font: "700 17px/1.3 var(--w-font-sans)", color: "var(--w-fg-strong)" }}>연결 없이 먼저 둘러보는 중이에요</div>
-            <p style={{ font: "500 13px/1.55 var(--w-font-sans)", color: "var(--w-fg-neutral)", margin: 0 }}>예시 데이터로 화면과 흐름을 살펴볼 수 있어요. 광고 집행은 연결 후에 가능해요.</p>
-            <button className="btn btn--secondary btn--sm" type="button" onClick={() => router.push("/connect")}>지금 연결하기 →</button>
+          <div style={{ flex: 1, minWidth: 220 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+              <div style={{ font: "700 17px/1.3 var(--w-font-sans)", color: "var(--w-fg-strong)", letterSpacing: "-0.012em" }}>광고를 만들 수 있어요</div>
+              <Badge kind="success" size="sm" dot live>준비됨</Badge>
+            </div>
+            <p style={{ font: "500 13px/1.55 var(--w-font-sans)", color: "var(--w-fg-neutral)", margin: "6px 0 0" }}>바로 광고 만들기 화면으로 이동해 첫 캠페인을 시작해보세요.</p>
           </div>
-        )}
-      </div>
+          <button className="btn btn--primary btn--sm" type="button" onClick={() => router.push("/create")}>광고 만들기로 이동 <Icon name="arrow-right" size={13} /></button>
+        </div>
+      )}
+
+      {(session?.role === "팀장" || browseMode) && <MetaAppCard previewMode={browseMode} />}
 
       <div className="card card--lg">
-        <h2 className="section-title">Instagram 오가닉 인사이트</h2>
-        <p className="section-sub">연결된 Facebook 페이지에 Instagram 비즈니스 계정이 링크되면 성과 탭에서 오가닉 인사이트를 자동으로 확인할 수 있어요.</p>
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          <div style={{ width: 48, height: 48, borderRadius: 12, background: "linear-gradient(135deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888)", display: "grid", placeItems: "center", flex: "0 0 auto" }}>
+            <Icon name="image" size={22} style={{ color: "#fff" }} />
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <h2 className="section-title">Instagram 오가닉 인사이트</h2>
+            <p className="section-sub">연결된 Facebook 페이지에 Instagram 비즈니스 계정이 링크되면 성과 탭에서 오가닉 인사이트를 자동으로 확인할 수 있어요.</p>
+          </div>
+        </div>
         <hr className="divider" />
         <div className="list-row">
-          <div style={{ display: "flex", alignItems: "center", gap: 14, minWidth: 0 }}>
-            <div style={{ width: 40, height: 40, borderRadius: 10, background: "linear-gradient(135deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888)", display: "grid", placeItems: "center", flex: "0 0 auto" }}>
-              <Icon name="image" size={18} style={{ color: "#fff" }} />
-            </div>
-            <div>
-              <div className="list-row__title">Instagram 비즈니스 계정</div>
-              <div className="list-row__sub">
-                {connected
-                  ? "Facebook 페이지에 Instagram 비즈니스 계정이 연결되면 자동으로 인사이트를 불러와요."
-                  : "먼저 Meta 광고 계정과 Facebook 페이지를 연결해주세요."}
-              </div>
+          <div style={{ minWidth: 0 }}>
+            <div className="list-row__title">Instagram 비즈니스 계정</div>
+            <div className="list-row__sub">
+              {connected
+                ? "Facebook 페이지에 Instagram 비즈니스 계정이 연결되면 자동으로 인사이트를 불러와요."
+                : "먼저 Meta 광고 계정과 Facebook 페이지를 연결해주세요."}
             </div>
           </div>
           <button className="btn btn--secondary btn--sm" type="button" onClick={() => router.push("/create")}>
             성과 탭에서 확인 <Icon name="arrow-right" size={13} />
           </button>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 14, font: "500 12px/1.4 var(--w-font-sans)", color: "var(--w-fg-neutral)" }}>
-          <Icon name="info" size={12} />
-          Instagram 비즈니스 계정 연결은 Facebook 페이지 설정에서 할 수 있어요. 연결 후 다시 로그인하면 인사이트가 활성화돼요.
+        <div className="callout callout--info" style={{ marginTop: 14, font: "500 12.5px/1.5 var(--w-font-sans)" }}>
+          <Icon name="info" size={14} style={{ flex: "0 0 auto", marginTop: 2 }} />
+          <span>Instagram 비즈니스 계정 연결은 Facebook 페이지 설정에서 할 수 있어요. 연결 후 다시 로그인하면 인사이트가 활성화돼요.</span>
         </div>
       </div>
     </div>
@@ -137,9 +174,87 @@ function AccountTab() {
 }
 
 
-type NotifKey = "launch" | "perf" | "weekly" | "opt";
+interface MetaAppState {
+  configured: boolean;
+  clientId: string | null;
+  audit: { actor: string; action: "set" | "clear"; timestamp: string }[];
+}
+
+function MetaAppCard({ previewMode = false }: { previewMode?: boolean }) {
+  const router = useRouter();
+  const [state, setState] = useState<MetaAppState | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/install/meta-app")
+      .then((r) => r.json())
+      .then((data) => setState(data))
+      .catch(() => setState({ configured: false, clientId: null, audit: [] }))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const lastChange = state?.audit.filter((a) => a.action === "set").slice(-1)[0];
+  const installHref = previewMode ? "/install?preview=1" : "/install";
+
+  return (
+    <div className="card card--lg">
+      <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+        <div style={{ width: 48, height: 48, borderRadius: 12, background: "var(--w-accent-violet-soft)", color: "var(--w-accent-violet)", display: "grid", placeItems: "center", flex: "0 0 auto" }}>
+          <Icon name="settings" size={22} />
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+            <h2 className="section-title">Meta 앱 연결</h2>
+            <Badge kind={previewMode ? "warn" : "violet"} size="sm">{previewMode ? "둘러보기" : "관리자"}</Badge>
+          </div>
+          <p className="section-sub">
+            {previewMode
+              ? "Meta 개발자센터 가입부터 라이브 전환까지의 연결 과정을 미리 둘러볼 수 있어요. 저장은 되지 않아요."
+              : "AdFlow가 Meta 광고 API를 호출할 때 사용하는 앱 자격증명이에요. 교체하면 모든 사용자가 다시 로그인해야 해요."}
+          </p>
+        </div>
+      </div>
+      <hr className="divider" />
+      {loading ? (
+        <div className="field__hint">불러오는 중…</div>
+      ) : state?.configured ? (
+        <>
+          <IdField
+            label="App ID"
+            id={state.clientId}
+            desc="AdFlow가 Meta 광고 API를 호출할 때 사용하는 앱 고유 식별자."
+          />
+          <hr className="divider" />
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10 }}>
+            <div className="field__hint">
+              {lastChange
+                ? `마지막 변경: ${new Date(lastChange.timestamp).toLocaleString("ko-KR")} · ${lastChange.actor}`
+                : "변경 이력이 없어요."}
+            </div>
+            <button className="btn btn--secondary btn--sm" type="button" onClick={() => router.push(installHref)}>
+              {previewMode ? "연결하기" : "자격증명 교체"} <Icon name="arrow-right" size={13} />
+            </button>
+          </div>
+        </>
+      ) : (
+        <div className="list-row" style={{ borderStyle: "dashed" }}>
+          <div>
+            <div className="list-row__title">Meta 앱이 연결되지 않았어요</div>
+            <div className="list-row__sub">로그인이 동작하려면 Meta 앱 자격증명을 먼저 등록해야 해요.</div>
+          </div>
+          <button className="btn btn--primary btn--sm" type="button" onClick={() => router.push("/install")}>
+            <Icon name="link" size={14} /> 셋업 시작
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+type NotifKey = "launch" | "perf" | "weekly" | "opt" | "adStatus";
 const NOTIF_OPTS: [NotifKey, string, boolean][] = [
   ["launch", "광고가 게재됐을 때", true],
+  ["adStatus", "광고 상태가 바뀌었을 때 (승인·거부·이슈)", true],
   ["opt", "AI 최적화 제안이 있을 때", true],
   ["perf", "성과가 갑자기 변동했을 때", false],
   ["weekly", "주간 성과 요약", false],
@@ -185,9 +300,14 @@ function DangerTab() {
 
   const clearLocalData = () => {
     try {
-      LOCAL_KEYS.forEach((k) => localStorage.removeItem(k));
-      SESSION_KEYS.forEach((k) => sessionStorage.removeItem(k));
-      window.dispatchEvent(new CustomEvent("adflow:library"));
+      LOCAL_KEYS.forEach((k) => {
+        localStorage.removeItem(k);
+        notifyScopedStorageChange("local", k);
+      });
+      SESSION_KEYS.forEach((k) => {
+        sessionStorage.removeItem(k);
+        notifyScopedStorageChange("session", k);
+      });
     } catch {
       /* storage 사용 불가 — 무시 */
     }

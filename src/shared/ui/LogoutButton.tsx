@@ -1,10 +1,12 @@
 "use client";
 
 import { useRef, useState, useEffect } from "react";
-import { signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import Icon from "@shared/ui/Icon";
 
 export default function LogoutButton() {
+  const { data: session } = useSession();
+  const browseMode = !!session?.browseMode;
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const btnRef = useRef<HTMLButtonElement>(null);
@@ -74,7 +76,7 @@ export default function LogoutButton() {
             color: "var(--w-fg-strong)",
             marginBottom: 4,
           }}>
-            로그아웃하시겠어요?
+            {browseMode ? "둘러보기 모드를 종료하시겠어요?" : "로그아웃하시겠어요?"}
           </div>
           <div style={{
             font: "500 11.5px/1.4 var(--w-font-sans)",
@@ -116,7 +118,7 @@ export default function LogoutButton() {
               }}
             >
               <Icon name="logout" size={12} />
-              로그아웃
+              {browseMode ? "종료하기" : "로그아웃"}
             </button>
           </div>
         </div>

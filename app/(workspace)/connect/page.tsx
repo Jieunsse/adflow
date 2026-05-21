@@ -7,6 +7,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Icon, { type IconName } from "@shared/ui/Icon";
 import { useToast } from "@shared/ui/Toast";
 import ConfirmModal from "@shared/ui/ConfirmModal";
+import IdField from "@shared/ui/IdField";
+import { maskId } from "@shared/lib/format";
 
 type AccountInfo = { connected: boolean; accountId: string; accountName: string; currency: string };
 
@@ -251,10 +253,16 @@ function AdAccountCard({ name, id, currency, status, disabled, onChange }: {
           <div style={{ minWidth: 0 }}>
             <div className="w-overline" style={{ color: "var(--w-fg-alternative)", marginBottom: 6 }}>광고 계정</div>
             <div className="conn-card__title">{name}</div>
-            <div className="conn-card__id-row">
-              <span className="conn-card__id">{id}</span>
-              {currency !== "—" && <><span className="conn-card__dot" /><span className="conn-card__id">{currency}</span></>}
-            </div>
+            {currency !== "—" && (
+              <div className="conn-card__id-row">
+                <span className="conn-card__id">{currency}</span>
+              </div>
+            )}
+            <IdField
+              label="광고 계정 ID"
+              id={id}
+              desc="Meta 광고 계정의 고유 번호. 결제·문의 시 Meta에 알려주는 값이에요."
+            />
           </div>
           <div className="conn-card__right">
             {status === "disabled"
@@ -262,7 +270,6 @@ function AdAccountCard({ name, id, currency, status, disabled, onChange }: {
               : status === "active"
                 ? <span className="status-badge status-badge--active"><span className="status-dot" /> 활성</span>
                 : null}
-            {!disabled && <button className="btn btn--ghost btn--sm" type="button" onClick={onChange}>광고 계정 변경</button>}
           </div>
         </div>
         {status === "disabled" && (
@@ -275,6 +282,11 @@ function AdAccountCard({ name, id, currency, status, disabled, onChange }: {
           <div className="alert-bar alert-bar--muted">
             <Icon name="lock" size={13} />
             <span>재인증 후 확인할 수 있어요.</span>
+          </div>
+        )}
+        {!disabled && (
+          <div className="conn-card__foot">
+            <button className="btn btn--secondary btn--sm" type="button" onClick={onChange}>광고 계정 변경</button>
           </div>
         )}
       </div>
@@ -293,19 +305,27 @@ function PixelCard({ name, id, disabled, onChange }: { name: string | null; id: 
               Facebook Pixel <span style={{ font: "500 11px/1 var(--w-font-sans)", color: "var(--w-fg-neutral)", verticalAlign: "middle" }}>(선택)</span>
             </div>
             <div className="conn-card__title">{name ?? "선택 안 됨"}</div>
-            {id && <div className="conn-card__id-row"><span className="conn-card__id">{id}</span></div>}
-            <div style={{ font: "500 12.5px/1.5 var(--w-font-sans)", color: "var(--w-fg-neutral)", marginTop: 10 }}>
+            <div style={{ font: "500 12.5px/1.5 var(--w-font-sans)", color: "var(--w-fg-neutral)", marginTop: 6 }}>
               {name ? "광고 클릭 후 사이트 방문을 이 Pixel로 추적해요." : "선택하면 광고 클릭 후 사이트 방문을 추적할 수 있어요. 없으면 건너뛰어도 돼요."}
             </div>
-          </div>
-          <div className="conn-card__right">
-            {!disabled && <button className="btn btn--ghost btn--sm" type="button" onClick={onChange}>{name ? "Pixel 변경" : "Pixel 선택"}</button>}
+            {id && (
+              <IdField
+                label="Pixel ID"
+                id={id}
+                desc="사이트 방문 추적에 쓰이는 Meta Pixel 식별자."
+              />
+            )}
           </div>
         </div>
         {disabled && (
           <div className="alert-bar alert-bar--muted">
             <Icon name="lock" size={13} />
             <span>재인증 후 확인할 수 있어요.</span>
+          </div>
+        )}
+        {!disabled && (
+          <div className="conn-card__foot">
+            <button className="btn btn--secondary btn--sm" type="button" onClick={onChange}>{name ? "Pixel 변경" : "Pixel 선택"}</button>
           </div>
         )}
       </div>
@@ -327,17 +347,23 @@ function PageCard({ name, id, picture, disabled, onChange }: { name: string; id:
           <div style={{ minWidth: 0 }}>
             <div className="w-overline" style={{ color: "var(--w-fg-alternative)", marginBottom: 6 }}>페이스북 페이지</div>
             <div className="conn-card__title">{name}</div>
-            <div className="conn-card__id-row"><span className="conn-card__id">{id}</span></div>
-            <div style={{ font: "500 12.5px/1.5 var(--w-font-sans)", color: "var(--w-fg-neutral)", marginTop: 10 }}>광고가 이 페이지 명의로 게재돼요.</div>
-          </div>
-          <div className="conn-card__right">
-            {!disabled && <button className="btn btn--ghost btn--sm" type="button" onClick={onChange}>페이지 변경</button>}
+            <div style={{ font: "500 12.5px/1.5 var(--w-font-sans)", color: "var(--w-fg-neutral)", marginTop: 6 }}>광고가 이 페이지 명의로 게재돼요.</div>
+            <IdField
+              label="페이지 ID"
+              id={id}
+              desc="광고가 게재되는 페이스북 페이지의 고유 번호."
+            />
           </div>
         </div>
         {disabled && (
           <div className="alert-bar alert-bar--muted">
             <Icon name="lock" size={13} />
             <span>재인증 후 확인할 수 있어요.</span>
+          </div>
+        )}
+        {!disabled && (
+          <div className="conn-card__foot">
+            <button className="btn btn--secondary btn--sm" type="button" onClick={onChange}>페이지 변경</button>
           </div>
         )}
       </div>
@@ -367,12 +393,18 @@ function InstagramCard({ username, id, picture, pageId, disabled, onReload }: {
               Instagram 비즈니스 계정
             </div>
             <div className="conn-card__title">{linked ? `@${username}` : "연결되지 않음"}</div>
-            {id && <div className="conn-card__id-row"><span className="conn-card__id">{id}</span></div>}
-            <div style={{ font: "500 12.5px/1.5 var(--w-font-sans)", color: "var(--w-fg-neutral)", marginTop: 10 }}>
+            <div style={{ font: "500 12.5px/1.5 var(--w-font-sans)", color: "var(--w-fg-neutral)", marginTop: 6 }}>
               {linked
                 ? "선택한 페이스북 페이지에 연결된 Instagram 계정의 인사이트를 보여드려요."
                 : "선택한 페이스북 페이지에 Instagram 비즈니스 계정이 연결돼 있지 않아요. 페이지 설정에서 Instagram 계정을 연결한 뒤 아래 [다시 불러오기]를 눌러주세요."}
             </div>
+            {id && (
+              <IdField
+                label="Instagram 비즈니스 ID"
+                id={id}
+                desc="Instagram 인사이트가 사용하는 비즈니스 계정 식별자."
+              />
+            )}
           </div>
           <div className="conn-card__right">
             {linked
@@ -552,7 +584,7 @@ function PickerModal({ kind, title, subtitle, currentId, onClose, onPick }: {
                         {it.status === "disabled" && <span className="picker-row__sub-badge">비활성</span>}
                       </div>
                       <div className="picker-row__id">
-                        <span>{it.id}</span>
+                        <span>{maskId(it.id)}</span>
                         {it.currency && <><span className="conn-card__dot" /><span>{it.currency}</span></>}
                       </div>
                     </div>

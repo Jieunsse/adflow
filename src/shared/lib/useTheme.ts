@@ -1,23 +1,21 @@
 "use client";
 
-// Shared light/dark/system theme — persisted in localStorage (`adflow_theme`), applied to <html data-theme>.
-// The FOUC-prevention inline script in app/layout.tsx reads the same key on first paint.
-// All useTheme() instances stay in sync via a custom event so the sidebar toggle and the settings page agree.
-import { useCallback, useEffect, useState } from "react";
+// 라이트/다크/시스템 테마 — localStorage (`adflow_theme`) + <html data-theme> 동기화.
+// 저장소 read/write/sync 는 useScopedStorage primitive 담당.
+// 여기선 (1) raw string 직렬화 + 검증, (2) DOM data-theme 적용, (3) "system" 일 때 OS preference 구독.
+// app/layout.tsx 의 FOUC 인라인 스크립트가 같은 키를 raw 로 읽으므로 JSON wrap 금지.
+
+import { useEffect } from "react";
+import { useScopedStorage, type ScopedStorageSerde } from "./storage/useScopedStorage";
 
 export type ThemeChoice = "light" | "dark" | "system";
-const THEME_KEY = "adflow_theme";
-const THEME_EVENT = "adflow:theme";
 
-function readStored(): ThemeChoice {
-  if (typeof window === "undefined") return "light";
-  try {
-    const v = localStorage.getItem(THEME_KEY);
-    return v === "light" || v === "dark" || v === "system" ? v : "light";
-  } catch {
-    return "light";
-  }
-}
+const THEME_KEY = "adflow_theme";
+
+const themeSerde: ScopedStorageSerde<ThemeChoice> = {
+  stringify: (value) => value,
+  parse: (raw) => (raw === "light" || raw === "dark" || raw === "system" ? raw : "light"),
+};
 
 function resolve(t: ThemeChoice): "light" | "dark" {
   if (t !== "system") return t;
@@ -29,22 +27,9 @@ function applyToHtml(t: ThemeChoice) {
   if (typeof document !== "undefined") document.documentElement.setAttribute("data-theme", resolve(t));
 }
 
-export function useTheme(): [ThemeChoice, (t: ThemeChoice) => void] {
-  // First render matches SSR ("light"); the real value lands after mount (the inline script already painted with it).
-  const [theme, setThemeState] = useState<ThemeChoice>("light");
+export function useTheme() {
+  const [theme, setTheme] = useScopedStorage<ThemeChoice>("local", THEME_KEY, "light", themeSerde);
 
-  useEffect(() => {
-    setThemeState(readStored());
-    const sync = () => setThemeState(readStored());
-    window.addEventListener(THEME_EVENT, sync);
-    window.addEventListener("storage", sync);
-    return () => {
-      window.removeEventListener(THEME_EVENT, sync);
-      window.removeEventListener("storage", sync);
-    };
-  }, []);
-
-  // Keep <html data-theme> in sync, and re-resolve "system" when the OS preference changes.
   useEffect(() => {
     applyToHtml(theme);
     if (theme !== "system" || typeof window === "undefined") return;
@@ -54,16 +39,5 @@ export function useTheme(): [ThemeChoice, (t: ThemeChoice) => void] {
     return () => mq.removeEventListener("change", onChange);
   }, [theme]);
 
-  const setTheme = useCallback((t: ThemeChoice) => {
-    setThemeState(t);
-    try {
-      localStorage.setItem(THEME_KEY, t);
-    } catch {
-      /* storage unavailable — ignore */
-    }
-    applyToHtml(t);
-    window.dispatchEvent(new Event(THEME_EVENT));
-  }, []);
-
-  return [theme, setTheme];
+  return [theme, setTheme] as const;
 }

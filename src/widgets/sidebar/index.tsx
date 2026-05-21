@@ -3,10 +3,12 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { useQuery } from "@tanstack/react-query";
 import Icon, { type IconName } from "@shared/ui/Icon";
 import { useTheme, type ThemeChoice } from "@shared/lib/useTheme";
 import NotificationBell from "@shared/ui/NotificationBell";
 import LogoutButton from "@shared/ui/LogoutButton";
+import { fetchCampaigns } from "@entities/campaign/api";
 
 interface NavItem {
   href: string;
@@ -27,7 +29,7 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
         label: "대시보드",
         icon: "grid",
         children: [
-          { href: "/dashboard/instagram", label: "Instagram", icon: "image" },
+          { href: "/dashboard/business-portfolio", label: "비즈니스 포트폴리오", icon: "image" },
         ],
       },
       { href: "/create", label: "광고 만들기", icon: "sparkles", chip: "AI" },
@@ -37,7 +39,8 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
     label: "캠페인 관리",
     items: [
       { href: "/campaigns", label: "캠페인", icon: "message", count: 12, countVariant: "primary" },
-      { href: "/approvals", label: "승인 대기", icon: "clock", count: 7, countVariant: "warn" },
+      { href: "/ab-tests", label: "A/B 테스트", icon: "chart" },
+      { href: "/approvals", label: "승인 대기", icon: "clock", countVariant: "warn" },
       { href: "/library", label: "소재 라이브러리", icon: "folder" },
     ],
   },
@@ -46,6 +49,7 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
     items: [
       { href: "/members", label: "구성원 · 권한", icon: "users" },
       { href: "/connect", label: "계정 연결", icon: "asterisk" },
+      { href: "/billing", label: "청구 및 결제", icon: "wallet" },
       { href: "/settings", label: "설정", icon: "settings" },
     ],
   },
@@ -69,15 +73,27 @@ export default function Sidebar() {
   const pageName = session?.pageName;
   const connected = !!(adAccountName && pageName);
 
+  // /approvals 배지 — review + issue 캠페인 합. 같은 queryKey 로 /campaigns·/approvals 페이지와 캐시 공유.
+  // 광고 계정 연결 전(=session 없거나 미연결)엔 fetch 안 함 (401 무한 호출 회피).
+  const approvalsQ = useQuery({
+    queryKey: ["campaigns", "all"],
+    queryFn: () => fetchCampaigns("all"),
+    enabled: connected,
+    retry: false,
+  });
+  const approvalsCount = approvalsQ.data
+    ? approvalsQ.data.filter((c) => c.status === "review" || c.status === "issue").length
+    : 0;
+
   return (
     <aside className="side">
-      <div className="side__brand">
+      <Link href="/dashboard" className="side__brand" style={{ textDecoration: "none", color: "inherit" }}>
         <div className="side__mark">A</div>
         <div>
           <div className="side__name">AdFlow</div>
           <div className="side__name-sub">Marketing AI Studio</div>
         </div>
-      </div>
+      </Link>
 
       <nav className="side__nav">
         {NAV_GROUPS.map((group, gi) => (
@@ -90,6 +106,7 @@ export default function Sidebar() {
               const active = hasChildren
                 ? pathname === it.href
                 : pathname === it.href || pathname.startsWith(it.href + "/");
+              const liveCount = it.href === "/approvals" ? approvalsCount : it.count;
               return (
                 <div key={it.href}>
                   <Link
@@ -99,9 +116,9 @@ export default function Sidebar() {
                     <span className="side__link-icon"><Icon name={it.icon} size={18} /></span>
                     <span>{it.label}</span>
                     {it.chip && <span className="side__link-count">{it.chip}</span>}
-                    {it.count != null && (
+                    {liveCount != null && liveCount > 0 && (
                       <span className={"side__link-count" + (it.countVariant === "warn" ? " side__link-count--warn" : it.countVariant === "primary" ? " side__link-count--primary" : "")}>
-                        {it.count}
+                        {liveCount}
                       </span>
                     )}
                   </Link>

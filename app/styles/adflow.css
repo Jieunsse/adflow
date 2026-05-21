@@ -328,8 +328,17 @@
   transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
   letter-spacing: 0.004em;
 }
-.adflow .chip:hover { background: rgba(112,115,124,0.12); border-color: var(--w-line-normal); color: #121212; }
-[data-theme="dark"] .adflow .chip:hover { background: rgba(255,255,255,0.10); border-color: var(--w-line-normal); }
+/* 인터랙티브 피커 칩 전용 hover. 상태/목표 배지(chip--issue/review/live/paused/ended/neutral/obj-*)
+   와 선택된 chip--on 은 자체 색을 보존해야 하므로 hover 회색 처리에서 제외해요. */
+.adflow .chip:not(.chip--on, .chip--issue, .chip--review, .chip--live, .chip--paused, .chip--ended, .chip--neutral, .chip--obj-traffic, .chip--obj-conversion, .chip--obj-awareness, .chip--obj-leads, .chip--obj-engagement, .chip--obj-install):hover {
+  background: rgba(112,115,124,0.12);
+  border-color: var(--w-line-normal);
+  color: #121212;
+}
+[data-theme="dark"] .adflow .chip:not(.chip--on, .chip--issue, .chip--review, .chip--live, .chip--paused, .chip--ended, .chip--neutral, .chip--obj-traffic, .chip--obj-conversion, .chip--obj-awareness, .chip--obj-leads, .chip--obj-engagement, .chip--obj-install):hover {
+  background: rgba(255,255,255,0.10);
+  border-color: var(--w-line-normal);
+}
 .adflow .chip--on {
   background: var(--w-fg-strong);
   color: var(--w-bg-elevated);
@@ -629,8 +638,44 @@
 .adflow .conn-card__id {
   font: 500 12.5px/1 var(--w-font-mono); color: var(--w-fg-neutral);
 }
+
+.adflow .id-field { margin-top: 10px; }
+.adflow .id-field__row {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+}
+.adflow .id-field__label {
+  font: 600 11.5px/1 var(--w-font-sans);
+  color: var(--w-fg-alternative);
+  letter-spacing: 0.01em;
+}
+.adflow .id-field__value {
+  font: 500 12.5px/1 var(--w-font-mono);
+  color: var(--w-fg-neutral);
+  letter-spacing: 0.02em;
+}
+.adflow .id-field__actions {
+  display: inline-flex; align-items: center; gap: 2px;
+}
+.adflow .id-field__btn {
+  width: 24px; height: 24px; border-radius: 6px;
+  border: 1px solid transparent; background: transparent;
+  color: var(--w-fg-neutral); cursor: pointer;
+  display: inline-grid; place-items: center;
+  transition: background 120ms ease, color 120ms ease;
+}
+.adflow .id-field__btn:hover {
+  background: var(--w-bg-neutral); color: var(--w-fg-strong);
+}
+.adflow .id-field__desc {
+  margin-top: 6px;
+  font: 500 12px/1.4 var(--w-font-sans);
+  color: var(--w-fg-neutral);
+}
 .adflow .conn-card__right {
   display: flex; flex-direction: column; gap: 10px; align-items: flex-end; flex: 0 0 auto;
+}
+.adflow .conn-card__foot {
+  display: flex; justify-content: flex-end; margin-top: 14px;
 }
 
 .adflow .btn--sm {
@@ -984,6 +1029,11 @@
   color: var(--w-bg-elevated);
   border-color: var(--w-fg-strong);
 }
+.adflow .filter-chip--on:hover {
+  background: var(--w-fg-neutral);
+  color: var(--w-bg-elevated);
+  border-color: var(--w-fg-neutral);
+}
 
 .adflow .icon-btn {
   width: 32px; height: 32px; border-radius: 8px;
@@ -1059,6 +1109,32 @@
 [data-theme="dark"] .adflow .chip--obj-leads      { background: rgba(255,146,0,0.20);  color: #ffb74d; }
 [data-theme="dark"] .adflow .chip--obj-engagement { background: rgba(0,191,64,0.18);   color: #49e57d; }
 [data-theme="dark"] .adflow .chip--obj-install    { background: rgba(217,75,167,0.22); color: #ff7fbf; }
+
+.adflow .dtable__row:hover .chip--obj-traffic    { background: rgba(0,102,255,0.20); }
+.adflow .dtable__row:hover .chip--obj-conversion { background: rgba(101,65,242,0.18); }
+.adflow .dtable__row:hover .chip--obj-awareness  { background: rgba(0,189,222,0.24); }
+.adflow .dtable__row:hover .chip--obj-leads      { background: rgba(255,146,0,0.22); }
+.adflow .dtable__row:hover .chip--obj-engagement { background: rgba(0,191,64,0.22); }
+.adflow .dtable__row:hover .chip--obj-install    { background: rgba(217,75,167,0.24); }
+.adflow .dtable__row:hover .chip--issue          { background: #fcd2d2; }
+.adflow .dtable__row:hover .chip--review         { background: #d6e4fb; }
+.adflow .dtable__row:hover .chip--live           { background: #c1f5d2; }
+.adflow .dtable__row:hover .chip--paused         { background: #fbe1c1; }
+.adflow .dtable__row:hover .chip--ended          { background: rgba(112,115,124,.16); }
+.adflow .dtable__row:hover .chip--neutral        { background: rgba(112,115,124,.14); }
+
+[data-theme="dark"] .adflow .dtable__row:hover .chip--obj-traffic    { background: rgba(0,102,255,0.32); }
+[data-theme="dark"] .adflow .dtable__row:hover .chip--obj-conversion { background: rgba(101,65,242,0.32); }
+[data-theme="dark"] .adflow .dtable__row:hover .chip--obj-awareness  { background: rgba(0,189,222,0.32); }
+[data-theme="dark"] .adflow .dtable__row:hover .chip--obj-leads      { background: rgba(255,146,0,0.30); }
+[data-theme="dark"] .adflow .dtable__row:hover .chip--obj-engagement { background: rgba(0,191,64,0.28); }
+[data-theme="dark"] .adflow .dtable__row:hover .chip--obj-install    { background: rgba(217,75,167,0.32); }
+[data-theme="dark"] .adflow .dtable__row:hover .chip--issue          { background: rgba(255,66,66,0.28); }
+[data-theme="dark"] .adflow .dtable__row:hover .chip--review         { background: rgba(0,102,255,0.30); }
+[data-theme="dark"] .adflow .dtable__row:hover .chip--live           { background: rgba(0,191,64,0.26); }
+[data-theme="dark"] .adflow .dtable__row:hover .chip--paused         { background: rgba(255,146,0,0.28); }
+[data-theme="dark"] .adflow .dtable__row:hover .chip--ended          { background: rgba(255,255,255,0.14); }
+[data-theme="dark"] .adflow .dtable__row:hover .chip--neutral        { background: rgba(255,255,255,0.12); }
 
 .adflow .badge {
   display: inline-flex; align-items: center; gap: 5px;
@@ -1400,4 +1476,72 @@
 .adflow .setup-empty__title { font: 700 14.5px/1.35 var(--w-font-display); color: var(--w-fg-strong); }
 .adflow .setup-empty__hint { font: 500 12.5px/1.55 var(--w-font-sans); color: var(--w-fg-neutral); max-width: 320px; }
 .adflow .setup-foot { display: flex; flex-wrap: wrap; gap: 8px; }
+.adflow .setup-foot .btn--ghost { border-color: var(--w-line-normal); color: #121212; }
+.adflow .setup-foot .btn--ghost:hover:not(:disabled) { color: #121212; }
 .adflow .setup-note { font: 500 11.5px/1.6 var(--w-font-sans); color: var(--w-fg-alternative); margin: 0; }
+
+.adflow .install-card { max-width: 640px; }
+.adflow .install-body {
+  display: flex; flex-direction: column; gap: 16px;
+  font: 500 13.5px/1.6 var(--w-font-sans); color: var(--w-fg-strong);
+}
+.adflow .install-body p { margin: 0; color: var(--w-fg-neutral); }
+.adflow .install-ol {
+  margin: 0; padding-left: 22px;
+  display: flex; flex-direction: column; gap: 6px;
+  font: 500 13px/1.55 var(--w-font-sans); color: var(--w-fg-neutral);
+}
+.adflow .install-ol b { color: var(--w-fg-strong); font-weight: 700; }
+.adflow .install-link {
+  display: inline-flex; align-items: center; gap: 6px;
+  align-self: flex-start;
+  padding: 8px 14px; border-radius: 8px;
+  background: var(--w-primary-soft); color: var(--w-primary-press);
+  font: 600 12.5px/1 var(--w-font-sans);
+  text-decoration: none; transition: background .14s;
+}
+.adflow .install-link:hover { background: rgba(0,102,255,0.16); }
+.adflow .install-field { display: flex; flex-direction: column; gap: 6px; }
+.adflow .install-field__label {
+  font: 600 12px/1 var(--w-font-sans);
+  color: var(--w-fg-neutral); letter-spacing: 0.02em;
+}
+.adflow .install-field__input {
+  border: 1px solid var(--w-line-normal); border-radius: 8px;
+  padding: 11px 13px; font: 500 13.5px/1.4 var(--w-font-mono, var(--w-font-sans));
+  background: var(--w-bg-base); color: var(--w-fg-strong);
+  transition: border-color .14s;
+}
+.adflow .install-field__input:focus { outline: none; border-color: var(--w-primary-normal); }
+.adflow .install-field__input:disabled { background: var(--w-bg-alternative); color: var(--w-fg-neutral); }
+.adflow .install-faq {
+  border: 1px solid var(--w-line-alternative); border-radius: 10px;
+  background: var(--w-bg-alternative);
+}
+.adflow .install-faq > summary {
+  list-style: none; cursor: pointer;
+  display: flex; align-items: center; gap: 8px;
+  padding: 12px 14px;
+  font: 600 12.5px/1 var(--w-font-sans); color: var(--w-fg-neutral);
+}
+.adflow .install-faq > summary::-webkit-details-marker { display: none; }
+.adflow .install-faq > summary > svg:last-child { margin-left: auto; transition: transform .18s; }
+.adflow .install-faq[open] > summary > svg:last-child { transform: rotate(180deg); }
+.adflow .install-faq__body {
+  border-top: 1px solid var(--w-line-alternative);
+  padding: 12px 14px;
+  display: flex; flex-direction: column; gap: 14px;
+}
+.adflow .install-faq__item { display: flex; flex-direction: column; gap: 4px; }
+.adflow .install-faq__q { font: 600 12.5px/1.45 var(--w-font-sans); color: var(--w-fg-strong); }
+.adflow .install-faq__a { font: 500 12.5px/1.6 var(--w-font-sans); color: var(--w-fg-neutral); white-space: pre-line; }
+.adflow .install-copy { position: relative; }
+.adflow .install-copy__text {
+  margin: 0; padding: 14px 16px; padding-right: 80px;
+  border: 1px solid var(--w-line-normal); border-radius: 10px;
+  background: var(--w-bg-alternative); color: var(--w-fg-strong);
+  font: 500 12.5px/1.65 var(--w-font-mono, ui-monospace, monospace);
+  white-space: pre-wrap; word-break: break-word;
+  max-height: 280px; overflow: auto;
+}
+.adflow .install-copy__btn { position: absolute; top: 8px; right: 8px; }

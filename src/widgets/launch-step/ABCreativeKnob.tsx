@@ -26,6 +26,8 @@ export default function ABCreativeKnob() {
 
   const primaryTextA = creative.primaryText;
   const primaryTextAvailable = !!primaryTextA;
+  const primaryTextCandidates = creative.primaryTextCandidates;
+  const primaryTextOptions = (primaryTextCandidates ?? []).filter((t) => t !== primaryTextA);
 
   const generatedImages = creative.generatedImages;
   const imageAvailable = !!(generatedImages && generatedImages.length >= 2);
@@ -38,6 +40,7 @@ export default function ABCreativeKnob() {
 
   const variantB = state.abTestVariantB;
   const variantBHeadline = variantB?.axis === "headline" ? variantB.headline : null;
+  const variantBPrimaryText = variantB?.axis === "primary_text" ? variantB.primaryText : null;
 
   // 헤드라인 축: pool 변화 시 자동 초기화
   useEffect(() => {
@@ -52,6 +55,16 @@ export default function ABCreativeKnob() {
     }
   }, [state.abTestEnabled, axis, variantBHeadline, candidates, headlineA, dispatch]);
 
+  // 카피문구 축: candidates 변화 시 자동 초기화
+  useEffect(() => {
+    if (!state.abTestEnabled || axis !== "primary_text") return;
+    const pool = (primaryTextCandidates ?? []).filter((t) => t !== primaryTextA);
+    if (pool.length === 0) return;
+    if (!variantBPrimaryText || !pool.includes(variantBPrimaryText)) {
+      dispatch({ type: "SET_AB_TEST_VARIANT_B", value: { axis: "primary_text", primaryText: pool[0] } });
+    }
+  }, [state.abTestEnabled, axis, variantBPrimaryText, primaryTextCandidates, primaryTextA, dispatch]);
+
   // 축 변경 시 abTestAxis + variantB 동기화
   const switchAxis = (next: AbTestAxis) => {
     setAxis(next);
@@ -60,7 +73,8 @@ export default function ABCreativeKnob() {
       const pool = (candidates ?? []).filter((h) => h !== headlineA);
       if (pool[0]) dispatch({ type: "SET_AB_TEST_VARIANT_B", value: { axis: "headline", headline: pool[0] } });
     } else if (next === "primary_text") {
-      dispatch({ type: "SET_AB_TEST_VARIANT_B", value: { axis: "primary_text", primaryText: "" } });
+      const pool = (primaryTextCandidates ?? []).filter((t) => t !== primaryTextA);
+      dispatch({ type: "SET_AB_TEST_VARIANT_B", value: { axis: "primary_text", primaryText: pool[0] ?? "" } });
     } else {
       const imgB = generatedImages?.[1] ?? generatedImages?.[0] ?? "";
       dispatch({ type: "SET_AB_TEST_VARIANT_B", value: { axis: "image", imageDataUrl: imgB } });
@@ -132,6 +146,9 @@ export default function ABCreativeKnob() {
           {axis === "primary_text" && (
             <PrimaryTextAxis
               textA={primaryTextA}
+              options={primaryTextOptions}
+              selected={variantBPrimaryText}
+              onSelect={(v) => dispatch({ type: "SET_AB_TEST_VARIANT_B", value: { axis: "primary_text", primaryText: v } })}
               textB={variantB?.axis === "primary_text" ? variantB.primaryText : ""}
               onChangeB={(v) => dispatch({ type: "SET_AB_TEST_VARIANT_B", value: { axis: "primary_text", primaryText: v } })}
             />
@@ -197,33 +214,66 @@ function HeadlineAxis({ headlineA, options, selected, onSelect }: {
   );
 }
 
-function PrimaryTextAxis({ textA, textB, onChangeB }: {
+function PrimaryTextAxis({ textA, options, selected, onSelect, textB, onChangeB }: {
   textA: string;
+  options: string[];
+  selected: string | null;
+  onSelect: (v: string) => void;
   textB: string;
   onChangeB: (v: string) => void;
 }) {
+  const hasOptions = options.length >= 1;
   return (
     <>
-      <SubHead title="B안 카피 문구 입력" subtitle="A안은 STEP 01에서 작성한 카피예요. B안을 직접 입력해주세요." />
+      <SubHead
+        title={hasOptions ? "B안 카피 문구 선택" : "B안 카피 문구 입력"}
+        subtitle={hasOptions ? "A안은 STEP 01에서 고른 카피예요. B안만 골라주세요." : "A안은 STEP 01에서 작성한 카피예요. B안을 직접 입력해주세요."}
+      />
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-        <div style={{ padding: "12px 14px", borderRadius: 10, border: "1.5px solid var(--w-line-normal)", background: "var(--w-bg-alternative)", opacity: 0.85 }}>
-          <div style={{ font: "600 11.5px/1 var(--w-font-sans)", color: "var(--w-fg-alternative)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>A안 (고정)</div>
-          <p style={{ font: "500 13px/1.55 var(--w-font-sans)", color: "var(--w-fg-neutral)", margin: 0, whiteSpace: "pre-wrap" }}>{textA || "카피 문구 없음"}</p>
+        <div className="radio-card radio-card--on" style={{ opacity: 0.85 }}>
+          <div className="radio-card__indicator" />
+          <div style={{ flex: 1 }}>
+            <div className="radio-card__num">A안 (고정)</div>
+            <div className="radio-card__text">{textA || "카피 문구 없음"}</div>
+          </div>
         </div>
-        <div style={{ padding: "12px 14px", borderRadius: 10, border: "1.5px solid var(--w-primary-normal)", background: "var(--w-bg-normal)" }}>
-          <div style={{ font: "600 11.5px/1 var(--w-font-sans)", color: "var(--w-primary-press)", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.06em" }}>B안</div>
-          <textarea
-            value={textB}
-            onChange={(e) => onChangeB(e.target.value)}
-            placeholder="비교할 카피 문구를 입력해주세요"
-            rows={3}
-            style={{
-              width: "100%", border: "none", background: "transparent", resize: "vertical",
-              font: "500 13px/1.55 var(--w-font-sans)", color: "var(--w-fg-strong)",
-              outline: "none", padding: 0,
-            }}
-          />
-        </div>
+        {hasOptions ? (
+          options.map((t) => {
+            const on = selected === t;
+            return (
+              <div
+                key={t}
+                className={"radio-card" + (on ? " radio-card--on" : "")}
+                onClick={() => onSelect(t)}
+                role="radio"
+                aria-checked={on}
+                tabIndex={0}
+                onKeyDown={(e) => { if (e.key === " " || e.key === "Enter") { e.preventDefault(); onSelect(t); } }}
+              >
+                <div className="radio-card__indicator" />
+                <div style={{ flex: 1 }}>
+                  <div className="radio-card__num">B안</div>
+                  <div className="radio-card__text">{t}</div>
+                </div>
+              </div>
+            );
+          })
+        ) : (
+          <div style={{ padding: "12px 14px", borderRadius: 10, border: "1.5px solid var(--w-primary-normal)", background: "var(--w-bg-normal)" }}>
+            <div style={{ font: "600 11.5px/1 var(--w-font-sans)", color: "var(--w-primary-press)", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.06em" }}>B안</div>
+            <textarea
+              value={textB}
+              onChange={(e) => onChangeB(e.target.value)}
+              placeholder="비교할 카피 문구를 입력해주세요"
+              rows={3}
+              style={{
+                width: "100%", border: "none", background: "transparent", resize: "vertical",
+                font: "500 13px/1.55 var(--w-font-sans)", color: "var(--w-fg-strong)",
+                outline: "none", padding: 0,
+              }}
+            />
+          </div>
+        )}
       </div>
     </>
   );

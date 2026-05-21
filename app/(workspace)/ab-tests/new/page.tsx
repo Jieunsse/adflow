@@ -252,6 +252,115 @@ function AxisCard({ info, onClick }: { info: typeof AXIS_INFO[0]; onClick: () =>
   );
 }
 
+/* ─── AI 생성 패널 ───────────────────────────────────────── */
+
+type AiGenState = "idle" | "loading" | "done" | "error";
+
+function AiGeneratePanel({ axis, onSelect }: { axis: "headline" | "primary_text"; onSelect: (text: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const [brief, setBrief] = useState("");
+  const [tone, setTone] = useState<"warm" | "pro" | "trendy">("warm");
+  const [genState, setGenState] = useState<AiGenState>("idle");
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [errMsg, setErrMsg] = useState("");
+
+  const TONE_LABELS = { warm: "감성적", pro: "전문적", trendy: "트렌디" } as const;
+
+  async function generate() {
+    if (!brief.trim()) return;
+    setGenState("loading");
+    setErrMsg("");
+    try {
+      const res = await fetch("/api/generate-creative", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ brand: brief, target: "광고 타겟 고객", tone, outcome: "traffic" }),
+      });
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      setSuggestions(axis === "headline" ? data.headlines : data.primaryTexts);
+      setGenState("done");
+    } catch {
+      setErrMsg("생성에 실패했어요. 잠시 후 다시 시도해주세요.");
+      setGenState("error");
+    }
+  }
+
+  return (
+    <div style={{ marginTop: 10 }}>
+      <button
+        type="button"
+        className="btn btn--ghost btn--sm"
+        onClick={() => setOpen((v) => !v)}
+        style={{ display: "inline-flex", alignItems: "center", gap: 6, color: "var(--w-accent-violet)" }}
+      >
+        <Icon name="sparkles" size={13} /> AI로 B안 생성
+      </button>
+
+      {open && (
+        <div style={{ marginTop: 10, padding: "14px 16px", borderRadius: 10, background: "var(--w-primary-soft)", border: "1px solid var(--w-primary-weak)" }}>
+          <div style={{ font: "600 12.5px/1.3 var(--w-font-sans)", color: "var(--w-fg-strong)", marginBottom: 8 }}>
+            제품/서비스 한 줄 설명
+          </div>
+          <textarea
+            value={brief}
+            onChange={(e) => setBrief(e.target.value)}
+            placeholder="예) 20대 여성을 위한 비건 스킨케어 브랜드"
+            rows={2}
+            style={{ width: "100%", padding: "8px 10px", borderRadius: 8, border: "1px solid var(--w-line-normal)", font: "500 13px/1.5 var(--w-font-sans)", background: "var(--w-bg-elevated)", resize: "none", boxSizing: "border-box" }}
+          />
+          <div style={{ display: "flex", gap: 6, margin: "10px 0" }}>
+            {(["warm", "pro", "trendy"] as const).map((t) => (
+              <button key={t} type="button" className={`chip${tone === t ? " chip--accent" : ""}`} onClick={() => setTone(t)}>
+                {TONE_LABELS[t]}
+              </button>
+            ))}
+          </div>
+          <button
+            type="button"
+            className="btn btn--primary btn--sm"
+            disabled={!brief.trim() || genState === "loading"}
+            onClick={generate}
+            style={{ width: "100%" }}
+          >
+            {genState === "loading"
+              ? <><Icon name="spinner" size={13} spin /> 생성 중…</>
+              : <><Icon name="sparkles" size={13} /> 생성하기</>}
+          </button>
+
+          {genState === "error" && (
+            <p style={{ font: "500 12px/1.3 var(--w-font-sans)", color: "var(--w-status-negative)", marginTop: 8, marginBottom: 0 }}>{errMsg}</p>
+          )}
+
+          {genState === "done" && suggestions.length > 0 && (
+            <div style={{ marginTop: 10 }}>
+              <div style={{ font: "600 12px/1.3 var(--w-font-sans)", color: "var(--w-fg-neutral)", marginBottom: 6 }}>
+                선택하면 B안에 입력돼요
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {suggestions.map((s, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => { onSelect(s); setOpen(false); }}
+                    style={{
+                      textAlign: "left", padding: "8px 12px", borderRadius: 8,
+                      border: "1px solid var(--w-primary-weak)", background: "var(--w-bg-elevated)",
+                      font: "500 13px/1.5 var(--w-font-sans)", color: "var(--w-fg-strong)", cursor: "pointer",
+                    }}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ─── STEP 3: 세부 설정 ──────────────────────────────────── */
 
 function ConfigStep({ method, axis, onBack }: { method: Method; axis: AxisType; onBack: () => void }) {
@@ -261,15 +370,38 @@ function ConfigStep({ method, axis, onBack }: { method: Method; axis: AxisType; 
   return <ExistingConfig axis={axis} />;
 }
 
-/* 새로 만들기 안내 */
+/* 새로 만들기 — A안/B안 직접 입력 + AI 생성 */
 function NewGuide({ axis }: { axis: AxisType }) {
   const router = useRouter();
   const axisInfo = AXIS_INFO.find((a) => a.id === axis)!;
-  const steps: string[] = {
-    headline: ["STEP 01에서 AI 카피 생성 → 헤드라인 후보 2개 이상 생성", "STEP 02 → 'A/B 시험으로 집행' 체크", "'헤드라인' 탭 선택 → B안 헤드라인 고르기", "STEP 03에서 집행 → 자동으로 A/B 등록"],
-    primary_text: ["STEP 01에서 카피 문구 작성", "STEP 02 → 'A/B 시험으로 집행' 체크", "'카피 문구' 탭 선택 → B안 문구 직접 입력", "STEP 03에서 집행 → 자동으로 A/B 등록"],
-    image: ["STEP 01에서 AI 이미지 3장 생성", "STEP 02 → 'A/B 시험으로 집행' 체크", "'이미지' 탭 선택 → A안·B안 이미지 선택", "STEP 03에서 집행 → 자동으로 A/B 등록"],
-  }[axis];
+  const [variantA, setVariantA] = useState("");
+  const [variantB, setVariantB] = useState("");
+
+  if (axis === "image") {
+    return (
+      <div>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
+          <div style={{ width: 40, height: 40, borderRadius: 10, background: "var(--w-primary-soft)", color: "var(--w-primary-normal)", display: "grid", placeItems: "center" }}>
+            <Icon name={axisInfo.icon} size={20} />
+          </div>
+          <div>
+            <div style={{ font: "700 15px/1.3 var(--w-font-sans)", color: "var(--w-fg-strong)" }}>이미지 A/B 테스트</div>
+            <div style={{ font: "500 12.5px/1.3 var(--w-font-sans)", color: "var(--w-fg-neutral)", marginTop: 2 }}>광고 만들기에서 이미지를 선택한 뒤 설정할 수 있어요</div>
+          </div>
+        </div>
+        <div style={{ padding: "12px 16px", borderRadius: 10, background: "var(--w-primary-soft)", marginBottom: 16, font: "500 13px/1.5 var(--w-font-sans)", color: "var(--w-primary-press)" }}>
+          STEP 01에서 AI 이미지 3장 생성 → STEP 02에서 "A/B 시험으로 집행" 체크 → 이미지 탭 선택 → A안·B안 고르기
+        </div>
+        <button className="btn btn--primary" type="button" onClick={() => router.push("/create")} style={{ width: "100%" }}>
+          <Icon name="sparkles" size={15} /> 광고 만들기로 이동
+        </button>
+      </div>
+    );
+  }
+
+  const isHeadline = axis === "headline";
+  const aPlaceholder = isHeadline ? "현재 사용 중인 헤드라인을 입력해주세요" : "현재 사용 중인 광고 문구를 입력해주세요";
+  const bPlaceholder = isHeadline ? "비교할 헤드라인을 입력해주세요" : "비교할 광고 문구를 입력해주세요";
 
   return (
     <div>
@@ -279,35 +411,49 @@ function NewGuide({ axis }: { axis: AxisType }) {
         </div>
         <div>
           <div style={{ font: "700 15px/1.3 var(--w-font-sans)", color: "var(--w-fg-strong)" }}>{axisInfo.label} A/B 테스트</div>
-          <div style={{ font: "500 12.5px/1.3 var(--w-font-sans)", color: "var(--w-fg-neutral)", marginTop: 2 }}>새로 광고 만들면서 시작</div>
+          <div style={{ font: "500 12.5px/1.3 var(--w-font-sans)", color: "var(--w-fg-neutral)", marginTop: 2 }}>A안과 B안을 입력하거나 AI로 생성해요</div>
         </div>
       </div>
 
-      <div className="card" style={{ marginBottom: 20 }}>
-        <h3 className="section-title">광고 만들기 진행 순서</h3>
-        <hr className="divider" />
-        <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
-          {steps.map((s, i) => (
-            <div key={i} style={{ display: "flex", gap: 14, padding: "12px 0", borderBottom: i < steps.length - 1 ? "1px solid var(--w-line-alternative)" : "none" }}>
-              <div style={{
-                width: 24, height: 24, borderRadius: "50%", background: "var(--w-primary-soft)", color: "var(--w-primary-press)",
-                font: "700 11.5px/1 var(--w-font-sans)", display: "grid", placeItems: "center", flex: "0 0 auto",
-              }}>
-                {i + 1}
-              </div>
-              <span style={{ font: "500 13.5px/1.5 var(--w-font-sans)", color: "var(--w-fg-normal)", paddingTop: 2 }}>{s}</span>
-            </div>
-          ))}
+      {/* A안 */}
+      <div style={{ marginBottom: 12, padding: "14px 16px", borderRadius: 12, border: "1.5px solid var(--w-line-normal)", background: "var(--w-bg-normal)" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+          <span style={{ width: 22, height: 22, borderRadius: "50%", background: "var(--w-bg-alternative)", border: "1.5px solid var(--w-line-normal)", font: "700 11px/1 var(--w-font-sans)", color: "var(--w-fg-neutral)", display: "grid", placeItems: "center" }}>A</span>
+          <span style={{ font: "600 12.5px/1 var(--w-font-sans)", color: "var(--w-fg-neutral)" }}>A안 — 기준 소재</span>
         </div>
+        {isHeadline ? (
+          <input type="text" value={variantA} onChange={(e) => setVariantA(e.target.value)} placeholder={aPlaceholder}
+            style={{ width: "100%", background: "transparent", border: "none", padding: 0, font: "600 14px/1.4 var(--w-font-sans)", color: "var(--w-fg-strong)", outline: "none", boxSizing: "border-box" }} />
+        ) : (
+          <textarea value={variantA} onChange={(e) => setVariantA(e.target.value)} placeholder={aPlaceholder} rows={3}
+            style={{ width: "100%", background: "transparent", border: "none", padding: 0, font: "500 13px/1.55 var(--w-font-sans)", color: "var(--w-fg-strong)", outline: "none", resize: "vertical" }} />
+        )}
+      </div>
+
+      {/* B안 */}
+      <div style={{ padding: "14px 16px", borderRadius: 12, border: "1.5px solid var(--w-primary-normal)", background: "var(--w-bg-normal)", marginBottom: 16 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+          <span style={{ width: 22, height: 22, borderRadius: "50%", background: "var(--w-primary-soft)", border: "1.5px solid var(--w-primary-normal)", font: "700 11px/1 var(--w-font-sans)", color: "var(--w-primary-press)", display: "grid", placeItems: "center" }}>B</span>
+          <span style={{ font: "600 12.5px/1 var(--w-font-sans)", color: "var(--w-primary-press)" }}>B안 — 비교할 소재</span>
+        </div>
+        {isHeadline ? (
+          <input type="text" value={variantB} onChange={(e) => setVariantB(e.target.value)} placeholder={bPlaceholder}
+            style={{ width: "100%", background: "transparent", border: "none", padding: 0, font: "600 14px/1.4 var(--w-font-sans)", color: "var(--w-fg-strong)", outline: "none", boxSizing: "border-box" }} />
+        ) : (
+          <textarea value={variantB} onChange={(e) => setVariantB(e.target.value)} placeholder={bPlaceholder} rows={3}
+            style={{ width: "100%", background: "transparent", border: "none", padding: 0, font: "500 13px/1.55 var(--w-font-sans)", color: "var(--w-fg-strong)", outline: "none", resize: "vertical" }} />
+        )}
+        <AiGeneratePanel axis={axis} onSelect={setVariantB} />
       </div>
 
       <button
-        className="btn btn--primary"
-        type="button"
-        onClick={() => router.push("/create")}
+        className="btn btn--primary" type="button"
+        disabled={!variantA.trim() || !variantB.trim()}
+        onClick={() => router.push("/ab-tests")}
         style={{ width: "100%" }}
+        title={!variantA.trim() || !variantB.trim() ? "A안과 B안을 모두 입력해주세요" : undefined}
       >
-        <Icon name="sparkles" size={15} /> 광고 만들기로 이동
+        <Icon name="chart" size={14} /> A/B 테스트 시작
       </button>
     </div>
   );
@@ -492,6 +638,7 @@ function TextVariants({ axis, variantA, variantB, onChangeA, onChangeB, locked }
             style={{ width: "100%", background: "transparent", border: "none", padding: 0, font: "500 13px/1.55 var(--w-font-sans)", color: "var(--w-fg-strong)", outline: "none", resize: "vertical" }}
           />
         )}
+        {!locked && <AiGeneratePanel axis={axis} onSelect={onChangeB} />}
       </div>
     </div>
   );

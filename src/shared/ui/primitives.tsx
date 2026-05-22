@@ -1,10 +1,23 @@
-// Shared presentational primitives — ported from the design bundle's primitives.jsx.
 import type { ReactNode } from "react";
 import Icon from "./Icon";
+import { cn } from "@shared/lib/cn";
+import { Card } from "./Card";
 
 /* ── Badge ─────────────────────────────────────────────────────────── */
 
 export type BadgeKind = "neutral" | "accent" | "success" | "warn" | "neg" | "violet" | "inverse";
+
+const BADGE_BASE = "inline-flex items-center gap-[5px] self-start px-[9px] py-1 rounded-full font-semibold text-[11.5px] leading-none tracking-[0.008em] border border-transparent";
+
+const BADGE_VARIANT: Record<BadgeKind, string> = {
+  neutral: "bg-[var(--w-bg-alternative)] text-[var(--w-fg-neutral)]",
+  accent:  "bg-[var(--w-primary-soft)] text-[var(--w-primary-press)]",
+  success: "bg-[rgba(0,191,64,0.10)] text-[#008a2e]",
+  warn:    "bg-[rgba(255,146,0,0.10)] text-[#b06700] border-[rgba(255,146,0,0.35)]",
+  neg:     "bg-[rgba(255,66,66,0.10)] text-[#c52d2d]",
+  violet:  "bg-[var(--w-accent-violet-soft)] text-[var(--w-accent-violet)]",
+  inverse: "bg-[var(--w-fg-strong)] text-[var(--w-bg-elevated)]",
+};
 
 export function Badge({
   kind = "neutral",
@@ -20,8 +33,14 @@ export function Badge({
   children: ReactNode;
 }) {
   return (
-    <span className={`badge badge--${kind}${size ? ` badge--${size}` : ""}`}>
-      {dot && <span className={"badge__dot" + (live ? " badge__dot--live" : "")} />}
+    <span className={cn(BADGE_BASE, BADGE_VARIANT[kind], size === "sm" && "px-[7px] py-0.5 text-[10.5px] gap-1")}>
+      {dot && (
+        <span className={cn("relative rounded-full shrink-0", size === "sm" ? "w-[5px] h-[5px]" : "w-1.5 h-1.5", live ? "bg-[var(--w-status-positive)]" : "bg-current")}>
+          {live && (
+            <span className="absolute inset-[-3px] rounded-full border-2 border-current opacity-35 animate-[live-pulse_1.6s_ease-out_infinite]" />
+          )}
+        </span>
+      )}
       {children}
     </span>
   );
@@ -54,7 +73,7 @@ export function Sparkline({
   const d = pts.map((p, i) => (i === 0 ? "M" : "L") + p[0].toFixed(1) + " " + p[1].toFixed(1)).join(" ");
   const area = `${d} L ${w} ${h} L 0 ${h} Z`;
   return (
-    <svg className="spark" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" style={{ height }}>
+    <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" style={{ height }}>
       {fill && <path d={area} fill={color} opacity="0.12" />}
       <path d={d} fill="none" stroke={color} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
@@ -83,22 +102,26 @@ export function KpiCard({
   color?: string;
 }) {
   return (
-    <div className="kpi">
-      <span className="kpi__label">{label}</span>
-      <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
-        <span className="kpi__value">
+    <div className="bg-[var(--w-bg-elevated)] border border-[var(--w-line-normal)] rounded-2xl py-5 px-[22px] flex flex-col gap-3 min-h-[124px]">
+      <span className="font-semibold text-[12.5px] leading-none tracking-[0.008em] text-[var(--w-fg-neutral)] flex items-center gap-1.5">
+        {label}
+      </span>
+      <div className="flex items-baseline gap-2.5">
+        <span className="font-bold text-[30px] leading-[1.05] tracking-[-0.024em] text-[var(--w-fg-strong)]">
           {value}
-          {suffix && <span className="kpi__suffix">{suffix}</span>}
+          {suffix && <span className="font-semibold text-base leading-none text-[var(--w-fg-neutral)] ml-1">{suffix}</span>}
         </span>
       </div>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6 }}>
+      <div className="flex items-center justify-between gap-1.5">
         {delta && (
-          <span className={"kpi__delta " + (down ? "kpi__delta--down" : "kpi__delta--up")}>
+          <span className={cn("font-semibold text-xs leading-none inline-flex items-center gap-1", down ? "text-[#c52d2d]" : "text-[#008a2e]")}>
             <Icon name={down ? "trend-down" : "trend-up"} size={14} /> {delta}
           </span>
         )}
       </div>
-      <div className="kpi__spark"><Sparkline data={trend} color={color} fill /></div>
+      <div className="mt-auto">
+        <Sparkline data={trend} color={color} fill />
+      </div>
     </div>
   );
 }
@@ -117,15 +140,15 @@ export function EmptyState({
   action?: ReactNode;
 }) {
   return (
-    <div className="card" style={{ textAlign: "center", padding: "48px 32px", display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
+    <Card className="text-center py-12 px-8 flex flex-col items-center gap-3">
       {icon && (
-        <div style={{ width: 56, height: 56, borderRadius: "50%", background: "var(--w-bg-alternative)", display: "grid", placeItems: "center", color: "var(--w-fg-neutral)" }}>
+        <div className="w-14 h-14 rounded-full bg-[var(--w-bg-alternative)] grid place-items-center text-[var(--w-fg-neutral)]">
           {icon}
         </div>
       )}
-      <div style={{ font: "700 17px/1.3 var(--w-font-sans)", color: "var(--w-fg-strong)", letterSpacing: "-0.01em" }}>{title}</div>
-      {desc && <div style={{ font: "500 13px/1.5 var(--w-font-sans)", color: "var(--w-fg-neutral)", maxWidth: 360 }}>{desc}</div>}
-      {action && <div style={{ marginTop: 8 }}>{action}</div>}
-    </div>
+      <div className="font-bold text-[17px] leading-[1.3] tracking-[-0.01em] text-[var(--w-fg-strong)]">{title}</div>
+      {desc && <div className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)] max-w-[360px]">{desc}</div>}
+      {action && <div className="mt-2">{action}</div>}
+    </Card>
   );
 }

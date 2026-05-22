@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import Icon from "@shared/ui/Icon";
+import { Card } from "@shared/ui/Card";
+import { Button } from "@shared/ui/Button";
 import { useLaunchDraft } from "@entities/campaign/model";
 
 const AB_RESULT_DAYS = 7;
@@ -39,7 +41,7 @@ function StepBadge({ status, num }: { status: ItemStatus; num: number }) {
       {status === "ok"
         ? <Icon name="check" size={13} strokeWidth={3} />
         : status === "warn"
-          ? <Icon name="alert-triangle" size={13} />
+          ? <Icon name="warn" size={13} />
           : <span style={{ font: "700 12px/1 var(--w-font-sans)" }}>{num}</span>}
     </div>
   );
@@ -49,7 +51,7 @@ function CheckItem({ item, num }: { item: Item; num: number }) {
   const m = STATUS_META[item.status];
   const isDone = item.status === "ok";
   return (
-    <div className="card" style={{ padding: "16px 18px", display: "flex", gap: 14, alignItems: "flex-start" }}>
+    <Card className="py-4 px-[18px] flex gap-3.5 items-start">
       <StepBadge status={item.status} num={num} />
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: isDone ? 0 : 5 }}>
@@ -69,47 +71,43 @@ function CheckItem({ item, num }: { item: Item; num: number }) {
         )}
         {item.action && <div style={{ marginTop: 10 }}>{item.action}</div>}
       </div>
-    </div>
+    </Card>
   );
 }
 
 function CtaCard({ label, href }: { label: string; href: string }) {
   const router = useRouter();
   return (
-    <div className="card" style={{
-      padding: "18px 20px", marginTop: 8,
-      display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16,
-      background: "var(--w-primary-soft)",
-    }}>
+    <Card className="py-[18px] px-5 mt-2 flex items-center justify-between gap-4 bg-[var(--w-primary-soft)]">
       <div>
-        <div style={{ font: "600 14px/1.3 var(--w-font-sans)", color: "var(--w-fg-strong)", marginBottom: 3 }}>
+        <div className="font-semibold text-[14px] leading-[1.3] text-[var(--w-fg-strong)] mb-[3px]">
           성과는 며칠 후부터 쌓여요
         </div>
-        <p style={{ font: "400 13px/1.5 var(--w-font-sans)", color: "var(--w-fg-neutral)", margin: 0 }}>
+        <p className="font-normal text-[13px] leading-[1.5] text-[var(--w-fg-neutral)] m-0">
           캠페인 페이지에서 매일 확인해보세요.
         </p>
       </div>
-      <button
-        className="btn btn--primary btn--sm"
-        type="button"
-        style={{ flexShrink: 0 }}
+      <Button
+        variant="primary"
+        size="sm"
+        className="shrink-0"
         onClick={() => router.push(href)}
       >
         {label} <Icon name="arrow-right" size={13} />
-      </button>
-    </div>
+      </Button>
+    </Card>
   );
 }
 
 function BottomNav({ onRestart }: { onRestart: () => void }) {
   return (
-    <div className="between" style={{ marginTop: 24 }}>
-      <button className="btn btn--secondary" type="button" onClick={onRestart}>
+    <div className="flex items-center justify-between gap-3 mt-6">
+      <Button variant="secondary" onClick={onRestart}>
         처음으로 돌아가기
-      </button>
-      <button className="btn btn--primary" type="button" onClick={onRestart}>
+      </Button>
+      <Button variant="primary" onClick={onRestart}>
         새 소재로 다시 만들기 <Icon name="plus" size={14} />
-      </button>
+      </Button>
     </div>
   );
 }
@@ -146,26 +144,22 @@ function BrowseChecklist({ onRestart }: { onRestart: () => void }) {
         : "푸시 알림을 켜면 성과·A/B 결과를 바로 받을 수 있어요.",
       status: notifPerm === "granted" ? "ok" : "info",
       action: notifPerm === "default" ? (
-        <button
-          className="btn btn--secondary btn--sm"
-          type="button"
+        <Button
+          variant="secondary"
+          size="sm"
           onClick={() => Notification.requestPermission().then(setNotifPerm)}
         >
           알림 허용하기
-        </button>
+        </Button>
       ) : undefined,
     },
   ];
 
   return (
     <div>
-      <div style={{
-        display: "flex", alignItems: "center", gap: 10,
-        padding: "10px 14px", marginBottom: 16,
-        background: "var(--w-primary-soft)", borderRadius: 10,
-      }}>
+      <div className="flex items-center gap-2.5 px-3.5 py-2.5 mb-4 bg-[var(--w-primary-soft)] rounded-[10px]">
         <Icon name="info" size={14} style={{ color: "var(--w-accent-violet)", flexShrink: 0 }} />
-        <p style={{ font: "500 13px/1.5 var(--w-font-sans)", color: "var(--w-fg-strong)", margin: 0 }}>
+        <p className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-strong)] m-0">
           예시 데이터예요. 실제 광고를 집행하면 실시간 상태가 여기에 표시돼요.
         </p>
       </div>
@@ -206,14 +200,14 @@ export default function PostLaunchChecklist({ onRestart }: { onRestart: () => vo
   if (!launched) {
     if (session?.browseMode) return <BrowseChecklist onRestart={onRestart} />;
     return (
-      <div className="card" style={{ textAlign: "center", padding: "40px 20px" }}>
-        <p style={{ font: "500 14px/1.5 var(--w-font-sans)", color: "var(--w-fg-neutral)", marginBottom: 16 }}>
+      <Card className="text-center py-10 px-5">
+        <p className="font-medium text-[14px] leading-[1.5] text-[var(--w-fg-neutral)] mb-4">
           아직 광고가 집행되지 않았어요. STEP 02에서 광고를 먼저 집행해주세요.
         </p>
-        <button className="btn btn--secondary" type="button" onClick={onRestart}>
+        <Button variant="secondary" onClick={onRestart}>
           처음으로 돌아가기
-        </button>
-      </div>
+        </Button>
+      </Card>
     );
   }
 
@@ -232,9 +226,9 @@ export default function PostLaunchChecklist({ onRestart }: { onRestart: () => vo
       title: "광고가 잘 검토되고 있는지 확인해봐요",
       ...reviewEntry,
       action: (
-        <button className="btn btn--ghost btn--sm" type="button" onClick={() => refetch()}>
+        <Button variant="ghost" size="sm" onClick={() => refetch()}>
           <Icon name="refresh" size={12} /> 새로고침
-        </button>
+        </Button>
       ),
     },
     {
@@ -253,13 +247,13 @@ export default function PostLaunchChecklist({ onRestart }: { onRestart: () => vo
           : "푸시 알림을 켜면 성과·A/B 결과를 바로 받을 수 있어요.",
       status: notifPerm === "granted" ? "ok" : "info",
       action: notifPerm === "default" ? (
-        <button
-          className="btn btn--secondary btn--sm"
-          type="button"
+        <Button
+          variant="secondary"
+          size="sm"
           onClick={() => Notification.requestPermission().then(setNotifPerm)}
         >
           알림 허용하기
-        </button>
+        </Button>
       ) : undefined,
     },
   ];
@@ -274,32 +268,21 @@ export default function PostLaunchChecklist({ onRestart }: { onRestart: () => vo
 
   return (
     <div>
-      {/* 접수 확인 헤더 */}
-      <div style={{
-        display: "flex", alignItems: "center", gap: 14,
-        padding: "16px 20px", marginBottom: 16,
-        background: "rgba(0,191,64,0.06)",
-        border: "1px solid rgba(0,191,64,0.18)",
-        borderRadius: 14,
-      }}>
-        <div style={{
-          width: 40, height: 40, borderRadius: "50%", flexShrink: 0,
-          background: "rgba(0,191,64,0.12)", color: "var(--w-status-positive)",
-          display: "grid", placeItems: "center",
-        }}>
+      <div className="flex items-center gap-3.5 px-5 py-4 mb-4 bg-[rgba(0,191,64,0.06)] border border-[rgba(0,191,64,0.18)] rounded-[14px]">
+        <div className="w-10 h-10 rounded-full shrink-0 bg-[rgba(0,191,64,0.12)] text-[var(--w-status-positive)] grid place-items-center">
           <Icon name="check" size={18} strokeWidth={2.5} />
         </div>
         <div>
-          <div style={{ font: "700 15px/1.3 var(--w-font-sans)", color: "var(--w-fg-strong)" }}>
+          <div className="font-bold text-[15px] leading-[1.3] text-[var(--w-fg-strong)]">
             광고가 접수됐어요
           </div>
-          <p style={{ font: "400 13px/1.5 var(--w-font-sans)", color: "var(--w-fg-neutral)", margin: "2px 0 0" }}>
+          <p className="font-normal text-[13px] leading-[1.5] text-[var(--w-fg-neutral)] mt-[2px] mb-0">
             지금 Meta에서 처리 중이에요. 아래 사항을 확인해봐요.
           </p>
         </div>
       </div>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      <div className="flex flex-col gap-2">
         {items.map((item, i) => <CheckItem key={i} item={item} num={i + 1} />)}
       </div>
 

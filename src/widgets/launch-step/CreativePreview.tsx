@@ -5,6 +5,7 @@
 
 import { useRef } from "react";
 import Icon from "@shared/ui/Icon";
+import { Button } from "@shared/ui/Button";
 import { useToast } from "@shared/ui/Toast";
 import { CTAS } from "@entities/creative/options";
 import { useCreativeDraft } from "@entities/creative/model";
@@ -43,44 +44,39 @@ export default function CreativePreview() {
   return (
     <>
       <SubHead title="광고 소재" />
-      <div style={{ display: "flex", gap: 14, padding: 14, border: "1px solid var(--w-line-alternative)", borderRadius: 14, alignItems: "center" }}>
+      <div className="flex gap-3.5 p-3.5 border border-[var(--w-line-alternative)] rounded-[14px] items-center">
         <div
+          className="w-[84px] h-[84px] rounded-xl grid place-items-center text-white shrink-0"
           style={{
-            width: 84,
-            height: 84,
-            borderRadius: 12,
             background: imageDataUrl ? `url(${imageDataUrl}) center/cover` : "linear-gradient(135deg, #0066ff, #6541f2 60%, #00bdde)",
-            display: "grid",
-            placeItems: "center",
-            color: "#fff",
-            flex: "0 0 auto",
           }}
         >
           {!imageDataUrl && <Icon name="image" size={22} />}
         </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ font: "600 14px/1.4 var(--w-font-sans)", color: hasCreative ? "var(--w-fg-strong)" : "var(--w-fg-alternative)" }}>
+        <div className="flex-1 min-w-0">
+          <div className={`font-semibold text-[14px] leading-[1.4] ${hasCreative ? "text-[var(--w-fg-strong)]" : "text-[var(--w-fg-alternative)]"}`}>
             {hasCreative ? headline : "STEP 01에서 AI 소재를 먼저 만들어 주세요"}
           </div>
-          <div style={{ font: "500 12px/1 var(--w-font-sans)", color: "var(--w-fg-neutral)", marginTop: 6 }}>CTA · {ctaLabel}</div>
-          <div style={{ display: "flex", gap: 6, marginTop: 10 }}>
-            <button className="btn btn--secondary btn--sm" type="button" onClick={() => fileRef.current?.click()}>
+          <div className="font-medium text-[12px] leading-none text-[var(--w-fg-neutral)] mt-1.5">CTA · {ctaLabel}</div>
+          <div className="flex gap-1.5 mt-2.5">
+            <Button variant="secondary" size="sm" type="button" onClick={() => fileRef.current?.click()}>
               <Icon name="upload" size={12} /> {imageDataUrl ? "이미지 변경" : "이미지 업로드"}
-            </button>
+            </Button>
             {imageDataUrl && (
-              <button
-                className="btn btn--ghost btn--sm"
+              <Button
+                variant="ghost"
+                size="sm"
                 type="button"
                 onClick={() => launch.dispatch({ type: "SET_IMAGE_DATA_URL", value: null })}
               >
                 제거
-              </button>
+              </Button>
             )}
             <input ref={fileRef} type="file" accept="image/*" hidden onChange={handleFile} />
           </div>
         </div>
       </div>
-      <p style={{ font: "500 12px/1.5 var(--w-font-sans)", color: "var(--w-fg-normal)", margin: "10px 0 0" }}>
+      <p className="font-medium text-[12px] leading-[1.5] text-[var(--w-fg-normal)] mt-2.5 mb-0">
         업로드하지 않으면 아래에서 입력한 페이지의 og:image 가 사용돼요. JPEG·3MB 이하 권장.
       </p>
     </>

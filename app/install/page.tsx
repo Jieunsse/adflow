@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Icon from "@shared/ui/Icon";
+import { Button } from "@shared/ui/Button";
 
 type Phase = "A" | "B" | "done";
 
@@ -61,16 +62,16 @@ function Faq({ step }: { step: number }) {
   const items = FAQ_BY_STEP[step] ?? [];
   if (items.length === 0) return null;
   return (
-    <details className="install-faq">
-      <summary>
+    <details className="border border-[var(--w-line-alternative)] rounded-[10px] bg-[var(--w-bg-alternative)]">
+      <summary className="list-none cursor-pointer flex items-center gap-2 px-[14px] py-3 font-semibold text-[12.5px] leading-none text-[var(--w-fg-neutral)] [&::-webkit-details-marker]:hidden">
         <Icon name="info" size={14} /> 자주 막히는 부분
-        <Icon name="chev-down" size={14} className="install-faq__caret" />
+        <Icon name="chev-down" size={14} className="ml-auto transition-transform duration-[180ms] [[open]_&]:rotate-180" />
       </summary>
-      <div className="install-faq__body">
+      <div className="border-t border-[var(--w-line-alternative)] px-[14px] py-3 flex flex-col gap-3.5">
         {items.map((item) => (
-          <div key={item.q} className="install-faq__item">
-            <div className="install-faq__q">{item.q}</div>
-            <div className="install-faq__a">{item.a}</div>
+          <div key={item.q} className="flex flex-col gap-1">
+            <div className="font-semibold text-[12.5px] leading-[1.45] text-[var(--w-fg-strong)]">{item.q}</div>
+            <div className="font-medium text-[12.5px] leading-[1.6] text-[var(--w-fg-neutral)] whitespace-pre-line">{item.a}</div>
           </div>
         ))}
       </div>
@@ -80,7 +81,12 @@ function Faq({ step }: { step: number }) {
 
 function ExternalLink({ href, children }: { href: string; children: React.ReactNode }) {
   return (
-    <a href={href} target="_blank" rel="noopener noreferrer" className="install-link">
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-flex items-center gap-1.5 self-start px-[14px] py-2 rounded-lg bg-[var(--w-primary-soft)] text-[var(--w-primary-press)] font-semibold text-[12.5px] leading-none no-underline transition-[background] duration-[140ms] hover:bg-[rgba(0,102,255,0.16)]"
+    >
       {children}
       <Icon name="arrow-right" size={12} />
     </a>
@@ -90,11 +96,13 @@ function ExternalLink({ href, children }: { href: string; children: React.ReactN
 function CopyBlock({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
   return (
-    <div className="install-copy">
-      <pre className="install-copy__text">{text}</pre>
-      <button
+    <div className="relative">
+      <pre className="m-0 px-4 py-[14px] pr-20 border border-[var(--w-line-normal)] rounded-[10px] bg-[var(--w-bg-alternative)] text-[var(--w-fg-strong)] [font-family:var(--w-font-mono,ui-monospace,monospace)] font-medium text-[12.5px] leading-[1.65] whitespace-pre-wrap break-words max-h-[280px] overflow-auto">{text}</pre>
+      <Button
+        variant="ghost"
+        size="sm"
         type="button"
-        className="btn btn--ghost btn--sm install-copy__btn"
+        className="absolute top-2 right-2"
         onClick={async () => {
           await navigator.clipboard.writeText(text);
           setCopied(true);
@@ -102,13 +110,25 @@ function CopyBlock({ text }: { text: string }) {
         }}
       >
         {copied ? "복사됨!" : "복사"}
-      </button>
+      </Button>
+    </div>
+  );
+}
+
+function SetupSteps({ total, filled }: { total: number; filled: number }) {
+  return (
+    <div className="flex gap-1.5">
+      {Array.from({ length: total }).map((_, i) => (
+        <span
+          key={i}
+          className={`flex-1 h-1 rounded-sm transition-[background] duration-[160ms] ${i < filled ? "bg-[var(--w-primary-normal)]" : "bg-[var(--w-line-neutral)]"}`}
+        />
+      ))}
     </div>
   );
 }
 
 function PhaseHeader({
-  phase,
   step,
   totalInPhase,
   title,
@@ -122,19 +142,15 @@ function PhaseHeader({
 }) {
   return (
     <div>
-      <div className="setup-steps">
-        {Array.from({ length: totalInPhase }).map((_, i) => (
-          <span key={i} className={"setup-steps__seg" + (i < step ? " setup-steps__seg--on" : "")} />
-        ))}
-      </div>
+      <SetupSteps total={totalInPhase} filled={step} />
       <span
-        className="w-overline"
-        style={{ display: "block", marginTop: 14, color: "var(--w-primary-normal)", letterSpacing: "0.1em" }}
+        className="font-semibold text-[11px] leading-[1.45] tracking-[0.04em] uppercase text-[var(--w-primary-normal)] block"
+        style={{ marginTop: 14, letterSpacing: "0.1em" }}
       >
         STEP {step}
       </span>
-      <h1 className="setup-head__title" style={{ marginTop: 8 }}>{title}</h1>
-      <p className="setup-head__sub">{subtitle}</p>
+      <h1 className="font-[800] text-[21px] leading-[1.3] [font-family:var(--w-font-display)] text-[var(--w-fg-strong)] tracking-[-0.02em] m-0" style={{ marginTop: 8 }}>{title}</h1>
+      <p className="font-medium text-[13.5px] leading-[1.55] text-[var(--w-fg-neutral)] mt-2 mb-0">{subtitle}</p>
     </div>
   );
 }
@@ -149,21 +165,21 @@ function Step1Signup({ onNext }: { onNext: () => void }) {
         title="Meta 개발자 계정으로 가입해주세요"
         subtitle="이미 가입돼 있다면 다음 단계로 넘어가요."
       />
-      <div className="install-body">
-        <p>
+      <div className="flex flex-col gap-4 font-medium text-[13.5px] leading-[1.6] text-[var(--w-fg-strong)]">
+        <p className="m-0 text-[var(--w-fg-neutral)]">
           페이스북 / 인스타그램 광고 API를 쓰려면 Meta 개발자 계정이 필요해요.
           <br />
           사내 마케팅 계정으로 등록 가능해요.
         </p>
-        <a href="https://developers.facebook.com/" target="_blank" rel="noopener noreferrer" className="install-link">
+        <a href="https://developers.facebook.com/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 self-start px-[14px] py-2 rounded-lg bg-[var(--w-primary-soft)] text-[var(--w-primary-press)] font-semibold text-[12.5px] leading-none no-underline transition-[background] duration-[140ms] hover:bg-[rgba(0,102,255,0.16)]">
           META 개발자센터 링크
         </a>
         <Faq step={1} />
       </div>
-      <div className="setup-foot" style={{ justifyContent: "flex-end" }}>
-        <button className="btn btn--primary btn--sm" type="button" onClick={onNext}>
+      <div className="flex flex-wrap gap-2" style={{ justifyContent: "flex-end" }}>
+        <Button variant="primary" size="sm" type="button" onClick={onNext}>
           다음으로
-        </button>
+        </Button>
       </div>
     </>
   );
@@ -179,25 +195,25 @@ function Step2CreateApp({ onNext, onBack }: { onNext: () => void; onBack: () => 
         title="비즈니스 앱을 만들어주세요"
         subtitle="AdFlow가 광고를 게재할 Meta 앱이에요."
       />
-      <div className="install-body">
-        <ol className="install-ol" style={{ listStyle: "none", paddingLeft: 0 }}>
+      <div className="flex flex-col gap-4 font-medium text-[13.5px] leading-[1.6] text-[var(--w-fg-strong)]">
+        <ol className="m-0 pl-[22px] flex flex-col gap-1.5 font-medium text-[13px] leading-[1.55] text-[var(--w-fg-neutral)]" style={{ listStyle: "none", paddingLeft: 0 }}>
           <li>1. '앱 만들기' 페이지를 열어요.</li>
           <li>2. 앱 종류는 <b>'비즈니스(Business)'</b>를 선택해주세요.</li>
           <li>3. 앱 이름은 회사명 또는 'AdFlow - 회사명' 형식으로 자유롭게 지어요.</li>
           <li>4. 비즈니스 계정 선택 화면이 나오면 회사 계정을 골라주세요.</li>
         </ol>
-        <a href="https://developers.facebook.com/apps/" target="_blank" rel="noopener noreferrer" className="install-link">
+        <a href="https://developers.facebook.com/apps/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 self-start px-[14px] py-2 rounded-lg bg-[var(--w-primary-soft)] text-[var(--w-primary-press)] font-semibold text-[12.5px] leading-none no-underline transition-[background] duration-[140ms] hover:bg-[rgba(0,102,255,0.16)]">
           앱 만들기 페이지 열기
         </a>
         <Faq step={2} />
       </div>
-      <div className="setup-foot" style={{ justifyContent: "space-between" }}>
-        <button className="btn btn--ghost btn--sm" type="button" onClick={onBack}>
+      <div className="flex flex-wrap gap-2" style={{ justifyContent: "space-between" }}>
+        <Button variant="ghost" size="sm" type="button" onClick={onBack}>
           이전
-        </button>
-        <button className="btn btn--primary btn--sm" type="button" onClick={onNext}>
+        </Button>
+        <Button variant="primary" size="sm" type="button" onClick={onNext}>
           다음으로
-        </button>
+        </Button>
       </div>
     </>
   );
@@ -246,50 +262,50 @@ function Step3Credentials({ onSaved, onBack, preview = false }: { onSaved: (appN
         title="App ID와 App Secret을 입력해주세요"
         subtitle="Meta 앱 콘솔 → 설정 → 기본 화면에서 복사하면 돼요."
       />
-      <div className="install-body">
-        <label className="install-field">
-          <span className="install-field__label">App ID</span>
+      <div className="flex flex-col gap-4 font-medium text-[13.5px] leading-[1.6] text-[var(--w-fg-strong)]">
+        <label className="flex flex-col gap-1.5">
+          <span className="font-semibold text-[12px] leading-none text-[var(--w-fg-neutral)] tracking-[0.02em]">App ID</span>
           <input
             type="text"
             value={clientId}
             onChange={(e) => setClientId(e.target.value)}
             placeholder="예: 1234567890123456"
-            className="install-field__input"
+            className="border border-[var(--w-line-normal)] rounded-lg px-[13px] py-[11px] font-medium text-[13.5px] leading-[1.4] [font-family:var(--w-font-mono,var(--w-font-sans))] bg-[var(--w-bg-base)] text-[var(--w-fg-strong)] transition-[border-color] duration-[140ms] outline-none focus:border-[var(--w-primary-normal)] disabled:bg-[var(--w-bg-alternative)] disabled:text-[var(--w-fg-neutral)]"
             disabled={busy}
           />
         </label>
-        <label className="install-field">
-          <span className="install-field__label">App Secret</span>
+        <label className="flex flex-col gap-1.5">
+          <span className="font-semibold text-[12px] leading-none text-[var(--w-fg-neutral)] tracking-[0.02em]">App Secret</span>
           <input
             type="password"
             value={clientSecret}
             onChange={(e) => setClientSecret(e.target.value)}
             placeholder="••••••••••••••••"
-            className="install-field__input"
+            className="border border-[var(--w-line-normal)] rounded-lg px-[13px] py-[11px] font-medium text-[13.5px] leading-[1.4] [font-family:var(--w-font-mono,var(--w-font-sans))] bg-[var(--w-bg-base)] text-[var(--w-fg-strong)] transition-[border-color] duration-[140ms] outline-none focus:border-[var(--w-primary-normal)] disabled:bg-[var(--w-bg-alternative)] disabled:text-[var(--w-fg-neutral)]"
             disabled={busy}
           />
         </label>
         {error && (
-          <div className="callout callout--warn">
+          <div className="flex items-start gap-2.5 px-[14px] py-3 rounded-[10px] border border-transparent bg-[rgba(255,146,0,0.10)] border-[rgba(255,146,0,0.24)] text-[var(--w-status-cautionary)]">
             <Icon name="warn" size={16} />
             <div style={{ font: "500 12.5px/1.5 var(--w-font-sans)" }}>{error}</div>
           </div>
         )}
         <Faq step={3} />
       </div>
-      <div className="setup-foot" style={{ justifyContent: "space-between" }}>
-        <button className="btn btn--ghost btn--sm" type="button" onClick={onBack} disabled={busy}>
+      <div className="flex flex-wrap gap-2" style={{ justifyContent: "space-between" }}>
+        <Button variant="ghost" size="sm" type="button" onClick={onBack} disabled={busy}>
           이전
-        </button>
-        <button className="btn btn--primary btn--sm" type="button" disabled={disabled} onClick={submit}>
+        </Button>
+        <Button variant="primary" size="sm" type="button" disabled={disabled} onClick={submit}>
           {busy ? (
             <>
-              <div className="spinner" style={{ width: 14, height: 14, borderWidth: 2 }} /> 검증 중…
+              <div className="rounded-full border-[2.4px] border-[var(--w-line-normal)] border-t-[var(--w-primary-normal)] animate-[spin_0.85s_linear_infinite] w-[14px] h-[14px]" /> 검증 중…
             </>
           ) : (
             "자격증명 저장하기"
           )}
-        </button>
+        </Button>
       </div>
     </>
   );
@@ -306,8 +322,8 @@ function Step4Permissions({ onNext, onBack }: { onNext: () => void; onBack: () =
         title="필요한 권한 7개를 추가해주세요"
         subtitle="Meta 앱 콘솔 → '앱 검수' → '권한 및 기능'에서 추가해요."
       />
-      <div className="install-body">
-        <ol className="install-ol">
+      <div className="flex flex-col gap-4 font-medium text-[13.5px] leading-[1.6] text-[var(--w-fg-strong)]">
+        <ol className="m-0 pl-[22px] flex flex-col gap-1.5 font-medium text-[13px] leading-[1.55] text-[var(--w-fg-neutral)]">
           <li>아래 권한 목록을 복사해서 하나씩 검색해 추가해주세요.</li>
           <li>각 권한 옆 'Advanced Access 요청' 버튼을 눌러주세요.</li>
         </ol>
@@ -315,13 +331,13 @@ function Step4Permissions({ onNext, onBack }: { onNext: () => void; onBack: () =
         <ExternalLink href="https://developers.facebook.com/apps/">내 Meta 앱 콘솔 열기</ExternalLink>
         <Faq step={4} />
       </div>
-      <div className="setup-foot">
-        <button className="btn btn--ghost btn--sm" type="button" onClick={onBack}>
+      <div className="flex flex-wrap gap-2">
+        <Button variant="ghost" size="sm" type="button" onClick={onBack}>
           <Icon name="arrow-left" size={13} /> 이전
-        </button>
-        <button className="btn btn--primary btn--sm" type="button" onClick={onNext}>
+        </Button>
+        <Button variant="primary" size="sm" type="button" onClick={onNext}>
           권한을 추가했어요 <Icon name="arrow-right" size={13} />
-        </button>
+        </Button>
       </div>
     </>
   );
@@ -338,8 +354,8 @@ function Step5Review({ onNext, onBack }: { onNext: () => void; onBack: () => voi
         title="App Review를 신청해주세요"
         subtitle="아래 사유서 템플릿을 권한별 사유 입력란에 그대로 붙여넣으면 돼요."
       />
-      <div className="install-body">
-        <ol className="install-ol">
+      <div className="flex flex-col gap-4 font-medium text-[13.5px] leading-[1.6] text-[var(--w-fg-strong)]">
+        <ol className="m-0 pl-[22px] flex flex-col gap-1.5 font-medium text-[13px] leading-[1.55] text-[var(--w-fg-neutral)]">
           <li>Meta 앱 콘솔에서 권한별 'Submit for review' 버튼을 눌러요.</li>
           <li>사유 입력란에 아래 해당 권한의 사유를 복사해서 붙여넣어요.</li>
           <li>데모 영상은 AdFlow 화면 녹화로 충분해요 (캠페인 생성 → 결과 조회 흐름).</li>
@@ -348,13 +364,13 @@ function Step5Review({ onNext, onBack }: { onNext: () => void; onBack: () => voi
         <CopyBlock text={reasonsText} />
         <Faq step={5} />
       </div>
-      <div className="setup-foot">
-        <button className="btn btn--ghost btn--sm" type="button" onClick={onBack}>
+      <div className="flex flex-wrap gap-2">
+        <Button variant="ghost" size="sm" type="button" onClick={onBack}>
           <Icon name="arrow-left" size={13} /> 이전
-        </button>
-        <button className="btn btn--primary btn--sm" type="button" onClick={onNext}>
+        </Button>
+        <Button variant="primary" size="sm" type="button" onClick={onNext}>
           App Review 신청했어요 <Icon name="arrow-right" size={13} />
-        </button>
+        </Button>
       </div>
     </>
   );
@@ -370,8 +386,8 @@ function Step6GoLive({ onDone, onBack }: { onDone: () => void; onBack: () => voi
         title="라이브 모드로 전환해주세요"
         subtitle="App Review 통과 메일을 받으셨다면 마지막 단계예요."
       />
-      <div className="install-body">
-        <ol className="install-ol">
+      <div className="flex flex-col gap-4 font-medium text-[13.5px] leading-[1.6] text-[var(--w-fg-strong)]">
+        <ol className="m-0 pl-[22px] flex flex-col gap-1.5 font-medium text-[13px] leading-[1.55] text-[var(--w-fg-neutral)]">
           <li>Meta 앱 콘솔 → 설정 → 기본 화면을 열어요.</li>
           <li>상단의 '앱 모드' 토글을 <b>'라이브'</b>로 전환해주세요.</li>
           <li>아래 버튼을 눌러 셋업을 완료해주세요.</li>
@@ -379,13 +395,13 @@ function Step6GoLive({ onDone, onBack }: { onDone: () => void; onBack: () => voi
         <ExternalLink href="https://developers.facebook.com/apps/">내 Meta 앱 콘솔 열기</ExternalLink>
         <Faq step={6} />
       </div>
-      <div className="setup-foot">
-        <button className="btn btn--ghost btn--sm" type="button" onClick={onBack}>
+      <div className="flex flex-wrap gap-2">
+        <Button variant="ghost" size="sm" type="button" onClick={onBack}>
           <Icon name="arrow-left" size={13} /> 이전
-        </button>
-        <button className="btn btn--primary btn--sm" type="button" onClick={onDone}>
+        </Button>
+        <Button variant="primary" size="sm" type="button" onClick={onDone}>
           셋업 완료 <Icon name="arrow-right" size={13} />
-        </button>
+        </Button>
       </div>
     </>
   );
@@ -395,40 +411,36 @@ function PhaseADone({ appName, onStartPhaseB, onLogin }: { appName: string; onSt
   return (
     <>
       <div>
-        <div className="setup-steps">
-          <span className="setup-steps__seg setup-steps__seg--on" />
-          <span className="setup-steps__seg setup-steps__seg--on" />
-          <span className="setup-steps__seg setup-steps__seg--on" />
-        </div>
+        <SetupSteps total={3} filled={3} />
         <span
-          className="w-overline"
-          style={{ display: "block", marginTop: 14, color: "var(--w-primary-normal)", letterSpacing: "0.1em" }}
+          className="font-semibold text-[11px] leading-[1.45] tracking-[0.04em] uppercase text-[var(--w-primary-normal)] block"
+          style={{ marginTop: 14, letterSpacing: "0.1em" }}
         >
           Phase A 완료
         </span>
-        <h1 className="setup-head__title" style={{ marginTop: 8 }}>
+        <h1 className="font-[800] text-[21px] leading-[1.3] [font-family:var(--w-font-display)] text-[var(--w-fg-strong)] tracking-[-0.02em] m-0" style={{ marginTop: 8 }}>
           <b>{appName}</b> 와 연결됐어요
         </h1>
-        <p className="setup-head__sub">
+        <p className="font-medium text-[13.5px] leading-[1.55] text-[var(--w-fg-neutral)] mt-2 mb-0">
           이제 AdFlow를 개발 모드로 사용할 수 있어요. 팀장과 등록된 테스트 계정만 가능해요.
           전 직원 사용을 위해선 Phase B(App Review)를 진행해주세요.
         </p>
       </div>
-      <div className="install-body">
-        <div className="callout callout--info">
+      <div className="flex flex-col gap-4 font-medium text-[13.5px] leading-[1.6] text-[var(--w-fg-strong)]">
+        <div className="flex items-start gap-2.5 px-[14px] py-3 rounded-[10px] border border-transparent bg-[rgba(0,102,255,0.06)] border-[rgba(0,102,255,0.18)] text-[var(--w-primary-press)]">
           <Icon name="info" size={16} />
           <div style={{ font: "500 12.5px/1.5 var(--w-font-sans)" }}>
             Phase B는 시간이 있을 때 진행해도 돼요. App Review 신청 후 통과까지 1~3주 정도 걸려요.
           </div>
         </div>
       </div>
-      <div className="setup-foot">
-        <button className="btn btn--secondary btn--sm" type="button" onClick={onStartPhaseB}>
+      <div className="flex flex-wrap gap-2">
+        <Button variant="secondary" size="sm" type="button" onClick={onStartPhaseB}>
           Phase B 시작하기
-        </button>
-        <button className="btn btn--primary btn--sm" type="button" onClick={onLogin}>
+        </Button>
+        <Button variant="primary" size="sm" type="button" onClick={onLogin}>
           AdFlow 사용 시작 <Icon name="arrow-right" size={13} />
-        </button>
+        </Button>
       </div>
     </>
   );
@@ -438,29 +450,25 @@ function AllDone({ onGo }: { onGo: () => void }) {
   return (
     <>
       <div>
-        <div className="setup-steps">
-          <span className="setup-steps__seg setup-steps__seg--on" />
-          <span className="setup-steps__seg setup-steps__seg--on" />
-          <span className="setup-steps__seg setup-steps__seg--on" />
-        </div>
+        <SetupSteps total={3} filled={3} />
         <span
-          className="w-overline"
-          style={{ display: "block", marginTop: 14, color: "var(--w-primary-normal)", letterSpacing: "0.1em" }}
+          className="font-semibold text-[11px] leading-[1.45] tracking-[0.04em] uppercase text-[var(--w-primary-normal)] block"
+          style={{ marginTop: 14, letterSpacing: "0.1em" }}
         >
           모든 셋업 완료
         </span>
-        <h1 className="setup-head__title" style={{ marginTop: 8 }}>
+        <h1 className="font-[800] text-[21px] leading-[1.3] [font-family:var(--w-font-display)] text-[var(--w-fg-strong)] tracking-[-0.02em] m-0" style={{ marginTop: 8 }}>
           AdFlow를 전 직원과 함께 사용할 수 있어요
         </h1>
-        <p className="setup-head__sub">
+        <p className="font-medium text-[13.5px] leading-[1.55] text-[var(--w-fg-neutral)] mt-2 mb-0">
           페이스북 로그인을 통해 회사 모든 직원이 AdFlow를 쓸 수 있어요.
         </p>
       </div>
-      <div className="setup-foot">
+      <div className="flex flex-wrap gap-2">
         <span />
-        <button className="btn btn--primary btn--sm" type="button" onClick={onGo}>
+        <Button variant="primary" size="sm" type="button" onClick={onGo}>
           대시보드로 이동 <Icon name="arrow-right" size={13} />
-        </button>
+        </Button>
       </div>
     </>
   );
@@ -537,16 +545,22 @@ function InstallPageInner() {
   }
 
   return (
-    <div className="adflow">
-      <div className="setup-shell" data-screen-label="AdFlow 설치">
-        <div className="setup-card install-card">
-          <div className="setup-card__brand">
-            <div className="setup-card__mark">A</div>
-            <span className="setup-card__wordmark">AdFlow</span>
+    <div
+      className="[font-family:var(--w-font-sans)] [color:var(--w-fg-normal)] [background:var(--w-bg-alternative)] text-[14px] min-h-screen [color-scheme:light] [-webkit-font-smoothing:antialiased] [text-rendering:optimizeLegibility]"
+      style={{ colorScheme: "light" }}
+    >
+      <div
+        className="min-h-screen grid place-items-center px-6 py-12 relative z-[1] [background:radial-gradient(ellipse_720px_380px_at_50%_-8%,rgba(0,102,255,0.07),transparent_70%),radial-gradient(ellipse_520px_320px_at_88%_112%,rgba(101,65,242,0.06),transparent_70%),var(--w-bg-normal)]"
+        data-screen-label="AdFlow 설치"
+      >
+        <div className="w-full max-w-[640px] bg-[var(--w-bg-elevated)] border border-[var(--w-line-normal)] rounded-[20px] shadow-[var(--w-shadow-card)] px-8 pt-8 pb-[26px] flex flex-col gap-[22px]">
+          <div className="flex items-center gap-2.5">
+            <div className="w-[34px] h-[34px] rounded-[10px] [background:linear-gradient(135deg,var(--w-primary-normal),var(--w-accent-violet))] text-white grid place-items-center font-[800] text-[16px] leading-none [font-family:var(--w-font-display)] tracking-[-0.03em]">A</div>
+            <span className="font-[800] text-[17px] leading-none [font-family:var(--w-font-display)] text-[var(--w-fg-strong)] tracking-[-0.022em]">AdFlow</span>
           </div>
 
           {preview && (
-            <div className="callout callout--info">
+            <div className="flex items-start gap-2.5 px-[14px] py-3 rounded-[10px] border border-transparent bg-[rgba(0,102,255,0.06)] border-[rgba(0,102,255,0.18)] text-[var(--w-primary-press)]">
               <Icon name="info" size={16} />
               <div style={{ font: "500 12.5px/1.5 var(--w-font-sans)" }}>
                 <b>미리보기 모드</b> · 개발자센터 연동을 미리 확인하는 용도예요. 입력값과 진행 상태는 저장되지 않아요.
@@ -555,8 +569,8 @@ function InstallPageInner() {
           )}
 
           {bootLoading ? (
-            <div className="setup-loading">
-              <div className="spinner" />
+            <div className="flex flex-col items-center gap-3 py-[34px] text-[var(--w-fg-neutral)] font-medium text-[13px] leading-[1.4]">
+              <div className="rounded-full border-[2.4px] border-[var(--w-line-normal)] border-t-[var(--w-primary-normal)] animate-[spin_0.85s_linear_infinite] w-[18px] h-[18px]" />
               <span>현재 상태 확인 중…</span>
             </div>
           ) : phase === "done" ? (
@@ -585,11 +599,17 @@ export default function InstallPage() {
   return (
     <Suspense
       fallback={
-        <div className="adflow">
-          <div className="setup-shell" data-screen-label="AdFlow 설치">
-            <div className="setup-card install-card">
-              <div className="setup-loading">
-                <div className="spinner" />
+        <div
+          className="[font-family:var(--w-font-sans)] [color:var(--w-fg-normal)] [background:var(--w-bg-alternative)] text-[14px] min-h-screen [color-scheme:light] [-webkit-font-smoothing:antialiased] [text-rendering:optimizeLegibility]"
+          style={{ colorScheme: "light" }}
+        >
+          <div
+            className="min-h-screen grid place-items-center px-6 py-12 relative z-[1] [background:radial-gradient(ellipse_720px_380px_at_50%_-8%,rgba(0,102,255,0.07),transparent_70%),radial-gradient(ellipse_520px_320px_at_88%_112%,rgba(101,65,242,0.06),transparent_70%),var(--w-bg-normal)]"
+            data-screen-label="AdFlow 설치"
+          >
+            <div className="w-full max-w-[640px] bg-[var(--w-bg-elevated)] border border-[var(--w-line-normal)] rounded-[20px] shadow-[var(--w-shadow-card)] px-8 pt-8 pb-[26px] flex flex-col gap-[22px]">
+              <div className="flex flex-col items-center gap-3 py-[34px] text-[var(--w-fg-neutral)] font-medium text-[13px] leading-[1.4]">
+                <div className="rounded-full border-[2.4px] border-[var(--w-line-normal)] border-t-[var(--w-primary-normal)] animate-[spin_0.85s_linear_infinite] w-[18px] h-[18px]" />
                 <span>로딩 중…</span>
               </div>
             </div>

@@ -1,6 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
+import type { WinnerEvidence } from "@entities/insights/winner-types";
 
-export type NotifType = "launch" | "opt" | "perf" | "weekly" | "ad-status";
+export type { WinnerEvidence };
+
+export type NotifType = "launch" | "opt" | "perf" | "weekly" | "ad-status" | "auto-relaunch-ready";
 
 export interface Notification {
   id: string;
@@ -10,6 +13,7 @@ export interface Notification {
   adId?: string;
   campaignId?: string;
   transition?: string;
+  evidence?: WinnerEvidence;
 }
 
 export type NotifSettings = {
@@ -18,6 +22,7 @@ export type NotifSettings = {
   weekly: boolean;
   opt: boolean;
   adStatus: boolean;
+  autoRelaunch: boolean;
 };
 
 const NOTIF_KEY = "adflow_notifications_v1";
@@ -31,6 +36,7 @@ export const DEFAULT_NOTIF_SETTINGS: NotifSettings = {
   weekly: false,
   opt: true,
   adStatus: true,
+  autoRelaunch: true,
 };
 
 function loadNotifs(): Notification[] {
@@ -58,6 +64,7 @@ const TYPE_TO_SETTING: Record<NotifType, keyof NotifSettings> = {
   perf: "perf",
   weekly: "weekly",
   "ad-status": "adStatus",
+  "auto-relaunch-ready": "autoRelaunch",
 };
 
 export function addNotification(notif: Omit<Notification, "id" | "ts"> & { id?: string; ts?: number }) {

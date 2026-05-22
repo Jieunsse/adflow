@@ -12,6 +12,9 @@ import { useState } from "react";
 import { useSession } from "next-auth/react";
 import { useQuery } from "@tanstack/react-query";
 import Icon from "@shared/ui/Icon";
+import { Button } from "@shared/ui/Button";
+import { Card } from "@shared/ui/Card";
+import { cn } from "@shared/lib/cn";
 import { useLaunchDraft } from "@entities/campaign/model";
 import { useCreativeDraft } from "@entities/creative/model";
 import { OBJECTIVES_PHASE1, CTAS, type CtaId, type ObjectivePhase1Id } from "@entities/creative/options";
@@ -20,8 +23,10 @@ import SubHead from "./SubHead";
 
 type Page = { id: string; name: string; phone: string | null };
 
-// traffic/engagement 에서 사용자가 고를 수 있는 CTA. like_page/message/call 은 *목표가 결정*하는 CTA 라 제외.
 const USER_CHOICE_CTAS: CtaId[] = ["buy", "learn", "sample"];
+
+const chipBase = "inline-flex items-center gap-1.5 px-[14px] py-2 rounded-full border border-[var(--w-line-normal)] bg-[var(--w-bg-elevated)] font-medium text-[13px] leading-none text-[var(--w-fg-strong)] cursor-pointer transition-[background,border-color,color] duration-[120ms]";
+const chipOn = "bg-[var(--w-fg-strong)] text-[var(--w-bg-elevated)] border-[var(--w-fg-strong)]";
 
 export default function DestinationField() {
   const { state, dispatch } = useLaunchDraft();
@@ -53,7 +58,7 @@ export default function DestinationField() {
   const ctaPicker = ctaMode === "user_choice" ? (
     <>
       <SubHead title="버튼 문구" subtitle="광고 클릭 버튼에 표시될 문구예요. 목표에 맞는 문구를 골라주세요." />
-      <div className="chips" style={{ marginBottom: 12 }}>
+      <div className="flex flex-wrap gap-2 mb-3">
         {USER_CHOICE_CTAS.map((id) => {
           const label = CTAS.find((c) => c.id === id)?.label ?? id;
           const on = creative.cta === id;
@@ -61,7 +66,7 @@ export default function DestinationField() {
             <button
               key={id}
               type="button"
-              className={"chip" + (on ? " chip--on" : "")}
+              className={cn(chipBase, on && chipOn)}
               onClick={() => creativeDispatch({ type: "SET_CTA", cta: id })}
             >
               {label}
@@ -82,7 +87,7 @@ export default function DestinationField() {
       <>
         <SubHead title="광고 클릭 시 보여줄 페이지" subtitle="광고를 누른 사용자가 이동할 URL 이에요." />
         <input
-          className="input"
+          className="w-full px-[14px] py-3 border border-[var(--w-line-normal)] rounded-xl bg-[var(--w-bg-elevated)] font-medium text-[14px] leading-[1.5] tracking-[0.004em] text-[var(--w-fg-strong)] outline-none transition-[border-color,box-shadow] duration-[120ms] placeholder:text-[var(--w-fg-alternative)] focus:border-[var(--w-primary-normal)] focus:shadow-[0_0_0_4px_rgba(0,102,255,0.14)]"
           value={state.landingUrl}
           onChange={(e) => dispatch({ type: "SET_LANDING_URL", value: e.target.value })}
           placeholder="https://example.com/landing"
@@ -90,11 +95,11 @@ export default function DestinationField() {
           inputMode="url"
         />
         {!httpsOk && (
-          <div className="field__hint field__hint--err" style={{ marginTop: 8 }}>
+          <div className="font-medium text-[12px] leading-[1.5] tracking-[0.008em] text-[var(--w-status-negative)] mt-2">
             https:// 로 시작해야 해요.
           </div>
         )}
-        {ctaPicker && <div style={{ marginTop: 16 }}>{ctaPicker}</div>}
+        {ctaPicker && <div className="mt-4">{ctaPicker}</div>}
       </>
     );
   }
@@ -113,50 +118,37 @@ export default function DestinationField() {
   return (
     <>
       <SubHead title="사람들이 어디로 가나요?" subtitle={destSubtitle} />
-      <div
-        className="card"
-        style={{ padding: 16, display: "flex", alignItems: "center", gap: 14 }}
-      >
-        <div
-          style={{
-            width: 44,
-            height: 44,
-            borderRadius: "50%",
-            background: "var(--w-primary-soft)",
-            color: "var(--w-accent-violet)",
-            display: "grid",
-            placeItems: "center",
-            flex: "0 0 auto",
-          }}
-        >
+      <Card className="p-4 flex items-center gap-3.5">
+        <div className="w-11 h-11 rounded-full bg-[var(--w-primary-soft)] text-[var(--w-accent-violet)] grid place-items-center shrink-0">
           <Icon name={destIcon} size={20} strokeWidth={1.7} />
         </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ font: "500 11.5px/1 var(--w-font-sans)", color: "var(--w-fg-neutral)", marginBottom: 4 }}>
+        <div className="flex-1 min-w-0">
+          <div className="font-medium text-[11.5px] leading-none text-[var(--w-fg-neutral)] mb-1">
             {destLabel}
           </div>
-          <div style={{ font: "700 14.5px/1.3 var(--w-font-sans)", color: "var(--w-fg-strong)" }}>
+          <div className="font-bold text-[14.5px] leading-[1.3] text-[var(--w-fg-strong)]">
             {activePage?.name ?? "활성 페이지 확인 중…"}
           </div>
-          <div style={{ font: "500 11px/1.2 var(--w-font-mono)", color: "var(--w-fg-alternative)", marginTop: 4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          <div className="font-medium text-[11px] leading-[1.2] font-[var(--w-font-mono)] text-[var(--w-fg-alternative)] mt-1 overflow-hidden text-ellipsis whitespace-nowrap">
             {state.landingUrl || fallbackUrl}
           </div>
         </div>
-      </div>
+      </Card>
 
-      <button
+      <Button
+        variant="ghost"
+        size="sm"
         type="button"
-        className="btn btn--ghost btn--sm"
-        style={{ marginTop: 10 }}
+        className="mt-2.5"
         onClick={() => setOverrideOpen((v) => !v)}
       >
         <Icon name="arrow-right" size={12} /> {overrideOpen ? "직접 입력 닫기" : "다른 URL 로 보내고 싶어요"}
-      </button>
+      </Button>
 
       {overrideOpen && (
-        <div style={{ marginTop: 10 }}>
+        <div className="mt-2.5">
           <input
-            className="input"
+            className="w-full px-[14px] py-3 border border-[var(--w-line-normal)] rounded-xl bg-[var(--w-bg-elevated)] font-medium text-[14px] leading-[1.5] tracking-[0.004em] text-[var(--w-fg-strong)] outline-none transition-[border-color,box-shadow] duration-[120ms] placeholder:text-[var(--w-fg-alternative)] focus:border-[var(--w-primary-normal)] focus:shadow-[0_0_0_4px_rgba(0,102,255,0.14)]"
             value={state.landingUrl}
             onChange={(e) => dispatch({ type: "SET_LANDING_URL", value: e.target.value })}
             placeholder="https://example.com/landing"
@@ -164,11 +156,11 @@ export default function DestinationField() {
             inputMode="url"
           />
           {!httpsOk && (
-            <div className="field__hint field__hint--err" style={{ marginTop: 8 }}>
+            <div className="font-medium text-[12px] leading-[1.5] tracking-[0.008em] text-[var(--w-status-negative)] mt-2">
               https:// 로 시작해야 해요.
             </div>
           )}
-          <div className="field__hint" style={{ marginTop: 6 }}>
+          <div className="font-medium text-[12px] leading-[1.5] tracking-[0.008em] text-[var(--w-fg-neutral)] mt-1.5">
             기본은 활성 {destLabel} 로 자동 연결돼요. 다른 URL 로 바꾸면 광고 목표와 어긋날 수 있어요.
           </div>
         </div>

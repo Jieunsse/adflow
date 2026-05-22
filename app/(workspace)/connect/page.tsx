@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession, signIn, signOut } from "next-auth/react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -9,6 +9,10 @@ import { useToast } from "@shared/ui/Toast";
 import ConfirmModal from "@shared/ui/ConfirmModal";
 import IdField from "@shared/ui/IdField";
 import { maskId } from "@shared/lib/format";
+import { Button, buttonVariants } from "@shared/ui/Button";
+import { Card } from "@shared/ui/Card";
+import { Skeleton } from "@shared/ui/Skeleton";
+import { cn } from "@shared/lib/cn";
 
 type AccountInfo = { connected: boolean; accountId: string; accountName: string; currency: string };
 
@@ -56,6 +60,12 @@ async function fetchPickerList(kind: PickerKind): Promise<PickerItem[]> {
   }));
 }
 
+function connCardClass(tone: "neutral" | "warn" | "danger" | "muted") {
+  const border = tone === "warn" ? "border-[rgba(255,146,0,0.42)]" : tone === "danger" ? "border-[rgba(255,66,66,0.42)]" : "border-[var(--w-line-normal)]";
+  const bg = tone === "muted" ? "bg-[var(--w-bg-alternative)]" : "bg-[var(--w-bg-elevated)]";
+  return `flex gap-[18px] items-start p-[22px] ${bg} border ${border} rounded-[14px] dark:shadow-[var(--w-shadow-card)]`;
+}
+
 export default function ConnectPage() {
   const router = useRouter();
   const showToast = useToast();
@@ -65,6 +75,27 @@ export default function ConnectPage() {
   const [pickerOpen, setPickerOpen] = useState<PickerKind | null>(null);
   const [confirmDisconnect, setConfirmDisconnect] = useState(false);
   const [reauthing, setReauthing] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("igLinked") === "1") {
+      window.history.replaceState({}, "", "/connect");
+      fetch("/api/instagram/token")
+        .then(r => r.ok ? r.json() : null)
+        .then((data: { igAccessToken: string; igUserId: string; igUsername: string } | null) => {
+          if (data?.igAccessToken) {
+            return update({ igAccessToken: data.igAccessToken, igUserId: data.igUserId, igUsername: data.igUsername });
+          }
+        })
+        .then(() => showToast("Instagram 비즈니스 계정이 연결됐어요"))
+        .catch(() => showToast("Instagram 연결 중 오류가 발생했어요"));
+    }
+    if (params.get("igError")) {
+      window.history.replaceState({}, "", "/connect");
+      showToast("Instagram 연결에 실패했어요. 다시 시도해주세요.");
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const connected = !!(session?.adAccountId && session?.pageId);
   const isExploring = !!session?.browseMode && !connected;
@@ -117,21 +148,21 @@ export default function ConnectPage() {
   };
 
   return (
-    <div className="page" data-screen-label="계정 연결">
-      <div className="page__head">
+    <div className="px-12 py-9 pb-16 max-w-[1280px] w-full mx-auto flex flex-col gap-7" data-screen-label="계정 연결">
+      <div className="flex justify-between items-end gap-6">
         <div>
-          <span className="w-overline" style={{ color: "var(--w-fg-neutral)" }}>워크스페이스 · 계정 연결</span>
-          <h1 className="page__title" style={{ marginTop: 4 }}>Meta 광고 계정 연결</h1>
-          <p className="page__sub">AdFlow가 어떤 Meta 광고 계정·페이스북 페이지에 연결돼 있는지 보고, 바꾸고, 끊을 수 있어요.</p>
+          <span className="font-semibold text-[11px] leading-[1.45] tracking-[0.04em] uppercase text-[var(--w-fg-neutral)]">워크스페이스 · 계정 연결</span>
+          <h1 className="m-0 font-bold text-[28px] leading-[1.25] tracking-[-0.024em] text-[var(--w-fg-strong)]" style={{ marginTop: 4 }}>Meta 광고 계정 연결</h1>
+          <p className="font-medium text-[14px] leading-[1.5] tracking-[0.004em] text-[var(--w-fg-neutral)] mt-1.5 mb-0">AdFlow가 어떤 Meta 광고 계정·페이스북 페이지에 연결돼 있는지 보고, 바꾸고, 끊을 수 있어요.</p>
         </div>
       </div>
 
       {isExploring && (
-        <div className="explore-banner">
-          <div className="explore-banner__icon"><Icon name="info" size={16} /></div>
+        <div className="flex items-center gap-3 p-[12px_16px] bg-[linear-gradient(90deg,rgba(0,102,255,0.06),rgba(101,65,242,0.06))] border border-[rgba(0,102,255,0.20)] rounded-xl mb-4">
+          <div className="w-8 h-8 rounded-[9px] bg-[var(--w-bg-elevated)] text-[var(--w-primary-press)] grid place-items-center flex-none border border-[var(--w-line-alternative)]"><Icon name="info" size={16} /></div>
           <div style={{ flex: 1 }}>
-            <div className="explore-banner__title">둘러보기 중</div>
-            <div className="explore-banner__sub">계정을 연결하면 실제 광고 집행과 성과 추적이 가능해요.</div>
+            <div className="font-bold text-[13px] leading-[1.3] text-[var(--w-fg-strong)]">둘러보기 중</div>
+            <div className="font-medium text-[12px] leading-[1.4] text-[var(--w-fg-neutral)] mt-0.5">계정을 연결하면 실제 광고 집행과 성과 추적이 가능해요.</div>
           </div>
         </div>
       )}
@@ -156,6 +187,7 @@ export default function ConnectPage() {
             id={igUserId}
             picture={picturesQ.data?.igPicture ?? null}
             pageId={session?.pageId ?? null}
+            igAccessToken={session?.igAccessToken ?? null}
             disabled={tokenExpired}
             onReload={() => {
               queryClient.invalidateQueries({ queryKey: ["picker-list", "page"] });
@@ -166,14 +198,14 @@ export default function ConnectPage() {
 
           <PermissionsDisclosure open={permsOpen} onToggle={() => setPermsOpen((o) => !o)} />
 
-          <div className="danger-zone">
+          <div className="flex items-center gap-4 px-[22px] py-[18px] bg-[rgba(255,66,66,0.04)] dark:bg-[rgba(255,66,66,0.06)] border border-[rgba(255,66,66,0.20)] rounded-[14px] mt-1">
             <div style={{ flex: 1 }}>
-              <div className="danger-zone__title">Meta 연결 해제</div>
-              <div className="danger-zone__sub">해제하면 캠페인 성과 조회·게재 제어가 멈춰요. 다시 연결하려면 로그아웃 후 Facebook으로 다시 로그인하면 돼요.</div>
+              <div className="font-bold text-[14px] leading-[1.3] text-[var(--w-status-negative)]">Meta 연결 해제</div>
+              <div className="font-medium text-[12.5px] leading-[1.5] text-[var(--w-fg-neutral)] mt-1">해제하면 캠페인 성과 조회·게재 제어가 멈춰요. 다시 연결하려면 로그아웃 후 Facebook으로 다시 로그인하면 돼요.</div>
             </div>
-            <button className="btn btn--danger" type="button" onClick={() => setConfirmDisconnect(true)}>
+            <Button variant="danger" type="button" onClick={() => setConfirmDisconnect(true)}>
               <Icon name="link" size={14} /> 연결 해제
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -205,35 +237,35 @@ function FacebookCard({ memberName, memberImage, tokenExpired, reauthing, onReau
   memberName: string; memberImage: string | null; tokenExpired: boolean; reauthing: boolean; onReauth: () => void;
 }) {
   return (
-    <div className={"conn-card conn-card--" + (tokenExpired ? "danger" : "neutral")}>
-      <div className="conn-card__icon conn-card__icon--fb"><Icon name="facebook" size={26} /></div>
-      <div className="conn-card__body">
-        <div className="conn-card__row">
+    <div className={connCardClass(tokenExpired ? "danger" : "neutral")}>
+      <div className="w-12 h-12 rounded-xl grid place-items-center flex-none bg-[#1877F2] text-white"><Icon name="facebook" size={26} /></div>
+      <div className="flex-1 min-w-0">
+        <div className="flex justify-between items-start gap-4">
           <div>
-            <div className="conn-card__title">{tokenExpired ? "Meta 인증이 만료됐어요" : "Facebook에 연결됨"}</div>
-            <div className="conn-card__meta">
+            <div className="font-bold text-[16.5px] leading-[1.35] [font-family:var(--w-font-display)] text-[var(--w-fg-strong)] tracking-[-0.012em]">{tokenExpired ? "Meta 인증이 만료됐어요" : "Facebook에 연결됨"}</div>
+            <div className="flex items-center gap-2 flex-wrap font-medium text-[12.5px] leading-none text-[var(--w-fg-neutral)] mt-2">
               {memberImage ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={memberImage} alt="" className="conn-card__avatar" style={{ objectFit: "cover" }} />
+                <img src={memberImage} alt="" className="w-5 h-5 rounded-full text-white grid place-items-center font-bold text-[10px] leading-none [font-family:var(--w-font-display)]" style={{ objectFit: "cover" }} />
               ) : (
-                <span className="conn-card__avatar" style={{ background: "#0066ff" }}>{(memberName.trim()[0] ?? "?").toUpperCase()}</span>
+                <span className="w-5 h-5 rounded-full text-white grid place-items-center font-bold text-[10px] leading-none [font-family:var(--w-font-display)]" style={{ background: "#0066ff" }}>{(memberName.trim()[0] ?? "?").toUpperCase()}</span>
               )}
               <span>{memberName ? `${memberName}님이 연결` : "Facebook 계정으로 연결됨"}</span>
-              <span className="conn-card__dot" />
-              <span className="conn-card__meta-mono">장기 액세스 토큰 (약 60일)</span>
+              <span className="w-[3px] h-[3px] rounded-full bg-[var(--w-fg-alternative)]" />
+              <span className="font-medium text-[12px] leading-none [font-family:var(--w-font-mono)] text-[var(--w-fg-alternative)]">장기 액세스 토큰 (약 60일)</span>
             </div>
           </div>
-          <div className="conn-card__right">
+          <div className="flex flex-col gap-2.5 items-end flex-none">
             {tokenExpired
-              ? <span className="status-badge-danger"><Icon name="warn" size={12} /> 인증 만료</span>
-              : <span className="status-badge status-badge--active"><span className="status-dot" /> 정상</span>}
+              ? <span className="inline-flex items-center gap-[5px] px-2.5 py-1 rounded-full font-semibold text-[12px] leading-none text-[var(--w-status-negative)] bg-[rgba(255,66,66,0.12)]"><Icon name="warn" size={12} /> 인증 만료</span>
+              : <span className="inline-flex items-center gap-[5px] px-[9px] py-[3px] rounded-full font-semibold text-[11.5px] leading-none text-[var(--w-status-positive)] bg-[rgba(0,191,64,0.10)] dark:bg-[rgba(73,229,125,0.14)] dark:text-[#49e57d]"><span className="w-1.5 h-1.5 rounded-full bg-[var(--w-status-positive)] dark:bg-[#49e57d]" /> 정상</span>}
           </div>
         </div>
         {tokenExpired && (
-          <div className="alert-bar alert-bar--danger">
+          <div className={cn("flex items-center gap-2.5 p-[10px_12px] rounded-[10px] font-medium text-[12.5px] leading-[1.5] mt-3.5", "bg-[rgba(255,66,66,0.08)] border border-[rgba(255,66,66,0.22)] text-[var(--w-status-negative)]")}>
             <Icon name="warn" size={14} />
             <span style={{ flex: 1 }}><strong>Meta 인증이 만료됐어요.</strong> 재인증해야 광고 집행과 성과 조회를 다시 할 수 있어요.</span>
-            <button className="btn btn--danger btn--sm" type="button" onClick={onReauth} disabled={reauthing}><Icon name="refresh" size={13} /> {reauthing ? "이동 중…" : "재인증"}</button>
+            <Button variant="danger" size="sm" type="button" onClick={onReauth} disabled={reauthing}><Icon name="refresh" size={13} /> {reauthing ? "이동 중…" : "재인증"}</Button>
           </div>
         )}
       </div>
@@ -246,16 +278,16 @@ function AdAccountCard({ name, id, currency, status, disabled, onChange }: {
 }) {
   const tone = status === "disabled" ? "warn" : disabled ? "muted" : "neutral";
   return (
-    <div className={"conn-card conn-card--" + tone}>
-      <div className="conn-card__icon conn-card__icon--account"><Icon name="wallet" size={22} /></div>
-      <div className="conn-card__body">
-        <div className="conn-card__row">
+    <div className={connCardClass(tone)}>
+      <div className="w-12 h-12 rounded-xl grid place-items-center flex-none bg-[var(--w-primary-soft)] text-[var(--w-primary-press)] dark:bg-[rgba(0,102,255,0.18)] dark:text-[#6ea7ff]"><Icon name="wallet" size={22} /></div>
+      <div className="flex-1 min-w-0">
+        <div className="flex justify-between items-start gap-4">
           <div style={{ minWidth: 0 }}>
-            <div className="w-overline" style={{ color: "var(--w-fg-alternative)", marginBottom: 6 }}>광고 계정</div>
-            <div className="conn-card__title">{name}</div>
+            <div className="font-semibold text-[11px] leading-[1.45] tracking-[0.04em] uppercase text-[var(--w-fg-neutral)]" style={{ color: "var(--w-fg-alternative)", marginBottom: 6 }}>광고 계정</div>
+            <div className="font-bold text-[16.5px] leading-[1.35] [font-family:var(--w-font-display)] tracking-[-0.012em]" style={{ color: disabled ? "var(--w-fg-neutral)" : "var(--w-fg-strong)" }}>{name}</div>
             {currency !== "—" && (
-              <div className="conn-card__id-row">
-                <span className="conn-card__id">{currency}</span>
+              <div className="flex items-center gap-2 flex-wrap mt-2">
+                <span className="font-medium text-[12.5px] leading-none [font-family:var(--w-font-mono)] text-[var(--w-fg-neutral)]">{currency}</span>
               </div>
             )}
             <IdField
@@ -264,29 +296,29 @@ function AdAccountCard({ name, id, currency, status, disabled, onChange }: {
               desc="Meta 광고 계정의 고유 번호. 결제·문의 시 Meta에 알려주는 값이에요."
             />
           </div>
-          <div className="conn-card__right">
+          <div className="flex flex-col gap-2.5 items-end flex-none">
             {status === "disabled"
-              ? <span className="status-badge-warn"><Icon name="warn" size={12} /> 비활성·정지</span>
+              ? <span className="inline-flex items-center gap-[5px] px-2.5 py-1 rounded-full font-semibold text-[12px] leading-none text-[var(--w-status-cautionary)] bg-[rgba(255,146,0,0.12)]"><Icon name="warn" size={12} /> 비활성·정지</span>
               : status === "active"
-                ? <span className="status-badge status-badge--active"><span className="status-dot" /> 활성</span>
+                ? <span className="inline-flex items-center gap-[5px] px-[9px] py-[3px] rounded-full font-semibold text-[11.5px] leading-none text-[var(--w-status-positive)] bg-[rgba(0,191,64,0.10)] dark:bg-[rgba(73,229,125,0.14)] dark:text-[#49e57d]"><span className="w-1.5 h-1.5 rounded-full bg-[var(--w-status-positive)] dark:bg-[#49e57d]" /> 활성</span>
                 : null}
           </div>
         </div>
         {status === "disabled" && (
-          <div className="alert-bar alert-bar--warn">
+          <div className={cn("flex items-center gap-2.5 p-[10px_12px] rounded-[10px] font-medium text-[12.5px] leading-[1.5] mt-3.5", "bg-[rgba(255,146,0,0.10)] border border-[rgba(255,146,0,0.24)] text-[var(--w-status-cautionary)]")}>
             <Icon name="warn" size={14} />
             <span>이 광고 계정이 <strong>비활성/정지</strong> 상태예요. Meta 광고 관리자에서 결제·정책 위반 등을 확인해 주세요.</span>
           </div>
         )}
         {disabled && (
-          <div className="alert-bar alert-bar--muted">
+          <div className={cn("flex items-center gap-2.5 p-[10px_12px] rounded-[10px] font-medium text-[12.5px] leading-[1.5] mt-3.5", "bg-[var(--w-bg-alternative)] text-[var(--w-fg-alternative)] border border-[var(--w-line-alternative)]")}>
             <Icon name="lock" size={13} />
             <span>재인증 후 확인할 수 있어요.</span>
           </div>
         )}
         {!disabled && (
-          <div className="conn-card__foot">
-            <button className="btn btn--secondary btn--sm" type="button" onClick={onChange}>광고 계정 변경</button>
+          <div className="flex justify-end mt-3.5">
+            <Button variant="secondary" size="sm" type="button" onClick={onChange}>광고 계정 변경</Button>
           </div>
         )}
       </div>
@@ -296,16 +328,16 @@ function AdAccountCard({ name, id, currency, status, disabled, onChange }: {
 
 function PixelCard({ name, id, disabled, onChange }: { name: string | null; id: string | null; disabled: boolean; onChange: () => void }) {
   return (
-    <div className={"conn-card conn-card--" + (disabled ? "muted" : "neutral")}>
-      <div className="conn-card__icon conn-card__icon--page"><Icon name="chart" size={20} /></div>
-      <div className="conn-card__body">
-        <div className="conn-card__row">
+    <div className={connCardClass(disabled ? "muted" : "neutral")}>
+      <div className="w-12 h-12 rounded-xl grid place-items-center flex-none bg-[rgba(101,65,242,0.14)] text-[var(--w-accent-violet)] dark:bg-[rgba(101,65,242,0.22)] dark:text-[#b9a4ff]"><Icon name="chart" size={20} /></div>
+      <div className="flex-1 min-w-0">
+        <div className="flex justify-between items-start gap-4">
           <div style={{ minWidth: 0 }}>
-            <div className="w-overline" style={{ color: "var(--w-fg-alternative)", marginBottom: 6 }}>
+            <div className="font-semibold text-[11px] leading-[1.45] tracking-[0.04em] uppercase text-[var(--w-fg-neutral)]" style={{ color: "var(--w-fg-alternative)", marginBottom: 6 }}>
               Facebook Pixel <span style={{ font: "500 11px/1 var(--w-font-sans)", color: "var(--w-fg-neutral)", verticalAlign: "middle" }}>(선택)</span>
             </div>
-            <div className="conn-card__title">{name ?? "선택 안 됨"}</div>
-            <div style={{ font: "500 12.5px/1.5 var(--w-font-sans)", color: "var(--w-fg-neutral)", marginTop: 6 }}>
+            <div className="font-bold text-[16.5px] leading-[1.35] [font-family:var(--w-font-display)] tracking-[-0.012em]" style={{ color: disabled ? "var(--w-fg-neutral)" : "var(--w-fg-strong)" }}>{name ?? "선택 안 됨"}</div>
+            <div className="font-medium text-[12.5px] leading-[1.5] text-[var(--w-fg-neutral)]" style={{ marginTop: 6 }}>
               {name ? "광고 클릭 후 사이트 방문을 이 Pixel로 추적해요." : "선택하면 광고 클릭 후 사이트 방문을 추적할 수 있어요. 없으면 건너뛰어도 돼요."}
             </div>
             {id && (
@@ -318,14 +350,14 @@ function PixelCard({ name, id, disabled, onChange }: { name: string | null; id: 
           </div>
         </div>
         {disabled && (
-          <div className="alert-bar alert-bar--muted">
+          <div className={cn("flex items-center gap-2.5 p-[10px_12px] rounded-[10px] font-medium text-[12.5px] leading-[1.5] mt-3.5", "bg-[var(--w-bg-alternative)] text-[var(--w-fg-alternative)] border border-[var(--w-line-alternative)]")}>
             <Icon name="lock" size={13} />
             <span>재인증 후 확인할 수 있어요.</span>
           </div>
         )}
         {!disabled && (
-          <div className="conn-card__foot">
-            <button className="btn btn--secondary btn--sm" type="button" onClick={onChange}>{name ? "Pixel 변경" : "Pixel 선택"}</button>
+          <div className="flex justify-end mt-3.5">
+            <Button variant="secondary" size="sm" type="button" onClick={onChange}>{name ? "Pixel 변경" : "Pixel 선택"}</Button>
           </div>
         )}
       </div>
@@ -335,19 +367,19 @@ function PixelCard({ name, id, disabled, onChange }: { name: string | null; id: 
 
 function PageCard({ name, id, picture, disabled, onChange }: { name: string; id: string; picture: string | null; disabled: boolean; onChange: () => void }) {
   return (
-    <div className={"conn-card conn-card--" + (disabled ? "muted" : "neutral")}>
+    <div className={connCardClass(disabled ? "muted" : "neutral")}>
       {picture ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={picture} alt="" className="conn-card__icon" style={{ objectFit: "cover", background: "var(--w-bg-alternative)" }} />
+        <img src={picture} alt="" className="w-12 h-12 rounded-xl flex-none" style={{ objectFit: "cover", background: "var(--w-bg-alternative)" }} />
       ) : (
-        <div className="conn-card__icon conn-card__icon--page"><Icon name="doc" size={20} /></div>
+        <div className="w-12 h-12 rounded-xl grid place-items-center flex-none bg-[rgba(101,65,242,0.14)] text-[var(--w-accent-violet)] dark:bg-[rgba(101,65,242,0.22)] dark:text-[#b9a4ff]"><Icon name="doc" size={20} /></div>
       )}
-      <div className="conn-card__body">
-        <div className="conn-card__row">
+      <div className="flex-1 min-w-0">
+        <div className="flex justify-between items-start gap-4">
           <div style={{ minWidth: 0 }}>
-            <div className="w-overline" style={{ color: "var(--w-fg-alternative)", marginBottom: 6 }}>페이스북 페이지</div>
-            <div className="conn-card__title">{name}</div>
-            <div style={{ font: "500 12.5px/1.5 var(--w-font-sans)", color: "var(--w-fg-neutral)", marginTop: 6 }}>광고가 이 페이지 명의로 게재돼요.</div>
+            <div className="font-semibold text-[11px] leading-[1.45] tracking-[0.04em] uppercase text-[var(--w-fg-neutral)]" style={{ color: "var(--w-fg-alternative)", marginBottom: 6 }}>페이스북 페이지</div>
+            <div className="font-bold text-[16.5px] leading-[1.35] [font-family:var(--w-font-display)] tracking-[-0.012em]" style={{ color: disabled ? "var(--w-fg-neutral)" : "var(--w-fg-strong)" }}>{name}</div>
+            <div className="font-medium text-[12.5px] leading-[1.5] text-[var(--w-fg-neutral)]" style={{ marginTop: 6 }}>광고가 이 페이지 명의로 게재돼요.</div>
             <IdField
               label="페이지 ID"
               id={id}
@@ -356,14 +388,14 @@ function PageCard({ name, id, picture, disabled, onChange }: { name: string; id:
           </div>
         </div>
         {disabled && (
-          <div className="alert-bar alert-bar--muted">
+          <div className={cn("flex items-center gap-2.5 p-[10px_12px] rounded-[10px] font-medium text-[12.5px] leading-[1.5] mt-3.5", "bg-[var(--w-bg-alternative)] text-[var(--w-fg-alternative)] border border-[var(--w-line-alternative)]")}>
             <Icon name="lock" size={13} />
             <span>재인증 후 확인할 수 있어요.</span>
           </div>
         )}
         {!disabled && (
-          <div className="conn-card__foot">
-            <button className="btn btn--secondary btn--sm" type="button" onClick={onChange}>페이지 변경</button>
+          <div className="flex justify-end mt-3.5">
+            <Button variant="secondary" size="sm" type="button" onClick={onChange}>페이지 변경</Button>
           </div>
         )}
       </div>
@@ -371,29 +403,30 @@ function PageCard({ name, id, picture, disabled, onChange }: { name: string; id:
   );
 }
 
-function InstagramCard({ username, id, picture, pageId, disabled, onReload }: {
-  username: string | null; id: string | null; picture: string | null; pageId: string | null; disabled: boolean; onReload: () => void;
+function InstagramCard({ username, id, picture, pageId, igAccessToken, disabled, onReload }: {
+  username: string | null; id: string | null; picture: string | null; pageId: string | null; igAccessToken: string | null; disabled: boolean; onReload: () => void;
 }) {
   const linked = !!id;
+  const insightsAuthorized = !!igAccessToken;
   const linkInstagramUrl = pageId
     ? `https://www.facebook.com/${pageId}/settings/?tab=linked_accounts`
     : "https://accountscenter.facebook.com/connected_experiences";
   return (
-    <div className={"conn-card conn-card--" + (disabled ? "muted" : linked ? "neutral" : "warn")}>
+    <div className={connCardClass(disabled ? "muted" : linked ? "neutral" : "warn")}>
       {linked && picture ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={picture} alt="" className="conn-card__icon" style={{ objectFit: "cover", background: "var(--w-bg-alternative)" }} />
+        <img src={picture} alt="" className="w-12 h-12 rounded-xl flex-none" style={{ objectFit: "cover", background: "var(--w-bg-alternative)" }} />
       ) : (
-        <div className="conn-card__icon conn-card__icon--page"><Icon name="image" size={20} /></div>
+        <div className="w-12 h-12 rounded-xl grid place-items-center flex-none bg-[rgba(101,65,242,0.14)] text-[var(--w-accent-violet)] dark:bg-[rgba(101,65,242,0.22)] dark:text-[#b9a4ff]"><Icon name="image" size={20} /></div>
       )}
-      <div className="conn-card__body">
-        <div className="conn-card__row">
+      <div className="flex-1 min-w-0">
+        <div className="flex justify-between items-start gap-4">
           <div style={{ minWidth: 0 }}>
-            <div className="w-overline" style={{ color: "var(--w-fg-alternative)", marginBottom: 6 }}>
+            <div className="font-semibold text-[11px] leading-[1.45] tracking-[0.04em] uppercase text-[var(--w-fg-neutral)]" style={{ color: "var(--w-fg-alternative)", marginBottom: 6 }}>
               Instagram 비즈니스 계정
             </div>
-            <div className="conn-card__title">{linked ? `@${username}` : "연결되지 않음"}</div>
-            <div style={{ font: "500 12.5px/1.5 var(--w-font-sans)", color: "var(--w-fg-neutral)", marginTop: 6 }}>
+            <div className="font-bold text-[16.5px] leading-[1.35] [font-family:var(--w-font-display)] tracking-[-0.012em]" style={{ color: disabled ? "var(--w-fg-neutral)" : "var(--w-fg-strong)" }}>{linked ? `@${username}` : "연결되지 않음"}</div>
+            <div className="font-medium text-[12.5px] leading-[1.5] text-[var(--w-fg-neutral)]" style={{ marginTop: 6 }}>
               {linked
                 ? "선택한 페이스북 페이지에 연결된 Instagram 계정의 인사이트를 보여드려요."
                 : "선택한 페이스북 페이지에 Instagram 비즈니스 계정이 연결돼 있지 않아요. 페이지 설정에서 Instagram 계정을 연결한 뒤 아래 [다시 불러오기]를 눌러주세요."}
@@ -406,29 +439,32 @@ function InstagramCard({ username, id, picture, pageId, disabled, onReload }: {
               />
             )}
           </div>
-          <div className="conn-card__right">
+          <div className="flex flex-col gap-2.5 items-end flex-none">
             {linked
-              ? <span className="status-badge status-badge--active"><span className="status-dot" /> 연결됨</span>
-              : <span className="status-badge-warn"><Icon name="warn" size={12} /> 미연결</span>}
+              ? <span className="inline-flex items-center gap-[5px] px-[9px] py-[3px] rounded-full font-semibold text-[11.5px] leading-none text-[var(--w-status-positive)] bg-[rgba(0,191,64,0.10)] dark:bg-[rgba(73,229,125,0.14)] dark:text-[#49e57d]"><span className="w-1.5 h-1.5 rounded-full bg-[var(--w-status-positive)] dark:bg-[#49e57d]" /> 연결됨</span>
+              : <span className="inline-flex items-center gap-[5px] px-2.5 py-1 rounded-full font-semibold text-[12px] leading-none text-[var(--w-status-cautionary)] bg-[rgba(255,146,0,0.12)]"><Icon name="warn" size={12} /> 미연결</span>}
+            {insightsAuthorized
+              ? <span className="inline-flex items-center gap-[5px] px-[9px] py-[3px] rounded-full font-semibold text-[11.5px] leading-none text-[var(--w-status-positive)] bg-[rgba(0,191,64,0.10)] dark:bg-[rgba(73,229,125,0.14)] dark:text-[#49e57d]"><span className="w-1.5 h-1.5 rounded-full bg-[var(--w-status-positive)] dark:bg-[#49e57d]" /> 인사이트 권한</span>
+              : !disabled && <a className={buttonVariants({ variant: "secondary", size: "sm" })} href="/api/instagram/connect"><Icon name="chart" size={13} /> 인사이트 권한 받기</a>}
             {!linked && !disabled && (
-              <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+              <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
                 <a
-                  className="btn btn--primary btn--sm"
+                  className={buttonVariants({ variant: "primary", size: "sm" })}
                   href={linkInstagramUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
                   <Icon name="link" size={13} /> Instagram 연결하기
                 </a>
-                <button className="btn btn--ghost btn--sm" type="button" onClick={onReload}>
+                <Button variant="ghost" size="sm" type="button" onClick={onReload}>
                   <Icon name="refresh" size={13} /> 다시 불러오기
-                </button>
+                </Button>
               </div>
             )}
           </div>
         </div>
         {disabled && (
-          <div className="alert-bar alert-bar--muted">
+          <div className={cn("flex items-center gap-2.5 p-[10px_12px] rounded-[10px] font-medium text-[12.5px] leading-[1.5] mt-3.5", "bg-[var(--w-bg-alternative)] text-[var(--w-fg-alternative)] border border-[var(--w-line-alternative)]")}>
             <Icon name="lock" size={13} />
             <span>재인증 후 확인할 수 있어요.</span>
           </div>
@@ -448,69 +484,69 @@ const PERMS: { code: string; label: string }[] = [
 
 function PermissionsDisclosure({ open, onToggle }: { open: boolean; onToggle: () => void }) {
   return (
-    <div className="card" style={{ padding: 0, overflow: "hidden" }}>
-      <button className="disclosure__head" type="button" onClick={onToggle} aria-expanded={open}>
+    <Card style={{ padding: 0, overflow: "hidden" }}>
+      <button className="w-full flex items-center justify-between p-[18px_22px] bg-transparent border-none cursor-pointer text-left hover:bg-[var(--w-bg-alternative)] transition-colors duration-[120ms]" type="button" onClick={onToggle} aria-expanded={open}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <span className="disclosure__icon"><Icon name="lock" size={14} /></span>
+          <span className="w-8 h-8 rounded-[9px] bg-[var(--w-bg-alternative)] text-[var(--w-fg-neutral)] grid place-items-center flex-none"><Icon name="lock" size={14} /></span>
           <div style={{ textAlign: "left" }}>
-            <div style={{ font: "600 14px/1.3 var(--w-font-sans)", color: "var(--w-fg-strong)" }}>AdFlow가 쓰는 권한</div>
-            <div style={{ font: "500 12px/1.4 var(--w-font-sans)", color: "var(--w-fg-neutral)", marginTop: 3 }}>Facebook 비밀번호는 받지도 저장하지도 않아요.</div>
+            <div className="font-semibold text-[14px] leading-[1.3] text-[var(--w-fg-strong)]">AdFlow가 쓰는 권한</div>
+            <div className="font-medium text-[12px] leading-[1.4] text-[var(--w-fg-neutral)]" style={{ marginTop: 3 }}>Facebook 비밀번호는 받지도 저장하지도 않아요.</div>
           </div>
         </div>
         <Icon name="chev-down" size={14} style={{ transform: open ? "rotate(180deg)" : "none", transition: "transform 160ms ease", color: "var(--w-fg-neutral)" }} />
       </button>
       {open && (
-        <div className="disclosure__body">
+        <div className="flex flex-col gap-2.5 px-[22px] pb-5 pt-4 border-t border-[var(--w-line-alternative)]">
           {PERMS.map((p) => (
-            <div key={p.code} className="perm-item">
-              <span className="perm-item__code">{p.code}</span>
-              <span className="perm-item__label">{p.label}</span>
+            <div key={p.code} className="flex items-start gap-3.5 p-[10px_12px] bg-[var(--w-bg-alternative)] rounded-[10px]">
+              <span className="font-semibold text-[11.5px] leading-[1.3] [font-family:var(--w-font-mono)] text-[var(--w-primary-press)] bg-[var(--w-bg-elevated)] px-[9px] py-[5px] rounded-[6px] flex-none border border-[var(--w-line-alternative)]">{p.code}</span>
+              <span className="font-medium text-[12.5px] leading-[1.5] text-[var(--w-fg-strong)] pt-1">{p.label}</span>
             </div>
           ))}
-          <div className="perm-item__note">
+          <div className="flex items-start gap-2 p-1 font-medium text-[12px] leading-[1.55] text-[var(--w-fg-alternative)]">
             <Icon name="info" size={12} />
             <span>AdFlow는 이 권한으로 위 작업만 합니다. 동의는 언제든 Facebook 설정에서 철회할 수 있어요.</span>
           </div>
         </div>
       )}
-    </div>
+    </Card>
   );
 }
 
 function UnconnectedCTA({ onConnect }: { onConnect: () => void }) {
   return (
-    <div className="connect-cta">
-      <div className="connect-cta__glyph">
-        <div className="connect-cta__glyph-a">A</div>
-        <div className="connect-cta__glyph-link"><Icon name="link" size={18} /></div>
-        <div className="connect-cta__glyph-fb"><Icon name="facebook" size={32} /></div>
+    <div className="relative overflow-hidden bg-[var(--w-bg-elevated)] border border-[var(--w-line-normal)] rounded-[18px] p-[48px_48px_40px] text-center before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-[220px] before:bg-[radial-gradient(circle_at_50%_0%,rgba(0,102,255,0.08),transparent_60%)] dark:before:bg-[radial-gradient(circle_at_50%_0%,rgba(0,102,255,0.18),transparent_60%)] before:pointer-events-none">
+      <div className="relative inline-flex items-center justify-center gap-3.5 mb-[22px] z-[1]">
+        <div className="w-16 h-16 rounded-[18px] grid place-items-center shadow-[0_6px_16px_rgba(0,0,0,0.08)] bg-[var(--w-fg-strong)] text-[var(--w-bg-elevated)] font-extrabold text-[30px] leading-none [font-family:var(--w-font-display)]">A</div>
+        <div className="w-7 h-7 rounded-lg bg-[var(--w-bg-elevated)] border border-[var(--w-line-normal)] text-[var(--w-fg-neutral)] grid place-items-center"><Icon name="link" size={18} /></div>
+        <div className="w-16 h-16 rounded-[18px] grid place-items-center shadow-[0_6px_16px_rgba(0,0,0,0.08)] bg-[#1877F2] text-white"><Icon name="facebook" size={32} /></div>
       </div>
-      <h2 className="connect-cta__title">AdFlow를 Meta 광고 계정에 연결하세요</h2>
-      <p className="connect-cta__sub">연결하면 AdFlow가 광고를 자동으로 게재하고, 성과를 추적하고, 최적화 제안을 만들어줘요.</p>
-      <div className="connect-cta__features">
+      <h2 className="font-extrabold text-[26px] leading-[1.25] [font-family:var(--w-font-display)] text-[var(--w-fg-strong)] tracking-[-0.022em] m-0 mb-2.5 relative z-[1]">AdFlow를 Meta 광고 계정에 연결하세요</h2>
+      <p className="font-medium text-[14.5px] leading-[1.6] text-[var(--w-fg-neutral)] max-w-[480px] mx-auto mb-[30px] relative z-[1]">연결하면 AdFlow가 광고를 자동으로 게재하고, 성과를 추적하고, 최적화 제안을 만들어줘요.</p>
+      <div className="grid grid-cols-3 gap-3.5 max-w-[680px] mx-auto mb-7 relative z-[1]">
         <CtaFeature icon="megaphone" title="광고 게재" desc="이 자리에서 바로 광고를 만들고 Meta에 올려요." />
         <CtaFeature icon="chart" title="성과 추적" desc="노출·클릭·CTR을 자동으로 가져와 보여줘요." />
         <CtaFeature icon="sparkles" title="최적화 제안" desc="실적이 낮은 소재·타겟에 대한 개선안을 받아요." />
       </div>
-      <div className="connect-cta__require">
-        <div className="connect-cta__require-title">필요한 것</div>
-        <ul className="connect-cta__require-list">
-          <li><Icon name="wallet" size={15} /> Meta Business 광고 계정 1개</li>
-          <li><Icon name="doc" size={15} /> 관리 중인 페이스북 페이지 1개</li>
+      <div className="flex flex-col w-max max-w-full text-left p-[20px_28px] bg-[var(--w-bg-alternative)] rounded-[14px] mx-auto mb-7 relative z-[1]">
+        <div className="font-semibold text-[11.5px] leading-none [font-family:var(--w-font-sans)] text-[var(--w-fg-alternative)] tracking-[0.06em] uppercase mb-3.5">필요한 것</div>
+        <ul className="list-none p-0 m-0 flex flex-col gap-2.5">
+          <li className="flex items-center gap-2.5 font-medium text-[14px] leading-[1.45] text-[var(--w-fg-strong)] [&_svg]:text-[var(--w-fg-neutral)]"><Icon name="wallet" size={15} /> Meta Business 광고 계정 1개</li>
+          <li className="flex items-center gap-2.5 font-medium text-[14px] leading-[1.45] text-[var(--w-fg-strong)] [&_svg]:text-[var(--w-fg-neutral)]"><Icon name="doc" size={15} /> 관리 중인 페이스북 페이지 1개</li>
         </ul>
       </div>
-      <button className="btn btn--fb" type="button" onClick={onConnect}><Icon name="facebook" size={16} /> 광고 계정·페이지 연결하기</button>
-      <div className="connect-cta__legal">이미 Facebook으로 로그인돼 있어요. 광고 계정과 페이지를 골라주세요.</div>
+      <Button variant="fb" type="button" onClick={onConnect}><Icon name="facebook" size={16} /> 광고 계정·페이지 연결하기</Button>
+      <div className="font-medium text-[11.5px] leading-[1.5] text-[var(--w-fg-alternative)] mt-3.5 relative z-[1]">이미 Facebook으로 로그인돼 있어요. 광고 계정과 페이지를 골라주세요.</div>
     </div>
   );
 }
 
 function CtaFeature({ icon, title, desc }: { icon: IconName; title: string; desc: string }) {
   return (
-    <div className="cta-feat">
-      <div className="cta-feat__icon"><Icon name={icon} size={18} /></div>
-      <div className="cta-feat__title">{title}</div>
-      <div className="cta-feat__desc">{desc}</div>
+    <div className="p-[18px] bg-[var(--w-bg-alternative)] rounded-xl text-left">
+      <div className="w-8 h-8 rounded-[9px] bg-[var(--w-bg-elevated)] text-[var(--w-primary-press)] grid place-items-center mb-2.5 border border-[var(--w-line-alternative)]"><Icon name={icon} size={18} /></div>
+      <div className="font-bold text-[13.5px] leading-[1.3] text-[var(--w-fg-strong)]">{title}</div>
+      <div className="font-medium text-[12px] leading-[1.5] text-[var(--w-fg-neutral)] mt-1">{desc}</div>
     </div>
   );
 }
@@ -528,67 +564,85 @@ function PickerModal({ kind, title, subtitle, currentId, onClose, onPick }: {
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal" style={{ width: 520 }} onClick={(e) => e.stopPropagation()}>
-        <div className="modal__head">
+    <div className="fixed inset-0 z-[100] bg-[rgba(15,17,21,0.45)] dark:bg-[rgba(0,0,0,0.6)] grid place-items-center p-10 animate-[fadeIn_120ms_ease]" onClick={onClose}>
+      <div className="bg-[var(--w-bg-elevated)] border border-[var(--w-line-alternative)] rounded-2xl shadow-[0_30px_80px_rgba(0,0,0,0.20)] max-w-[90vw] max-h-[90vh] overflow-auto animate-[popIn_140ms_ease]" style={{ width: 520 }} onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between p-6 pb-0">
           <div>
-            <h3 className="modal__title">{title}</h3>
-            <div style={{ font: "500 12.5px/1.5 var(--w-font-sans)", color: "var(--w-fg-neutral)", marginTop: 4 }}>{subtitle}</div>
+            <h3 className="font-bold text-[17px] leading-[1.3] [font-family:var(--w-font-display)] text-[var(--w-fg-strong)] tracking-[-0.01em] m-0">{title}</h3>
+            <div className="font-medium text-[12.5px] leading-[1.5] text-[var(--w-fg-neutral)]" style={{ marginTop: 4 }}>{subtitle}</div>
           </div>
-          <button className="icon-btn" type="button" onClick={onClose}><Icon name="x" size={16} /></button>
+          <button className="w-8 h-8 rounded-lg border border-transparent bg-transparent text-[var(--w-fg-neutral)] cursor-pointer inline-grid place-items-center hover:bg-[var(--w-bg-neutral)] hover:text-[var(--w-fg-strong)] transition-[background,color] duration-[120ms]" type="button" onClick={onClose}><Icon name="x" size={16} /></button>
         </div>
 
         <div style={{ padding: "16px 20px 4px" }}>
           {q.isLoading ? (
-            <div className="picker-list">
+            <div className="flex flex-col gap-1 max-h-[380px] overflow-y-auto py-1 pb-3">
               {[0, 1, 2].map((i) => (
-                <div key={i} className="picker-row" style={{ pointerEvents: "none" }}>
-                  <div className="skel" style={{ width: 32, height: 32, borderRadius: 8 }} />
+                <div key={i} className="flex items-center gap-3 p-3 bg-transparent border border-transparent rounded-[10px] w-full" style={{ pointerEvents: "none" }}>
+                  <Skeleton className="w-8 h-8 rounded-lg flex-none" />
                   <div style={{ flex: 1 }}>
-                    <div className="skel" style={{ height: 13, width: 160, marginBottom: 6 }} />
-                    <div className="skel" style={{ height: 11, width: 110 }} />
+                    <Skeleton className="h-[13px] w-40 mb-1.5" />
+                    <Skeleton className="h-[11px] w-[110px]" />
                   </div>
                 </div>
               ))}
             </div>
           ) : q.isError ? (
             <div style={{ padding: "28px 18px 18px", textAlign: "center" }}>
-              <div style={{ font: "600 13.5px/1.4 var(--w-font-sans)", color: "var(--w-fg-strong)" }}>목록을 불러오지 못했어요</div>
-              <p style={{ font: "500 12.5px/1.5 var(--w-font-sans)", color: "var(--w-fg-neutral)", margin: "8px 0 14px" }}>{q.error instanceof Error ? q.error.message : "잠시 후 다시 시도해 주세요."}</p>
-              <button className="btn btn--secondary btn--sm" type="button" onClick={() => q.refetch()}>다시 시도</button>
+              <div className="font-semibold text-[13.5px] leading-[1.4] text-[var(--w-fg-strong)]">목록을 불러오지 못했어요</div>
+              <p className="font-medium text-[12.5px] leading-[1.5] text-[var(--w-fg-neutral)]" style={{ margin: "8px 0 14px" }}>{q.error instanceof Error ? q.error.message : "잠시 후 다시 시도해 주세요."}</p>
+              <Button variant="secondary" size="sm" type="button" onClick={() => q.refetch()}>다시 시도</Button>
             </div>
           ) : items.length === 0 ? (
             <div style={{ padding: "32px 18px 20px", textAlign: "center" }}>
               <div style={{ width: 48, height: 48, borderRadius: 14, margin: "0 auto 12px", background: "var(--w-bg-alternative)", color: "var(--w-fg-neutral)", display: "grid", placeItems: "center" }}>
                 <Icon name={kind === "account" ? "wallet" : kind === "pixel" ? "chart" : "doc"} size={22} />
               </div>
-              <div style={{ font: "700 14.5px/1.35 var(--w-font-display)", color: "var(--w-fg-strong)" }}>{kind === "pixel" ? "이 광고 계정에 Pixel이 없어요" : kind === "account" ? "연결된 광고 계정이 없어요" : "관리 중인 페이스북 페이지가 없어요"}</div>
-              <p style={{ font: "500 12.5px/1.55 var(--w-font-sans)", color: "var(--w-fg-neutral)", maxWidth: 320, margin: "10px auto 0" }}>
+              <div className="font-bold text-[14.5px] leading-[1.35] [font-family:var(--w-font-display)] text-[var(--w-fg-strong)]">{kind === "pixel" ? "이 광고 계정에 Pixel이 없어요" : kind === "account" ? "연결된 광고 계정이 없어요" : "관리 중인 페이스북 페이지가 없어요"}</div>
+              <p className="font-medium text-[12.5px] leading-[1.55] text-[var(--w-fg-neutral)]" style={{ maxWidth: 320, margin: "10px auto 0" }}>
                 {kind === "pixel" ? "Meta Events Manager에서 Pixel을 먼저 만들어주세요." : kind === "account" ? "Meta Business Manager에서 광고 계정을 먼저 만들어주세요." : "페이지 권한이 없거나 페이지가 없어요. 다른 계정으로 다시 로그인하면 권한을 다시 요청해요."}
               </p>
               <div style={{ marginTop: 16, display: "flex", gap: 8, justifyContent: "center" }}>
-                {kind === "page" && <button className="btn btn--ghost btn--sm" type="button" onClick={() => signOut({ callbackUrl: "/login" })}><Icon name="refresh" size={13} /> 다른 계정으로 다시 로그인</button>}
-                <button className="btn btn--ghost btn--sm" type="button" onClick={() => q.refetch()}>목록 새로고침</button>
+                {kind === "page" && <Button variant="ghost" size="sm" type="button" onClick={() => signOut({ callbackUrl: "/login" })}><Icon name="refresh" size={13} /> 다른 계정으로 다시 로그인</Button>}
+                <Button variant="ghost" size="sm" type="button" onClick={() => q.refetch()}>목록 새로고침</Button>
               </div>
             </div>
           ) : (
-            <div className="picker-list">
+            <div className="flex flex-col gap-1 max-h-[380px] overflow-y-auto py-1 pb-3">
               {items.map((it) => {
                 const current = it.id === currentId;
                 return (
-                  <button key={it.id} className={"picker-row" + (current ? " picker-row--current" : "")} type="button" disabled={!!picking} onClick={() => handlePick(it)}>
-                    <div className={"picker-row__icon picker-row__icon--" + kind}><Icon name={kind === "account" ? "wallet" : kind === "pixel" ? "chart" : "doc"} size={16} /></div>
+                  <button
+                    key={it.id}
+                    className={cn(
+                      "flex items-center gap-3 p-3 bg-transparent border border-transparent rounded-[10px] cursor-pointer text-left w-full hover:bg-[var(--w-bg-alternative)] hover:border-[var(--w-line-alternative)] transition-[background,border-color] duration-[120ms]",
+                      current && "bg-[var(--w-primary-soft)] border-[rgba(0,102,255,0.18)] dark:bg-[rgba(0,102,255,0.14)] hover:bg-[var(--w-primary-soft)]"
+                    )}
+                    type="button"
+                    disabled={!!picking}
+                    onClick={() => handlePick(it)}
+                  >
+                    <div className={cn(
+                      "w-8 h-8 rounded-[9px] grid place-items-center flex-none",
+                      kind === "account" && "bg-[var(--w-primary-soft)] text-[var(--w-primary-press)] dark:bg-[rgba(0,102,255,0.18)] dark:text-[#6ea7ff]",
+                      kind === "page" && "bg-[rgba(101,65,242,0.14)] text-[var(--w-accent-violet)] dark:bg-[rgba(101,65,242,0.22)] dark:text-[#b9a4ff]",
+                      kind === "pixel" && "bg-[var(--w-bg-alternative)] text-[var(--w-fg-neutral)]"
+                    )}><Icon name={kind === "account" ? "wallet" : kind === "pixel" ? "chart" : "doc"} size={16} /></div>
                     <div style={{ flex: 1, minWidth: 0, textAlign: "left" }}>
-                      <div className="picker-row__title">
+                      <div className="flex items-center gap-2 font-semibold text-[13.5px] leading-[1.3] text-[var(--w-fg-strong)]">
                         {it.name}
-                        {it.status === "disabled" && <span className="picker-row__sub-badge">비활성</span>}
+                        {it.status === "disabled" && <span className="font-semibold text-[10px] leading-none [font-family:var(--w-font-mono)] bg-[rgba(255,146,0,0.12)] text-[var(--w-status-cautionary)] px-1.5 py-[3px] rounded-[4px] tracking-[0.04em]">비활성</span>}
                       </div>
-                      <div className="picker-row__id">
+                      <div className="flex items-center gap-1.5 flex-wrap font-medium text-[11.5px] leading-[1.3] [font-family:var(--w-font-mono)] text-[var(--w-fg-neutral)] mt-1">
                         <span>{maskId(it.id)}</span>
-                        {it.currency && <><span className="conn-card__dot" /><span>{it.currency}</span></>}
+                        {it.currency && <><span className="w-[3px] h-[3px] rounded-full bg-[var(--w-fg-alternative)]" /><span>{it.currency}</span></>}
                       </div>
                     </div>
-                    {picking === it.id ? <div className="spinner" style={{ width: 16, height: 16, borderWidth: 2 }} /> : current ? <span className="picker-row__check"><Icon name="check" size={13} strokeWidth={3} /></span> : null}
+                    {picking === it.id
+                      ? <div className="rounded-full border-2 border-[var(--w-line-normal)] border-t-[var(--w-primary-normal)] animate-[spin_0.85s_linear_infinite]" style={{ width: 16, height: 16 }} />
+                      : current
+                        ? <span className="w-[22px] h-[22px] rounded-full bg-[var(--w-primary-normal)] text-white grid place-items-center flex-none"><Icon name="check" size={13} strokeWidth={3} /></span>
+                        : null}
                   </button>
                 );
               })}
@@ -596,8 +650,8 @@ function PickerModal({ kind, title, subtitle, currentId, onClose, onPick }: {
           )}
         </div>
 
-        <div className="modal__foot">
-          <button className="btn btn--ghost" type="button" onClick={onClose}>닫기</button>
+        <div className="flex gap-2 justify-end px-6 py-[18px] border-t border-[var(--w-line-alternative)] mt-5">
+          <Button variant="ghost" type="button" onClick={onClose}>닫기</Button>
         </div>
       </div>
     </div>
@@ -608,15 +662,15 @@ function ConnectSkeleton() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
       {[0, 1, 2].map((i) => (
-        <div key={i} className="card" style={{ padding: 20, display: "flex", gap: 16, alignItems: "flex-start" }}>
-          <div className="skel" style={{ width: 52, height: 52, borderRadius: 14 }} />
+        <Card key={i} style={{ padding: 20, display: "flex", gap: 16, alignItems: "flex-start" }}>
+          <Skeleton className="w-[52px] h-[52px] rounded-[14px] flex-none" />
           <div style={{ flex: 1 }}>
-            <div className="skel" style={{ height: 11, width: 60, marginBottom: 10 }} />
-            <div className="skel" style={{ height: 16, width: 220, marginBottom: 10 }} />
-            <div className="skel" style={{ height: 12, width: 180 }} />
+            <Skeleton className="h-[11px] w-[60px] mb-2.5" />
+            <Skeleton className="h-[16px] w-[220px] mb-2.5" />
+            <Skeleton className="h-[12px] w-[180px]" />
           </div>
-          <div className="skel" style={{ height: 30, width: 110, borderRadius: 8 }} />
-        </div>
+          <Skeleton className="h-[30px] w-[110px] rounded-lg flex-none" />
+        </Card>
       ))}
     </div>
   );
@@ -624,11 +678,11 @@ function ConnectSkeleton() {
 
 function ErrorCard({ title, reason, onRetry }: { title: string; reason: string; onRetry: () => void }) {
   return (
-    <div className="card" style={{ padding: "40px 32px", display: "flex", flexDirection: "column", alignItems: "center", gap: 12, textAlign: "center" }}>
+    <Card style={{ padding: "40px 32px", display: "flex", flexDirection: "column", alignItems: "center", gap: 12, textAlign: "center" }}>
       <div style={{ width: 56, height: 56, borderRadius: "50%", background: "rgba(255,66,66,0.10)", color: "var(--w-status-negative)", display: "grid", placeItems: "center" }}><Icon name="warn" size={24} /></div>
-      <div style={{ font: "700 17px/1.3 var(--w-font-sans)", color: "var(--w-fg-strong)", letterSpacing: "-0.01em" }}>{title}</div>
-      <div style={{ font: "500 13px/1.5 var(--w-font-sans)", color: "var(--w-fg-neutral)", maxWidth: 380 }}>{reason}</div>
-      <button className="btn btn--secondary" type="button" style={{ marginTop: 8 }} onClick={onRetry}>다시 시도</button>
-    </div>
+      <div className="font-bold text-[17px] leading-[1.3] text-[var(--w-fg-strong)]" style={{ letterSpacing: "-0.01em" }}>{title}</div>
+      <div className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)]" style={{ maxWidth: 380 }}>{reason}</div>
+      <Button variant="secondary" type="button" style={{ marginTop: 8 }} onClick={onRetry}>다시 시도</Button>
+    </Card>
   );
 }

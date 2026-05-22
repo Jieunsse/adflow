@@ -14,10 +14,12 @@
     "@google/genai": "^2.0.1",
     "@google/generative-ai": "^0.24.1",
     "@tanstack/react-query": "^5.100.9",
+    "clsx": "^2.1.1",
     "next": "^16.0.10",
     "next-auth": "^4.24.14",
     "react": "^19.2.1",
-    "react-dom": "^19.2.1"
+    "react-dom": "^19.2.1",
+    "tailwind-merge": "^3.6.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

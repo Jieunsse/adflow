@@ -5,6 +5,8 @@
 // 자료/사이즈/추가 지시는 brief 모드 안 로컬 state.
 
 import Icon from "@shared/ui/Icon";
+import { Button } from "@shared/ui/Button";
+import { cn } from "@shared/lib/cn";
 import { TONES, OBJECTIVES_ALL, type ToneId, type ObjectiveId } from "@entities/creative/options";
 
 export const ASPECT_OPTIONS = [
@@ -84,12 +86,12 @@ export default function BriefForm({
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
             <span style={{ font: "500 12px/1 var(--w-font-sans)", color: "var(--w-fg-strong)" }}>연출컷 (분위기·앵글 참고)</span>
             <div style={{ display: "flex", gap: 6 }}>
-              <label className="btn btn--ghost btn--sm" style={{ cursor: "pointer", borderColor: "var(--w-line-normal)" }}>
+              <label className={cn("inline-flex items-center justify-center gap-1.5 border font-semibold leading-none tracking-[-0.002em] cursor-pointer transition-[background,border-color,color,box-shadow] duration-[120ms] whitespace-nowrap", "h-8 px-3 text-[12.5px] rounded-lg gap-[5px]", "bg-transparent border-[var(--w-line-normal)] text-[var(--w-fg-strong)] hover:bg-[var(--w-bg-neutral)]")}>
                 <Icon name="upload" size={12} /> 연출컷 추가{scenes.length > 0 ? ` (${scenes.length})` : ""}
                 <input type="file" accept="image/*" multiple style={{ display: "none" }} onChange={(e) => onAddScenes(e.target.files)} />
               </label>
               {scenes.length > 0 && (
-                <button type="button" className="btn btn--ghost btn--sm" onClick={onClearScenes} style={{ borderColor: "var(--w-line-normal)" }}>비우기</button>
+                <Button variant="ghost" size="sm" onClick={onClearScenes} className="border-[var(--w-line-normal)]">비우기</Button>
               )}
             </div>
           </div>
@@ -117,7 +119,7 @@ export default function BriefForm({
               ))}
             </div>
           ) : (
-            <p className="field__hint" style={{ margin: 0 }}>2~3장 권장 — 원하는 톤·앵글·라이팅에 가까운 사진</p>
+            <p className="font-medium text-[12px] leading-[1.5] tracking-[0.008em] text-[var(--w-fg-neutral)]" style={{ margin: 0 }}>2~3장 권장 — 원하는 톤·앵글·라이팅에 가까운 사진</p>
           )}
         </div>
 
@@ -126,12 +128,12 @@ export default function BriefForm({
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
             <span style={{ font: "500 12px/1 var(--w-font-sans)", color: "var(--w-fg-strong)" }}>로고 파일 (선택)</span>
             <div style={{ display: "flex", gap: 6 }}>
-              <label className="btn btn--ghost btn--sm" style={{ cursor: "pointer", borderColor: "var(--w-line-normal)" }}>
+              <label className={cn("inline-flex items-center justify-center gap-1.5 border font-semibold leading-none tracking-[-0.002em] cursor-pointer transition-[background,border-color,color,box-shadow] duration-[120ms] whitespace-nowrap", "h-8 px-3 text-[12.5px] rounded-lg gap-[5px]", "bg-transparent border-[var(--w-line-normal)] text-[var(--w-fg-strong)] hover:bg-[var(--w-bg-neutral)]")}>
                 <Icon name="upload" size={12} /> {logo ? "로고 변경" : "로고 첨부"}
                 <input type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => onSetLogo(e.target.files)} />
               </label>
               {logo && (
-                <button type="button" className="btn btn--ghost btn--sm" onClick={onRemoveLogo} style={{ borderColor: "var(--w-line-normal)" }}>제거</button>
+                <Button variant="ghost" size="sm" onClick={onRemoveLogo} className="border-[var(--w-line-normal)]">제거</Button>
               )}
             </div>
           </div>
@@ -145,10 +147,10 @@ export default function BriefForm({
                 onClick={() => onZoom(logo)}
                 style={{ width: 60, height: 60, objectFit: "contain", borderRadius: 6, border: "1px solid var(--w-line-normal)", background: "#fff", cursor: "zoom-in" }}
               />
-              <span className="field__hint" style={{ margin: 0 }}>투명 배경 PNG 권장. AI는 분위기만 참고하고 이미지에 직접 합성하진 않아요.</span>
+              <span className="font-medium text-[12px] leading-[1.5] tracking-[0.008em] text-[var(--w-fg-neutral)]" style={{ margin: 0 }}>투명 배경 PNG 권장. AI는 분위기만 참고하고 이미지에 직접 합성하진 않아요.</span>
             </div>
           ) : (
-            <p className="field__hint" style={{ margin: 0 }}>없어도 돼요. 있으면 분위기 참고용으로 같이 보내요.</p>
+            <p className="font-medium text-[12px] leading-[1.5] tracking-[0.008em] text-[var(--w-fg-neutral)]" style={{ margin: 0 }}>없어도 돼요. 있으면 분위기 참고용으로 같이 보내요.</p>
           )}
         </div>
 
@@ -156,7 +158,7 @@ export default function BriefForm({
         <div>
           <span style={{ display: "block", font: "500 12px/1 var(--w-font-sans)", color: "var(--w-fg-strong)", marginBottom: 6 }}>추가 지시사항 (선택)</span>
           <textarea
-            className="textarea"
+            className="w-full px-[14px] py-3 border border-[var(--w-line-normal)] rounded-xl bg-[var(--w-bg-elevated)] font-medium text-[14px] leading-[1.6] tracking-[0.004em] text-[var(--w-fg-strong)] outline-none transition-[border-color,box-shadow] duration-[120ms] placeholder:text-[var(--w-fg-alternative)] focus:border-[var(--w-primary-normal)] focus:shadow-[0_0_0_4px_rgba(0,102,255,0.14)] resize-y min-h-[88px]"
             value={briefNotes ?? ""}
             onChange={(e) => onNotesChange(e.target.value)}
             placeholder="예) 인물 얼굴이 정면으로 보이게, 자연광 느낌, 텍스트 없이 제품 중심"
@@ -171,12 +173,15 @@ export default function BriefForm({
           <Icon name="image" size={13} style={{ color: "var(--w-fg-neutral)" }} />
           <span style={{ font: "600 12px/1 var(--w-font-sans)", color: "var(--w-fg-strong)" }}>3. 작업 사이즈</span>
         </div>
-        <div className="chips">
+        <div className="flex gap-2 flex-wrap">
           {ASPECT_OPTIONS.map((opt) => (
             <button
               key={opt.id}
               type="button"
-              className={"chip" + (aspect === opt.id ? " chip--on" : "")}
+              className={cn(
+                "inline-flex items-center gap-1.5 px-[14px] py-2 rounded-full border border-[var(--w-line-normal)] bg-[var(--w-bg-elevated)] font-medium text-[13px] leading-none text-[var(--w-fg-strong)] cursor-pointer transition-[background,border-color,color] duration-[120ms]",
+                aspect === opt.id && "bg-[var(--w-fg-strong)] text-[var(--w-bg-elevated)] border-[var(--w-fg-strong)]"
+              )}
               disabled={!opt.enabled}
               style={{ opacity: opt.enabled ? 1 : 0.55 }}
               onClick={() => opt.enabled && onAspectChange(opt.id)}
@@ -193,18 +198,18 @@ export default function BriefForm({
 
       {/* 생성 버튼 */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, paddingTop: 4, flexWrap: "wrap" }}>
-        <span className="field__hint" style={{ margin: 0 }}>
+        <span className="font-medium text-[12px] leading-[1.5] tracking-[0.008em] text-[var(--w-fg-neutral)]" style={{ margin: 0 }}>
           기획안 + 자료를 한 덩어리로 AI에 전달해 1:1 광고 이미지 3장을 만들어요.
         </span>
-        <button
-          type="button"
-          className="btn btn--primary btn--sm"
+        <Button
+          variant="primary"
+          size="sm"
           disabled={generating || !hasCopy || !hasMaterials}
           title={!hasCopy ? "STEP 01에서 헤드라인을 먼저 만들어 주세요" : !hasMaterials ? "연출컷이나 로고를 1장 이상 올려주세요" : undefined}
           onClick={onGenerate}
         >
           {generating ? "생성 중…" : <><Icon name="sparkles" size={13} /> 이 기획안으로 3장 생성</>}
-        </button>
+        </Button>
       </div>
     </div>
   );

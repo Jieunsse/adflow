@@ -125,6 +125,13 @@ export const LAUNCH_PROFILES: Record<ObjectivePhase1Id, LaunchObjectiveProfile> 
     uniqueSections: ['call_schedule'],
     validations: ['page_phone_required', 'call_schedule_required'],
   },
+  boost_post: {
+    url: { mode: 'hidden' },
+    cta: { mode: 'locked' },
+    placement: { default: 'auto', recommendedPositions: [], recommendation: 'Meta 자동 배치' },
+    uniqueSections: [],
+    validations: [],
+  },
 }
 
 export function getLaunchProfile(id: ObjectivePhase1Id): LaunchObjectiveProfile {

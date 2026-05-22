@@ -15,6 +15,8 @@ import { suggestOptimizations, assessAutomationReadiness } from "@entities/insig
 import { addNotification } from "@shared/lib/notifications";
 import { shortDate } from "@shared/lib/format";
 
+import { Card } from "@shared/ui/Card";
+import { Button } from "@shared/ui/Button";
 import CampaignBar from "./CampaignBar";
 import ExampleBanner from "./ExampleBanner";
 import KpiGrid from "./KpiGrid";
@@ -126,15 +128,15 @@ export default function PerformanceStep({ onRestart }: { onRestart: () => void }
   );
 
   const footer = (
-    <div className="between">
-      <button className="btn btn--ghost" type="button" onClick={onRestart}><Icon name="arrow-left" size={14} /> 처음으로 돌아가기</button>
-      <div style={{ display: "inline-flex", gap: 8 }}>
+    <div className="flex items-center justify-between gap-3">
+      <Button variant="ghost" onClick={onRestart}><Icon name="arrow-left" size={14} /> 처음으로 돌아가기</Button>
+      <div className="inline-flex gap-2">
         {launched && (
-          <button className="btn btn--secondary" type="button" onClick={() => router.push(`/campaigns/${launched.campaignId}`)}>
+          <Button variant="secondary" onClick={() => router.push(`/campaigns/${launched.campaignId}`)}>
             <Icon name="message" size={14} /> 캠페인 페이지에서 보기
-          </button>
+          </Button>
         )}
-        <button className="btn btn--primary" type="button" onClick={onRestart}><Icon name="sparkles" size={14} /> 새 소재로 다시 만들기</button>
+        <Button variant="primary" onClick={onRestart}><Icon name="sparkles" size={14} /> 새 소재로 다시 만들기</Button>
       </div>
     </div>
   );
@@ -145,10 +147,10 @@ export default function PerformanceStep({ onRestart }: { onRestart: () => void }
       return (
         <>
           {campaignBar}
-          <div className="card" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, padding: "40px 20px", color: "var(--w-fg-neutral)" }}>
-            <div className="spinner" />
-            <span style={{ font: "500 13px/1 var(--w-font-sans)" }}>성과를 불러오는 중…</span>
-          </div>
+          <Card className="flex flex-col items-center gap-3 py-10 px-5 text-[var(--w-fg-neutral)]">
+            <div className="rounded-full border-[2.4px] border-[var(--w-line-normal)] border-t-[var(--w-primary-normal)] animate-[spin_0.85s_linear_infinite] w-[18px] h-[18px]" />
+            <span className="font-medium text-[13px] leading-none">성과를 불러오는 중…</span>
+          </Card>
           {footer}
         </>
       );
@@ -157,12 +159,12 @@ export default function PerformanceStep({ onRestart }: { onRestart: () => void }
       return (
         <>
           {campaignBar}
-          <div className="card" style={{ borderColor: "var(--w-status-negative)", display: "flex", flexDirection: "column", alignItems: "center", gap: 12, padding: "32px 20px", textAlign: "center" }}>
-            <div style={{ width: 40, height: 40, borderRadius: "50%", background: "rgba(255,66,66,0.10)", color: "var(--w-status-negative)", display: "grid", placeItems: "center" }}><Icon name="x" size={20} /></div>
-            <div style={{ font: "700 15px/1.3 var(--w-font-sans)", color: "var(--w-fg-strong)" }}>성과를 불러오지 못했어요</div>
-            <p style={{ font: "500 12.5px/1.5 var(--w-font-sans)", color: "var(--w-fg-neutral)", margin: 0 }}>{q.error instanceof Error ? q.error.message : "알 수 없는 오류"}</p>
-            <button className="btn btn--primary btn--sm" type="button" onClick={() => q.refetch()}>다시 시도</button>
-          </div>
+          <Card className="border-[var(--w-status-negative)] flex flex-col items-center gap-3 py-8 px-5 text-center">
+            <div className="w-10 h-10 rounded-full bg-[rgba(255,66,66,0.10)] text-[var(--w-status-negative)] grid place-items-center"><Icon name="x" size={20} /></div>
+            <div className="font-bold text-[15px] leading-[1.3] text-[var(--w-fg-strong)]">성과를 불러오지 못했어요</div>
+            <p className="font-medium text-[12.5px] leading-[1.5] text-[var(--w-fg-neutral)] m-0">{q.error instanceof Error ? q.error.message : "알 수 없는 오류"}</p>
+            <Button variant="primary" size="sm" onClick={() => q.refetch()}>다시 시도</Button>
+          </Card>
           {footer}
         </>
       );
@@ -171,15 +173,15 @@ export default function PerformanceStep({ onRestart }: { onRestart: () => void }
       return (
         <>
           {campaignBar}
-          <div className="card" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, padding: "32px 24px", textAlign: "center" }}>
-            <div style={{ width: 48, height: 48, borderRadius: "50%", background: "var(--w-primary-soft)", color: "var(--w-primary-press)", display: "grid", placeItems: "center" }}><Icon name="clock" size={22} /></div>
-            <div style={{ font: "700 16px/1.3 var(--w-font-sans)", color: "var(--w-fg-strong)" }}>아직 성과 데이터가 없어요</div>
-            <p style={{ font: "500 13px/1.7 var(--w-font-sans)", color: "var(--w-fg-neutral)", margin: 0, maxWidth: 420 }}>
+          <Card className="flex flex-col items-center gap-3 py-8 px-6 text-center">
+            <div className="w-12 h-12 rounded-full bg-[var(--w-primary-soft)] text-[var(--w-primary-press)] grid place-items-center"><Icon name="clock" size={22} /></div>
+            <div className="font-bold text-[16px] leading-[1.3] text-[var(--w-fg-strong)]">아직 성과 데이터가 없어요</div>
+            <p className="font-medium text-[13px] leading-[1.7] text-[var(--w-fg-neutral)] m-0 max-w-[420px]">
               Meta가 광고를 검토하고 집계를 준비하고 있어요. 심사를 통과해 게재가 시작되고 노출이 쌓이면 여기에 표시돼요.<br />
-              <span style={{ color: "var(--w-fg-alternative)" }}>보통 수 분 ~ 수 시간 걸리고, 데이터는 몇 시간 단위로 갱신돼요.</span>
+              <span className="text-[var(--w-fg-alternative)]">보통 수 분 ~ 수 시간 걸리고, 데이터는 몇 시간 단위로 갱신돼요.</span>
             </p>
-            <button className="btn btn--primary btn--sm" type="button" onClick={() => q.refetch()} disabled={q.isFetching}>{q.isFetching ? "확인 중…" : "성과 새로고침"}</button>
-          </div>
+            <Button variant="primary" size="sm" onClick={() => q.refetch()} disabled={q.isFetching}>{q.isFetching ? "확인 중…" : "성과 새로고침"}</Button>
+          </Card>
           {footer}
         </>
       );

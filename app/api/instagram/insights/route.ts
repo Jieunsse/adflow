@@ -36,6 +36,6 @@ export async function GET(req: NextRequest) {
     if (session?.accessToken) Object.assign(dbg, await introspectToken(session.accessToken))
     return NextResponse.json(dbg)
   }
-  const data = await getInstagramInsights(session?.pageId, session?.accessToken, session?.igUserId)
+  const data = await getInstagramInsights(session?.pageId, session?.accessToken, session?.igUserId, session?.igAccessToken)
   return NextResponse.json(data)
 }

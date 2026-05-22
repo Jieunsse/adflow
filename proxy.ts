@@ -48,7 +48,7 @@ export default withAuth(
 
 export const config = {
   matcher: [
-    // install/auth/install-api/health, 정적 자원, 폰트, 로그인 제외 (가드 발동 시 무한 루프 방지)
-    "/((?!install|api/auth|api/install|api/health|_next/static|_next/image|favicon.ico|fonts|login).*)",
+    // install/auth/install-api/health, 정적 자원, 폰트, 로그인, 공개 약관 제외 (가드 발동 시 무한 루프 방지)
+    "/((?!install|api/auth|api/install|api/health|_next/static|_next/image|favicon.ico|fonts|login|privacy|terms).*)",
   ],
 }

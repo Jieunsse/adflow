@@ -1,6 +1,7 @@
 "use client";
 
 import Icon from "@shared/ui/Icon";
+import { Card } from "@shared/ui/Card";
 
 function fmtK(n: number): string {
   if (n >= 10000) return `${(n / 10000).toFixed(1)}만`;
@@ -21,7 +22,7 @@ export default function CompareBar({ ig, fb, onJumpInstagram, onJumpFacebook }: 
   const anyMock = ig.mock || fb.mock;
 
   return (
-    <div className="card" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 20, flexWrap: "wrap" }}>
+    <Card className="flex items-center justify-between gap-5 flex-wrap">
       <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
         <button
           type="button"
@@ -53,10 +54,10 @@ export default function CompareBar({ ig, fb, onJumpInstagram, onJumpFacebook }: 
       </div>
 
       {anyMock && (
-        <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 10px", borderRadius: 999, background: "var(--w-accent-violet-soft)", color: "var(--w-accent-violet)", font: "600 11.5px/1 var(--w-font-sans)" }}>
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[var(--w-accent-violet-soft)] text-[var(--w-accent-violet)] font-semibold text-[11.5px] leading-none">
           mock 포함
         </span>
       )}
-    </div>
+    </Card>
   );
 }

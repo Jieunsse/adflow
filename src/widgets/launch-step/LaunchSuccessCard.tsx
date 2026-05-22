@@ -5,6 +5,8 @@
 
 import { useState } from "react";
 import Icon from "@shared/ui/Icon";
+import { Button } from "@shared/ui/Button";
+import { Card } from "@shared/ui/Card";
 import { Badge } from "@shared/ui/primitives";
 import { useLaunchDraft } from "@entities/campaign/model";
 
@@ -27,39 +29,43 @@ export default function LaunchSuccessCard({ onNext }: { onNext: () => void }) {
   ];
 
   return (
-    <div className="card" style={{ borderColor: "var(--w-status-positive)", background: "rgba(0,191,64,0.04)" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
-        <div style={{ width: 36, height: 36, borderRadius: "50%", background: "var(--w-status-positive)", color: "#fff", display: "grid", placeItems: "center" }}>
+    <Card className="border-[var(--w-status-positive)] bg-[rgba(0,191,64,0.04)]">
+      <div className="flex items-center gap-3 mb-3.5">
+        <div className="w-9 h-9 rounded-full bg-[var(--w-status-positive)] text-white grid place-items-center">
           <Icon name="check" size={18} />
         </div>
         <div>
-          <div style={{ font: "700 15px/1.3 var(--w-font-sans)", color: "var(--w-fg-strong)" }}>광고가 Meta에 등록됐어요</div>
-          <div style={{ font: "500 12.5px/1.4 var(--w-font-sans)", color: "var(--w-fg-normal)", marginTop: 2 }}>
+          <div className="font-bold text-[15px] leading-[1.3] text-[var(--w-fg-strong)]">광고가 Meta에 등록됐어요</div>
+          <div className="font-medium text-[12.5px] leading-[1.4] text-[var(--w-fg-normal)] mt-0.5">
             {launched.status === "ACTIVE"
               ? "검토가 끝나면 자동으로 게재가 시작돼요."
               : "일시중지 상태로 만들어졌어요. Meta 광고 관리자에서 켤 수 있어요."}
           </div>
         </div>
       </div>
-      <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 12px", background: "var(--w-bg-elevated)", borderRadius: 10, marginBottom: 14 }}>
+      <div className="flex items-center gap-2 p-[10px_12px] bg-[var(--w-bg-elevated)] rounded-[10px] mb-3.5">
         <Badge kind="accent" dot>검토 중</Badge>
         <Icon name="arrow-right" size={12} style={{ color: "var(--w-fg-alternative)" }} />
         <Badge kind="success" dot>게재 중</Badge>
       </div>
-      <div className="id-list">
+      <div className="flex flex-col gap-2">
         {rows.map(([l, v]) => (
-          <div key={l} className="id-row">
-            <span className="id-row__label">{l}</span>
-            <span className="id-row__val">{v}</span>
-            <button className="id-row__copy" type="button" onClick={() => copy(l, v)}>
+          <div key={l} className="flex items-center gap-3 p-[12px_14px] bg-[var(--w-bg-alternative)] rounded-[10px]">
+            <span className="font-semibold text-[11.5px] leading-none text-[var(--w-fg-neutral)] tracking-[0.04em] uppercase min-w-[90px]">{l}</span>
+            <span className="font-medium text-[13px] leading-none font-[var(--w-font-mono)] text-[var(--w-fg-strong)] flex-1 overflow-hidden text-ellipsis">{v}</span>
+            <button
+              className="border-none bg-transparent font-semibold text-[11.5px] leading-none text-[var(--w-primary-press)] cursor-pointer px-2 py-1.5 rounded-md hover:bg-[var(--w-primary-soft)]"
+              type="button"
+              onClick={() => copy(l, v)}
+            >
               {copied === l ? "복사됨 ✓" : <><Icon name="copy" size={12} /> 복사</>}
             </button>
           </div>
         ))}
       </div>
-      <button className="btn btn--primary btn--block" type="button" style={{ marginTop: 14 }} onClick={onNext}>
+      <Button variant="primary" className="w-full mt-3.5" type="button" onClick={onNext}>
         마무리 점검하러 가기 <Icon name="arrow-right" size={14} />
-      </button>
-    </div>
+      </Button>
+    </Card>
   );
 }

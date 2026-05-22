@@ -3,7 +3,6 @@
 import { useRef } from "react";
 
 // Dual-thumb age slider — ported from the design bundle's primitives.jsx.
-// Uses the `.range*` classes from app/styles/adflow.css.
 export default function AgeRange({
   value,
   onChange,
@@ -44,11 +43,11 @@ export default function AgeRange({
 
   return (
     <div>
-      <div className="range" ref={trackRef}>
-        <div className="range__track" />
-        <div className="range__fill" style={{ left: pct(lo) + "%", right: 100 - pct(hi) + "%" }} />
+      <div className="relative h-9 flex items-center" ref={trackRef}>
+        <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-1 rounded-full bg-[var(--w-bg-neutral)]" />
+        <div className="absolute top-1/2 -translate-y-1/2 h-1 rounded-full bg-[var(--w-primary-normal)]" style={{ left: pct(lo) + "%", right: 100 - pct(hi) + "%" }} />
         <div
-          className="range__thumb"
+          className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2 w-[22px] h-[22px] bg-white border-2 border-[var(--w-primary-normal)] rounded-full shadow-[0_2px_6px_rgba(0,0,0,0.12)] cursor-grab active:cursor-grabbing"
           style={{ left: pct(lo) + "%" }}
           role="slider"
           aria-label="최소 연령"
@@ -59,7 +58,7 @@ export default function AgeRange({
           onTouchStart={(e) => start("lo", e)}
         />
         <div
-          className="range__thumb"
+          className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2 w-[22px] h-[22px] bg-white border-2 border-[var(--w-primary-normal)] rounded-full shadow-[0_2px_6px_rgba(0,0,0,0.12)] cursor-grab active:cursor-grabbing"
           style={{ left: pct(hi) + "%" }}
           role="slider"
           aria-label="최대 연령"
@@ -70,7 +69,7 @@ export default function AgeRange({
           onTouchStart={(e) => start("hi", e)}
         />
       </div>
-      <div className="range__values">
+      <div className="flex justify-between mt-1.5 font-semibold text-[12px] leading-none [font-family:var(--w-font-mono)] text-[var(--w-fg-neutral)]">
         <span>{lo}세</span>
         <span>{hi}세{hi >= max ? "+" : ""}</span>
       </div>

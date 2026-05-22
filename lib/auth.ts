@@ -103,6 +103,9 @@ function buildCommonOptions(meta?: MetaCredentials): AuthOptions {
             token.igUserId = session.igUserId
             token.igUsername = session.igUsername
           }
+          if (session.igAccessToken !== undefined) {
+            token.igAccessToken = session.igAccessToken
+          }
           if (session.browseMode !== undefined) {
             token.browseMode = session.browseMode
           }
@@ -114,6 +117,7 @@ function buildCommonOptions(meta?: MetaCredentials): AuthOptions {
       },
       async session({ session, token }) {
         session.accessToken = token.accessToken as string | undefined
+        session.igAccessToken = token.igAccessToken as string | undefined
         session.adAccountId = token.adAccountId as string | undefined
         session.adAccountName = token.adAccountName as string | undefined
         session.pageId = token.pageId as string | undefined

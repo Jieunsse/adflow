@@ -42,6 +42,7 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
       { href: "/ab-tests", label: "A/B 테스트", icon: "chart" },
       { href: "/approvals", label: "승인 대기", icon: "clock", countVariant: "warn" },
       { href: "/library", label: "소재 라이브러리", icon: "folder" },
+      { href: "/posts", label: "Instagram 게시", icon: "image" },
     ],
   },
   {
@@ -60,6 +61,43 @@ const THEME_BUTTONS: { id: ThemeChoice; icon: IconName; label: string }[] = [
   { id: "dark", icon: "moon", label: "다크" },
   { id: "system", icon: "monitor", label: "자동" },
 ];
+
+const COUNT_BASE =
+  "ml-auto font-semibold text-[11px] leading-none [font-family:var(--w-font-mono)] px-[7px] py-[3px] rounded-full";
+
+function countClass(variant: "warn" | "primary" | undefined, active: boolean) {
+  if (variant === "warn") {
+    return `${COUNT_BASE} text-[#b06700] bg-[rgba(255,146,0,0.14)] dark:text-[#ffb24d] dark:bg-[rgba(255,146,0,0.18)]`;
+  }
+  if (variant === "primary" || active) {
+    return `${COUNT_BASE} text-[var(--w-primary-press)] bg-[rgba(0,102,255,0.10)]`;
+  }
+  return `${COUNT_BASE} text-[var(--w-fg-alternative)] bg-[var(--w-bg-alternative)]`;
+}
+
+function linkClass(active: boolean, isSub = false) {
+  const base = [
+    "flex items-center gap-[11px] rounded-lg",
+    "font-semibold leading-none tracking-[-0.003em]",
+    "cursor-pointer border-none text-left",
+    "transition-[background,color] duration-[120ms]",
+    isSub ? "h-[34px] pl-9 pr-3 text-[12.5px]" : "h-[38px] px-3 text-[13.5px]",
+  ];
+  if (active) {
+    base.push("bg-[var(--w-primary-soft)] text-[var(--w-primary-press)]");
+  } else if (isSub) {
+    base.push(
+      "bg-transparent text-[var(--w-fg-neutral)]",
+      "hover:bg-[var(--w-bg-neutral)] hover:text-[var(--w-fg-strong)]"
+    );
+  } else {
+    base.push(
+      "bg-transparent text-[#121212] dark:text-[var(--w-fg-neutral)]",
+      "hover:bg-[var(--w-bg-neutral)] hover:text-[var(--w-fg-strong)]"
+    );
+  }
+  return base.join(" ");
+}
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -86,19 +124,30 @@ export default function Sidebar() {
     : 0;
 
   return (
-    <aside className="side">
-      <Link href="/dashboard" className="side__brand" style={{ textDecoration: "none", color: "inherit" }}>
-        <div className="side__mark">A</div>
+    <aside className="sticky top-0 h-screen bg-[var(--w-bg-elevated)] border-r border-[var(--w-line-normal)] flex flex-col pt-5 px-3.5 pb-4 gap-5">
+      <Link
+        href="/dashboard"
+        className="flex items-center gap-2.5 pt-1 px-2 pb-2 no-underline text-inherit"
+      >
+        <div className="w-8 h-8 rounded-lg bg-[linear-gradient(135deg,#0066ff_0%,#6541f2_55%,#00bdde_100%)] grid place-items-center text-white font-extrabold text-[17px] leading-none tracking-[-0.02em]">
+          A
+        </div>
         <div>
-          <div className="side__name">AdFlow</div>
-          <div className="side__name-sub">Marketing AI Studio</div>
+          <div className="[font-family:var(--w-font-display)] font-extrabold text-[18px] leading-none tracking-[-0.022em] text-[var(--w-fg-strong)]">
+            AdFlow
+          </div>
+          <div className="font-medium text-[11px] leading-[1.2] tracking-[0.012em] text-[var(--w-fg-neutral)] mt-0.5">
+            Marketing AI Studio
+          </div>
         </div>
       </Link>
 
-      <nav className="side__nav">
+      <nav className="flex flex-col gap-0.5 flex-1">
         {NAV_GROUPS.map((group, gi) => (
           <div key={group.label}>
-            <div className="side__group-label" style={gi === 0 ? undefined : { paddingTop: 18 }}>
+            <div
+              className={`font-semibold text-[10.5px] leading-none uppercase tracking-[0.08em] text-[var(--w-fg-alternative)] px-3 pb-1.5 ${gi === 0 ? "pt-3.5" : "pt-[18px]"}`}
+            >
               {group.label}
             </div>
             {group.items.map((it) => {
@@ -109,32 +158,31 @@ export default function Sidebar() {
               const liveCount = it.href === "/approvals" ? approvalsCount : it.count;
               return (
                 <div key={it.href}>
-                  <Link
-                    href={it.href}
-                    className={"side__link" + (active ? " side__link--on" : "")}
-                  >
-                    <span className="side__link-icon"><Icon name={it.icon} size={18} /></span>
+                  <Link href={it.href} className={linkClass(active)}>
+                    <span className="w-[18px] h-[18px] grid place-items-center">
+                      <Icon name={it.icon} size={18} />
+                    </span>
                     <span>{it.label}</span>
-                    {it.chip && <span className="side__link-count">{it.chip}</span>}
+                    {it.chip && (
+                      <span className={countClass(undefined, active)}>{it.chip}</span>
+                    )}
                     {liveCount != null && liveCount > 0 && (
-                      <span className={"side__link-count" + (it.countVariant === "warn" ? " side__link-count--warn" : it.countVariant === "primary" ? " side__link-count--primary" : "")}>
-                        {liveCount}
-                      </span>
+                      <span className={countClass(it.countVariant, active)}>{liveCount}</span>
                     )}
                   </Link>
-                  {hasChildren && it.children!.map((child) => {
-                    const childActive = pathname === child.href || pathname.startsWith(child.href + "/");
-                    return (
-                      <Link
-                        key={child.href}
-                        href={child.href}
-                        className={"side__link side__link--sub" + (childActive ? " side__link--on" : "")}
-                      >
-                        <span className="side__link-icon"><Icon name={child.icon} size={16} /></span>
-                        <span>{child.label}</span>
-                      </Link>
-                    );
-                  })}
+                  {hasChildren &&
+                    it.children!.map((child) => {
+                      const childActive =
+                        pathname === child.href || pathname.startsWith(child.href + "/");
+                      return (
+                        <Link key={child.href} href={child.href} className={linkClass(childActive, true)}>
+                          <span className="w-4 h-4 grid place-items-center">
+                            <Icon name={child.icon} size={16} />
+                          </span>
+                          <span>{child.label}</span>
+                        </Link>
+                      );
+                    })}
                 </div>
               );
             })}
@@ -142,56 +190,77 @@ export default function Sidebar() {
         ))}
       </nav>
 
-      <div className="side__foot">
-        <div style={{ padding: "10px 12px", borderRadius: 10, background: "var(--w-bg-alternative)" }}>
-          <div style={{ font: "600 10.5px/1 var(--w-font-sans)", textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--w-fg-alternative)", marginBottom: 8 }}>
+      <div className="flex flex-col gap-2 pt-3 border-t border-[var(--w-line-alternative)]">
+        <div className="px-3 py-2.5 rounded-[10px] bg-[var(--w-bg-alternative)]">
+          <div className="font-semibold text-[10.5px] leading-none uppercase tracking-[0.08em] text-[var(--w-fg-alternative)] mb-2">
             연결 상태
           </div>
           {connected ? (
             <>
-              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
-                <span style={{ width: 7, height: 7, borderRadius: "50%", flexShrink: 0, background: "var(--w-status-positive)" }} />
-                <span style={{ font: "600 12px/1.3 var(--w-font-sans)", color: "var(--w-fg-strong)" }}>연결됨</span>
+              <div className="flex items-center gap-1.5 mb-1.5">
+                <span className="w-[7px] h-[7px] rounded-full shrink-0 bg-[var(--w-status-positive)]" />
+                <span className="font-semibold text-[12px] leading-[1.3] text-[var(--w-fg-strong)]">연결됨</span>
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4, color: "var(--w-fg-neutral)" }}>
+              <div className="flex items-center gap-1.5 mb-1 text-[var(--w-fg-neutral)]">
                 <Icon name="wallet" size={11} />
-                <span style={{ font: "500 11.5px/1.3 var(--w-font-sans)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                <span className="font-medium text-[11.5px] leading-[1.3] whitespace-nowrap overflow-hidden text-ellipsis">
                   {adAccountName}
                 </span>
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 6, color: "var(--w-fg-neutral)" }}>
+              <div className="flex items-center gap-1.5 text-[var(--w-fg-neutral)]">
                 <Icon name="doc" size={11} />
-                <span style={{ font: "500 11.5px/1.3 var(--w-font-sans)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                <span className="font-medium text-[11.5px] leading-[1.3] whitespace-nowrap overflow-hidden text-ellipsis">
                   {pageName}
                 </span>
               </div>
             </>
           ) : (
-            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <span style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--w-fg-alternative)" }} />
-              <span style={{ font: "600 12px/1.3 var(--w-font-sans)", color: "var(--w-fg-neutral)" }}>미연결</span>
+            <div className="flex items-center gap-1.5">
+              <span className="w-[7px] h-[7px] rounded-full bg-[var(--w-fg-alternative)]" />
+              <span className="font-semibold text-[12px] leading-[1.3] text-[var(--w-fg-neutral)]">미연결</span>
             </div>
           )}
         </div>
 
-        <div className="side__theme">
+        <div className="flex items-center gap-1.5 p-1 rounded-full bg-[var(--w-bg-alternative)]">
           {THEME_BUTTONS.map((b) => (
-            <button key={b.id} onClick={() => setTheme(b.id)} className={theme === b.id ? "on" : ""} title={b.label} type="button">
+            <button
+              key={b.id}
+              onClick={() => setTheme(b.id)}
+              className={`flex-1 h-7 border-none rounded-full font-semibold text-xs leading-none cursor-pointer flex items-center justify-center gap-1.5 transition-[background,color] duration-[160ms] ${
+                theme === b.id
+                  ? "bg-[var(--w-bg-elevated)] text-[var(--w-fg-strong)] shadow-[0_1px_2px_rgba(23,23,23,0.08)]"
+                  : "bg-transparent text-[var(--w-fg-neutral)]"
+              }`}
+              title={b.label}
+              type="button"
+            >
               <Icon name={b.icon} size={13} />
               {b.label}
             </button>
           ))}
         </div>
 
-        <div className="side__user">
-          <Link href="/settings" style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, minWidth: 0, textDecoration: "none" }}>
-            <div className="side__avatar">{userInitial}</div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div className="side__user-name" style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+        <div className="flex items-center gap-2.5 px-2 py-2.5 rounded-[10px] hover:bg-[var(--w-bg-neutral)]">
+          <Link
+            href="/settings"
+            className="flex items-center gap-2 flex-1 min-w-0 no-underline"
+          >
+            <div className="w-8 h-8 rounded-full bg-[linear-gradient(135deg,#0066ff,#6541f2)] text-white grid place-items-center font-bold text-xs leading-none shrink-0">
+              {userInitial}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="font-semibold text-[13px] leading-[1.2] text-[var(--w-fg-strong)] whitespace-nowrap overflow-hidden text-ellipsis">
                 {userName || "마케터"}
               </div>
               {userRole && (
-                <div className={"side__role-badge" + (userRole === "팀장" ? " side__role-badge--lead" : " side__role-badge--member")}>
+                <div
+                  className={`inline-flex items-center px-[7px] py-0.5 rounded-[20px] font-semibold text-[10px] leading-[1.4] mt-1 ${
+                    userRole === "팀장"
+                      ? "bg-[rgba(0,102,255,0.12)] text-[var(--w-primary-normal)]"
+                      : "bg-[var(--w-bg-neutral)] text-[var(--w-fg-neutral)]"
+                  }`}
+                >
                   {userRole}
                 </div>
               )}

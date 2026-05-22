@@ -6,6 +6,7 @@
 //   allowedPositions  → leads_call 의 Call 미지원 placement(Stories) 비활성.
 
 import Icon from "@shared/ui/Icon";
+import { cn } from "@shared/lib/cn";
 import { useLaunchDraft } from "@entities/campaign/model";
 import { useCreativeDraft } from "@entities/creative/model";
 import { GOAL_RESULT, type ObjectivePhase1Id } from "@entities/creative/options";
@@ -14,6 +15,12 @@ import {
   type PlacementPosition,
 } from "@entities/launch-objective/profile";
 import SubHead from "./SubHead";
+
+const chipBase = "inline-flex items-center gap-1.5 px-[14px] py-2 rounded-full border border-[var(--w-line-normal)] bg-[var(--w-bg-elevated)] font-medium text-[13px] leading-none text-[var(--w-fg-strong)] cursor-pointer transition-[background,border-color,color] duration-[120ms]";
+const chipOn = "bg-[var(--w-fg-strong)] text-[var(--w-bg-elevated)] border-[var(--w-fg-strong)]";
+
+const segBtnBase = "border-none bg-transparent px-[14px] py-2 rounded-lg font-semibold text-[12.5px] leading-none text-[var(--w-fg-neutral)] cursor-pointer transition-[background,color] duration-[120ms]";
+const segBtnOn = "bg-[var(--w-bg-elevated)] text-[var(--w-fg-strong)] shadow-[0_1px_2px_rgba(23,23,23,0.08)]";
 
 export default function PlacementKnob() {
   const { state, dispatch } = useLaunchDraft();
@@ -30,7 +37,7 @@ export default function PlacementKnob() {
   return (
     <>
       <SubHead title="광고 플랫폼" subtitle="페이스북·인스타그램 중 어디에 노출할지 고르고, 필요하면 아래에서 세부 위치까지 정해요." />
-      <div className="chips" style={{ marginBottom: 14 }}>
+      <div className="flex flex-wrap gap-2 mb-3.5">
         {([
           { id: "both" as const, label: "페이스북 · 인스타그램" },
           { id: "facebook" as const, label: "페이스북만" },
@@ -39,7 +46,7 @@ export default function PlacementKnob() {
           <button
             key={opt.id}
             type="button"
-            className={"chip" + (state.platforms === opt.id ? " chip--on" : "")}
+            className={cn(chipBase, state.platforms === opt.id && chipOn)}
             onClick={() => {
               dispatch({ type: "SET_PLATFORMS", platforms: opt.id });
               if (state.placements.mode === "manual") {
@@ -62,17 +69,17 @@ export default function PlacementKnob() {
         title="세부 위치"
         subtitle={profile.placement.recommendation ?? `자동을 권해요. 보통 자동이 더 효율적이에요 (${result.costLabel} 기준).`}
       />
-      <div className="seg" style={{ marginBottom: 10 }}>
+      <div className="inline-flex gap-0.5 p-[3px] bg-[var(--w-bg-alternative)] rounded-[10px] mb-2.5">
         <button
           type="button"
-          className={state.placements.mode === "auto" ? "on" : ""}
+          className={cn(segBtnBase, state.placements.mode === "auto" && segBtnOn)}
           onClick={() => dispatch({ type: "SET_PLACEMENTS", placements: { mode: "auto" } })}
         >
           자동 (Advantage+)
         </button>
         <button
           type="button"
-          className={state.placements.mode === "manual" ? "on" : ""}
+          className={cn(segBtnBase, state.placements.mode === "manual" && segBtnOn)}
           onClick={() => {
             const defaults = state.platforms === "facebook" ? ["facebook_feed"]
               : state.platforms === "instagram" ? ["instagram_feed"]
@@ -87,7 +94,7 @@ export default function PlacementKnob() {
         </button>
       </div>
       {state.placements.mode === "manual" && (
-        <div className="chips" style={{ marginBottom: 4 }}>
+        <div className="flex flex-wrap gap-2 mb-1">
           {[
             { id: "facebook_feed" as PlacementPosition, label: "Facebook 피드", platform: "facebook" as const },
             { id: "instagram_feed" as PlacementPosition, label: "Instagram 피드", platform: "instagram" as const },
@@ -113,9 +120,8 @@ export default function PlacementKnob() {
               <button
                 key={pos.id}
                 type="button"
-                className={"chip" + (on ? " chip--on" : "")}
+                className={cn(chipBase, on && chipOn, !enabled && "opacity-45")}
                 disabled={!enabled}
-                style={{ opacity: enabled ? 1 : 0.45 }}
                 title={blockReason}
                 onClick={() => {
                   const next = on ? positions.filter((x) => x !== pos.id) : [...positions, pos.id];
@@ -129,7 +135,7 @@ export default function PlacementKnob() {
         </div>
       )}
       {profile.placement.allowedPositions && profile.placement.allowedPositions.length < 5 && (
-        <div className="field__hint" style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 6 }}>
+        <div className="flex items-center gap-1.5 font-medium text-[12px] leading-[1.5] tracking-[0.008em] text-[var(--w-fg-neutral)] mt-2">
           <Icon name="info" size={12} /> {profile.placement.recommendation}
         </div>
       )}

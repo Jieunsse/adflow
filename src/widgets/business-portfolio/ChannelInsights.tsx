@@ -2,6 +2,8 @@
 
 import { KpiCard } from "@shared/ui/primitives";
 import Icon from "@shared/ui/Icon";
+import { Card } from "@shared/ui/Card";
+import { cn } from "@shared/lib/cn";
 import { type Suggestion } from "@entities/insights/optimization";
 
 export type ChannelKpi = { label: string; value: string; suffix?: string };
@@ -49,7 +51,7 @@ function PostRow({ post }: { post: ChannelPostRow }) {
     ? new Date(post.timestamp).toLocaleDateString("ko-KR", { month: "short", day: "numeric" })
     : "";
   return (
-    <div className="list-row">
+    <div className="flex items-center justify-between gap-3 py-4 px-[18px] rounded-xl border border-[var(--w-line-alternative)] bg-[var(--w-bg-elevated)]">
       <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0, flex: 1 }}>
         <div style={{ width: 44, height: 44, borderRadius: 8, background: "var(--w-bg-assistive)", flex: "0 0 auto", overflow: "hidden", display: "grid", placeItems: "center" }}>
           {post.mediaUrl
@@ -81,21 +83,39 @@ export default function ChannelInsights({ channel, kpis, posts, accountHandle, i
   return (
     <>
       {isMock && (
-        <div className="card" style={{ background: "var(--w-accent-violet-soft)", borderColor: "transparent", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
-          <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
-            <div style={{ color: "var(--w-accent-violet)", paddingTop: 2 }}><Icon name="info" size={18} /></div>
+        <Card className="bg-[var(--w-accent-violet-soft)] border-transparent flex items-center justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <div className="text-[var(--w-accent-violet)] pt-0.5"><Icon name="info" size={18} /></div>
             <div>
-              <div style={{ font: "600 14px/1.4 var(--w-font-sans)", color: "var(--w-fg-strong)" }}>{channelLabel} 계정이 연결되지 않아 예시 데이터를 보여드려요</div>
-              <div style={{ font: "500 12.5px/1.5 var(--w-font-sans)", color: "var(--w-fg-neutral)", marginTop: 3 }}>{mockHelp}</div>
+              <div className="font-semibold text-[14px] leading-[1.4] text-[var(--w-fg-strong)]">{channelLabel} 계정이 연결되지 않아 예시 데이터를 보여드려요</div>
+              <div className="font-medium text-[12.5px] leading-[1.5] text-[var(--w-fg-neutral)] mt-[3px]">{mockHelp}</div>
             </div>
           </div>
           {onScenarioChange && (
-            <div className="seg">
-              <button type="button" className={scenario === "good" ? "on" : ""} onClick={() => onScenarioChange("good")}>양호 예시</button>
-              <button type="button" className={scenario === "poor" ? "on" : ""} onClick={() => onScenarioChange("poor")}>개선 필요 예시</button>
+            <div className="inline-flex gap-0.5 p-[3px] bg-[var(--w-bg-alternative)] rounded-[10px]">
+              <button
+                type="button"
+                onClick={() => onScenarioChange("good")}
+                className={cn(
+                  "border-none px-3.5 py-2 rounded-lg font-semibold text-[12.5px] leading-none cursor-pointer transition-[background,color] duration-[120ms]",
+                  scenario === "good"
+                    ? "bg-[var(--w-bg-elevated)] text-[var(--w-fg-strong)] shadow-[0_1px_2px_rgba(23,23,23,0.08)]"
+                    : "bg-transparent text-[var(--w-fg-neutral)]"
+                )}
+              >양호 예시</button>
+              <button
+                type="button"
+                onClick={() => onScenarioChange("poor")}
+                className={cn(
+                  "border-none px-3.5 py-2 rounded-lg font-semibold text-[12.5px] leading-none cursor-pointer transition-[background,color] duration-[120ms]",
+                  scenario === "poor"
+                    ? "bg-[var(--w-bg-elevated)] text-[var(--w-fg-strong)] shadow-[0_1px_2px_rgba(23,23,23,0.08)]"
+                    : "bg-transparent text-[var(--w-fg-neutral)]"
+                )}
+              >개선 필요 예시</button>
             </div>
           )}
-        </div>
+        </Card>
       )}
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 14 }}>
@@ -105,16 +125,16 @@ export default function ChannelInsights({ channel, kpis, posts, accountHandle, i
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: 20, alignItems: "flex-start" }}>
-        <div className="card card--lg">
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-            <h2 className="section-title" style={{ margin: 0 }}>최근 게시물</h2>
+        <Card variant="lg">
+          <div className="flex items-center justify-between mb-3.5">
+            <h2 className="m-0 font-bold text-[17px] leading-[1.3] tracking-[-0.012em] text-[var(--w-fg-strong)]">최근 게시물</h2>
             {accountHandle && (
-              <span style={{ font: "500 12px/1 var(--w-font-sans)", color: "var(--w-fg-neutral)" }}>{channel === "instagram" ? `@${accountHandle}` : accountHandle}</span>
+              <span className="font-medium text-[12px] leading-none text-[var(--w-fg-neutral)]">{channel === "instagram" ? `@${accountHandle}` : accountHandle}</span>
             )}
           </div>
           {posts.length === 0 ? (
-            <div style={{ padding: "20px 14px", color: "var(--w-fg-neutral)", font: "500 12.5px/1.55 var(--w-font-sans)" }}>
-              <div style={{ font: "600 13.5px/1.4 var(--w-font-sans)", color: "var(--w-fg-strong)", marginBottom: 6 }}>최근 게시물을 가져오지 못했어요</div>
+            <div className="py-5 px-3.5 text-[var(--w-fg-neutral)] font-medium text-[12.5px] leading-[1.55]">
+              <div className="font-semibold text-[13.5px] leading-[1.4] text-[var(--w-fg-strong)] mb-1.5">최근 게시물을 가져오지 못했어요</div>
               {channel === "instagram"
                 ? "게시물이 없거나, Meta 앱의 `instagram_basic` 권한이 활성화 안 됐을 수 있어요. Meta for Developers 콘솔에서 권한 product 를 확인해주세요."
                 : "게시물이 없거나, Facebook 페이지의 `pages_read_engagement` 권한이 충분하지 않을 수 있어요."}
@@ -122,16 +142,16 @@ export default function ChannelInsights({ channel, kpis, posts, accountHandle, i
           ) : (
             posts.map(post => <PostRow key={post.id} post={post} />)
           )}
-        </div>
+        </Card>
 
-        <div className="card card--lg">
-          <h3 className="section-title">AI 콘텐츠 제안</h3>
-          <p className="section-sub">제안은 참고용이에요. 직접 확인 후 적용해요.</p>
-          <hr className="divider" />
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        <Card variant="lg">
+          <h3 className="m-0 font-bold text-[17px] leading-[1.3] tracking-[-0.012em] text-[var(--w-fg-strong)]">AI 콘텐츠 제안</h3>
+          <p className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)] mt-1 mb-0">제안은 참고용이에요. 직접 확인 후 적용해요.</p>
+          <hr className="h-px bg-[var(--w-line-neutral)] my-[18px] border-0" />
+          <div className="flex flex-col gap-3">
             {suggestions.map((s, i) => <SuggestionCard key={i} s={s} />)}
           </div>
-        </div>
+        </Card>
       </div>
     </>
   );

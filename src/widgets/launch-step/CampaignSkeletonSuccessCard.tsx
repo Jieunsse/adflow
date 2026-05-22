@@ -9,6 +9,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Icon from "@shared/ui/Icon";
+import { Button } from "@shared/ui/Button";
+import { Card } from "@shared/ui/Card";
 import { useLaunchDraft } from "@entities/campaign/model";
 
 type IdRow = { label: string; value: string };
@@ -32,82 +34,36 @@ export default function CampaignSkeletonSuccessCard() {
   ];
 
   return (
-    <div
-      className="card"
-      style={{
-        padding: 18,
-        borderStyle: "dashed",
-        background: "var(--w-bg-alternative)",
-      }}
-    >
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+    <Card className="p-[18px] border-dashed bg-[var(--w-bg-alternative)]">
+      <div className="flex items-center gap-2 mb-1.5">
         <Icon name="info" size={14} />
-        <span
-          style={{
-            font: "600 11.5px/1 var(--w-font-sans)",
-            color: "var(--w-fg-neutral)",
-            letterSpacing: "0.04em",
-            textTransform: "uppercase",
-          }}
-        >
+        <span className="font-semibold text-[11.5px] leading-none text-[var(--w-fg-neutral)] tracking-[0.04em] uppercase">
           Meta App 개발 모드
         </span>
       </div>
-      <div style={{ font: "700 15px/1.35 var(--w-font-sans)", color: "var(--w-fg-strong)", marginBottom: 6 }}>
+      <div className="font-bold text-[15px] leading-[1.35] text-[var(--w-fg-strong)] mb-1.5">
         캠페인 + 광고 세트가 생성됐어요
       </div>
-      <p style={{ font: "500 12.5px/1.55 var(--w-font-sans)", color: "var(--w-fg-normal)", margin: "0 0 14px" }}>
+      <p className="font-medium text-[12.5px] leading-[1.55] text-[var(--w-fg-normal)] m-0 mb-3.5">
         Ad Creative · Ad 단계는 건너뛰었어요 (PAUSED). Meta 광고 관리자에서 확인할 수 있어요.
       </p>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 14 }}>
+      <div className="flex flex-col gap-1.5 mb-3.5">
         {rows.map(({ label, value }) => (
           <div
             key={label}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-              padding: "8px 10px",
-              background: "var(--w-bg-elevated)",
-              border: "1px solid var(--w-line-normal)",
-              borderRadius: 8,
-            }}
+            className="flex items-center gap-2.5 px-2.5 py-2 bg-[var(--w-bg-elevated)] border border-[var(--w-line-normal)] rounded-lg"
           >
-            <span
-              style={{
-                font: "600 10.5px/1 var(--w-font-mono)",
-                color: "var(--w-fg-neutral)",
-                minWidth: 56,
-                letterSpacing: "0.04em",
-              }}
-            >
+            <span className="font-semibold text-[10.5px] leading-none font-[var(--w-font-mono)] text-[var(--w-fg-neutral)] min-w-[56px] tracking-[0.04em]">
               {label}
             </span>
-            <span
-              style={{
-                font: "500 12.5px/1 var(--w-font-mono)",
-                color: "var(--w-fg-strong)",
-                flex: 1,
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-              }}
-            >
+            <span className="font-medium text-[12.5px] leading-none font-[var(--w-font-mono)] text-[var(--w-fg-strong)] flex-1 overflow-hidden text-ellipsis whitespace-nowrap">
               {value}
             </span>
             <button
               type="button"
               onClick={() => copy(label, value)}
-              style={{
-                border: "none",
-                background: "transparent",
-                color: "var(--w-fg-neutral)",
-                font: "600 11px/1 var(--w-font-sans)",
-                cursor: "pointer",
-                padding: "4px 6px",
-                borderRadius: 6,
-              }}
+              className="border-none bg-transparent text-[var(--w-fg-neutral)] font-semibold text-[11px] leading-none cursor-pointer px-1.5 py-1 rounded-md"
             >
               {copied === label ? "복사됨 ✓" : <><Icon name="copy" size={11} /> 복사</>}
             </button>
@@ -115,13 +71,9 @@ export default function CampaignSkeletonSuccessCard() {
         ))}
       </div>
 
-      <button
-        className="btn btn--secondary btn--block"
-        type="button"
-        onClick={() => router.push("/campaigns")}
-      >
+      <Button variant="secondary" className="w-full" type="button" onClick={() => router.push("/campaigns")}>
         Campaigns 페이지에서 보기 <Icon name="arrow-right" size={13} />
-      </button>
-    </div>
+      </Button>
+    </Card>
   );
 }

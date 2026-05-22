@@ -5,6 +5,10 @@ import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import Icon from "@shared/ui/Icon";
+import { Button } from "@shared/ui/Button";
+import { Card } from "@shared/ui/Card";
+import { Chip } from "@shared/ui/Chip";
+import { SegControl } from "@shared/ui/SegControl";
 import { fetchCampaigns } from "@entities/campaign/api";
 import { MOCK_CAMPAIGN_SUMMARIES } from "@/lib/mock-campaigns";
 import type { CampaignSummary } from "@/lib/meta-ads";
@@ -61,28 +65,34 @@ export default function AbTestsPage() {
   });
 
   return (
-    <div className="page" data-screen-label="A/B 테스트">
-      <div className="page__head">
+    <div className="px-12 py-9 pb-16 max-w-[1280px] w-full mx-auto flex flex-col gap-7" data-screen-label="A/B 테스트">
+      <div className="flex justify-between items-end gap-6">
         <div>
-          <h1 className="page__title">A/B 테스트</h1>
-          <p className="page__sub">진행 중인 실험과 결과를 한눈에 확인해요</p>
+          <h1 className="m-0 font-bold text-[28px] leading-[1.25] tracking-[-0.024em] text-[var(--w-fg-strong)]">A/B 테스트</h1>
+          <p className="font-medium text-[14px] leading-[1.5] tracking-[0.004em] text-[var(--w-fg-neutral)] mt-1.5 mb-0">진행 중인 실험과 결과를 한눈에 확인해요</p>
         </div>
-        <button className="btn btn--primary" type="button" onClick={() => router.push("/ab-tests/new")}>
+        <Button variant="primary" type="button" onClick={() => router.push("/ab-tests/new")}>
           <Icon name="plus" size={14} /> 새 A/B 테스트
-        </button>
+        </Button>
       </div>
 
-      <div className="seg" style={{ marginBottom: 20 }}>
-        <button type="button" className={filter === "all" ? "on" : ""} onClick={() => setFilter("all")}>전체</button>
-        <button type="button" className={filter === "running" ? "on" : ""} onClick={() => setFilter("running")}>진행 중</button>
-        <button type="button" className={filter === "concluded" ? "on" : ""} onClick={() => setFilter("concluded")}>완료</button>
+      <div className="mb-5">
+        <SegControl
+          options={[
+            { label: "전체", value: "all" },
+            { label: "진행 중", value: "running" },
+            { label: "완료", value: "concluded" },
+          ]}
+          value={filter}
+          onChange={(v) => setFilter(v as Filter)}
+        />
       </div>
 
       {campaignsQ.isLoading ? (
-        <div className="card" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, padding: "40px 32px" }}>
-          <div className="spinner" style={{ width: 28, height: 28 }} />
-          <div style={{ font: "600 14px/1.3 var(--w-font-sans)", color: "var(--w-fg-strong)" }}>불러오는 중…</div>
-        </div>
+        <Card className="flex flex-col items-center gap-3 py-10 px-8">
+          <div className="rounded-full border-[2.4px] border-[var(--w-line-normal)] border-t-[var(--w-primary-normal)] animate-[spin_0.85s_linear_infinite] w-7 h-7" />
+          <div className="font-semibold text-[14px] leading-[1.3] text-[var(--w-fg-strong)]">불러오는 중…</div>
+        </Card>
       ) : campaignsQ.isError ? (
         <EmptyCard
           icon="warn"
@@ -95,11 +105,11 @@ export default function AbTestsPage() {
         <>
           <MockBanner connected={connected} onConnect={() => router.push("/connect")} onCreate={() => router.push("/create")} />
           {mockFiltered.length === 0 ? (
-            <div className="card" style={{ padding: "32px", textAlign: "center", color: "var(--w-fg-neutral)", font: "500 13px/1.5 var(--w-font-sans)" }}>
+            <Card className="py-8 text-center text-[var(--w-fg-neutral)] font-medium text-[13px] leading-[1.5]">
               {filter === "running" ? "진행 중인 예시가 없어요" : "완료된 예시가 없어요"}
-            </div>
+            </Card>
           ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <div className="flex flex-col gap-3">
               {mockFiltered.map((c) => (
                 <AbTestCard key={c.id} campaign={c} demo onClick={() => router.push(`/campaigns/${c.id}`)} />
               ))}
@@ -107,7 +117,7 @@ export default function AbTestsPage() {
           )}
         </>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        <div className="flex flex-col gap-3">
           {filtered.map((c) => (
             <AbTestCard key={c.id} campaign={c} onClick={() => router.push(`/campaigns/${c.id}`)} />
           ))}
@@ -119,15 +129,15 @@ export default function AbTestsPage() {
 
 function MockBanner({ connected, onConnect, onCreate }: { connected: boolean; onConnect: () => void; onCreate: () => void }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", borderRadius: 10, background: "var(--w-primary-soft)", border: "1px solid var(--w-primary-weak)", marginBottom: 16 }}>
+    <div className="flex items-center gap-3 py-3 px-4 rounded-[10px] bg-[var(--w-primary-soft)] border border-[var(--w-primary-weak)] mb-4">
       <Icon name="eye" size={16} style={{ color: "var(--w-primary-normal)", flex: "0 0 auto" }} />
-      <span style={{ flex: 1, font: "500 13px/1.4 var(--w-font-sans)", color: "var(--w-primary-press)" }}>
+      <span className="flex-1 font-medium text-[13px] leading-[1.4] text-[var(--w-primary-press)]">
         {connected ? "아직 A/B 테스트가 없어요. 아래는 예시예요." : "계정 미연결 상태예요. 아래는 예시 데이터예요."}
       </span>
       {connected ? (
-        <button className="btn btn--primary btn--sm" type="button" onClick={onCreate}>광고 만들기</button>
+        <Button variant="primary" size="sm" type="button" onClick={onCreate}>광고 만들기</Button>
       ) : (
-        <button className="btn btn--primary btn--sm" type="button" onClick={onConnect}>계정 연결</button>
+        <Button variant="primary" size="sm" type="button" onClick={onConnect}>계정 연결</Button>
       )}
     </div>
   );
@@ -141,28 +151,28 @@ function AbTestCard({ campaign: c, onClick, demo = false }: { campaign: Campaign
   return (
     <button
       type="button"
-      className="card"
       onClick={onClick}
-      style={{ textAlign: "left", cursor: "pointer", width: "100%", display: "flex", alignItems: "center", gap: 18, padding: "18px 20px", opacity: demo ? 0.85 : 1 }}
+      className="bg-[var(--w-bg-elevated)] border border-[var(--w-line-normal)] rounded-2xl text-left cursor-pointer transition-[border-color] duration-[160ms] flex items-center gap-[18px] py-[18px] px-5 w-full"
+      style={{ opacity: demo ? 0.85 : 1 }}
     >
       <div style={{ width: 40, height: 40, borderRadius: 10, background: running ? "var(--w-primary-soft)" : "var(--w-bg-alternative)", color: running ? "var(--w-primary-normal)" : "var(--w-fg-alternative)", display: "grid", placeItems: "center", flex: "0 0 auto" }}>
         <Icon name="chart" size={20} />
       </div>
 
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6, flexWrap: "wrap" }}>
-          <span className={`chip chip--${statusInfo.chip}`}><span className="chip__dot" />{statusInfo.label}</span>
-          <span className="chip chip--neutral">{axisLabel} 축</span>
-          {demo && <span className="chip chip--neutral" style={{ opacity: 0.7 }}>예시</span>}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+          <Chip variant={statusInfo.chip as "live" | "paused" | "review" | "ended" | "issue" | "neutral"} dot>{statusInfo.label}</Chip>
+          <Chip variant="neutral">{axisLabel} 축</Chip>
+          {demo && <Chip variant="neutral" style={{ opacity: 0.7 }}>예시</Chip>}
         </div>
-        <div style={{ font: "600 14px/1.4 var(--w-font-sans)", color: "var(--w-fg-strong)", marginBottom: 4, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+        <div className="font-semibold text-[14px] leading-[1.4] text-[var(--w-fg-strong)] mb-1 whitespace-nowrap overflow-hidden text-ellipsis">
           {c.headline ?? c.name}
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "16px 1fr", gap: "4px 8px", font: "500 12.5px/1.4 var(--w-font-sans)", color: "var(--w-fg-neutral)" }}>
-          <span style={{ color: "var(--w-fg-alternative)", fontSize: 10, fontWeight: 700, placeSelf: "center" }}>A</span>
-          <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{c.abTestVariantA ?? "—"}</span>
-          <span style={{ color: "var(--w-primary-normal)", fontSize: 10, fontWeight: 700, placeSelf: "center" }}>B</span>
-          <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{c.abTestVariantB ?? "—"}</span>
+        <div className="grid gap-x-2 gap-y-1 font-medium text-[12.5px] leading-[1.4] text-[var(--w-fg-neutral)]" style={{ gridTemplateColumns: "16px 1fr" }}>
+          <span className="text-[var(--w-fg-alternative)] text-[10px] font-bold place-self-center">A</span>
+          <span className="whitespace-nowrap overflow-hidden text-ellipsis">{c.abTestVariantA ?? "—"}</span>
+          <span className="text-[var(--w-primary-normal)] text-[10px] font-bold place-self-center">B</span>
+          <span className="whitespace-nowrap overflow-hidden text-ellipsis">{c.abTestVariantB ?? "—"}</span>
         </div>
       </div>
 
@@ -173,13 +183,13 @@ function AbTestCard({ campaign: c, onClick, demo = false }: { campaign: Campaign
 
 function EmptyCard({ icon, title, sub, ctaLabel, onAction }: { icon: import("@shared/ui/Icon").IconName; title: string; sub: string; ctaLabel: string; onAction: () => void }) {
   return (
-    <div className="card" style={{ padding: "48px 32px", display: "flex", flexDirection: "column", alignItems: "center", gap: 12, textAlign: "center" }}>
+    <Card className="py-12 px-8 flex flex-col items-center gap-3 text-center">
       <div style={{ width: 56, height: 56, borderRadius: "50%", background: "var(--w-bg-alternative)", color: "var(--w-fg-alternative)", display: "grid", placeItems: "center" }}>
         <Icon name={icon} size={24} />
       </div>
-      <div style={{ font: "700 17px/1.3 var(--w-font-sans)", color: "var(--w-fg-strong)" }}>{title}</div>
-      <div style={{ font: "500 13px/1.5 var(--w-font-sans)", color: "var(--w-fg-neutral)", maxWidth: 380 }}>{sub}</div>
-      <button className="btn btn--secondary" type="button" style={{ marginTop: 8 }} onClick={onAction}>{ctaLabel}</button>
-    </div>
+      <div className="font-bold text-[17px] leading-[1.3] text-[var(--w-fg-strong)]">{title}</div>
+      <div className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)] max-w-[380px]">{sub}</div>
+      <Button variant="secondary" type="button" className="mt-2" onClick={onAction}>{ctaLabel}</Button>
+    </Card>
   );
 }

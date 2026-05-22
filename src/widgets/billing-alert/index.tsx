@@ -5,6 +5,8 @@
 
 import Link from "next/link";
 import Icon from "@shared/ui/Icon";
+import { Card } from "@shared/ui/Card";
+import { buttonVariants } from "@shared/ui/Button";
 import type { Billing } from "@entities/billing/types";
 import { computeBillingAlerts, type BillingAlert } from "@entities/billing/alerts";
 
@@ -35,7 +37,7 @@ function AlertCard({ alert, showCta }: { alert: BillingAlert; showCta: boolean }
   const tint = isNegative ? "rgba(255,66,66,0.05)" : "rgba(255,146,0,0.05)";
   const iconBg = isNegative ? "rgba(255,66,66,0.15)" : "rgba(255,146,0,0.15)";
   return (
-    <div className="card" style={{ display: "flex", alignItems: "center", gap: 16, borderColor: accent, background: tint }}>
+    <Card className="flex items-center gap-4" style={{ borderColor: accent, background: tint }}>
       <div style={{ width: 40, height: 40, borderRadius: 10, background: iconBg, color: accent, display: "grid", placeItems: "center", flex: "0 0 auto" }}>
         <Icon name="warn" size={20} />
       </div>
@@ -48,10 +50,10 @@ function AlertCard({ alert, showCta }: { alert: BillingAlert; showCta: boolean }
         </div>
       </div>
       {showCta && (
-        <Link href="/billing" className="btn btn--primary btn--sm">
+        <Link href="/billing" className={buttonVariants({ variant: "primary", size: "sm" })}>
           청구 및 결제로 가기 <Icon name="arrow-right" size={14} />
         </Link>
       )}
-    </div>
+    </Card>
   );
 }

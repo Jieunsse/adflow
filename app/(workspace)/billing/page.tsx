@@ -8,6 +8,10 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useQuery } from "@tanstack/react-query";
 import Icon, { type IconName } from "@shared/ui/Icon";
+import { Button } from "@shared/ui/Button";
+import { Card } from "@shared/ui/Card";
+import { Chip } from "@shared/ui/Chip";
+import { Skeleton } from "@shared/ui/Skeleton";
 import { fmt } from "@shared/lib/format";
 import BillingAlertWidget from "@widgets/billing-alert";
 import type { Billing } from "@entities/billing/types";
@@ -54,12 +58,12 @@ export default function BillingPage() {
   });
 
   return (
-    <div className="page" data-screen-label="청구 및 결제">
-      <div className="page__head">
+    <div className="px-12 py-9 pb-16 max-w-[1280px] w-full mx-auto flex flex-col gap-7" data-screen-label="청구 및 결제">
+      <div className="flex justify-between items-end gap-6">
         <div>
-          <span className="w-overline" style={{ color: "var(--w-fg-neutral)" }}>워크스페이스</span>
-          <h1 className="page__title" style={{ marginTop: 4 }}>청구 및 결제</h1>
-          <p className="page__sub">광고 계정의 결제 정보를 확인할 수 있어요. 변경은 Meta 결제 페이지에서 안전하게 진행돼요.</p>
+          <span className="font-semibold text-[11px] leading-[1.45] tracking-[0.04em] uppercase text-[var(--w-fg-neutral)]">워크스페이스</span>
+          <h1 className="m-0 font-bold text-[28px] leading-[1.25] tracking-[-0.024em] text-[var(--w-fg-strong)]" style={{ marginTop: 4 }}>청구 및 결제</h1>
+          <p className="font-medium text-[14px] leading-[1.5] tracking-[0.004em] text-[var(--w-fg-neutral)] mt-1.5 mb-0">광고 계정의 결제 정보를 확인할 수 있어요. 변경은 Meta 결제 페이지에서 안전하게 진행돼요.</p>
         </div>
       </div>
 
@@ -193,7 +197,7 @@ function FundingSourceCard({ billing, accountId }: { billing: Billing; accountId
                 {s.displayString || "—"}
               </span>
               {s.type && (
-                <span className="chip chip--neutral" style={{ font: "500 10.5px/1 var(--w-font-mono)" }}>{fundingSourceTypeLabel(s.type)}</span>
+                <Chip variant="neutral" className="text-[10.5px] [font-family:var(--w-font-mono)] font-medium">{fundingSourceTypeLabel(s.type)}</Chip>
               )}
             </div>
           ))}
@@ -267,7 +271,7 @@ function TransactionsCard({ accountId }: { accountId: string }) {
 // ── 고객센터 ─────────────────────────────────────────────────────────
 function HelpLinksSection() {
   return (
-    <div className="card">
+    <Card>
       <div style={{ font: "600 14px/1 var(--w-font-sans)", color: "var(--w-fg-strong)", marginBottom: 4 }}>
         고객센터
       </div>
@@ -284,14 +288,14 @@ function HelpLinksSection() {
           </a>
         ))}
       </div>
-    </div>
+    </Card>
   );
 }
 
 // ── 공통 ──────────────────────────────────────────────────────────────
 function CardShell({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) {
   return (
-    <div className="card" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+    <Card className="flex flex-col gap-2.5">
       <div>
         <div style={{ font: "600 14px/1.2 var(--w-font-sans)", color: "var(--w-fg-strong)" }}>{title}</div>
         {hint && (
@@ -299,7 +303,7 @@ function CardShell({ title, hint, children }: { title: string; hint?: string; ch
         )}
       </div>
       <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>{children}</div>
-    </div>
+    </Card>
   );
 }
 
@@ -326,14 +330,14 @@ function DeeplinkButton({ href, label }: { href: string; label: string }) {
 
 function EmptyCard({ icon, title, reason, ctaLabel, onAction }: { icon: IconName; title: string; reason: string; ctaLabel: string; onAction: () => void }) {
   return (
-    <div className="card" style={{ padding: "40px 32px", display: "flex", flexDirection: "column", alignItems: "center", gap: 12, textAlign: "center" }}>
+    <Card className="py-10 px-8 flex flex-col items-center gap-3 text-center">
       <div style={{ width: 56, height: 56, borderRadius: "50%", background: "rgba(0,102,255,0.10)", color: "var(--w-primary-normal)", display: "grid", placeItems: "center" }}>
         <Icon name={icon} size={24} />
       </div>
       <div style={{ font: "700 17px/1.3 var(--w-font-sans)", color: "var(--w-fg-strong)", letterSpacing: "-0.01em" }}>{title}</div>
       <div style={{ font: "500 13px/1.5 var(--w-font-sans)", color: "var(--w-fg-neutral)", maxWidth: 380 }}>{reason}</div>
-      <button className="btn btn--primary" type="button" style={{ marginTop: 8 }} onClick={onAction}>{ctaLabel}</button>
-    </div>
+      <Button variant="primary" type="button" className="mt-2" onClick={onAction}>{ctaLabel}</Button>
+    </Card>
   );
 }
 
@@ -341,12 +345,12 @@ function CardsSkeleton() {
   return (
     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
       {[0, 1, 2, 3, 4, 5].map((i) => (
-        <div key={i} className="card">
-          <div className="skel" style={{ height: 14, width: 120, marginBottom: 8 }} />
-          <div className="skel" style={{ height: 11, width: 220, marginBottom: 16 }} />
-          <div className="skel" style={{ height: 30, width: 160, marginBottom: 12 }} />
-          <div className="skel" style={{ height: 11, width: 100 }} />
-        </div>
+        <Card key={i} className="flex flex-col gap-2">
+          <Skeleton className="h-[14px] w-[120px]" />
+          <Skeleton className="h-[11px] w-[220px]" />
+          <Skeleton className="h-[30px] w-[160px] mt-2" />
+          <Skeleton className="h-[11px] w-[100px]" />
+        </Card>
       ))}
     </div>
   );

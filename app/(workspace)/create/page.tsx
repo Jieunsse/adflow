@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Badge } from "@shared/ui/primitives";
+import { Button } from "@shared/ui/Button";
 import { useSessionStorage } from "@shared/lib/storage/useSessionStorage";
 import { useApiMutation } from "@shared/lib/api/useApiMutation";
 import type { GenerateCreativeParams, GenerateCreativeResult } from "@/lib/gemini-creative";
@@ -267,52 +268,14 @@ export default function CreatePage() {
   const showIntro = !introCompleted;
 
   return (
-    <div className="page" data-screen-label="광고 만들기">
-      {/* PRD §13.10.5 — /create 흐름 전체에 line-free 디자인. 카드는 shadow only, divider 숨김, input/textarea filled. */}
-      <style>{`
-        [data-screen-label="광고 만들기"] .card {
-          border: 0;
-          box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.05);
-        }
-        [data-screen-label="광고 만들기"] .divider { display: none; }
-        [data-screen-label="광고 만들기"] .input,
-        [data-screen-label="광고 만들기"] .textarea {
-          background: rgba(0,0,0,0.04);
-          border: 0;
-        }
-        [data-screen-label="광고 만들기"] .input:focus,
-        [data-screen-label="광고 만들기"] .textarea:focus {
-          background: rgba(0,0,0,0.06);
-          outline: 2px solid var(--w-primary-soft);
-          outline-offset: -2px;
-        }
-        [data-screen-label="광고 만들기"] .goal-card {
-          /* 비활성 카드 — 보더는 투명 placeholder (활성 시 violet 로 바뀌어도 size shift 없음) */
-          border: 1.5px solid transparent;
-          background: var(--w-bg-normal);
-          box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.05);
-        }
-        [data-screen-label="광고 만들기"] .goal-card:not(:disabled):hover {
-          transform: translateY(-2px);
-          box-shadow: 0 4px 10px rgba(0,0,0,0.06), 0 10px 24px rgba(0,0,0,0.08);
-        }
-        [data-screen-label="광고 만들기"] .goal-card--active {
-          /* 활성 카드 — violet 보더 + 미묘한 violet bg + 부드러운 후광 ring */
-          border-color: var(--w-accent-violet);
-          background: rgba(101,65,242,0.025);
-          box-shadow: 0 0 0 3px rgba(101,65,242,0.08), 0 6px 18px rgba(101,65,242,0.12);
-        }
-        [data-screen-label="광고 만들기"] .goal-card:not(:disabled):hover.goal-card--active {
-          box-shadow: 0 0 0 3px rgba(101,65,242,0.12), 0 8px 22px rgba(101,65,242,0.16);
-        }
-      `}</style>
-      <div className="page__head">
+    <div className="px-12 py-9 pb-16 max-w-[1280px] w-full mx-auto flex flex-col gap-7" data-screen-label="광고 만들기">
+      <div className="flex justify-between items-end gap-6">
         <div>
-          <span className="w-overline" style={{ color: "var(--w-fg-neutral)" }}>광고 만들기</span>
-          <h1 className="page__title" style={{ marginTop: 4 }}>
+          <span className="font-semibold text-[11px] leading-[1.45] tracking-[0.04em] uppercase text-[var(--w-fg-neutral)]">광고 만들기</span>
+          <h1 className="m-0 font-bold text-[28px] leading-[1.25] tracking-[-0.024em] text-[var(--w-fg-strong)]" style={{ marginTop: 4 }}>
             {showIntro ? "광고 목표를 골라주세요" : TITLES[step]}
           </h1>
-          <p className="page__sub">
+          <p className="font-medium text-[14px] leading-[1.5] tracking-[0.004em] text-[var(--w-fg-neutral)] mt-1.5 mb-0">
             {showIntro ? "어떤 광고를 만들지 먼저 결정해주세요. 카피·캠페인 설정이 자동으로 맞춰져요." : SUBS[step]}
           </p>
         </div>
@@ -322,24 +285,14 @@ export default function CreatePage() {
       </div>
 
       {prefillBanner && (
-        <div
-          className="callout"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 12,
-            padding: 14,
-            marginBottom: 16,
-            background: "var(--w-primary-soft)",
-            borderRadius: 12,
-          }}
-        >
+        <div className="flex items-center gap-3 p-[14px] bg-[var(--w-primary-soft)] rounded-xl">
           <Icon name="sparkles" size={16} />
           <p style={{ flex: 1, font: "500 13px/1.5 var(--w-font-sans)", color: "var(--w-fg-strong)", margin: 0 }}>
             {prefillBanner}
           </p>
-          <button
-            className="btn btn--ghost btn--sm"
+          <Button
+            variant="ghost"
+            size="sm"
             type="button"
             onClick={() => {
               creative.dispatch({ type: "RESET" });
@@ -348,12 +301,15 @@ export default function CreatePage() {
             }}
           >
             지우고 새로 시작
-          </button>
+          </Button>
         </div>
       )}
 
       {showIntro ? (
-        <GoalIntro onNext={() => { setIntroCompleted(true); setStep(0); }} />
+        <GoalIntro onNext={() => {
+          setIntroCompleted(true);
+          setStep(creative.state.outcome === 'boost_post' ? 1 : 0);
+        }} />
       ) : (
         <>
           <Stepper step={step} setStep={setStep} completed={completed} stepValid={stepValid} />

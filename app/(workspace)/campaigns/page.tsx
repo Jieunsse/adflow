@@ -8,6 +8,12 @@ import { EmptyState } from "@shared/ui/primitives";
 import { fmt, fmtKRW, campaignDateInfo, campaignGradient } from "@shared/lib/format";
 import { useApiMutation } from "@shared/lib/api/useApiMutation";
 import { useToast } from "@shared/ui/Toast";
+import { Button, buttonVariants } from "@shared/ui/Button";
+import { Card } from "@shared/ui/Card";
+import { Chip, type ChipVariant } from "@shared/ui/Chip";
+import { Skeleton } from "@shared/ui/Skeleton";
+import { SegControl } from "@shared/ui/SegControl";
+import { cn } from "@shared/lib/cn";
 import type { CampaignSummary, CampaignStatusBucket, InsightsPeriod } from "@/lib/meta-ads";
 
 type Period = "all" | InsightsPeriod;
@@ -28,29 +34,19 @@ type ControlResult = { ok: true };
 
 function CampaignStatusChip({ status }: { status: string }) {
   const def = STATUS_DEF[status as StatusFilter] ?? { label: status, chip: "neutral" };
-  return (
-    <span className={`chip chip--${def.chip}`}>
-      <span className="chip__dot" />
-      {def.label}
-    </span>
-  );
+  return <Chip variant={def.chip as ChipVariant} dot>{def.label}</Chip>;
 }
 
-const OBJECTIVE_CHIP_CLASS: Record<string, string> = {
-  OUTCOME_TRAFFIC: "chip--obj-traffic",
-  LINK_CLICKS: "chip--obj-traffic",
-  OUTCOME_SALES: "chip--obj-conversion",
-  CONVERSIONS: "chip--obj-conversion",
-  OUTCOME_AWARENESS: "chip--obj-awareness",
-  REACH: "chip--obj-awareness",
-  OUTCOME_LEADS: "chip--obj-leads",
-  OUTCOME_ENGAGEMENT: "chip--obj-engagement",
-  OUTCOME_APP_PROMOTION: "chip--obj-install",
+const OBJECTIVE_VARIANT: Record<string, ChipVariant> = {
+  OUTCOME_TRAFFIC: "obj-traffic", LINK_CLICKS: "obj-traffic",
+  OUTCOME_SALES: "obj-conversion", CONVERSIONS: "obj-conversion",
+  OUTCOME_AWARENESS: "obj-awareness", REACH: "obj-awareness",
+  OUTCOME_LEADS: "obj-leads", OUTCOME_ENGAGEMENT: "obj-engagement",
+  OUTCOME_APP_PROMOTION: "obj-install",
 };
 
 function CampaignObjectiveChip({ goal, objective }: { goal: string; objective: string }) {
-  const cls = OBJECTIVE_CHIP_CLASS[objective] ?? "chip--neutral";
-  return <span className={`chip ${cls}`}>{goal}</span>;
+  return <Chip variant={OBJECTIVE_VARIANT[objective] ?? "neutral"}>{goal}</Chip>;
 }
 
 async function fetchCampaigns(period: Period): Promise<CampaignSummary[]> {
@@ -163,17 +159,17 @@ export default function CampaignsPage() {
   };
 
   return (
-    <div className="page" data-screen-label="캠페인">
-      <div className="page__head">
+    <div className="px-12 py-9 pb-16 max-w-[1280px] w-full mx-auto flex flex-col gap-7" data-screen-label="캠페인">
+      <div className="flex justify-between items-end gap-6">
         <div>
-          <span className="w-overline" style={{ color: "var(--w-fg-neutral)" }}>캠페인 관리</span>
-          <h1 className="page__title" style={{ marginTop: 4 }}>캠페인</h1>
-          <p className="page__sub">집행 중인 캠페인을 한눈에 확인하고, 성과를 깊게 살펴보세요.</p>
+          <span className="font-semibold text-[11px] leading-[1.45] uppercase tracking-[0.04em] text-[var(--w-fg-neutral)]">캠페인 관리</span>
+          <h1 className="m-0 font-bold text-[28px] leading-[1.25] tracking-[-0.024em] text-[var(--w-fg-strong)]" style={{ marginTop: 4 }}>캠페인</h1>
+          <p className="mt-1.5 mb-0 font-medium text-[14px] leading-[1.5] text-[var(--w-fg-neutral)] tracking-[0.004em]">집행 중인 캠페인을 한눈에 확인하고, 성과를 깊게 살펴보세요.</p>
         </div>
-        <div style={{ display: "inline-flex", gap: 8 }}>
-          <button className="btn btn--primary" type="button" onClick={() => router.push("/create")}>
+        <div className="inline-flex gap-2">
+          <Button variant="primary" type="button" onClick={() => router.push("/create")}>
             <Icon name="plus" size={14} /> 새 캠페인 만들기
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -205,20 +201,45 @@ export default function CampaignsPage() {
           </div>
 
           <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center", marginBottom: 14 }}>
-            <div className="seg">
-              <button type="button" className={period === "all" ? "on" : ""} onClick={() => setPeriod("all")}>전체</button>
-              <button type="button" className={period === "7d" ? "on" : ""} onClick={() => setPeriod("7d")}>최근 7일</button>
-              <button type="button" className={period === "30d" ? "on" : ""} onClick={() => setPeriod("30d")}>최근 30일</button>
-            </div>
+            <SegControl
+              value={period}
+              onChange={setPeriod}
+              options={[
+                { value: "all" as Period, label: "전체" },
+                { value: "7d" as Period, label: "최근 7일" },
+                { value: "30d" as Period, label: "최근 30일" },
+              ]}
+            />
             <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
               {(Object.keys(STATUS_DEF) as StatusFilter[]).map((k) => (
-                <button key={k} type="button" onClick={() => setStatusFilter(k)} className={"filter-chip" + (statusFilter === k ? " filter-chip--on" : "")}>
+                <button
+                  key={k}
+                  type="button"
+                  onClick={() => setStatusFilter(k)}
+                  className={cn(
+                    "inline-flex items-center gap-1.5 px-3 py-[7px] rounded-full border font-semibold text-[12.5px] leading-none cursor-pointer",
+                    statusFilter === k
+                      ? "bg-[var(--w-fg-strong)] text-[var(--w-bg-elevated)] border-[var(--w-fg-strong)] hover:bg-[var(--w-fg-neutral)] hover:border-[var(--w-fg-neutral)]"
+                      : "border-[var(--w-line-normal)] bg-[var(--w-bg-elevated)] text-[var(--w-fg-strong)] hover:bg-[var(--w-bg-neutral)]"
+                  )}
+                >
                   {STATUS_DEF[k].label}
                   {statusFilter === k && k !== "all" && <Icon name="x" size={11} />}
                 </button>
               ))}
             </div>
-            <select className="select" style={{ width: 170, marginLeft: "auto" }} value={sort} onChange={(e) => setSort(e.target.value as SortKey)}>
+            <select
+              className="w-full bg-[var(--w-bg-elevated)] border border-[var(--w-line-normal)] rounded-xl py-3 px-3.5 font-medium text-[14px] leading-[1.5] text-[var(--w-fg-strong)] tracking-[0.004em] transition-[border-color,box-shadow] duration-[120ms] placeholder:text-[var(--w-fg-alternative)] focus:outline-none focus:border-[var(--w-primary-normal)] focus:shadow-[0_0_0_4px_rgba(0,102,255,0.14)] appearance-none pr-9 cursor-pointer"
+              style={{
+                width: 170,
+                marginLeft: "auto",
+                backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2370737c' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E\")",
+                backgroundRepeat: "no-repeat",
+                backgroundPosition: "right 12px center",
+              }}
+              value={sort}
+              onChange={(e) => setSort(e.target.value as SortKey)}
+            >
               <option value="recent">최신순</option>
               <option value="spend">지출 많은 순</option>
               <option value="ctr-desc">CTR 높은 순</option>
@@ -226,7 +247,13 @@ export default function CampaignsPage() {
             </select>
             <div style={{ position: "relative", width: 240 }}>
               <Icon name="message" size={13} style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "var(--w-fg-alternative)" }} />
-              <input className="input" placeholder="캠페인 이름 검색" value={query} onChange={(e) => setQuery(e.target.value)} style={{ paddingLeft: 34, height: 36 }} />
+              <input
+                className="w-full bg-[var(--w-bg-elevated)] border border-[var(--w-line-normal)] rounded-xl py-3 px-3.5 font-medium text-[14px] leading-[1.5] text-[var(--w-fg-strong)] tracking-[0.004em] transition-[border-color,box-shadow] duration-[120ms] placeholder:text-[var(--w-fg-alternative)] focus:outline-none focus:border-[var(--w-primary-normal)] focus:shadow-[0_0_0_4px_rgba(0,102,255,0.14)]"
+                placeholder="캠페인 이름 검색"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                style={{ paddingLeft: 34, height: 36 }}
+              />
             </div>
           </div>
 
@@ -235,11 +262,11 @@ export default function CampaignsPage() {
               <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
                 <span style={{ font: "600 13px/1 var(--w-font-sans)" }}>{selected.size}개 선택됨</span>
                 <span style={{ height: 14, width: 1, background: "rgba(255,255,255,0.18)" }} />
-                <button className="btn-link" type="button" disabled={bulkPending} onClick={() => runBulk("pause")}><Icon name="pause" size={13} /> 일괄 일시정지</button>
-                <button className="btn-link" type="button" disabled={bulkPending} onClick={() => runBulk("resume")}><Icon name="play" size={13} /> 일괄 재개</button>
+                <button className="bg-transparent border-none p-0 cursor-pointer inline-flex items-center gap-1.5 font-semibold text-[12.5px] leading-none text-current hover:underline" type="button" disabled={bulkPending} onClick={() => runBulk("pause")}><Icon name="pause" size={13} /> 일괄 일시정지</button>
+                <button className="bg-transparent border-none p-0 cursor-pointer inline-flex items-center gap-1.5 font-semibold text-[12.5px] leading-none text-current hover:underline" type="button" disabled={bulkPending} onClick={() => runBulk("resume")}><Icon name="play" size={13} /> 일괄 재개</button>
                 {bulkPending && <span style={{ font: "500 12px/1 var(--w-font-sans)", opacity: 0.7 }}>처리 중…</span>}
               </div>
-              <button className="btn-link" type="button" onClick={clearSelection}>선택 해제</button>
+              <button className="bg-transparent border-none p-0 cursor-pointer inline-flex items-center gap-1.5 font-semibold text-[12.5px] leading-none text-current hover:underline" type="button" onClick={clearSelection}>선택 해제</button>
             </div>
           )}
 
@@ -250,28 +277,28 @@ export default function CampaignsPage() {
               icon={<Icon name="megaphone" size={26} />}
               title="아직 집행한 캠페인이 없어요"
               desc="AI가 만든 소재로 첫 광고를 시작해 보세요. 기간·예산만 정하면 바로 집행할 수 있어요."
-              action={<button className="btn btn--primary" type="button" onClick={() => router.push("/create")}><Icon name="plus" size={14} /> 첫 캠페인 만들기</button>}
+              action={<Button variant="primary" type="button" onClick={() => router.push("/create")}><Icon name="plus" size={14} /> 첫 캠페인 만들기</Button>}
             />
           ) : filtered.length === 0 ? (
-            <div className="card" style={{ padding: "40px 32px", textAlign: "center", color: "var(--w-fg-neutral)" }}>
+            <Card className="py-10 px-8 text-center" style={{ color: "var(--w-fg-neutral)" }}>
               조건에 맞는 캠페인이 없어요. 필터나 검색어를 바꿔 보세요.
-            </div>
+            </Card>
           ) : (
-            <div className="card" style={{ padding: 0, overflow: "hidden" }}>
-              <table className="dtable">
+            <Card className="p-0 overflow-hidden">
+              <table className="w-full border-collapse">
                 <thead>
                   <tr>
-                    <th style={{ width: 40 }}><Checkbox checked={allVisibleSelected} onChange={toggleAll} /></th>
-                    <th>캠페인</th>
-                    <th style={{ width: 100, textAlign: "center" }}>목표</th>
-                    <th style={{ width: 110, textAlign: "center" }}>상태</th>
-                    <th style={{ width: 160, textAlign: "center" }}>기간</th>
-                    <th style={{ width: 110, textAlign: "center" }}>일일예산</th>
-                    <th style={{ width: 100, textAlign: "center" }}>노출</th>
-                    <th style={{ width: 90, textAlign: "center" }}>클릭</th>
-                    <th style={{ width: 80, textAlign: "center" }}>CTR</th>
-                    <th style={{ width: 110, textAlign: "center" }}>지출</th>
-                    <th style={{ width: 44 }} />
+                    <th className="text-left py-3 px-3.5 font-semibold text-[11px] leading-none uppercase tracking-[0.06em] text-[var(--w-fg-neutral)] border-b border-[var(--w-line-alternative)] bg-[var(--w-bg-alternative)]" style={{ width: 40 }}><Checkbox checked={allVisibleSelected} onChange={toggleAll} /></th>
+                    <th className="text-left py-3 px-3.5 font-semibold text-[11px] leading-none uppercase tracking-[0.06em] text-[var(--w-fg-neutral)] border-b border-[var(--w-line-alternative)] bg-[var(--w-bg-alternative)]">캠페인</th>
+                    <th className="text-left py-3 px-3.5 font-semibold text-[11px] leading-none uppercase tracking-[0.06em] text-[var(--w-fg-neutral)] border-b border-[var(--w-line-alternative)] bg-[var(--w-bg-alternative)]" style={{ width: 100, textAlign: "center" }}>목표</th>
+                    <th className="text-left py-3 px-3.5 font-semibold text-[11px] leading-none uppercase tracking-[0.06em] text-[var(--w-fg-neutral)] border-b border-[var(--w-line-alternative)] bg-[var(--w-bg-alternative)]" style={{ width: 110, textAlign: "center" }}>상태</th>
+                    <th className="text-left py-3 px-3.5 font-semibold text-[11px] leading-none uppercase tracking-[0.06em] text-[var(--w-fg-neutral)] border-b border-[var(--w-line-alternative)] bg-[var(--w-bg-alternative)]" style={{ width: 160, textAlign: "center" }}>기간</th>
+                    <th className="text-left py-3 px-3.5 font-semibold text-[11px] leading-none uppercase tracking-[0.06em] text-[var(--w-fg-neutral)] border-b border-[var(--w-line-alternative)] bg-[var(--w-bg-alternative)]" style={{ width: 110, textAlign: "center" }}>일일예산</th>
+                    <th className="text-left py-3 px-3.5 font-semibold text-[11px] leading-none uppercase tracking-[0.06em] text-[var(--w-fg-neutral)] border-b border-[var(--w-line-alternative)] bg-[var(--w-bg-alternative)]" style={{ width: 100, textAlign: "center" }}>노출</th>
+                    <th className="text-left py-3 px-3.5 font-semibold text-[11px] leading-none uppercase tracking-[0.06em] text-[var(--w-fg-neutral)] border-b border-[var(--w-line-alternative)] bg-[var(--w-bg-alternative)]" style={{ width: 90, textAlign: "center" }}>클릭</th>
+                    <th className="text-left py-3 px-3.5 font-semibold text-[11px] leading-none uppercase tracking-[0.06em] text-[var(--w-fg-neutral)] border-b border-[var(--w-line-alternative)] bg-[var(--w-bg-alternative)]" style={{ width: 80, textAlign: "center" }}>CTR</th>
+                    <th className="text-left py-3 px-3.5 font-semibold text-[11px] leading-none uppercase tracking-[0.06em] text-[var(--w-fg-neutral)] border-b border-[var(--w-line-alternative)] bg-[var(--w-bg-alternative)]" style={{ width: 110, textAlign: "center" }}>지출</th>
+                    <th className="text-left py-3 px-3.5 font-semibold text-[11px] leading-none uppercase tracking-[0.06em] text-[var(--w-fg-neutral)] border-b border-[var(--w-line-alternative)] bg-[var(--w-bg-alternative)]" style={{ width: 44 }} />
                   </tr>
                 </thead>
                 <tbody>
@@ -280,9 +307,15 @@ export default function CampaignsPage() {
                     const isMenu = menuOpen === c.id;
                     const { daysLine, progressLine } = campaignDateInfo(c.startDate, c.endDate, c.status);
                     return (
-                      <tr key={c.id} className={"dtable__row" + (isSel ? " dtable__row--on" : "")}>
-                        <td><Checkbox checked={isSel} onChange={() => toggleSelect(c.id)} /></td>
-                        <td onClick={() => goDetail(c.id)} style={{ cursor: "pointer" }}>
+                      <tr
+                        key={c.id}
+                        className={cn(
+                          "group",
+                          isSel && "[&_td]:bg-[var(--w-primary-soft)] [&:hover_td]:!bg-[var(--w-primary-soft)]"
+                        )}
+                      >
+                        <td className="py-3.5 px-3.5 border-b border-[var(--w-line-alternative)] font-medium text-[13px] leading-[1.4] text-[var(--w-fg-strong)] align-middle group-hover:bg-[var(--w-bg-neutral)]"><Checkbox checked={isSel} onChange={() => toggleSelect(c.id)} /></td>
+                        <td className="py-3.5 px-3.5 border-b border-[var(--w-line-alternative)] font-medium text-[13px] leading-[1.4] text-[var(--w-fg-strong)] align-middle group-hover:bg-[var(--w-bg-neutral)]" onClick={() => goDetail(c.id)} style={{ cursor: "pointer" }}>
                           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                             <div style={{ width: 38, height: 38, borderRadius: 8, background: campaignGradient(c.id), flex: "0 0 auto" }} />
                             <div style={{ minWidth: 0 }}>
@@ -290,19 +323,24 @@ export default function CampaignsPage() {
                             </div>
                           </div>
                         </td>
-                        <td style={{ textAlign: "center" }}><CampaignObjectiveChip goal={c.goal} objective={c.objective} /></td>
-                        <td style={{ textAlign: "center" }}><CampaignStatusChip status={c.status} /></td>
-                        <td onClick={() => goDetail(c.id)} style={{ cursor: "pointer", textAlign: "center" }}>
+                        <td className="py-3.5 px-3.5 border-b border-[var(--w-line-alternative)] font-medium text-[13px] leading-[1.4] text-[var(--w-fg-strong)] align-middle group-hover:bg-[var(--w-bg-neutral)]" style={{ textAlign: "center" }}><CampaignObjectiveChip goal={c.goal} objective={c.objective} /></td>
+                        <td className="py-3.5 px-3.5 border-b border-[var(--w-line-alternative)] font-medium text-[13px] leading-[1.4] text-[var(--w-fg-strong)] align-middle group-hover:bg-[var(--w-bg-neutral)]" style={{ textAlign: "center" }}><CampaignStatusChip status={c.status} /></td>
+                        <td className="py-3.5 px-3.5 border-b border-[var(--w-line-alternative)] font-medium text-[13px] leading-[1.4] text-[var(--w-fg-strong)] align-middle group-hover:bg-[var(--w-bg-neutral)]" onClick={() => goDetail(c.id)} style={{ cursor: "pointer", textAlign: "center" }}>
                           <div style={{ font: "500 12.5px/1 var(--w-font-sans)", color: "var(--w-fg-strong)" }}>{daysLine}</div>
                           <div style={{ font: "500 11px/1 var(--w-font-mono)", color: "var(--w-fg-alternative)", marginTop: 4 }}>{progressLine}</div>
                         </td>
-                        <td className="dtable__num" style={{ textAlign: "center" }}>{c.dailyBudget != null ? fmtKRW(c.dailyBudget) : "—"}</td>
-                        <td className="dtable__num" style={{ textAlign: "center" }}>{c.impressions ? fmt(c.impressions) : "—"}</td>
-                        <td className="dtable__num" style={{ textAlign: "center" }}>{c.clicks ? fmt(c.clicks) : "—"}</td>
-                        <td className="dtable__num" style={{ textAlign: "center" }}>{c.ctr ? c.ctr.toFixed(2) + "%" : "—"}</td>
-                        <td className="dtable__num" style={{ textAlign: "center" }}>{c.spend ? fmtKRW(c.spend) : "—"}</td>
-                        <td data-menu-root style={{ position: "relative" }}>
-                          <button className="icon-btn" type="button" title="더 보기" onClick={(e) => { e.stopPropagation(); setMenuOpen(isMenu ? null : c.id); setBudgetEdit(null); }}>
+                        <td className="py-3.5 px-3.5 border-b border-[var(--w-line-alternative)] align-middle group-hover:bg-[var(--w-bg-neutral)] text-right font-medium text-[13px] leading-none [font-family:var(--w-font-mono)] text-[var(--w-fg-strong)]" style={{ textAlign: "center" }}>{c.dailyBudget != null ? fmtKRW(c.dailyBudget) : "—"}</td>
+                        <td className="py-3.5 px-3.5 border-b border-[var(--w-line-alternative)] align-middle group-hover:bg-[var(--w-bg-neutral)] text-right font-medium text-[13px] leading-none [font-family:var(--w-font-mono)] text-[var(--w-fg-strong)]" style={{ textAlign: "center" }}>{c.impressions ? fmt(c.impressions) : "—"}</td>
+                        <td className="py-3.5 px-3.5 border-b border-[var(--w-line-alternative)] align-middle group-hover:bg-[var(--w-bg-neutral)] text-right font-medium text-[13px] leading-none [font-family:var(--w-font-mono)] text-[var(--w-fg-strong)]" style={{ textAlign: "center" }}>{c.clicks ? fmt(c.clicks) : "—"}</td>
+                        <td className="py-3.5 px-3.5 border-b border-[var(--w-line-alternative)] align-middle group-hover:bg-[var(--w-bg-neutral)] text-right font-medium text-[13px] leading-none [font-family:var(--w-font-mono)] text-[var(--w-fg-strong)]" style={{ textAlign: "center" }}>{c.ctr ? c.ctr.toFixed(2) + "%" : "—"}</td>
+                        <td className="py-3.5 px-3.5 border-b border-[var(--w-line-alternative)] align-middle group-hover:bg-[var(--w-bg-neutral)] text-right font-medium text-[13px] leading-none [font-family:var(--w-font-mono)] text-[var(--w-fg-strong)]" style={{ textAlign: "center" }}>{c.spend ? fmtKRW(c.spend) : "—"}</td>
+                        <td className="py-3.5 px-3.5 border-b border-[var(--w-line-alternative)] font-medium text-[13px] leading-[1.4] text-[var(--w-fg-strong)] align-middle group-hover:bg-[var(--w-bg-neutral)]" data-menu-root style={{ position: "relative" }}>
+                          <button
+                            className="w-8 h-8 rounded-lg border border-transparent bg-transparent text-[var(--w-fg-neutral)] cursor-pointer inline-grid place-items-center hover:bg-[var(--w-bg-neutral)] hover:text-[var(--w-fg-strong)]"
+                            type="button"
+                            title="더 보기"
+                            onClick={(e) => { e.stopPropagation(); setMenuOpen(isMenu ? null : c.id); setBudgetEdit(null); }}
+                          >
                             <Icon name="dots" size={16} />
                           </button>
                           {isMenu && (
@@ -335,7 +373,7 @@ export default function CampaignsPage() {
                   })}
                 </tbody>
               </table>
-            </div>
+            </Card>
           )}
         </>
       )}
@@ -378,12 +416,12 @@ function RowMenu({
 }) {
   const paused = campaign.status === "paused";
   return (
-    <div className="row-menu" onClick={(e) => e.stopPropagation()}>
+    <div className="absolute right-2 top-9 z-30 min-w-[220px] p-1.5 bg-[var(--w-bg-elevated)] border border-[var(--w-line-normal)] rounded-xl shadow-[0_12px_32px_rgba(0,0,0,0.12)]" onClick={(e) => e.stopPropagation()}>
       <MenuItem icon="arrow-right" onClick={onDetail}>상세 보기</MenuItem>
       <MenuItem icon={paused ? "play" : "pause"} onClick={onPauseResume} disabled={busy}>{busy ? "처리 중…" : paused ? "재개" : "일시정지"}</MenuItem>
       <MenuItem icon="wallet" onClick={onBudgetOpen}>일일예산 조정</MenuItem>
       <MenuItem icon="sparkles" onClick={onRemake}>새 소재로 다시 만들기</MenuItem>
-      <div className="row-menu__divider" />
+      <div className="h-px bg-[var(--w-line-alternative)] mx-1 my-0.5" />
       <MenuItem icon="folder" disabled soon>보관</MenuItem>
       <MenuItem icon="copy" disabled soon>복제</MenuItem>
       <MenuItem icon="doc" disabled soon>이름 수정</MenuItem>
@@ -392,12 +430,18 @@ function RowMenu({
           <div style={{ font: "600 11px/1 var(--w-font-sans)", textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--w-fg-alternative)", marginBottom: 8 }}>일일예산 조정</div>
           <div style={{ display: "flex", alignItems: "center", border: "1px solid var(--w-line-normal)", borderRadius: 8, paddingLeft: 10, marginBottom: 6 }}>
             <span style={{ font: "600 13px/1 var(--w-font-sans)", color: "var(--w-fg-neutral)" }}>₩</span>
-            <input className="input" style={{ border: "none", paddingLeft: 6, height: 34, font: "600 13px/1 var(--w-font-mono)" }} value={budgetValue ? Number(budgetValue).toLocaleString("ko-KR") : ""} onChange={(e) => setBudgetValue(e.target.value.replace(/[^\d]/g, ""))} inputMode="numeric" />
+            <input
+              className="w-full bg-[var(--w-bg-elevated)] border border-[var(--w-line-normal)] rounded-xl py-3 px-3.5 font-medium text-[14px] leading-[1.5] text-[var(--w-fg-strong)] tracking-[0.004em] transition-[border-color,box-shadow] duration-[120ms] placeholder:text-[var(--w-fg-alternative)] focus:outline-none focus:border-[var(--w-primary-normal)] focus:shadow-[0_0_0_4px_rgba(0,102,255,0.14)]"
+              style={{ border: "none", paddingLeft: 6, height: 34, font: "600 13px/1 var(--w-font-mono)" }}
+              value={budgetValue ? Number(budgetValue).toLocaleString("ko-KR") : ""}
+              onChange={(e) => setBudgetValue(e.target.value.replace(/[^\d]/g, ""))}
+              inputMode="numeric"
+            />
           </div>
           <div style={{ font: "500 11px/1.4 var(--w-font-sans)", color: "var(--w-fg-alternative)", marginBottom: 8 }}>최소 ₩10,000</div>
           <div style={{ display: "flex", gap: 6, justifyContent: "flex-end" }}>
-            <button className="btn btn--ghost btn--sm" type="button" onClick={() => setBudgetValue("")}>지우기</button>
-            <button className="btn btn--primary btn--sm" type="button" disabled={busy} onClick={onBudgetApply}>{busy ? "적용 중…" : "적용"}</button>
+            <Button variant="ghost" size="sm" type="button" onClick={() => setBudgetValue("")}>지우기</Button>
+            <Button variant="primary" size="sm" type="button" disabled={busy} onClick={onBudgetApply}>{busy ? "적용 중…" : "적용"}</Button>
           </div>
         </div>
       )}
@@ -407,7 +451,7 @@ function RowMenu({
 
 function MenuItem({ icon, children, onClick, disabled, soon }: { icon: IconName; children: React.ReactNode; onClick?: () => void; disabled?: boolean; soon?: boolean }) {
   return (
-    <button type="button" onClick={onClick} disabled={disabled} className="row-menu__item">
+    <button type="button" onClick={onClick} disabled={disabled} className="flex items-center gap-2.5 w-full px-2.5 py-2 bg-transparent border-none cursor-pointer rounded-lg text-left font-medium text-[13px] leading-none text-[var(--w-fg-strong)] hover:bg-[var(--w-bg-neutral)] disabled:text-[var(--w-fg-alternative)] disabled:cursor-default disabled:hover:bg-transparent">
       <Icon name={icon} size={14} />
       <span style={{ flex: 1 }}>{children}</span>
       {soon && <span style={{ font: "500 10px/1 var(--w-font-mono)", color: "var(--w-fg-alternative)", padding: "3px 6px", background: "var(--w-bg-alternative)", borderRadius: 4 }}>곧 지원</span>}
@@ -417,45 +461,60 @@ function MenuItem({ icon, children, onClick, disabled, soon }: { icon: IconName;
 
 function TableSkeleton() {
   return (
-    <div className="card" style={{ padding: 0, overflow: "hidden" }}>
-      <table className="dtable">
+    <Card className="p-0 overflow-hidden">
+      <table className="w-full border-collapse">
         <thead>
           <tr>
-            <th style={{ width: 40 }} /><th>캠페인</th><th style={{ width: 100, textAlign: "center" }}>목표</th><th style={{ width: 110, textAlign: "center" }}>상태</th><th style={{ width: 160, textAlign: "center" }}>기간</th>
-            <th style={{ width: 110, textAlign: "center" }}>일일예산</th><th style={{ width: 100, textAlign: "center" }}>노출</th>
-            <th style={{ width: 90, textAlign: "center" }}>클릭</th><th style={{ width: 80, textAlign: "center" }}>CTR</th>
-            <th style={{ width: 110, textAlign: "center" }}>지출</th><th style={{ width: 44 }} />
+            <th className="text-left py-3 px-3.5 font-semibold text-[11px] leading-none uppercase tracking-[0.06em] text-[var(--w-fg-neutral)] border-b border-[var(--w-line-alternative)] bg-[var(--w-bg-alternative)]" style={{ width: 40 }} />
+            <th className="text-left py-3 px-3.5 font-semibold text-[11px] leading-none uppercase tracking-[0.06em] text-[var(--w-fg-neutral)] border-b border-[var(--w-line-alternative)] bg-[var(--w-bg-alternative)]">캠페인</th>
+            <th className="text-left py-3 px-3.5 font-semibold text-[11px] leading-none uppercase tracking-[0.06em] text-[var(--w-fg-neutral)] border-b border-[var(--w-line-alternative)] bg-[var(--w-bg-alternative)]" style={{ width: 100, textAlign: "center" }}>목표</th>
+            <th className="text-left py-3 px-3.5 font-semibold text-[11px] leading-none uppercase tracking-[0.06em] text-[var(--w-fg-neutral)] border-b border-[var(--w-line-alternative)] bg-[var(--w-bg-alternative)]" style={{ width: 110, textAlign: "center" }}>상태</th>
+            <th className="text-left py-3 px-3.5 font-semibold text-[11px] leading-none uppercase tracking-[0.06em] text-[var(--w-fg-neutral)] border-b border-[var(--w-line-alternative)] bg-[var(--w-bg-alternative)]" style={{ width: 160, textAlign: "center" }}>기간</th>
+            <th className="text-left py-3 px-3.5 font-semibold text-[11px] leading-none uppercase tracking-[0.06em] text-[var(--w-fg-neutral)] border-b border-[var(--w-line-alternative)] bg-[var(--w-bg-alternative)]" style={{ width: 110, textAlign: "center" }}>일일예산</th>
+            <th className="text-left py-3 px-3.5 font-semibold text-[11px] leading-none uppercase tracking-[0.06em] text-[var(--w-fg-neutral)] border-b border-[var(--w-line-alternative)] bg-[var(--w-bg-alternative)]" style={{ width: 100, textAlign: "center" }}>노출</th>
+            <th className="text-left py-3 px-3.5 font-semibold text-[11px] leading-none uppercase tracking-[0.06em] text-[var(--w-fg-neutral)] border-b border-[var(--w-line-alternative)] bg-[var(--w-bg-alternative)]" style={{ width: 90, textAlign: "center" }}>클릭</th>
+            <th className="text-left py-3 px-3.5 font-semibold text-[11px] leading-none uppercase tracking-[0.06em] text-[var(--w-fg-neutral)] border-b border-[var(--w-line-alternative)] bg-[var(--w-bg-alternative)]" style={{ width: 80, textAlign: "center" }}>CTR</th>
+            <th className="text-left py-3 px-3.5 font-semibold text-[11px] leading-none uppercase tracking-[0.06em] text-[var(--w-fg-neutral)] border-b border-[var(--w-line-alternative)] bg-[var(--w-bg-alternative)]" style={{ width: 110, textAlign: "center" }}>지출</th>
+            <th className="text-left py-3 px-3.5 font-semibold text-[11px] leading-none uppercase tracking-[0.06em] text-[var(--w-fg-neutral)] border-b border-[var(--w-line-alternative)] bg-[var(--w-bg-alternative)]" style={{ width: 44 }} />
           </tr>
         </thead>
         <tbody>
           {[0, 1, 2, 3, 4, 5].map((i) => (
-            <tr key={i} className="dtable__row">
-              <td><div className="skel" style={{ width: 18, height: 18, borderRadius: 5 }} /></td>
-              <td><div style={{ display: "flex", gap: 12, alignItems: "center" }}><div className="skel" style={{ width: 38, height: 38, borderRadius: 8 }} /><div style={{ flex: 1 }}><div className="skel" style={{ height: 14, width: "70%", marginBottom: 6 }} /><div className="skel" style={{ height: 11, width: "40%" }} /></div></div></td>
-              <td><div className="skel" style={{ height: 22, width: 60, borderRadius: 999, margin: "0 auto" }} /></td>
-              <td><div className="skel" style={{ height: 22, width: 70, borderRadius: 999, margin: "0 auto" }} /></td>
-              <td><div className="skel" style={{ height: 14, width: "80%", margin: "0 auto" }} /></td>
-              <td><div className="skel" style={{ height: 14, width: 70, margin: "0 auto" }} /></td>
-              <td><div className="skel" style={{ height: 14, width: 60, margin: "0 auto" }} /></td>
-              <td><div className="skel" style={{ height: 14, width: 50, margin: "0 auto" }} /></td>
-              <td><div className="skel" style={{ height: 14, width: 50, margin: "0 auto" }} /></td>
-              <td><div className="skel" style={{ height: 14, width: 70, margin: "0 auto" }} /></td>
-              <td />
+            <tr key={i} className="group">
+              <td className="py-3.5 px-3.5 border-b border-[var(--w-line-alternative)] font-medium text-[13px] leading-[1.4] text-[var(--w-fg-strong)] align-middle group-hover:bg-[var(--w-bg-neutral)]"><Skeleton className="w-[18px] h-[18px] rounded-[5px]" /></td>
+              <td className="py-3.5 px-3.5 border-b border-[var(--w-line-alternative)] font-medium text-[13px] leading-[1.4] text-[var(--w-fg-strong)] align-middle group-hover:bg-[var(--w-bg-neutral)]">
+                <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+                  <Skeleton className="w-[38px] h-[38px] rounded-[8px]" />
+                  <div style={{ flex: 1 }}>
+                    <Skeleton className="h-[14px] w-[70%] mb-1.5" />
+                    <Skeleton className="h-[11px] w-[40%]" />
+                  </div>
+                </div>
+              </td>
+              <td className="py-3.5 px-3.5 border-b border-[var(--w-line-alternative)] font-medium text-[13px] leading-[1.4] text-[var(--w-fg-strong)] align-middle group-hover:bg-[var(--w-bg-neutral)]"><Skeleton className="h-[22px] w-[60px] rounded-full mx-auto" /></td>
+              <td className="py-3.5 px-3.5 border-b border-[var(--w-line-alternative)] font-medium text-[13px] leading-[1.4] text-[var(--w-fg-strong)] align-middle group-hover:bg-[var(--w-bg-neutral)]"><Skeleton className="h-[22px] w-[70px] rounded-full mx-auto" /></td>
+              <td className="py-3.5 px-3.5 border-b border-[var(--w-line-alternative)] font-medium text-[13px] leading-[1.4] text-[var(--w-fg-strong)] align-middle group-hover:bg-[var(--w-bg-neutral)]"><Skeleton className="h-[14px] w-[80%] mx-auto" /></td>
+              <td className="py-3.5 px-3.5 border-b border-[var(--w-line-alternative)] font-medium text-[13px] leading-[1.4] text-[var(--w-fg-strong)] align-middle group-hover:bg-[var(--w-bg-neutral)]"><Skeleton className="h-[14px] w-[70px] mx-auto" /></td>
+              <td className="py-3.5 px-3.5 border-b border-[var(--w-line-alternative)] font-medium text-[13px] leading-[1.4] text-[var(--w-fg-strong)] align-middle group-hover:bg-[var(--w-bg-neutral)]"><Skeleton className="h-[14px] w-[60px] mx-auto" /></td>
+              <td className="py-3.5 px-3.5 border-b border-[var(--w-line-alternative)] font-medium text-[13px] leading-[1.4] text-[var(--w-fg-strong)] align-middle group-hover:bg-[var(--w-bg-neutral)]"><Skeleton className="h-[14px] w-[50px] mx-auto" /></td>
+              <td className="py-3.5 px-3.5 border-b border-[var(--w-line-alternative)] font-medium text-[13px] leading-[1.4] text-[var(--w-fg-strong)] align-middle group-hover:bg-[var(--w-bg-neutral)]"><Skeleton className="h-[14px] w-[50px] mx-auto" /></td>
+              <td className="py-3.5 px-3.5 border-b border-[var(--w-line-alternative)] font-medium text-[13px] leading-[1.4] text-[var(--w-fg-strong)] align-middle group-hover:bg-[var(--w-bg-neutral)]"><Skeleton className="h-[14px] w-[70px] mx-auto" /></td>
+              <td className="py-3.5 px-3.5 border-b border-[var(--w-line-alternative)] font-medium text-[13px] leading-[1.4] text-[var(--w-fg-strong)] align-middle group-hover:bg-[var(--w-bg-neutral)]" />
             </tr>
           ))}
         </tbody>
       </table>
-    </div>
+    </Card>
   );
 }
 
 function ErrorCard({ icon = "warn", title, reason, ctaLabel = "다시 시도", onAction }: { icon?: IconName; title: string; reason: string; ctaLabel?: string; onAction: () => void }) {
   return (
-    <div className="card" style={{ padding: "40px 32px", display: "flex", flexDirection: "column", alignItems: "center", gap: 12, textAlign: "center" }}>
+    <Card className="py-10 px-8 flex flex-col items-center gap-3 text-center">
       <div style={{ width: 56, height: 56, borderRadius: "50%", background: "rgba(255,66,66,0.10)", color: "var(--w-status-negative)", display: "grid", placeItems: "center" }}><Icon name={icon} size={24} /></div>
       <div style={{ font: "700 17px/1.3 var(--w-font-sans)", color: "var(--w-fg-strong)", letterSpacing: "-0.01em" }}>{title}</div>
       <div style={{ font: "500 13px/1.5 var(--w-font-sans)", color: "var(--w-fg-neutral)", maxWidth: 380 }}>{reason}</div>
-      <button className="btn btn--secondary" type="button" style={{ marginTop: 8 }} onClick={onAction}>{ctaLabel}</button>
-    </div>
+      <Button variant="secondary" type="button" className="mt-2" onClick={onAction}>{ctaLabel}</Button>
+    </Card>
   );
 }

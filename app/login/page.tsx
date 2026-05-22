@@ -1,10 +1,11 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import Icon from "@shared/ui/Icon";
+import { Button } from "@shared/ui/Button";
 
 const MAINTENANCE = process.env.NEXT_PUBLIC_MAINTENANCE_MODE === "true";
 
@@ -31,6 +32,14 @@ function LoginContent() {
   const errorMessage = errorCode ? (ERROR_MESSAGES[errorCode] ?? ERROR_MESSAGES.Default) : null;
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    const prev = document.documentElement.getAttribute("data-theme");
+    document.documentElement.setAttribute("data-theme", "light");
+    return () => {
+      if (prev) document.documentElement.setAttribute("data-theme", prev);
+    };
+  }, []);
+
   if (errorCode && typeof window !== "undefined") {
     console.error("[AdFlow][login] NextAuth error code:", errorCode, "| URL:", window.location.href);
   }
@@ -46,9 +55,20 @@ function LoginContent() {
   }
 
   return (
-    <div className="adflow">
-      <div className="login-shell" data-screen-label="로그인">
-        <aside className="login-art">
+    <div
+      className="[font-family:var(--w-font-sans)] [color:var(--w-fg-normal)] [background:var(--w-bg-alternative)] text-[14px] min-h-screen [color-scheme:light] [-webkit-font-smoothing:antialiased] [text-rendering:optimizeLegibility]"
+      style={{ colorScheme: "light" }}
+    >
+      <div
+        className="min-h-screen grid [grid-template-columns:1.05fr_1fr] [background:var(--w-bg-elevated)]"
+        data-screen-label="로그인"
+      >
+        <aside
+          className="[background:linear-gradient(135deg,#001a4d_0%,#0066ff_45%,#6541f2_100%)] px-16 py-14 text-white flex flex-col justify-between relative overflow-hidden"
+          style={{
+            // ::after pseudo handled inline is not possible; retaining as bg overlay effect via CSS workaround
+          }}
+        >
           <div style={{ display: "flex", alignItems: "center", gap: 10, position: "relative", zIndex: 1 }}>
             <div style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(255,255,255,0.18)", backdropFilter: "blur(6px)", display: "grid", placeItems: "center", color: "#fff", font: "800 16px/1 var(--w-font-display)", letterSpacing: "-0.03em" }}>A</div>
             <span style={{ font: "800 18px/1 var(--w-font-display)", color: "#fff", letterSpacing: "-0.022em" }}>AdFlow</span>
@@ -80,9 +100,9 @@ function LoginContent() {
           </div>
         </aside>
 
-        <section className="login-side">
+        <section className="px-20 py-16 flex flex-col justify-center gap-7">
           <div style={{ maxWidth: 380, width: "100%" }}>
-            <span className="w-overline" style={{ color: "var(--w-primary-normal)", fontSize: 11, letterSpacing: "0.12em" }}>Marketing AI · 광고 자동화</span>
+            <span className="font-semibold text-[11px] leading-[1.45] tracking-[0.04em] uppercase text-[var(--w-primary-normal)]" style={{ letterSpacing: "0.12em", fontSize: 11 }}>Marketing AI · 광고 자동화</span>
             <h1 style={{ font: "800 32px/1.25 var(--w-font-display)", color: "var(--w-fg-strong)", letterSpacing: "-0.024em", margin: "12px 0 10px" }}>
               마케터를 위한<br />AI 광고 자동화
             </h1>
@@ -92,7 +112,7 @@ function LoginContent() {
             </p>
 
             {errorMessage && (
-              <div className="callout callout--danger" style={{ marginBottom: 16 }}>
+              <div className="flex items-start gap-2.5 px-[14px] py-3 rounded-[10px] border border-transparent bg-[rgba(255,66,66,0.08)] border-[rgba(255,66,66,0.20)] text-[var(--w-status-negative)]" style={{ marginBottom: 16 }}>
                 <Icon name="warn" size={16} />
                 <div>
                   <div style={{ font: "700 13px/1.4 var(--w-font-sans)" }}>로그인할 수 없어요</div>
@@ -103,7 +123,7 @@ function LoginContent() {
             )}
 
             {MAINTENANCE ? (
-              <div className="callout callout--warn">
+              <div className="flex items-start gap-2.5 px-[14px] py-3 rounded-[10px] border border-transparent bg-[rgba(255,146,0,0.10)] border-[rgba(255,146,0,0.24)] text-[var(--w-status-cautionary)]">
                 <Icon name="warn" size={16} />
                 <div>
                   <div style={{ font: "700 13px/1.4 var(--w-font-sans)" }}>현재 서비스 점검 중</div>
@@ -112,13 +132,13 @@ function LoginContent() {
               </div>
             ) : (
               <>
-                <button className="btn btn--primary btn--lg btn--block" type="button" onClick={handleLogin} disabled={loading}>
+                <Button variant="primary" size="lg" block type="button" onClick={handleLogin} disabled={loading}>
                   {loading ? <Icon name="spinner" size={16} /> : <Icon name="facebook" size={16} />}
                   {loading ? "Facebook에 연결 중…" : "Facebook으로 로그인"}
-                </button>
-                <button className="btn btn--secondary btn--lg btn--block" type="button" onClick={handleBrowse} disabled={loading} style={{ marginTop: 10 }}>
+                </Button>
+                <Button variant="secondary" size="lg" block type="button" onClick={handleBrowse} disabled={loading} style={{ marginTop: 10 }}>
                   로그인 없이 서비스 둘러보기
-                </button>
+                </Button>
                 <p style={{ font: "500 12px/1.6 var(--w-font-sans)", color: "var(--w-fg-neutral)", margin: "16px 0 0", textAlign: "center" }}>
                   광고 계정 관리 · 페이지 정보 · 광고 게재 권한을 사용해요.<br />
                   필요한 권한 외에는 요청하지 않아요.

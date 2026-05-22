@@ -17,16 +17,16 @@ export default function MessagesAutoReplyCallout() {
   return (
     <>
       <SubHead title="메시지 자동응답 설정" subtitle="광고를 본 사람이 메시지를 보내면 자동응답이 먼저 답해요. 미설정 시 첫 응답이 늦어 이탈률이 높아져요." />
-      <div className="callout callout--info" style={{ marginBottom: 4 }}>
+      <div className="flex items-start gap-2.5 px-[14px] py-3 rounded-[10px] border bg-[rgba(0,102,255,0.06)] border-[rgba(0,102,255,0.18)] text-[var(--w-primary-press)] mb-1">
         <Icon name="info" size={16} />
-        <div style={{ font: "500 12.5px/1.5 var(--w-font-sans)" }}>
+        <div className="font-medium text-[12.5px] leading-[1.5]">
           Meta 비즈니스 스위트에서 자동응답·환영 메시지를 미리 설정해두세요.
           <br />
           <a
             href={deeplink}
             target="_blank"
             rel="noopener noreferrer"
-            style={{ color: "var(--w-accent-violet)", font: "600 12.5px/1.5 var(--w-font-sans)", display: "inline-flex", alignItems: "center", gap: 4, marginTop: 4 }}
+            className="text-[var(--w-accent-violet)] font-semibold text-[12.5px] leading-[1.5] inline-flex items-center gap-1 mt-1"
           >
             자동응답 설정으로 가기 <Icon name="arrow-right" size={11} />
           </a>

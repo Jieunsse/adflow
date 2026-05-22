@@ -4,10 +4,15 @@ import { useState } from "react";
 import { IG_MOCK_GOOD, IG_MOCK_POOR, type IgAccountInsights } from "@/lib/instagram-insights";
 import { FB_MOCK_GOOD, FB_MOCK_POOR, type FbPageInsights } from "@/lib/facebook-insights";
 import { suggestChannelOptimizations } from "@entities/insights/optimization";
+import { cn } from "@shared/lib/cn";
 import ChannelInsights, { type ChannelKpi, type ChannelPostRow } from "./ChannelInsights";
 import CompareBar from "./CompareBar";
+import Messages from "./Messages";
+import Stories from "./Stories";
+import PromotedContent from "./PromotedContent";
 
 export type PortfolioTab = "instagram" | "facebook";
+export type IgView = "insights" | "messages" | "stories" | "promoted";
 
 type Scenario = "good" | "poor";
 
@@ -64,9 +69,11 @@ export type PortfolioTabsProps = {
   fb: FbPageInsights;
   activeTab: PortfolioTab;
   onTabChange: (tab: PortfolioTab) => void;
+  igView: IgView;
+  onIgViewChange: (v: IgView) => void;
 };
 
-export default function PortfolioTabs({ ig, fb, activeTab, onTabChange }: PortfolioTabsProps) {
+export default function PortfolioTabs({ ig, fb, activeTab, onTabChange, igView, onIgViewChange }: PortfolioTabsProps) {
   const [igScenario, setIgScenario] = useState<Scenario>("good");
   const [fbScenario, setFbScenario] = useState<Scenario>("good");
 
@@ -95,22 +102,104 @@ export default function PortfolioTabs({ ig, fb, activeTab, onTabChange }: Portfo
         onJumpFacebook={() => onTabChange("facebook")}
       />
 
-      <div className="seg" role="tablist" aria-label="채널 선택">
-        <button type="button" role="tab" aria-selected={activeTab === "instagram"} className={activeTab === "instagram" ? "on" : ""} onClick={() => onTabChange("instagram")}>Instagram</button>
-        <button type="button" role="tab" aria-selected={activeTab === "facebook"} className={activeTab === "facebook" ? "on" : ""} onClick={() => onTabChange("facebook")}>Facebook</button>
+      <div className="inline-flex gap-0.5 p-[3px] bg-[var(--w-bg-alternative)] rounded-[10px]" role="tablist" aria-label="채널 선택">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === "instagram"}
+          onClick={() => onTabChange("instagram")}
+          className={cn(
+            "border-none px-3.5 py-2 rounded-lg font-semibold text-[12.5px] leading-none cursor-pointer transition-[background,color] duration-[120ms]",
+            activeTab === "instagram"
+              ? "bg-[var(--w-bg-elevated)] text-[var(--w-fg-strong)] shadow-[0_1px_2px_rgba(23,23,23,0.08)]"
+              : "bg-transparent text-[var(--w-fg-neutral)]"
+          )}
+        >Instagram</button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === "facebook"}
+          onClick={() => onTabChange("facebook")}
+          className={cn(
+            "border-none px-3.5 py-2 rounded-lg font-semibold text-[12.5px] leading-none cursor-pointer transition-[background,color] duration-[120ms]",
+            activeTab === "facebook"
+              ? "bg-[var(--w-bg-elevated)] text-[var(--w-fg-strong)] shadow-[0_1px_2px_rgba(23,23,23,0.08)]"
+              : "bg-transparent text-[var(--w-fg-neutral)]"
+          )}
+        >Facebook</button>
       </div>
 
       {activeTab === "instagram" ? (
-        <ChannelInsights
-          channel="instagram"
-          kpis={igKpis(igData)}
-          posts={igPosts(igData)}
-          accountHandle={igData.igUsername}
-          isMock={igData.mock}
-          scenario={igScenario}
-          onScenarioChange={ig.mock ? setIgScenario : undefined}
-          suggestions={igSuggestions}
-        />
+        <>
+          <div className="inline-flex gap-0.5 p-[3px] bg-[var(--w-bg-alternative)] rounded-[10px]" role="tablist" aria-label="Instagram 보기 전환">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={igView === "insights"}
+              onClick={() => onIgViewChange("insights")}
+              className={cn(
+                "border-none px-3.5 py-2 rounded-lg font-semibold text-[12.5px] leading-none cursor-pointer transition-[background,color] duration-[120ms]",
+                igView === "insights"
+                  ? "bg-[var(--w-bg-elevated)] text-[var(--w-fg-strong)] shadow-[0_1px_2px_rgba(23,23,23,0.08)]"
+                  : "bg-transparent text-[var(--w-fg-neutral)]"
+              )}
+            >인사이트</button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={igView === "messages"}
+              onClick={() => onIgViewChange("messages")}
+              className={cn(
+                "border-none px-3.5 py-2 rounded-lg font-semibold text-[12.5px] leading-none cursor-pointer transition-[background,color] duration-[120ms]",
+                igView === "messages"
+                  ? "bg-[var(--w-bg-elevated)] text-[var(--w-fg-strong)] shadow-[0_1px_2px_rgba(23,23,23,0.08)]"
+                  : "bg-transparent text-[var(--w-fg-neutral)]"
+              )}
+            >메시지</button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={igView === "stories"}
+              onClick={() => onIgViewChange("stories")}
+              className={cn(
+                "border-none px-3.5 py-2 rounded-lg font-semibold text-[12.5px] leading-none cursor-pointer transition-[background,color] duration-[120ms]",
+                igView === "stories"
+                  ? "bg-[var(--w-bg-elevated)] text-[var(--w-fg-strong)] shadow-[0_1px_2px_rgba(23,23,23,0.08)]"
+                  : "bg-transparent text-[var(--w-fg-neutral)]"
+              )}
+            >스토리</button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={igView === "promoted"}
+              onClick={() => onIgViewChange("promoted")}
+              className={cn(
+                "border-none px-3.5 py-2 rounded-lg font-semibold text-[12.5px] leading-none cursor-pointer transition-[background,color] duration-[120ms]",
+                igView === "promoted"
+                  ? "bg-[var(--w-bg-elevated)] text-[var(--w-fg-strong)] shadow-[0_1px_2px_rgba(23,23,23,0.08)]"
+                  : "bg-transparent text-[var(--w-fg-neutral)]"
+              )}
+            >콘텐츠 홍보</button>
+          </div>
+          {igView === "insights" ? (
+            <ChannelInsights
+              channel="instagram"
+              kpis={igKpis(igData)}
+              posts={igPosts(igData)}
+              accountHandle={igData.igUsername}
+              isMock={igData.mock}
+              scenario={igScenario}
+              onScenarioChange={ig.mock ? setIgScenario : undefined}
+              suggestions={igSuggestions}
+            />
+          ) : igView === "messages" ? (
+            <Messages />
+          ) : igView === "promoted" ? (
+            <PromotedContent />
+          ) : (
+            <Stories />
+          )}
+        </>
       ) : (
         <ChannelInsights
           channel="facebook"

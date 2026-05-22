@@ -732,6 +732,27 @@ export const metaAds = {
     }
   },
 
+  async getCampaignBrief(campaignId: string, token: string): Promise<{
+    name: string;
+    headline: string;
+    objective: string;
+    status: CampaignStatusBucket;
+  } | null> {
+    try {
+      const data = await graphFetch<RawCampaign>(
+        `/${campaignId}?fields=id,name,effective_status,objective,stop_time&access_token=${token}`
+      )
+      return {
+        name: data.name,
+        headline: stripHeadline(data.name),
+        objective: data.objective ?? 'OUTCOME_TRAFFIC',
+        status: mapCampaignStatus(data.effective_status, data.stop_time),
+      }
+    } catch {
+      return null
+    }
+  },
+
   async listAdsForPolling(token: string, accountId: string): Promise<AdSnapshot[]> {
     const fields = encodeURIComponent('id,name,effective_status,issues_info{error_message,error_summary},campaign{id}')
     const filtering = encodeURIComponent(JSON.stringify([{
@@ -1084,5 +1105,83 @@ export const metaAds = {
     })
 
     return { newCreativeId: newCreative.id }
+  },
+
+  async boostPost(
+    params: {
+      igMediaId: string; igUserId: string; dailyBudget: number; startDate: string; endDate: string
+      ageMin: number; ageMax: number; genders?: number[]; countries: string[]
+      status: 'ACTIVE' | 'PAUSED'; pageId: string
+      boostGoal?: 'engagement' | 'profile' | 'website' | 'message'
+      landingUrl?: string
+    },
+    token: string, accountId: string, pageId: string,
+  ): Promise<CampaignResult> {
+    const { igMediaId, igUserId, dailyBudget, startDate, endDate, ageMin, ageMax, genders, countries, status, boostGoal = 'engagement', landingUrl } = params
+
+    const BOOST_GOAL_MAP: Record<string, { optimizationGoal: string; destinationType?: string }> = {
+      engagement: { optimizationGoal: 'POST_ENGAGEMENT' },
+      profile:    { optimizationGoal: 'PROFILE_VISIT' },
+      website:    { optimizationGoal: 'LINK_CLICKS', destinationType: 'WEBSITE' },
+      message:    { optimizationGoal: 'CONVERSATIONS' },
+    }
+    const { optimizationGoal, destinationType } = BOOST_GOAL_MAP[boostGoal] ?? BOOST_GOAL_MAP.engagement
+
+    const campaign = await graphFetch<{ id: string }>(`/act_${accountId}/campaigns`, {
+      method: 'POST',
+      body: JSON.stringify({
+        objective: 'OUTCOME_ENGAGEMENT',
+        name: `AdFlow Boost — ${igMediaId}`,
+        status,
+        special_ad_categories: [],
+        access_token: token,
+      }),
+    })
+
+    const adSet = await graphFetch<{ id: string }>(`/act_${accountId}/adsets`, {
+      method: 'POST',
+      body: JSON.stringify({
+        campaign_id: campaign.id,
+        name: `AdFlow Boost AdSet — ${igMediaId}`,
+        optimization_goal: optimizationGoal,
+        ...(destinationType ? { destination_type: destinationType } : {}),
+        billing_event: 'IMPRESSIONS',
+        daily_budget: dailyBudget,
+        start_time: new Date(`${startDate}T00:00:00+09:00`).toISOString(),
+        end_time: new Date(`${endDate}T23:59:59+09:00`).toISOString(),
+        targeting: {
+          age_min: ageMin,
+          age_max: ageMax,
+          ...(genders?.length ? { genders } : {}),
+          geo_locations: { countries },
+        },
+        promoted_object: { page_id: pageId, instagram_media_id: igMediaId },
+        status,
+        access_token: token,
+      }),
+    })
+
+    const creative = await graphFetch<{ id: string }>(`/act_${accountId}/adcreatives`, {
+      method: 'POST',
+      body: JSON.stringify({
+        name: `AdFlow Boost Creative — ${igMediaId}`,
+        object_story_id: `${igUserId}_${igMediaId}`,
+        ...(boostGoal === 'website' && landingUrl ? { object_story_spec: undefined, link_url: landingUrl } : {}),
+        access_token: token,
+      }),
+    })
+
+    const ad = await graphFetch<{ id: string }>(`/act_${accountId}/ads`, {
+      method: 'POST',
+      body: JSON.stringify({
+        name: `AdFlow Boost Ad — ${igMediaId}`,
+        adset_id: adSet.id,
+        creative: { creative_id: creative.id },
+        status,
+        access_token: token,
+      }),
+    })
+
+    return { campaignId: campaign.id, adSetId: adSet.id, adId: ad.id }
   },
 }

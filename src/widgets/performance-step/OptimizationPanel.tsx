@@ -3,6 +3,8 @@
 // 최적화 제안 + 자동화 준비도 패널 (active 상태) / 일시정지 카드 (paused 상태).
 
 import Icon, { type IconName } from "@shared/ui/Icon";
+import { Card } from "@shared/ui/Card";
+import { Button } from "@shared/ui/Button";
 import { Badge } from "@shared/ui/primitives";
 import { fmtKRW } from "@shared/lib/format";
 import { type Suggestion, type AutomationReadiness } from "@entities/insights/optimization";
@@ -40,65 +42,65 @@ function OptCard({ icon, good, title, lines, children }: { icon: IconName; good:
 export default function OptimizationPanel({ isPaused, suggestions, readiness, dailyBudget, exampleMode, busy, onPause, onResume, onIncreaseBudget, onRestart }: Props) {
   if (isPaused) {
     return (
-      <div className="card" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        <div style={{ font: "700 15px/1.3 var(--w-font-sans)", color: "var(--w-fg-strong)" }}>이 광고는 일시정지 상태예요</div>
-        <p style={{ font: "500 13px/1.6 var(--w-font-sans)", color: "var(--w-fg-neutral)", margin: 0 }}>
+      <Card className="flex flex-col gap-2.5">
+        <div className="font-bold text-[15px] leading-[1.3] text-[var(--w-fg-strong)]">이 광고는 일시정지 상태예요</div>
+        <p className="font-medium text-[13px] leading-[1.6] text-[var(--w-fg-neutral)] m-0">
           다시 게재하려면 재개하거나, 성과가 부진했다면 새 소재로 다시 만드는 걸 권해요. Meta 광고 관리자에서 외부로 상태가 바뀌었다면 새로고침 후 다시 확인해주세요.
         </p>
-        <div style={{ display: "flex", gap: 8, marginTop: 4, flexWrap: "wrap" }}>
-          <button className="btn btn--primary btn--sm" type="button" disabled={busy} onClick={onResume}>{busy ? "처리 중…" : "광고 재개"}</button>
-          <button className="btn btn--ghost btn--sm" type="button" onClick={onRestart}>새 소재로 다시 만들기</button>
+        <div className="flex gap-2 mt-1 flex-wrap">
+          <Button variant="primary" size="sm" disabled={busy} onClick={onResume}>{busy ? "처리 중…" : "광고 재개"}</Button>
+          <Button variant="ghost" size="sm" onClick={onRestart}>새 소재로 다시 만들기</Button>
         </div>
-      </div>
+      </Card>
     );
   }
 
   const lockTitle = exampleMode ? "광고를 집행하면 활성화돼요" : undefined;
 
   return (
-    <div className="card" style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: 24, alignItems: "flex-start" }}>
+    <Card className="grid grid-cols-[1.2fr_1fr] gap-6 items-start">
       <div>
-        <h3 className="section-title">최적화 제안</h3>
-        <p className="section-sub">제안은 직접 확인 후 적용해요. 자동으로 바뀌지 않아요.</p>
-        <hr className="divider" />
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        <h3 className="m-0 font-bold text-[17px] leading-[1.3] tracking-[-0.012em] text-[var(--w-fg-strong)]">최적화 제안</h3>
+        <p className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)] mt-1 mb-0">제안은 직접 확인 후 적용해요. 자동으로 바뀌지 않아요.</p>
+        <hr className="h-px bg-[var(--w-line-neutral)] my-[18px] border-0" />
+        <div className="flex flex-col gap-3">
           {suggestions.length === 0
-            ? <p className="field__hint">지금은 특별히 권할 조정이 없어요. 데이터가 더 쌓이면 다시 살펴볼게요.</p>
+            ? <p className="font-medium text-[12px] leading-[1.5] tracking-[0.008em] text-[var(--w-fg-neutral)]">지금은 특별히 권할 조정이 없어요. 데이터가 더 쌓이면 다시 살펴볼게요.</p>
             : suggestions.map((s, i) => {
                 const warn = s.severity === "warn";
                 return (
                   <OptCard key={i} icon={warn ? "warn" : "trend-up"} good={!warn} title={s.title} lines={s.detail}>
                     {s.kind === "pause" && (
-                      <button className="btn btn--primary btn--sm" type="button" disabled={exampleMode || busy} title={lockTitle} onClick={onPause}>{busy ? "처리 중…" : "제안 집행하기"}</button>
+                      <Button variant="primary" size="sm" disabled={exampleMode || busy} title={lockTitle} onClick={onPause}>{busy ? "처리 중…" : "제안 집행하기"}</Button>
                     )}
                     {s.kind === "increase-budget" && (
-                      <button className="btn btn--primary btn--sm" type="button" disabled={exampleMode || busy} title={lockTitle} onClick={() => onIncreaseBudget(s.toDailyBudget)}>{busy ? "처리 중…" : "제안 집행하기"}</button>
+                      <Button variant="primary" size="sm" disabled={exampleMode || busy} title={lockTitle} onClick={() => onIncreaseBudget(s.toDailyBudget)}>{busy ? "처리 중…" : "제안 집행하기"}</Button>
                     )}
                   </OptCard>
                 );
               })}
         </div>
-        <div className="field__hint" style={{ marginTop: 12 }}>현재 일일예산은 {fmtKRW(dailyBudget)} 이에요.</div>
+        <div className="font-medium text-[12px] leading-[1.5] tracking-[0.008em] text-[var(--w-fg-neutral)] mt-3">현재 일일예산은 {fmtKRW(dailyBudget)} 이에요.</div>
       </div>
       <div>
-        <h3 className="section-title">자동화 준비도</h3>
-        <p className="section-sub">충분한 데이터가 쌓이면 AI가 자동으로 광고를 운영할 수 있어요.</p>
-        <hr className="divider" />
+        <h3 className="m-0 font-bold text-[17px] leading-[1.3] tracking-[-0.012em] text-[var(--w-fg-strong)]">자동화 준비도</h3>
+        <p className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)] mt-1 mb-0">충분한 데이터가 쌓이면 AI가 자동으로 광고를 운영할 수 있어요.</p>
+        <hr className="h-px bg-[var(--w-line-neutral)] my-[18px] border-0" />
         {readiness.ready ? (
-          <div style={{ background: "rgba(0,191,64,0.06)", border: "1px solid rgba(0,191,64,0.20)", borderRadius: 12, padding: 18 }}>
+          <div className="bg-[rgba(0,191,64,0.06)] border border-[rgba(0,191,64,0.20)] rounded-xl p-[18px]">
             <Badge kind="success" dot live>자동화 준비 완료</Badge>
-            <div style={{ font: "700 16px/1.3 var(--w-font-sans)", color: "var(--w-fg-strong)", marginTop: 10 }}>AI 자동 운영을 켤 수 있어요</div>
-            <p style={{ font: "500 13px/1.55 var(--w-font-sans)", color: "var(--w-fg-neutral)", margin: "8px 0 14px" }}>{readiness.reason}</p>
-            <button className="btn btn--primary btn--sm" type="button" disabled title="자동 실행 환경 연동 후 활성화돼요">자동화 켜기 (연동 준비 중)</button>
+            <div className="font-bold text-[16px] leading-[1.3] text-[var(--w-fg-strong)] mt-2.5">AI 자동 운영을 켤 수 있어요</div>
+            <p className="font-medium text-[13px] leading-[1.55] text-[var(--w-fg-neutral)] mt-2 mb-3.5">{readiness.reason}</p>
+            <Button variant="primary" size="sm" disabled title="자동 실행 환경 연동 후 활성화돼요">자동화 켜기 (연동 준비 중)</Button>
           </div>
         ) : (
-          <div style={{ background: "var(--w-bg-alternative)", borderRadius: 12, padding: 18 }}>
+          <div className="bg-[var(--w-bg-alternative)] rounded-xl p-[18px]">
             <Badge kind="warn" dot>아직 준비 중</Badge>
-            <div style={{ font: "700 16px/1.3 var(--w-font-sans)", color: "var(--w-fg-strong)", marginTop: 10 }}>아직 자동화를 맡기기엔 지표가 아쉬워요</div>
-            <p style={{ font: "500 13px/1.55 var(--w-font-sans)", color: "var(--w-fg-neutral)", margin: "8px 0 0" }}>부족: {readiness.reason}. 데이터가 더 쌓이면 자동화를 제안해드릴게요.</p>
+            <div className="font-bold text-[16px] leading-[1.3] text-[var(--w-fg-strong)] mt-2.5">아직 자동화를 맡기기엔 지표가 아쉬워요</div>
+            <p className="font-medium text-[13px] leading-[1.55] text-[var(--w-fg-neutral)] mt-2 mb-0">부족: {readiness.reason}. 데이터가 더 쌓이면 자동화를 제안해드릴게요.</p>
           </div>
         )}
       </div>
-    </div>
+    </Card>
   );
 }

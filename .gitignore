@@ -48,5 +48,7 @@ next-env.d.ts
 
 # adflow local secrets (Meta 자격증명 암호화 저장)
 .adflow/
+# /posts 업로드 — IG Graph 가 가져갈 임시 호스팅
+/public/uploads/
 # axhub quality state (local-only)
 .axhub-state/

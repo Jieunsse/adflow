@@ -114,7 +114,7 @@ export async function debugInstagramInsights(
     const accountRes = await fetch(`${GRAPH}/${igUserId}?fields=followers_count,username&access_token=${pageToken}`)
     debug.accountStatus = accountRes.status
     debug.accountBody = await accountRes.json()
-    const insightsRes = await fetch(`${GRAPH}/${igUserId}/insights?metric=reach,profile_views&period=days_28&access_token=${pageToken}`)
+    const insightsRes = await fetch(`${GRAPH}/${igUserId}/insights?metric=reach&period=days_28&access_token=${pageToken}`)
     debug.insightsStatus = insightsRes.status
     debug.insightsBody = await insightsRes.json()
     const mediaRes = await fetch(`${GRAPH}/${igUserId}/media?fields=id,caption,media_url,thumbnail_url,like_count,comments_count,timestamp&limit=5&access_token=${pageToken}`)
@@ -126,11 +126,83 @@ export async function debugInstagramInsights(
   return debug
 }
 
+async function fetchMediaInsights(mediaId: string, token: string): Promise<{ saved: number; reach: number }> {
+  try {
+    const res = await fetch(`${GRAPH}/${mediaId}/insights?metric=saved,reach&access_token=${token}`)
+    if (!res.ok) return { saved: 0, reach: 0 }
+    const body = await res.json() as { data?: Array<{ name: string; values: Array<{ value: number }> }> }
+    const pick = (name: string) => body.data?.find(d => d.name === name)?.values[0]?.value ?? 0
+    return { saved: pick("saved"), reach: pick("reach") }
+  } catch {
+    return { saved: 0, reach: 0 }
+  }
+}
+
+async function fetchInsightsWithToken(igUserId: string, token: string): Promise<IgAccountInsights> {
+  // profile_views 는 v22+ 부터 metric_type=total_value 필수. reach 는 기존 period 기반.
+  const [accountRes, reachRes, profileViewsRes, mediaRes] = await Promise.all([
+    fetch(`${GRAPH}/${igUserId}?fields=followers_count,username&access_token=${token}`),
+    fetch(`${GRAPH}/${igUserId}/insights?metric=reach&period=days_28&access_token=${token}`),
+    fetch(`${GRAPH}/${igUserId}/insights?metric=profile_views&metric_type=total_value&period=day&access_token=${token}`),
+    fetch(`${GRAPH}/${igUserId}/media?fields=id,caption,media_url,thumbnail_url,like_count,comments_count,timestamp&limit=5&access_token=${token}`),
+  ])
+
+  // account 가 실패하면 IG 계정 식별 자체가 안 된 거라 mock 으로 떨어뜨림.
+  if (!accountRes.ok) return IG_MOCK_GOOD
+
+  const account = await accountRes.json() as { followers_count?: number; username?: string }
+  const reachData = await reachRes.json() as {
+    data?: Array<{ name: string; values: Array<{ value: number }> }>
+  }
+  const profileViewsData = await profileViewsRes.json() as {
+    data?: Array<{ name: string; total_value?: { value: number } }>
+  }
+  const mediaData = await mediaRes.json() as {
+    data?: Array<{
+      id: string; caption?: string; media_url?: string; thumbnail_url?: string
+      like_count?: number; comments_count?: number; timestamp?: string
+    }>
+  }
+
+  const reach = reachData.data?.find(d => d.name === "reach")?.values.reduce((s, v) => s + v.value, 0) ?? 0
+  const profileViews = profileViewsData.data?.find(d => d.name === "profile_views")?.total_value?.value ?? 0
+  const followers = account.followers_count ?? 0
+
+  const rawMedia = mediaData.data ?? []
+  const mediaInsights = await Promise.all(rawMedia.map(m => fetchMediaInsights(m.id, token)))
+  const posts: IgPost[] = rawMedia.map((m, i) => ({
+    id: m.id,
+    mediaUrl: m.thumbnail_url ?? m.media_url ?? "",
+    caption: m.caption ?? "",
+    likeCount: m.like_count ?? 0,
+    commentCount: m.comments_count ?? 0,
+    savedCount: mediaInsights[i].saved,
+    timestamp: m.timestamp ?? "",
+  }))
+
+  const totalEngagement = posts.reduce((s, p) => s + p.likeCount + p.commentCount + p.savedCount, 0)
+  const engagementRate = followers > 0 && posts.length > 0
+    ? Number(((totalEngagement / posts.length / followers) * 100).toFixed(1))
+    : 0
+
+  return { followers, reach, profileViews, engagementRate, igUsername: account.username, posts, mock: false }
+}
+
 export async function getInstagramInsights(
   pageId: string | undefined,
   userToken: string | undefined,
   igUserIdHint?: string,
+  igAccessToken?: string,
 ): Promise<IgAccountInsights> {
+  // Instagram Business Login 토큰이 있으면 page token 없이 직접 호출
+  if (igAccessToken && igUserIdHint) {
+    try {
+      return await fetchInsightsWithToken(igUserIdHint, igAccessToken)
+    } catch {
+      return IG_MOCK_GOOD
+    }
+  }
+
   if (!pageId || !userToken) return IG_MOCK_GOOD
   try {
     const pageToken = await getPageToken(pageId, userToken)
@@ -139,46 +211,7 @@ export async function getInstagramInsights(
     const igUserId = igUserIdHint || (await getIgUserId(pageId, pageToken))
     if (!igUserId) return IG_MOCK_GOOD
 
-    const [accountRes, insightsRes, mediaRes] = await Promise.all([
-      fetch(`${GRAPH}/${igUserId}?fields=followers_count,username&access_token=${pageToken}`),
-      fetch(`${GRAPH}/${igUserId}/insights?metric=reach,profile_views&period=days_28&access_token=${pageToken}`),
-      fetch(`${GRAPH}/${igUserId}/media?fields=id,caption,media_url,thumbnail_url,like_count,comments_count,timestamp&limit=5&access_token=${pageToken}`),
-    ])
-
-    // account 가 실패하면 IG 계정 식별 자체가 안 된 거라 mock 으로 떨어뜨림. media/insights 만 실패는 부분 데이터 유지 (followers·username 은 실데이터).
-    if (!accountRes.ok) return IG_MOCK_GOOD
-
-    const account = await accountRes.json() as { followers_count?: number; username?: string }
-    const insightsData = await insightsRes.json() as {
-      data?: Array<{ name: string; values: Array<{ value: number }> }>
-    }
-    const mediaData = await mediaRes.json() as {
-      data?: Array<{
-        id: string; caption?: string; media_url?: string; thumbnail_url?: string
-        like_count?: number; comments_count?: number; timestamp?: string
-      }>
-    }
-
-    const reach = insightsData.data?.find(d => d.name === "reach")?.values.reduce((s, v) => s + v.value, 0) ?? 0
-    const profileViews = insightsData.data?.find(d => d.name === "profile_views")?.values.reduce((s, v) => s + v.value, 0) ?? 0
-    const followers = account.followers_count ?? 0
-
-    const posts: IgPost[] = (mediaData.data ?? []).map(m => ({
-      id: m.id,
-      mediaUrl: m.thumbnail_url ?? m.media_url ?? "",
-      caption: m.caption ?? "",
-      likeCount: m.like_count ?? 0,
-      commentCount: m.comments_count ?? 0,
-      savedCount: 0,
-      timestamp: m.timestamp ?? "",
-    }))
-
-    const totalEngagement = posts.reduce((s, p) => s + p.likeCount + p.commentCount + p.savedCount, 0)
-    const engagementRate = followers > 0 && posts.length > 0
-      ? Number(((totalEngagement / posts.length / followers) * 100).toFixed(1))
-      : 0
-
-    return { followers, reach, profileViews, engagementRate, igUsername: account.username, posts, mock: false }
+    return await fetchInsightsWithToken(igUserId, pageToken)
   } catch {
     return IG_MOCK_GOOD
   }

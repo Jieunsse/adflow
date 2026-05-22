@@ -1,5 +1,6 @@
 "use client";
 
+import { cn } from "@shared/lib/cn";
 import Icon from "@shared/ui/Icon";
 import { useLaunchDraft } from "@entities/campaign/model";
 
@@ -31,113 +32,91 @@ export default function ModeToggle() {
   };
 
   return (
-    <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
-        {MODES.map((m) => {
-          const selected = state.mode === m.id;
-          return (
-            <button
-              key={m.id}
-              type="button"
-              onClick={() => handleSwitch(m.id)}
-              style={{
-                flex: 1,
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "flex-start",
-                gap: 0,
-                padding: "16px 18px",
-                borderRadius: "var(--w-radius-16)",
-                border: `2px solid ${selected ? "var(--w-accent-violet)" : "var(--w-line-normal)"}`,
-                background: selected ? "var(--w-accent-violet-soft)" : "var(--w-bg-elevated)",
-                cursor: "pointer",
-                textAlign: "left",
-                transition: "border-color 0.15s, background 0.15s",
-                boxShadow: selected ? "none" : "var(--w-shadow-card)",
-              }}
-              aria-pressed={selected}
-            >
-              {/* 헤더 행 */}
-              <div style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", marginBottom: 10 }}>
-                {/* 아이콘 pill */}
-                <span style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  width: 34,
-                  height: 34,
-                  borderRadius: "var(--w-radius-8)",
-                  background: selected ? "rgba(101,65,242,0.14)" : "var(--w-bg-alternative)",
-                  flexShrink: 0,
-                }}>
-                  <Icon name={m.icon} size={16} style={{ color: selected ? "var(--w-accent-violet)" : "var(--w-fg-neutral)" }} />
-                </span>
+    <div className="flex gap-2.5 mb-4">
+      {MODES.map((m) => {
+        const selected = state.mode === m.id;
+        return (
+          <button
+            key={m.id}
+            type="button"
+            onClick={() => handleSwitch(m.id)}
+            className={cn(
+              "flex-1 flex flex-col items-start gap-0 p-[16px_18px] rounded-[var(--w-radius-16)] cursor-pointer text-left transition-[border-color,background] duration-[150ms]",
+              selected
+                ? "border-2 border-[var(--w-accent-violet)] bg-[var(--w-accent-violet-soft)] shadow-none"
+                : "border-2 border-[var(--w-line-normal)] bg-[var(--w-bg-elevated)] shadow-[var(--w-shadow-card)]"
+            )}
+            aria-pressed={selected}
+          >
+            <div className="flex items-center gap-2.5 w-full mb-2.5">
+              <span className={cn(
+                "inline-flex items-center justify-center w-[34px] h-[34px] rounded-[var(--w-radius-8)] shrink-0",
+                selected ? "bg-[rgba(101,65,242,0.14)]" : "bg-[var(--w-bg-alternative)]"
+              )}>
+                <Icon name={m.icon} size={16} style={{ color: selected ? "var(--w-accent-violet)" : "var(--w-fg-neutral)" }} />
+              </span>
 
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <span style={{
-                      font: `700 15px/1.25 var(--w-font-sans)`,
-                      letterSpacing: "var(--w-tracking-heading)",
-                      color: selected ? "var(--w-accent-violet)" : "var(--w-fg-strong)",
-                    }}>
-                      {m.label}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <span className={cn(
+                    "font-bold text-[15px] leading-[1.25] tracking-[var(--w-tracking-heading)]",
+                    selected ? "text-[var(--w-accent-violet)]" : "text-[var(--w-fg-strong)]"
+                  )}>
+                    {m.label}
+                  </span>
+                  {m.badge && (
+                    <span className="bg-[var(--w-accent-violet-soft)] text-[var(--w-accent-violet)] text-[10px] font-semibold px-[7px] py-[2px] rounded-[var(--w-radius-pill)] tracking-[0.02em]">
+                      {m.badge}
                     </span>
-                    {m.badge && (
-                      <span className="badge--violet" style={{ fontSize: 10, fontWeight: 600, padding: "2px 7px", borderRadius: "var(--w-radius-pill)", letterSpacing: "0.02em" }}>
-                        {m.badge}
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                {/* 선택 인디케이터 */}
-                <span style={{
-                  width: 18,
-                  height: 18,
-                  borderRadius: "50%",
-                  border: `2px solid ${selected ? "var(--w-accent-violet)" : "var(--w-line-normal)"}`,
-                  background: selected ? "var(--w-accent-violet)" : "transparent",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexShrink: 0,
-                  transition: "border-color 0.15s, background 0.15s",
-                }}>
-                  {selected && (
-                    <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
-                      <path d="M1 4l2.5 2.5L9 1" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
                   )}
-                </span>
+                </div>
               </div>
 
-              {/* 설명 */}
-              <p style={{ margin: "0 0 10px", font: "500 13px/1.5 var(--w-font-sans)", color: selected ? "var(--w-fg-neutral)" : "var(--w-fg-normal)", letterSpacing: "var(--w-tracking-body)" }}>
-                {m.desc}
-              </p>
+              <span className={cn(
+                "w-[18px] h-[18px] rounded-full inline-flex items-center justify-center shrink-0 transition-[border-color,background] duration-[150ms]",
+                selected
+                  ? "border-2 border-[var(--w-accent-violet)] bg-[var(--w-accent-violet)]"
+                  : "border-2 border-[var(--w-line-normal)] bg-transparent"
+              )}>
+                {selected && (
+                  <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                    <path d="M1 4l2.5 2.5L9 1" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                )}
+              </span>
+            </div>
 
-              {/* 구분선 */}
-              <div style={{ width: "100%", height: 1, background: selected ? "rgba(101,65,242,0.15)" : "var(--w-line-alternative)", marginBottom: 10 }} />
+            <p className={cn(
+              "m-0 mb-2.5 font-medium text-[13px] leading-[1.5] tracking-[var(--w-tracking-body)]",
+              selected ? "text-[var(--w-fg-neutral)]" : "text-[var(--w-fg-normal)]"
+            )}>
+              {m.desc}
+            </p>
 
-              {/* 불릿 */}
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                {m.bullets.map((b) => (
-                  <div key={b} style={{ display: "flex", alignItems: "center", gap: 7 }}>
-                    <span style={{
-                      width: 5,
-                      height: 5,
-                      borderRadius: "50%",
-                      background: selected ? "var(--w-accent-violet)" : "var(--w-fg-neutral)",
-                      flexShrink: 0,
-                    }} />
-                    <span style={{ font: "500 12px/1.4 var(--w-font-sans)", color: selected ? "rgba(101,65,242,0.75)" : "var(--w-fg-normal)", letterSpacing: "var(--w-tracking-caption)" }}>
-                      {b}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </button>
-          );
-        })}
+            <div className={cn(
+              "w-full h-px mb-2.5",
+              selected ? "bg-[rgba(101,65,242,0.15)]" : "bg-[var(--w-line-alternative)]"
+            )} />
+
+            <div className="flex flex-col gap-1.5">
+              {m.bullets.map((b) => (
+                <div key={b} className="flex items-center gap-[7px]">
+                  <span className={cn(
+                    "w-[5px] h-[5px] rounded-full shrink-0",
+                    selected ? "bg-[var(--w-accent-violet)]" : "bg-[var(--w-fg-neutral)]"
+                  )} />
+                  <span className={cn(
+                    "font-medium text-[12px] leading-[1.4] tracking-[var(--w-tracking-caption)]",
+                    selected ? "text-[rgba(101,65,242,0.75)]" : "text-[var(--w-fg-normal)]"
+                  )}>
+                    {b}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </button>
+        );
+      })}
     </div>
   );
 }

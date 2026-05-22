@@ -6,6 +6,9 @@
 import { useEffect, useState } from "react";
 import Icon from "@shared/ui/Icon";
 import { Badge } from "@shared/ui/primitives";
+import { Button } from "@shared/ui/Button";
+import { Skeleton } from "@shared/ui/Skeleton";
+import { cn } from "@shared/lib/cn";
 import { useApiMutation } from "@shared/lib/api/useApiMutation";
 import { useSessionStorage } from "@shared/lib/storage/useSessionStorage";
 import type { GenerateImageParams, ReferenceImage } from "@/lib/gemini-image";
@@ -213,16 +216,43 @@ export default function AiImageBlock({
   };
 
   return (
-    <div className="field" style={{ marginBottom: 18, paddingTop: 4 }}>
-      <label className="field__label" style={{ alignItems: "center" }}>
+    <div className="flex flex-col gap-2" style={{ marginBottom: 18, paddingTop: 4 }}>
+      <label className="font-semibold text-[15px] leading-[1.3] tracking-[-0.008em] text-[var(--w-fg-strong)] flex items-center gap-1.5">
         AI 이미지 생성 <Badge kind="neutral">실험</Badge>
       </label>
 
-      <div className="seg" role="tablist" aria-label="AI 이미지 생성 방식" style={{ marginBottom: 10 }}>
-        <button type="button" className={mode === "free" ? "on" : ""} onClick={() => setMode("free")} role="tab" aria-selected={mode === "free"}>
+      <div
+        className="inline-flex gap-0.5 p-[3px] bg-[var(--w-bg-alternative)] rounded-[10px]"
+        role="tablist"
+        aria-label="AI 이미지 생성 방식"
+        style={{ marginBottom: 10 }}
+      >
+        <button
+          type="button"
+          className={cn(
+            "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] font-semibold text-[12.5px] leading-none transition-[background,color] duration-[120ms] cursor-pointer",
+            mode === "free"
+              ? "bg-[var(--w-bg-elevated)] text-[var(--w-fg-strong)] shadow-sm"
+              : "text-[var(--w-fg-neutral)] hover:text-[var(--w-fg-strong)]"
+          )}
+          onClick={() => setMode("free")}
+          role="tab"
+          aria-selected={mode === "free"}
+        >
           <Icon name="sparkles" size={13} /> AI 프롬프트 제안받기
         </button>
-        <button type="button" className={mode === "brief" ? "on" : ""} onClick={() => setMode("brief")} role="tab" aria-selected={mode === "brief"}>
+        <button
+          type="button"
+          className={cn(
+            "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] font-semibold text-[12.5px] leading-none transition-[background,color] duration-[120ms] cursor-pointer",
+            mode === "brief"
+              ? "bg-[var(--w-bg-elevated)] text-[var(--w-fg-strong)] shadow-sm"
+              : "text-[var(--w-fg-neutral)] hover:text-[var(--w-fg-strong)]"
+          )}
+          onClick={() => setMode("brief")}
+          role="tab"
+          aria-selected={mode === "brief"}
+        >
           <Icon name="doc" size={13} /> 기획안·자료로 생성하기
         </button>
       </div>
@@ -230,14 +260,20 @@ export default function AiImageBlock({
       {mode === "free" ? (
         <>
           <textarea
-            className="textarea"
+            className="w-full px-[14px] py-3 border border-[var(--w-line-normal)] rounded-xl bg-[var(--w-bg-elevated)] font-medium text-[14px] leading-[1.6] tracking-[0.004em] text-[var(--w-fg-strong)] outline-none transition-[border-color,box-shadow] duration-[120ms] placeholder:text-[var(--w-fg-alternative)] focus:border-[var(--w-primary-normal)] focus:shadow-[0_0_0_4px_rgba(0,102,255,0.14)] resize-y min-h-[88px]"
             aria-label="이미지 프롬프트"
             placeholder="예) 미니멀한 욕실 선반에 놓인 비건 수분크림, 아침 햇살, 파스텔 톤"
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
           />
           <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginTop: 8 }}>
-            <button type="button" className="btn btn--ghost btn--sm" disabled={suggest.isPending || !state.primaryText} onClick={handleSuggest} style={{ borderColor: "var(--w-line-normal)" }}>
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled={suggest.isPending || !state.primaryText}
+              onClick={handleSuggest}
+              className="border border-[var(--w-line-normal)]"
+            >
               <span style={{ display: "inline-grid", alignItems: "center", justifyItems: "center" }}>
                 <span style={{ gridArea: "1 / 1", display: "inline-flex", alignItems: "center", gap: 4, visibility: suggest.isPending ? "hidden" : "visible" }}>
                   <Icon name="sparkles" size={13} /> 카피로 프롬프트 제안받기
@@ -246,17 +282,23 @@ export default function AiImageBlock({
                   <span style={{ gridArea: "1 / 1" }}>제안 중…</span>
                 )}
               </span>
-            </button>
-            <label className="btn btn--ghost btn--sm" style={{ cursor: "pointer", borderColor: "var(--w-line-normal)" }}>
+            </Button>
+            <label className={cn("inline-flex items-center justify-center gap-[5px] border font-semibold leading-none tracking-[-0.002em] whitespace-nowrap", "h-8 px-3 text-[12.5px] rounded-lg", "bg-transparent border-[var(--w-line-normal)] text-[var(--w-fg-strong)] hover:bg-[var(--w-bg-neutral)] cursor-pointer transition-[background,border-color,color,box-shadow] duration-[120ms]")}>
               <Icon name="upload" size={13} /> 레퍼런스 첨부{refs.length > 0 ? ` (${refs.length})` : ""}
               <input type="file" accept="image/*" multiple style={{ display: "none" }} onChange={(e) => handleAddRefs(e.target.files)} />
             </label>
             {refs.length > 0 && (
-              <button type="button" className="btn btn--ghost btn--sm" onClick={() => setRefs([])} style={{ borderColor: "var(--w-line-normal)" }}>비우기</button>
+              <Button variant="ghost" size="sm" onClick={() => setRefs([])} className="border border-[var(--w-line-normal)]">비우기</Button>
             )}
-            <button type="button" className="btn btn--secondary btn--sm" disabled={genPending || emptySlotCount === 0 || (!prompt.trim() && refs.length === 0)} onClick={handleGenerate} style={{ marginLeft: "auto" }}>
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={genPending || emptySlotCount === 0 || (!prompt.trim() && refs.length === 0)}
+              onClick={handleGenerate}
+              style={{ marginLeft: "auto" }}
+            >
               {genPending ? "생성 중…" : "이미지 생성"}
-            </button>
+            </Button>
           </div>
           {refs.length > 0 && (
             <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
@@ -356,7 +398,7 @@ export default function AiImageBlock({
                 );
               }
               if (genPending) {
-                return <div key={`skel-${i}`} className="skel" style={{ aspectRatio: "1 / 1", borderRadius: 8 }} />;
+                return <Skeleton key={`skel-${i}`} style={{ aspectRatio: "1 / 1", borderRadius: 8 }} />;
               }
               return (
                 <div key={`empty-${i}`} style={{ aspectRatio: "1 / 1", borderRadius: 8, border: "1.5px dashed var(--w-line-normal)", background: "var(--w-bg-alternative)" }} />

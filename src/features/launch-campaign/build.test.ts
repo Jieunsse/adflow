@@ -29,6 +29,7 @@ const baseLaunch: LaunchState = {
   lookalikeEnabled: false,
   placements: { mode: "auto" },
   autoPauseGuardrailEnabled: false,
+  autoRelaunchEnabled: false,
   abTestEnabled: false,
   abTestAxis: null,
   abTestVariantB: null,

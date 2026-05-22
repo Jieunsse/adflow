@@ -5,6 +5,8 @@
 
 import { useState } from "react";
 import Icon from "@shared/ui/Icon";
+import { Card } from "@shared/ui/Card";
+import { Button } from "@shared/ui/Button";
 import { fmt, fmtKRW } from "@shared/lib/format";
 import type { AbTestAxis } from "@entities/campaign/model";
 import type { AbVerdict } from "@entities/insights/ab-verdict";
@@ -30,20 +32,13 @@ export default function AbTestResultCard({ axis, variantA, variantB, verdict, on
   const [expanded, setExpanded] = useState(false);
 
   return (
-    <div className="card" style={{ marginBottom: 16 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-        <h3 className="section-title">A/B 시험 결과 — {AXIS_LABEL[axis]}</h3>
+    <Card className="mb-4">
+      <div className="flex justify-between items-center mb-3.5">
+        <h3 className="m-0 font-bold text-[17px] leading-[1.3] tracking-[-0.012em] text-[var(--w-fg-strong)]">A/B 시험 결과 — {AXIS_LABEL[axis]}</h3>
         {demoMode && (
           <span
             title="라이브모드 전환 전에는 시뮬레이션 결과입니다"
-            style={{
-              font: "600 11px/1 var(--w-font-sans)",
-              color: "var(--w-fg-neutral)",
-              background: "var(--w-bg-alternative)",
-              padding: "4px 8px",
-              borderRadius: 999,
-              border: "1px solid var(--w-line-alternative)",
-            }}
+            className="font-semibold text-[11px] leading-none text-[var(--w-fg-neutral)] bg-[var(--w-bg-alternative)] px-2 py-1 rounded-full border border-[var(--w-line-alternative)]"
           >
             데모 데이터
           </span>
@@ -63,7 +58,7 @@ export default function AbTestResultCard({ axis, variantA, variantB, verdict, on
           onCreateWithWinner={onCreateWithWinner}
         />
       )}
-    </div>
+    </Card>
   );
 }
 
@@ -139,25 +134,25 @@ function WinnerBody({
         <Panel label="B안" winner={verdict.winner === "B"} axis={axis} variant={variantB} kpi={verdict.b} />
       </div>
 
-      <div className="callout" style={{ background: "var(--w-primary-soft)", padding: 12, borderRadius: 8, marginBottom: 12 }}>
-        <p style={{ font: "600 13px/1.6 var(--w-font-sans)", color: "var(--w-fg-strong)", margin: 0 }}>
+      <div className="flex items-start gap-2.5 px-3 py-3 rounded-lg bg-[var(--w-primary-soft)] mb-3">
+        <p className="font-semibold text-[13px] leading-[1.6] text-[var(--w-fg-strong)] m-0">
           💡 {winnerLabel}이 CTR {ratio}배 더 높아요.
         </p>
-        <p style={{ font: "500 12.5px/1.6 var(--w-font-sans)", color: "var(--w-fg-normal)", margin: "4px 0 0" }}>
+        <p className="font-medium text-[12.5px] leading-[1.6] text-[var(--w-fg-normal)] mt-1 mb-0">
           다음 캠페인을 {winnerLabel} {AXIS_LABEL[axis]}(으)로 만드시겠어요?
           만든 캠페인은 검토 후 직접 집행 버튼을 눌러야 시작돼요.
         </p>
       </div>
 
-      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+      <div className="flex gap-2 flex-wrap">
         {onCreateWithWinner && (
-          <button className="btn btn--primary btn--sm" type="button" onClick={onCreateWithWinner}>
+          <Button variant="primary" size="sm" onClick={onCreateWithWinner}>
             <Icon name="sparkles" size={13} /> {winnerLabel}(으)로 새 캠페인 만들기
-          </button>
+          </Button>
         )}
-        <button className="btn btn--ghost btn--sm" type="button" onClick={() => setExpanded(!expanded)}>
+        <Button variant="ghost" size="sm" onClick={() => setExpanded(!expanded)}>
           {expanded ? "접기" : "상세 보기"} <Icon name="chev-down" size={12} style={{ transform: expanded ? "rotate(180deg)" : undefined, transition: "transform 160ms ease" }} />
-        </button>
+        </Button>
       </div>
 
       {expanded && (

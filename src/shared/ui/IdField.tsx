@@ -28,15 +28,15 @@ export default function IdField({ label, id, desc }: Props) {
   };
 
   return (
-    <div className="id-field">
-      <div className="id-field__row">
-        <span className="id-field__label">{label}</span>
-        <span className="id-field__value">{display}</span>
+    <div className="flex flex-col gap-1.5">
+      <div className="flex items-center gap-2 py-2 px-3 rounded-[10px] border border-[var(--w-line-alternative)] bg-[var(--w-bg-alternative)]">
+        <span className="font-semibold text-[12px] leading-none tracking-[0.008em] text-[var(--w-fg-neutral)] flex-none">{label}</span>
+        <span className="flex-1 font-medium text-[13px] leading-none [font-family:var(--w-font-mono)] text-[var(--w-fg-strong)] overflow-hidden text-ellipsis whitespace-nowrap min-w-0">{display}</span>
         {valid && (
-          <div className="id-field__actions">
+          <div className="flex items-center gap-0.5 flex-none">
             <button
               type="button"
-              className="id-field__btn"
+              className="w-7 h-7 rounded-lg grid place-items-center text-[var(--w-fg-neutral)] hover:bg-[var(--w-bg-neutral)] transition-colors duration-[120ms] border-none bg-transparent cursor-pointer"
               onClick={() => setRevealed((v) => !v)}
               aria-label={revealed ? "ID 숨기기" : "ID 확인하기"}
               title={revealed ? "숨기기" : "확인하기"}
@@ -45,7 +45,7 @@ export default function IdField({ label, id, desc }: Props) {
             </button>
             <button
               type="button"
-              className="id-field__btn"
+              className="w-7 h-7 rounded-lg grid place-items-center text-[var(--w-fg-neutral)] hover:bg-[var(--w-bg-neutral)] transition-colors duration-[120ms] border-none bg-transparent cursor-pointer"
               onClick={handleCopy}
               aria-label="ID 복사"
               title="ID 복사"
@@ -55,7 +55,7 @@ export default function IdField({ label, id, desc }: Props) {
           </div>
         )}
       </div>
-      {desc && <div className="id-field__desc">{desc}</div>}
+      {desc && <div className="font-medium text-[12px] leading-[1.5] tracking-[0.008em] text-[var(--w-fg-neutral)]">{desc}</div>}
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import Icon, { type IconName } from "@shared/ui/Icon";
+import { Chip } from "@shared/ui/Chip";
 
 type RouteKey = "campaigns" | "approvals" | "library" | "members" | "settings";
 
@@ -24,10 +25,7 @@ export default function PlaceholderScreen({ route }: { route: RouteKey }) {
           </div>
           <div style={{ font: "500 14px/1.6 var(--w-font-sans)", color: "var(--w-fg-neutral)", maxWidth: 360 }}>{m.desc}</div>
         </div>
-        <span className="chip chip--neutral" style={{ marginTop: 4 }}>
-          <span className="chip__dot" style={{ background: "var(--w-fg-alternative)" }} />
-          준비 중
-        </span>
+        <Chip variant="neutral" dot style={{ marginTop: 4 }}>준비 중</Chip>
       </div>
     </div>
   );

@@ -9,6 +9,11 @@ import { fmt, timeAgo } from "@shared/lib/format";
 import { useLibrary, type LibraryItem } from "@shared/lib/library";
 import { useToast } from "@shared/ui/Toast";
 import { getMockLibraryItems } from "@/lib/mock-library";
+import { Button } from "@shared/ui/Button";
+import { Card } from "@shared/ui/Card";
+import { Chip } from "@shared/ui/Chip";
+import { SegControl } from "@shared/ui/SegControl";
+import { cn } from "@shared/lib/cn";
 
 type SortKey = "recent" | "oldest" | "az";
 type View = "grid" | "list";
@@ -82,39 +87,61 @@ export default function LibraryPage() {
   };
 
   return (
-    <div className="page" data-screen-label="소재 라이브러리">
-      <div className="page__head">
+    <div className="px-12 py-9 pb-16 max-w-[1280px] w-full mx-auto flex flex-col gap-7" data-screen-label="소재 라이브러리">
+      <div className="flex justify-between items-end gap-6">
         <div>
-          <span className="w-overline" style={{ color: "var(--w-fg-neutral)" }}>캠페인 관리</span>
-          <h1 className="page__title" style={{ marginTop: 4 }}>소재 라이브러리</h1>
-          <p className="page__sub">AI로 생성하고 저장한 광고 소재를 한 곳에서 살펴보고 다시 활용하세요.</p>
+          <span className="font-semibold text-[11px] leading-[1.45] tracking-[0.04em] uppercase text-[var(--w-fg-neutral)]">캠페인 관리</span>
+          <h1 className="m-0 font-bold text-[28px] leading-[1.25] tracking-[-0.024em] text-[var(--w-fg-strong)]" style={{ marginTop: 4 }}>소재 라이브러리</h1>
+          <p className="font-medium text-[14px] leading-[1.5] tracking-[0.004em] text-[var(--w-fg-neutral)] mt-1.5 mb-0">AI로 생성하고 저장한 광고 소재를 한 곳에서 살펴보고 다시 활용하세요.</p>
         </div>
         <div style={{ display: "inline-flex", gap: 8 }}>
-          <button className="btn btn--primary" type="button" onClick={goCreate}><Icon name="sparkles" size={14} /> 새 소재 만들기</button>
+          <Button variant="primary" onClick={goCreate}><Icon name="sparkles" size={14} /> 새 소재 만들기</Button>
         </div>
       </div>
 
-      <div className="card" style={{ padding: 14, display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center", marginBottom: 18 }}>
+      <Card style={{ padding: 14, display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center", marginBottom: 18 }}>
         <div style={{ position: "relative", flex: "1 1 280px", minWidth: 220 }}>
           <Icon name="message" size={14} style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "var(--w-fg-alternative)" }} />
-          <input className="input" placeholder="브랜드·헤드라인·본문에서 검색" value={query} onChange={(e) => setQuery(e.target.value)} style={{ paddingLeft: 36 }} />
+          <input
+            className="w-full bg-[var(--w-bg-elevated)] border border-[var(--w-line-normal)] rounded-xl px-3.5 py-3 font-medium text-[14px] leading-[1.5] text-[var(--w-fg-strong)] tracking-[0.004em] outline-none transition-[border-color,box-shadow] duration-[120ms] focus:border-[var(--w-primary-normal)] focus:shadow-[0_0_0_4px_rgba(0,102,255,0.14)] placeholder:text-[var(--w-fg-alternative)]"
+            placeholder="브랜드·헤드라인·본문에서 검색"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            style={{ paddingLeft: 36 }}
+          />
         </div>
-        <div className="seg" style={{ flex: "0 0 auto" }}>
-          <button type="button" className={toneFilter === "all" ? "on" : ""} onClick={() => setToneFilter("all")}>전체</button>
-          {tones.map((t) => (
-            <button key={t} type="button" className={toneFilter === t ? "on" : ""} onClick={() => setToneFilter(t)}>{TONE_LABEL[t] ?? t}</button>
-          ))}
+        <div style={{ flex: "0 0 auto" }}>
+          <SegControl
+            value={toneFilter}
+            onChange={setToneFilter}
+            options={[{ value: "all", label: "전체" }, ...tones.map((t) => ({ value: t, label: TONE_LABEL[t] ?? t }))]}
+          />
         </div>
-        <select className="select" style={{ flex: "0 0 auto", width: 150 }} value={sort} onChange={(e) => setSort(e.target.value as SortKey)}>
+        <select
+          className="w-full bg-[var(--w-bg-elevated)] border border-[var(--w-line-normal)] rounded-xl px-3.5 py-3 font-medium text-[14px] leading-[1.5] text-[var(--w-fg-strong)] tracking-[0.004em] outline-none transition-[border-color,box-shadow] duration-[120ms] focus:border-[var(--w-primary-normal)] focus:shadow-[0_0_0_4px_rgba(0,102,255,0.14)] placeholder:text-[var(--w-fg-alternative)] appearance-none"
+          style={{ flex: "0 0 auto", width: 150 }}
+          value={sort}
+          onChange={(e) => setSort(e.target.value as SortKey)}
+        >
           <option value="recent">최신순</option>
           <option value="oldest">오래된순</option>
           <option value="az">헤드라인 가나다</option>
         </select>
-        <div className="seg" style={{ flex: "0 0 auto", marginLeft: "auto" }}>
-          <button type="button" className={view === "grid" ? "on" : ""} onClick={() => setView("grid")} title="그리드 보기"><Icon name="grid" size={14} /></button>
-          <button type="button" className={view === "list" ? "on" : ""} onClick={() => setView("list")} title="리스트 보기"><Icon name="doc" size={14} /></button>
+        <div className="inline-flex gap-0.5 p-[3px] bg-[var(--w-bg-alternative)] rounded-[10px] ml-auto">
+          <button
+            type="button"
+            className={cn("border-none px-3.5 py-2 rounded-lg cursor-pointer transition-[background,color] duration-[120ms]", view === "grid" ? "bg-[var(--w-bg-elevated)] text-[var(--w-fg-strong)] shadow-[0_1px_2px_rgba(23,23,23,0.08)]" : "bg-transparent text-[var(--w-fg-neutral)]")}
+            onClick={() => setView("grid")}
+            title="그리드 보기"
+          ><Icon name="grid" size={14} /></button>
+          <button
+            type="button"
+            className={cn("border-none px-3.5 py-2 rounded-lg cursor-pointer transition-[background,color] duration-[120ms]", view === "list" ? "bg-[var(--w-bg-elevated)] text-[var(--w-fg-strong)] shadow-[0_1px_2px_rgba(23,23,23,0.08)]" : "bg-transparent text-[var(--w-fg-neutral)]")}
+            onClick={() => setView("list")}
+            title="리스트 보기"
+          ><Icon name="doc" size={14} /></button>
         </div>
-      </div>
+      </Card>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 12, marginBottom: 18 }}>
         <SummaryStat label="저장된 소재" value={fmt(list.length)} icon="folder" />
@@ -130,8 +157,8 @@ export default function LibraryPage() {
             ? "광고 만들기에서 AI 생성 결과가 마음에 들면 '소재 라이브러리에 저장' 버튼을 눌러보세요."
             : "검색어나 필터를 바꿔서 다시 시도해 보세요."}
           action={list.length === 0
-            ? <button className="btn btn--primary" type="button" onClick={goCreate}><Icon name="sparkles" size={14} /> 광고 만들기로 이동</button>
-            : <button className="btn btn--secondary" type="button" onClick={() => { setQuery(""); setToneFilter("all"); }}>필터 초기화</button>}
+            ? <Button variant="primary" onClick={goCreate}><Icon name="sparkles" size={14} /> 광고 만들기로 이동</Button>
+            : <Button variant="secondary" onClick={() => { setQuery(""); setToneFilter("all"); }}>필터 초기화</Button>}
         />
       ) : view === "grid" ? (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
@@ -160,43 +187,42 @@ function SummaryStat({ label, value, icon, accent }: { label: string; value: str
   const tint = accent === "violet" ? "var(--w-accent-violet)" : "var(--w-primary-press)";
   const soft = accent === "violet" ? "var(--w-accent-violet-soft)" : "var(--w-primary-soft)";
   return (
-    <div className="card" style={{ padding: 16, display: "flex", alignItems: "center", gap: 14 }}>
+    <Card style={{ padding: 16, display: "flex", alignItems: "center", gap: 14 }}>
       <div style={{ width: 40, height: 40, borderRadius: 10, background: soft, color: tint, display: "grid", placeItems: "center", flex: "0 0 auto" }}><Icon name={icon} size={18} /></div>
       <div style={{ minWidth: 0 }}>
-        <div style={{ font: "500 11.5px/1 var(--w-font-sans)", color: "var(--w-fg-neutral)", letterSpacing: "0.02em", marginBottom: 6 }}>{label}</div>
-        <div style={{ font: "700 22px/1 var(--w-font-display)", color: "var(--w-fg-strong)", letterSpacing: "-0.02em" }}>{value}</div>
+        <div style={{ color: "var(--w-fg-neutral)", letterSpacing: "0.02em", marginBottom: 6 }} className="font-medium text-[11.5px] leading-none">{label}</div>
+        <div style={{ color: "var(--w-fg-strong)", letterSpacing: "-0.02em" }} className="font-bold text-[22px] leading-none [font-family:var(--w-font-display)]">{value}</div>
       </div>
-    </div>
+    </Card>
   );
 }
 
 function CreativeCard({ item, onPreview, onDelete }: { item: LibraryItem; onPreview: () => void; onDelete: () => void }) {
   return (
-    <div
-      className="card"
+    <Card
       style={{ padding: 0, overflow: "hidden", display: "flex", flexDirection: "column", cursor: "pointer", transition: "border-color 120ms ease" }}
       onClick={onPreview}
-      onMouseEnter={(e) => { e.currentTarget.style.borderColor = "var(--w-line-normal)"; }}
-      onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--w-line-alternative)"; }}
+      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--w-line-normal)"; }}
+      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--w-line-alternative)"; }}
     >
       <div style={{ position: "relative", aspectRatio: "16 / 10", background: item.gradient, display: "flex", alignItems: "flex-end", padding: 16, color: "#fff" }}>
         <div style={{ position: "absolute", top: 12, left: 12, display: "inline-flex", gap: 6 }}>
-          <span className="chip" style={{ background: "rgba(255,255,255,0.18)", color: "#fff" }}><Icon name="sparkles" size={12} /> {item.tag || "AI 생성"}</span>
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full font-semibold text-xs leading-none tracking-[0.006em] whitespace-nowrap" style={{ background: "rgba(255,255,255,0.18)", color: "#fff" }}><Icon name="sparkles" size={12} /> {item.tag || "AI 생성"}</span>
         </div>
-        <div style={{ font: "700 16px/1.35 var(--w-font-display)", letterSpacing: "-0.014em", textShadow: "0 2px 8px rgba(0,0,0,0.18)", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{item.headline}</div>
+        <div style={{ letterSpacing: "-0.014em", textShadow: "0 2px 8px rgba(0,0,0,0.18)", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }} className="font-bold text-[16px] leading-[1.35] [font-family:var(--w-font-display)]">{item.headline}</div>
       </div>
       <div style={{ padding: 14, display: "flex", flexDirection: "column", gap: 10, flex: 1 }}>
-        <div style={{ font: "500 13px/1.55 var(--w-font-sans)", color: "var(--w-fg-neutral)", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden", minHeight: 40, whiteSpace: "pre-wrap" }}>{item.primary}</div>
+        <div style={{ display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden", minHeight: 40, whiteSpace: "pre-wrap", color: "var(--w-fg-neutral)" }} className="font-medium text-[13px] leading-[1.55]">{item.primary}</div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-          {item.toneLabel && <span className="chip chip--neutral">{item.toneLabel}</span>}
-          {item.ctaLabel && <span className="chip chip--neutral"><Icon name="target" size={12} /> {item.ctaLabel}</span>}
+          {item.toneLabel && <Chip variant="neutral">{item.toneLabel}</Chip>}
+          {item.ctaLabel && <Chip variant="neutral"><Icon name="target" size={12} /> {item.ctaLabel}</Chip>}
         </div>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 2, paddingTop: 10, borderTop: "1px solid var(--w-line-alternative)" }}>
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 6, font: "500 12px/1 var(--w-font-sans)", color: "var(--w-fg-alternative)" }}><Icon name="clock" size={12} /> {timeAgo(item.savedAt)}</span>
-          <button className="btn btn--ghost btn--sm" type="button" title="삭제" style={{ color: "var(--w-fg-alternative)" }} onClick={(e) => { e.stopPropagation(); onDelete(); }}><Icon name="x" size={14} /></button>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 6, color: "var(--w-fg-alternative)" }} className="font-medium text-[12px] leading-none"><Icon name="clock" size={12} /> {timeAgo(item.savedAt)}</span>
+          <Button variant="ghost" size="sm" style={{ color: "var(--w-fg-alternative)" }} onClick={(e) => { e.stopPropagation(); onDelete(); }}><Icon name="x" size={14} /></Button>
         </div>
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -211,12 +237,12 @@ function CreativeRow({ item, onPreview, onDelete }: { item: LibraryItem; onPrevi
     >
       <div style={{ width: 80, height: 56, borderRadius: 8, background: item.gradient, flex: "0 0 auto" }} />
       <div style={{ minWidth: 0 }}>
-        <div style={{ font: "600 14.5px/1.4 var(--w-font-sans)", color: "var(--w-fg-strong)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.headline}</div>
-        <div style={{ font: "500 12.5px/1.5 var(--w-font-sans)", color: "var(--w-fg-neutral)", marginTop: 3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.brand}</div>
+        <div style={{ color: "var(--w-fg-strong)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} className="font-semibold text-[14.5px] leading-[1.4]">{item.headline}</div>
+        <div style={{ marginTop: 3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "var(--w-fg-neutral)" }} className="font-medium text-[12.5px] leading-[1.5]">{item.brand}</div>
       </div>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>{item.toneLabel && <span className="chip chip--neutral">{item.toneLabel}</span>}</div>
-      <span style={{ font: "500 12px/1 var(--w-font-sans)", color: "var(--w-fg-alternative)" }}>{timeAgo(item.savedAt)}</span>
-      <button className="btn btn--ghost btn--sm" type="button" title="삭제" style={{ color: "var(--w-fg-alternative)" }} onClick={(e) => { e.stopPropagation(); onDelete(); }}><Icon name="x" size={14} /></button>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>{item.toneLabel && <Chip variant="neutral">{item.toneLabel}</Chip>}</div>
+      <span style={{ color: "var(--w-fg-alternative)" }} className="font-medium text-[12px] leading-none">{timeAgo(item.savedAt)}</span>
+      <Button variant="ghost" size="sm" style={{ color: "var(--w-fg-alternative)" }} onClick={(e) => { e.stopPropagation(); onDelete(); }}><Icon name="x" size={14} /></Button>
     </button>
   );
 }
@@ -234,28 +260,28 @@ function PreviewModal({ item, onClose, onDelete, onCopy, onUse }: { item: Librar
         <div style={{ position: "relative", padding: "28px 32px 36px", background: item.gradient, color: "#fff" }}>
           <button type="button" onClick={onClose} title="닫기" style={{ position: "absolute", top: 14, right: 14, width: 34, height: 34, borderRadius: 10, border: "1px solid rgba(255,255,255,0.25)", background: "rgba(0,0,0,0.18)", color: "#fff", cursor: "pointer", display: "grid", placeItems: "center" }}><Icon name="x" size={16} /></button>
           <div style={{ display: "inline-flex", gap: 6, marginBottom: 14 }}>
-            <span className="chip" style={{ background: "rgba(255,255,255,0.18)", color: "#fff" }}><Icon name="sparkles" size={12} /> {item.tag || "AI 생성"}</span>
-            <span className="chip" style={{ background: "rgba(255,255,255,0.18)", color: "#fff" }}><Icon name="clock" size={12} /> {timeAgo(item.savedAt)}</span>
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full font-semibold text-xs leading-none tracking-[0.006em] whitespace-nowrap" style={{ background: "rgba(255,255,255,0.18)", color: "#fff" }}><Icon name="sparkles" size={12} /> {item.tag || "AI 생성"}</span>
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full font-semibold text-xs leading-none tracking-[0.006em] whitespace-nowrap" style={{ background: "rgba(255,255,255,0.18)", color: "#fff" }}><Icon name="clock" size={12} /> {timeAgo(item.savedAt)}</span>
           </div>
-          {item.brand && <div style={{ font: "500 13px/1 var(--w-font-sans)", opacity: 0.86, marginBottom: 8 }}>{item.brand}</div>}
-          <div style={{ font: "700 26px/1.3 var(--w-font-display)", letterSpacing: "-0.018em", textShadow: "0 2px 12px rgba(0,0,0,0.18)" }}>{item.headline}</div>
+          {item.brand && <div style={{ opacity: 0.86, marginBottom: 8 }} className="font-medium text-[13px] leading-none">{item.brand}</div>}
+          <div style={{ letterSpacing: "-0.018em", textShadow: "0 2px 12px rgba(0,0,0,0.18)" }} className="font-bold text-[26px] leading-[1.3] [font-family:var(--w-font-display)]">{item.headline}</div>
         </div>
         <div style={{ padding: "26px 32px 28px", display: "flex", flexDirection: "column", gap: 22 }}>
-          <DetailRow label="기본 텍스트" actions={<button className="btn btn--ghost btn--sm" type="button" onClick={() => onCopy(item.primary || "")}><Icon name="copy" size={12} /> 복사</button>}>
-            <div style={{ font: "500 14px/1.7 var(--w-font-sans)", color: "var(--w-fg-strong)", whiteSpace: "pre-wrap" }}>{item.primary}</div>
+          <DetailRow label="기본 텍스트" actions={<Button variant="ghost" size="sm" onClick={() => onCopy(item.primary || "")}><Icon name="copy" size={12} /> 복사</Button>}>
+            <div style={{ whiteSpace: "pre-wrap", color: "var(--w-fg-strong)" }} className="font-medium text-[14px] leading-[1.7]">{item.primary}</div>
           </DetailRow>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-            <DetailRow label="톤앤매너"><span className="chip chip--neutral">{item.toneLabel || "—"}</span></DetailRow>
-            <DetailRow label="CTA"><span className="chip chip--neutral"><Icon name="target" size={12} /> {item.ctaLabel || "—"}</span></DetailRow>
-            {item.goal && <DetailRow label="광고 목적"><div style={{ font: "500 13.5px/1.55 var(--w-font-sans)", color: "var(--w-fg-strong)" }}>{item.goal}</div></DetailRow>}
-            {item.target && <DetailRow label="타겟"><div style={{ font: "500 13.5px/1.55 var(--w-font-sans)", color: "var(--w-fg-strong)" }}>{item.target}</div></DetailRow>}
+            <DetailRow label="톤앤매너"><Chip variant="neutral">{item.toneLabel || "—"}</Chip></DetailRow>
+            <DetailRow label="CTA"><Chip variant="neutral"><Icon name="target" size={12} /> {item.ctaLabel || "—"}</Chip></DetailRow>
+            {item.goal && <DetailRow label="광고 목적"><div style={{ color: "var(--w-fg-strong)" }} className="font-medium text-[13.5px] leading-[1.55]">{item.goal}</div></DetailRow>}
+            {item.target && <DetailRow label="타겟"><div style={{ color: "var(--w-fg-strong)" }} className="font-medium text-[13.5px] leading-[1.55]">{item.target}</div></DetailRow>}
           </div>
         </div>
         <div style={{ padding: "14px 22px", borderTop: "1px solid var(--w-line-alternative)", background: "var(--w-bg-alternative)", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-          <button className="btn btn--ghost" type="button" onClick={onDelete} style={{ color: "var(--w-status-negative)" }}><Icon name="x" size={14} /> 삭제</button>
+          <Button variant="ghost" onClick={onDelete} style={{ color: "var(--w-status-negative)" }}><Icon name="x" size={14} /> 삭제</Button>
           <div style={{ display: "inline-flex", gap: 8 }}>
-            <button className="btn btn--secondary" type="button" onClick={onClose}>닫기</button>
-            <button className="btn btn--primary" type="button" onClick={onUse}><Icon name="megaphone" size={14} /> 이 소재로 광고 만들기</button>
+            <Button variant="secondary" onClick={onClose}>닫기</Button>
+            <Button variant="primary" onClick={onUse}><Icon name="megaphone" size={14} /> 이 소재로 광고 만들기</Button>
           </div>
         </div>
       </div>
@@ -267,7 +293,7 @@ function DetailRow({ label, actions, children }: { label: string; actions?: Reac
   return (
     <div>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-        <span style={{ font: "600 10.5px/1 var(--w-font-sans)", textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--w-fg-alternative)" }}>{label}</span>
+        <span style={{ textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--w-fg-alternative)" }} className="font-semibold text-[10.5px] leading-none">{label}</span>
         {actions}
       </div>
       {children}

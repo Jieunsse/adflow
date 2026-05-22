@@ -1,5 +1,7 @@
 import { AuthError } from "../route-handler";
-import { metaAds } from "../meta-ads";
+import { metaAds, type MetaObjectiveParam } from "../meta-ads";
+import { isWinner } from "../optimization";
+import type { WinnerEvidence } from "@entities/insights/winner-types";
 import {
   diffSnapshots,
   snapshotMap,
@@ -23,11 +25,21 @@ export interface AdStatusPayload {
   transition: string;
 }
 
+export interface AutoRelaunchReadyPayload {
+  id: string;
+  type: "auto-relaunch-ready";
+  message: string;
+  ts: number;
+  campaignId: string;
+  campaignName: string;
+  evidence: WinnerEvidence;
+}
+
 export interface AuthExpiredPayload {
   type: "auth_expired";
 }
 
-export type NotificationPayload = AdStatusPayload | AuthExpiredPayload;
+export type NotificationPayload = AdStatusPayload | AutoRelaunchReadyPayload | AuthExpiredPayload;
 
 interface ControllerEntry {
   controller: ReadableStreamDefaultController<Uint8Array>;
@@ -41,6 +53,7 @@ interface UserEntry {
   backoff: ErrorBackoff;
   token: string;
   adAccountId: string;
+  emittedAutoRelaunchIds: Set<string>;
 }
 
 const USER_CONTROLLER_CAP = 10;
@@ -93,6 +106,54 @@ function scheduleNext(userId: string, entry: UserEntry) {
   entry.timerHandle = setTimeout(() => runTick(userId), delay);
 }
 
+const WINNER_OBJECTIVE_PARAMS: Set<string> = new Set([
+  "OUTCOME_TRAFFIC",
+  "OUTCOME_AWARENESS",
+  "OUTCOME_ENGAGEMENT",
+]);
+
+async function processWinnerCheck(userId: string, campaignId: string): Promise<void> {
+  const entry = registry.get(userId);
+  if (!entry || entry.controllers.length === 0) return;
+  if (entry.emittedAutoRelaunchIds.has(campaignId)) return;
+
+  const brief = await metaAds.getCampaignBrief(campaignId, entry.token);
+  if (!brief || brief.status !== "ended") return;
+
+  const objective = WINNER_OBJECTIVE_PARAMS.has(brief.objective)
+    ? (brief.objective as MetaObjectiveParam)
+    : null;
+  if (!objective) return;
+
+  let insights;
+  try {
+    insights = await metaAds.getInsights(campaignId, entry.token, "all", objective);
+  } catch {
+    return;
+  }
+  const daysOfData = insights.daily.length;
+
+  const result = isWinner(insights, objective, null, daysOfData);
+  if (!result.winner || !result.evidence) return;
+
+  // Re-check after awaits (entry may have been removed).
+  const entry2 = registry.get(userId);
+  if (!entry2 || entry2.controllers.length === 0) return;
+  if (entry2.emittedAutoRelaunchIds.has(campaignId)) return;
+  entry2.emittedAutoRelaunchIds.add(campaignId);
+
+  const ts = Date.now();
+  fanOut(entry2, {
+    id: `${userId}-ar-${campaignId}-${ts}`,
+    type: "auto-relaunch-ready",
+    message: `🏆 '${brief.headline}' 캠페인이 목표를 통과했어요 — 다시 게재할까요?`,
+    ts,
+    campaignId,
+    campaignName: brief.headline,
+    evidence: result.evidence,
+  });
+}
+
 async function runTick(userId: string) {
   const entry = registry.get(userId);
   if (!entry || entry.controllers.length === 0) return;
@@ -129,6 +190,20 @@ async function runTick(userId: string) {
         campaignId: e.campaignId,
         transition: e.transition,
       });
+    }
+
+    // Detect ACTIVE→PAUSED transitions for Auto Relaunch winner detection.
+    const terminatedCampaigns = new Set<string>();
+    for (const ad of ads) {
+      const prev = entry.lastSnapshot.get(ad.adId);
+      if (prev === "ACTIVE" && ad.status === "PAUSED") {
+        terminatedCampaigns.add(ad.campaignId);
+      }
+    }
+    for (const campaignId of terminatedCampaigns) {
+      if (!entry.emittedAutoRelaunchIds.has(campaignId)) {
+        processWinnerCheck(userId, campaignId).catch(() => {});
+      }
     }
   }
   entry.lastSnapshot = snapshotMap(ads);
@@ -186,6 +261,7 @@ export function addController(
       backoff: { ...INITIAL_BACKOFF },
       token,
       adAccountId,
+      emittedAutoRelaunchIds: new Set(),
     };
     registry.set(userId, entry);
   } else {

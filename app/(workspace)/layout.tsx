@@ -15,9 +15,9 @@ export default async function WorkspaceLayout({ children }: { children: React.Re
   return (
     <div className="adflow">
       <NotificationStreamMount />
-      <div className="shell">
+      <div className="grid grid-cols-[248px_1fr] min-h-screen bg-[var(--w-bg-alternative)]">
         <Sidebar />
-        <main className="main">{children}</main>
+        <main className="min-w-0">{children}</main>
       </div>
     </div>
   );

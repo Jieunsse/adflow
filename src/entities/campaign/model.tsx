@@ -93,6 +93,7 @@ export type LaunchState = {
   lookalikeEnabled: boolean;
   placements: Placements;
   autoPauseGuardrailEnabled: boolean;
+  autoRelaunchEnabled: boolean;
   abTestEnabled: boolean;
   // PRD-ab-testing.md §4.1 — A/B 축 + B안. axis 변경 시 variantB null reset (invariant).
   abTestAxis: AbTestAxis | null;
@@ -124,6 +125,7 @@ export type LaunchAction =
   | { type: "SET_LOOKALIKE_ENABLED"; enabled: boolean }
   | { type: "SET_PLACEMENTS"; placements: Placements }
   | { type: "SET_AUTO_PAUSE_GUARDRAIL"; enabled: boolean }
+  | { type: "SET_AUTO_RELAUNCH_ENABLED"; enabled: boolean }
   | { type: "SET_AB_TEST_ENABLED"; enabled: boolean }
   | { type: "SET_AB_TEST_AXIS"; axis: AbTestAxis }
   | { type: "SET_AB_TEST_VARIANT_B"; value: AbTestVariantB | null }
@@ -160,6 +162,7 @@ export const INITIAL_LAUNCH_STATE: LaunchState = {
   lookalikeEnabled: false,
   placements: { mode: "auto" },
   autoPauseGuardrailEnabled: false,
+  autoRelaunchEnabled: false,
   abTestEnabled: false,
   abTestAxis: null,
   abTestVariantB: null,
@@ -199,6 +202,7 @@ function reducer(state: LaunchState, action: LaunchAction): LaunchState {
     case "SET_LOOKALIKE_ENABLED":    return { ...state, lookalikeEnabled: action.enabled };
     case "SET_PLACEMENTS":           return { ...state, placements: action.placements };
     case "SET_AUTO_PAUSE_GUARDRAIL": return { ...state, autoPauseGuardrailEnabled: action.enabled };
+    case "SET_AUTO_RELAUNCH_ENABLED": return { ...state, autoRelaunchEnabled: action.enabled };
     case "SET_AB_TEST_ENABLED": {
       // 끄면 축·B안도 정리 — payload 에 의도치 않게 안 실리도록.
       if (!action.enabled) return { ...state, abTestEnabled: false, abTestAxis: null, abTestVariantB: null };

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
@@ -22,6 +22,14 @@ import { getMockCampaignAdIds, seedMockAdRows, MOCK_CAMPAIGN_SUMMARIES } from "@
 import AbTestResultCard from "@widgets/performance-step/AbTestResultCard";
 import type { CampaignSummary, InsightsPeriod } from "@/lib/meta-ads";
 import type { AdInsightsRow } from "@entities/insights/types";
+import { Button, buttonVariants } from "@shared/ui/Button";
+import { Card } from "@shared/ui/Card";
+import { Chip, type ChipVariant } from "@shared/ui/Chip";
+import { Skeleton } from "@shared/ui/Skeleton";
+import { SegControl } from "@shared/ui/SegControl";
+import { cn } from "@shared/lib/cn";
+import { useAutoRelaunch } from "@shared/lib/autoRelaunch";
+import { useNotifications, type WinnerEvidence } from "@shared/lib/notifications";
 
 
 type Period = "all" | InsightsPeriod;
@@ -72,6 +80,52 @@ export default function CampaignDetailPage() {
   const rawTab = searchParams.get("tab");
   const initialTab = rawTab === "performance" ? "performance" : rawTab === "ab-test" ? "ab-test" : "info";
   const [activeTab, setActiveTab] = useState<"info" | "performance" | "ab-test">(initialTab);
+
+  const [showRelaunchModal, setShowRelaunchModal] = useState(false);
+  const [relaunchOnlyOnce, setRelaunchOnlyOnce] = useState(false);
+  const [relaunchBusy, setRelaunchBusy] = useState(false);
+  const [relaunchError, setRelaunchError] = useState<string | null>(null);
+  const { get: getAutoRelaunch, setEnabled: setAutoRelaunch, inheritFromParent } = useAutoRelaunch();
+  const { notifs } = useNotifications();
+
+  useEffect(() => {
+    if (searchParams.get("relaunch") === "1") {
+      setShowRelaunchModal(true);
+    }
+  }, [searchParams]);
+
+  const autoRelaunchEntry = getAutoRelaunch(id);
+  const relaunchEvidence = useMemo<WinnerEvidence | null>(() => {
+    const n = notifs.find((n) => n.type === "auto-relaunch-ready" && n.campaignId === id);
+    return n?.evidence ?? null;
+  }, [notifs, id]);
+
+  const handleRelaunch = async () => {
+    setRelaunchError(null);
+    setRelaunchBusy(true);
+    try {
+      const cycleCount = (autoRelaunchEntry?.cycleCount ?? 1) + 1;
+      const res = await fetch("/api/campaign/relaunch", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ campaignId: id, cycleCount }),
+      });
+      const data = await res.json() as { campaignId?: string; newName?: string; error?: string };
+      if (!res.ok) {
+        setRelaunchError(data.error ?? "재게재에 실패했어요");
+        return;
+      }
+      const newId = data.campaignId!;
+      inheritFromParent(id, newId, !relaunchOnlyOnce);
+      setShowRelaunchModal(false);
+      showToast(`'${data.newName ?? "새 캠페인"}' 게재됐어요`);
+      router.push(`/campaigns/${newId}`);
+    } catch {
+      setRelaunchError("재게재에 실패했어요. 다시 시도해 주세요.");
+    } finally {
+      setRelaunchBusy(false);
+    }
+  };
 
   // PRD-ab-testing.md §5.1 — 사용자 생성 캠페인은 adflow:launched:{id} 에서 A/B 정보. 1회 load (SSR-safe).
   const [launchedSnapshot] = useState(() => (typeof window !== "undefined" ? loadLaunchedCampaign(id) : null));
@@ -125,22 +179,36 @@ export default function CampaignDetailPage() {
     : "https://adsmanager.facebook.com/";
 
   return (
-    <div className="page" data-screen-label="캠페인 상세">
-      <button type="button" onClick={() => router.push("/campaigns")} className="btn-link" style={{ display: "inline-flex", alignItems: "center", gap: 6, color: "var(--w-fg-neutral)", marginBottom: 4 }}>
+    <div className="px-12 py-9 pb-16 max-w-[1280px] w-full mx-auto flex flex-col gap-7" data-screen-label="캠페인 상세">
+      {showRelaunchModal && (
+        <RelaunchConfirmModal
+          campaignName={c?.headline ?? c?.name ?? "캠페인"}
+          evidence={relaunchEvidence}
+          cycleCount={autoRelaunchEntry?.cycleCount ?? 1}
+          onlyOnce={relaunchOnlyOnce}
+          onOnlyOnceChange={setRelaunchOnlyOnce}
+          busy={relaunchBusy}
+          error={relaunchError}
+          onRelaunch={handleRelaunch}
+          onEditOriginal={() => { setShowRelaunchModal(false); router.push(`/create?prefill=campaign:${id}`); }}
+          onClose={() => { setShowRelaunchModal(false); setRelaunchError(null); const u = new URL(window.location.href); u.searchParams.delete("relaunch"); window.history.replaceState(null, "", u.toString()); }}
+        />
+      )}
+      <button type="button" onClick={() => router.push("/campaigns")} className="bg-transparent border-none p-0 cursor-pointer inline-flex items-center gap-1.5 font-semibold text-[12.5px] leading-none text-current hover:underline" style={{ display: "inline-flex", alignItems: "center", gap: 6, color: "var(--w-fg-neutral)", marginBottom: 4 }}>
         <Icon name="arrow-left" size={13} /> 캠페인
       </button>
 
-      <div className="page__head" style={{ marginTop: 4 }}>
+      <div className="flex justify-between items-end gap-6" style={{ marginTop: 4 }}>
         <div>
-          <h1 className="page__title" style={{ marginTop: 0 }}>{c?.headline ?? "캠페인"}</h1>
-          <p className="page__sub">{c?.name ?? id}</p>
+          <h1 className="m-0 font-bold text-[28px] leading-[1.25] tracking-[-0.024em] text-[var(--w-fg-strong)]" style={{ marginTop: 0 }}>{c?.headline ?? "캠페인"}</h1>
+          <p className="font-medium text-[14px] leading-[1.5] tracking-[0.004em] text-[var(--w-fg-neutral)] mt-1.5 mb-0">{c?.name ?? id}</p>
         </div>
       </div>
 
-      <div className="seg" style={{ marginBottom: 16 }}>
-        <button type="button" className={activeTab === "info" ? "on" : ""} onClick={() => setActiveTab("info")}>캠페인 정보</button>
-        <button type="button" className={activeTab === "performance" ? "on" : ""} onClick={() => setActiveTab("performance")}>성과</button>
-        <button type="button" className={activeTab === "ab-test" ? "on" : ""} onClick={() => setActiveTab("ab-test")}>
+      <div className="inline-flex gap-0.5 p-[3px] bg-[var(--w-bg-alternative)] rounded-[10px] mb-4">
+        <button type="button" className={cn("border-none px-3.5 py-2 rounded-lg font-semibold text-[12.5px] leading-none cursor-pointer transition-[background,color] duration-[120ms]", activeTab === "info" ? "bg-[var(--w-bg-elevated)] text-[var(--w-fg-strong)] shadow-[0_1px_2px_rgba(23,23,23,0.08)]" : "bg-transparent text-[var(--w-fg-neutral)]")} onClick={() => setActiveTab("info")}>캠페인 정보</button>
+        <button type="button" className={cn("border-none px-3.5 py-2 rounded-lg font-semibold text-[12.5px] leading-none cursor-pointer transition-[background,color] duration-[120ms]", activeTab === "performance" ? "bg-[var(--w-bg-elevated)] text-[var(--w-fg-strong)] shadow-[0_1px_2px_rgba(23,23,23,0.08)]" : "bg-transparent text-[var(--w-fg-neutral)]")} onClick={() => setActiveTab("performance")}>성과</button>
+        <button type="button" className={cn("border-none px-3.5 py-2 rounded-lg font-semibold text-[12.5px] leading-none cursor-pointer transition-[background,color] duration-[120ms]", activeTab === "ab-test" ? "bg-[var(--w-bg-elevated)] text-[var(--w-fg-strong)] shadow-[0_1px_2px_rgba(23,23,23,0.08)]" : "bg-transparent text-[var(--w-fg-neutral)]")} onClick={() => setActiveTab("ab-test")}>
           A/B 테스트
           {abInfo && <span style={{ marginLeft: 6, width: 6, height: 6, borderRadius: "50%", background: "var(--w-primary-normal)", display: "inline-block", verticalAlign: "middle" }} />}
         </button>
@@ -156,44 +224,44 @@ export default function CampaignDetailPage() {
         <AbTestTab abInfo={abInfo} insightsWithAds={insightsWithAds} campaignId={id} onCreateWithWinner={() => router.push(`/create?prefill=campaign:${id}`)} />
       ) : (
         <>
-          <div className="card" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, marginBottom: 16, flexWrap: "wrap" }}>
+          <Card className="flex items-center justify-between gap-4 mb-4 flex-wrap">
             <div style={{ display: "flex", alignItems: "center", gap: 14, minWidth: 0, flex: "1 1 360px" }}>
               <div style={{ width: 44, height: 44, borderRadius: 10, background: campaignGradient(id), flex: "0 0 auto" }} />
               <div style={{ minWidth: 0 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6, flexWrap: "wrap" }}>
                   {c ? (
-                    <span className={`chip chip--${STATUS_CHIP[c.status]?.chip ?? "neutral"}`}><span className="chip__dot" />{STATUS_CHIP[c.status]?.label ?? c.status}</span>
+                    <Chip variant={(STATUS_CHIP[c.status]?.chip ?? "neutral") as ChipVariant} dot>{STATUS_CHIP[c.status]?.label ?? c.status}</Chip>
                   ) : (
-                    <span className="skel" style={{ height: 22, width: 70, borderRadius: 999 }} />
+                    <Skeleton className="h-[22px] w-[70px] rounded-full" />
                   )}
-                  <span className="chip chip--neutral" style={{ font: "500 11.5px/1 var(--w-font-mono)" }}>Campaign ID · {id.slice(-10)}</span>
+                  <Chip variant="neutral" className="font-medium text-[11.5px] leading-none [font-family:var(--w-font-mono)]">Campaign ID · {id.slice(-10)}</Chip>
                 </div>
-                <div style={{ font: "500 12.5px/1 var(--w-font-sans)", color: "var(--w-fg-neutral)" }}>{daysLine} · {progressLine}</div>
+                <div className="font-medium text-[12.5px] leading-none text-[var(--w-fg-neutral)]">{daysLine} · {progressLine}</div>
               </div>
             </div>
-            <div className="seg">
-              <button type="button" className={period === "all" ? "on" : ""} onClick={() => setPeriod("all")}>전체</button>
-              <button type="button" className={period === "7d" ? "on" : ""} onClick={() => setPeriod("7d")}>최근 7일</button>
-              <button type="button" className={period === "30d" ? "on" : ""} onClick={() => setPeriod("30d")}>최근 30일</button>
-            </div>
-          </div>
+            <SegControl
+              value={period}
+              onChange={setPeriod}
+              options={[{ value: "all", label: "전체" }, { value: "7d", label: "최근 7일" }, { value: "30d", label: "최근 30일" }]}
+            />
+          </Card>
 
           {metaQ.isLoading || insQ.isLoading ? (
-            <div className="card" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, padding: "40px 32px" }}>
-              <div className="spinner" style={{ width: 28, height: 28 }} />
-              <div style={{ font: "600 14px/1.3 var(--w-font-sans)", color: "var(--w-fg-strong)" }}>성과를 불러오는 중…</div>
-            </div>
+            <Card className="flex flex-col items-center gap-3 py-10 px-8">
+              <div className="rounded-full border-[2.4px] border-[var(--w-line-normal)] border-t-[var(--w-primary-normal)] animate-[spin_0.85s_linear_infinite] w-7 h-7" />
+              <div className="font-semibold text-[14px] leading-[1.3] text-[var(--w-fg-strong)]">성과를 불러오는 중…</div>
+            </Card>
           ) : insQ.isError ? (
             <DetailErrorCard title="성과를 불러오지 못했어요" reason={insQ.error instanceof Error ? insQ.error.message : "Meta API 응답 오류 — 잠시 후 다시 시도해 주세요"} ctaLabel="다시 시도" onAction={() => insQ.refetch()} />
           ) : !c ? null : c.status === "review" || !insQ.data || insQ.data.daily.length === 0 ? (
-            <div className="card" style={{ padding: "40px 32px", display: "flex", flexDirection: "column", alignItems: "center", gap: 12, textAlign: "center" }}>
+            <Card className="py-10 px-8 flex flex-col items-center gap-3 text-center">
               <div style={{ width: 56, height: 56, borderRadius: "50%", background: "var(--w-primary-soft)", color: "var(--w-primary-press)", display: "grid", placeItems: "center" }}><Icon name="clock" size={24} /></div>
-              <div style={{ font: "700 17px/1.3 var(--w-font-sans)", color: "var(--w-fg-strong)" }}>아직 성과 데이터가 없어요</div>
-              <div style={{ font: "500 13px/1.5 var(--w-font-sans)", color: "var(--w-fg-neutral)", maxWidth: 400, lineHeight: 1.7 }}>
+              <div className="font-bold text-[17px] leading-[1.3] text-[var(--w-fg-strong)]">아직 성과 데이터가 없어요</div>
+              <div className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)]" style={{ maxWidth: 400, lineHeight: 1.7 }}>
                 Meta가 광고를 검토·집계 준비 중이에요. 심사를 통과해 게재가 시작되고 노출이 쌓이면 여기에 표시돼요.<br />
                 <span style={{ color: "var(--w-fg-alternative)" }}>보통 수 분 ~ 수 시간 걸리고, 데이터는 몇 시간 단위로 갱신돼요.</span>
               </div>
-            </div>
+            </Card>
           ) : (
             <>
               {/* PRD-ab-testing.md §5.1 — KpiCard 행 위에 결과 카드. */}
@@ -242,78 +310,78 @@ function DetailBody({
       </div>
 
       {isPaused ? (
-        <div className="card" style={{ background: "rgba(255,146,0,0.06)", border: "1px solid rgba(255,146,0,0.25)" }}>
+        <Card style={{ background: "rgba(255,146,0,0.06)", border: "1px solid rgba(255,146,0,0.25)" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
             <div style={{ width: 44, height: 44, borderRadius: 12, background: "rgba(255,146,0,0.15)", color: "var(--w-status-cautionary)", display: "grid", placeItems: "center", flex: "0 0 auto" }}><Icon name="pause" size={20} /></div>
             <div style={{ flex: 1, minWidth: 200 }}>
-              <div style={{ font: "700 16px/1.3 var(--w-font-sans)", color: "var(--w-fg-strong)" }}>이 광고는 일시정지 상태예요</div>
-              <div style={{ font: "500 13px/1.5 var(--w-font-sans)", color: "var(--w-fg-neutral)", marginTop: 4 }}>재개하거나 새 소재로 다시 만들어볼 수 있어요. Meta 광고 관리자에서 외부로 상태가 바뀌었다면 새로고침 후 다시 확인해주세요.</div>
+              <div className="font-bold text-[16px] leading-[1.3] text-[var(--w-fg-strong)]">이 광고는 일시정지 상태예요</div>
+              <div className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)]" style={{ marginTop: 4 }}>재개하거나 새 소재로 다시 만들어볼 수 있어요. Meta 광고 관리자에서 외부로 상태가 바뀌었다면 새로고침 후 다시 확인해주세요.</div>
             </div>
             <div style={{ display: "inline-flex", gap: 8 }}>
-              <button className="btn btn--secondary" type="button" disabled={busy || !c.adSetId} onClick={() => onApply({ adSetId: c.adSetId ?? undefined, adId: c.adId ?? undefined, action: "resume" }, "광고를 재개했어요")}><Icon name="play" size={14} /> {busy ? "처리 중…" : "광고 재개"}</button>
-              <button className="btn btn--primary" type="button" onClick={onRemake}><Icon name="sparkles" size={14} /> 새 소재로 다시 만들기</button>
+              <Button variant="secondary" type="button" disabled={busy || !c.adSetId} onClick={() => onApply({ adSetId: c.adSetId ?? undefined, adId: c.adId ?? undefined, action: "resume" }, "광고를 재개했어요")}><Icon name="play" size={14} /> {busy ? "처리 중…" : "광고 재개"}</Button>
+              <Button variant="primary" type="button" onClick={onRemake}><Icon name="sparkles" size={14} /> 새 소재로 다시 만들기</Button>
             </div>
           </div>
-        </div>
+        </Card>
       ) : isIssue ? (
-        <div className="card" style={{ background: "rgba(255,66,66,0.06)", border: "1px solid rgba(255,66,66,0.30)" }}>
+        <Card style={{ background: "rgba(255,66,66,0.06)", border: "1px solid rgba(255,66,66,0.30)" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
             <div style={{ width: 44, height: 44, borderRadius: 12, background: "rgba(255,66,66,0.12)", color: "var(--w-status-negative)", display: "grid", placeItems: "center", flex: "0 0 auto" }}><Icon name="warn" size={20} /></div>
             <div style={{ flex: 1, minWidth: 200 }}>
-              <div style={{ font: "700 16px/1.3 var(--w-font-sans)", color: "var(--w-fg-strong)" }}>이 광고에 문제가 있어요</div>
-              <div style={{ font: "500 13px/1.5 var(--w-font-sans)", color: "var(--w-fg-neutral)", marginTop: 4 }}>Meta 광고 관리자에서 사유를 확인하고 조치해 주세요.</div>
+              <div className="font-bold text-[16px] leading-[1.3] text-[var(--w-fg-strong)]">이 광고에 문제가 있어요</div>
+              <div className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)]" style={{ marginTop: 4 }}>Meta 광고 관리자에서 사유를 확인하고 조치해 주세요.</div>
             </div>
-            <a className="btn btn--secondary" href={adsManagerUrl} target="_blank" rel="noreferrer">Meta 광고 관리자에서 사유 확인 <Icon name="arrow-right" size={14} /></a>
+            <a className={buttonVariants({ variant: "secondary" })} href={adsManagerUrl} target="_blank" rel="noreferrer">Meta 광고 관리자에서 사유 확인 <Icon name="arrow-right" size={14} /></a>
           </div>
-        </div>
+        </Card>
       ) : (
-        <div className="card" style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: 24, alignItems: "flex-start" }}>
+        <Card style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: 24, alignItems: "flex-start" }}>
           <div>
-            <h3 className="section-title">최적화 제안</h3>
-            <p className="section-sub">제안은 직접 확인 후 적용해요. 자동으로 바뀌지 않아요.</p>
-            <hr className="divider" />
+            <h3 className="font-bold text-[17px] leading-[1.3] tracking-[-0.012em] text-[var(--w-fg-strong)] m-0">최적화 제안</h3>
+            <p className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)] mt-1">제안은 직접 확인 후 적용해요. 자동으로 바뀌지 않아요.</p>
+            <hr className="h-px bg-[var(--w-line-neutral)] my-[18px] border-0" />
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               {suggestions.length === 0 ? (
-                <p className="field__hint">지금은 특별히 권할 조정이 없어요. 데이터가 더 쌓이면 다시 살펴볼게요.</p>
+                <p className="font-medium text-[12px] leading-[1.5] text-[var(--w-fg-alternative)]">지금은 특별히 권할 조정이 없어요. 데이터가 더 쌓이면 다시 살펴볼게요.</p>
               ) : suggestions.map((s, i) => {
                 const warn = s.severity === "warn";
                 return (
                   <OptCard key={i} icon={warn ? "warn" : "trend-up"} good={!warn} title={s.title} lines={s.detail}>
-                    {s.kind === "pause" && <button className="btn btn--secondary btn--sm" type="button" disabled={busy} onClick={() => onApply({ action: "pause" }, "광고를 일시정지했어요")}>{busy ? "처리 중…" : "광고 일시정지"}</button>}
-                    {s.kind === "increase-budget" && <button className="btn btn--secondary btn--sm" type="button" disabled={busy || !c.adSetId} onClick={() => onApply({ adSetId: c.adSetId ?? undefined, action: "set-daily-budget", dailyBudget: s.toDailyBudget }, `일일예산을 ${fmtKRW(s.toDailyBudget)}로 올렸어요`)}>{busy ? "처리 중…" : `${fmtKRW(s.toDailyBudget)}로 올리기`}</button>}
+                    {s.kind === "pause" && <Button variant="secondary" size="sm" type="button" disabled={busy} onClick={() => onApply({ action: "pause" }, "광고를 일시정지했어요")}>{busy ? "처리 중…" : "광고 일시정지"}</Button>}
+                    {s.kind === "increase-budget" && <Button variant="secondary" size="sm" type="button" disabled={busy || !c.adSetId} onClick={() => onApply({ adSetId: c.adSetId ?? undefined, action: "set-daily-budget", dailyBudget: s.toDailyBudget }, `일일예산을 ${fmtKRW(s.toDailyBudget)}로 올렸어요`)}>{busy ? "처리 중…" : `${fmtKRW(s.toDailyBudget)}로 올리기`}</Button>}
                   </OptCard>
                 );
               })}
             </div>
-            <div className="field__hint" style={{ marginTop: 12 }}>현재 일일예산은 {fmtKRW(dailyBudget)} 이에요.</div>
+            <div className="font-medium text-[12px] leading-[1.5] text-[var(--w-fg-alternative)]" style={{ marginTop: 12 }}>현재 일일예산은 {fmtKRW(dailyBudget)} 이에요.</div>
           </div>
           <div>
-            <h3 className="section-title">자동화 준비도</h3>
-            <p className="section-sub">충분한 데이터가 쌓이면 AI가 자동으로 광고를 운영할 수 있어요.</p>
-            <hr className="divider" />
+            <h3 className="font-bold text-[17px] leading-[1.3] tracking-[-0.012em] text-[var(--w-fg-strong)] m-0">자동화 준비도</h3>
+            <p className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)] mt-1">충분한 데이터가 쌓이면 AI가 자동으로 광고를 운영할 수 있어요.</p>
+            <hr className="h-px bg-[var(--w-line-neutral)] my-[18px] border-0" />
             {readiness.ready ? (
               <div style={{ background: "rgba(0,191,64,0.06)", border: "1px solid rgba(0,191,64,0.20)", borderRadius: 12, padding: 18 }}>
-                <span className="chip chip--live"><span className="chip__dot" /> 자동화 준비 완료</span>
-                <div style={{ font: "700 16px/1.3 var(--w-font-sans)", color: "var(--w-fg-strong)", marginTop: 10 }}>AI 자동 운영을 켤 수 있어요</div>
-                <p style={{ font: "500 13px/1.55 var(--w-font-sans)", color: "var(--w-fg-neutral)", margin: "8px 0 14px" }}>{readiness.reason}</p>
-                <button className="btn btn--primary btn--sm" type="button" disabled title="자동 실행 환경 연동 후 활성화돼요">자동화 켜기 (연동 준비 중)</button>
+                <Chip variant="live" dot>자동화 준비 완료</Chip>
+                <div className="font-bold text-[16px] leading-[1.3] text-[var(--w-fg-strong)]" style={{ marginTop: 10 }}>AI 자동 운영을 켤 수 있어요</div>
+                <p className="font-medium text-[13px] leading-[1.55] text-[var(--w-fg-neutral)]" style={{ margin: "8px 0 14px" }}>{readiness.reason}</p>
+                <Button variant="primary" size="sm" type="button" disabled title="자동 실행 환경 연동 후 활성화돼요">자동화 켜기 (연동 준비 중)</Button>
               </div>
             ) : (
               <div style={{ background: "var(--w-bg-alternative)", borderRadius: 12, padding: 18 }}>
-                <span className="chip chip--neutral">아직 지표가 아쉬워요</span>
-                <div style={{ font: "700 16px/1.3 var(--w-font-sans)", color: "var(--w-fg-strong)", marginTop: 10 }}>아직 자동화를 맡기기엔 지표가 아쉬워요</div>
-                <p style={{ font: "500 13px/1.55 var(--w-font-sans)", color: "var(--w-fg-neutral)", margin: "8px 0" }}>부족: {readiness.reason}. 데이터가 더 쌓이면 자동화를 제안해드릴게요.</p>
+                <Chip variant="neutral">아직 지표가 아쉬워요</Chip>
+                <div className="font-bold text-[16px] leading-[1.3] text-[var(--w-fg-strong)]" style={{ marginTop: 10 }}>아직 자동화를 맡기기엔 지표가 아쉬워요</div>
+                <p className="font-medium text-[13px] leading-[1.55] text-[var(--w-fg-neutral)]" style={{ margin: "8px 0" }}>부족: {readiness.reason}. 데이터가 더 쌓이면 자동화를 제안해드릴게요.</p>
               </div>
             )}
           </div>
-        </div>
+        </Card>
       )}
 
-      <div className="card" style={{ marginTop: 16 }}>
-        <div className="between" style={{ marginBottom: 14 }}>
+      <Card style={{ marginTop: 16 }}>
+        <div className="flex items-center justify-between gap-3" style={{ marginBottom: 14 }}>
           <div>
-            <h3 className="section-title">일별 추이</h3>
-            <p className="section-sub">최근 {data.daily.length}일 클릭수와 CTR 변화</p>
+            <h3 className="font-bold text-[17px] leading-[1.3] tracking-[-0.012em] text-[var(--w-fg-strong)] m-0">일별 추이</h3>
+            <p className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)] mt-1">최근 {data.daily.length}일 클릭수와 CTR 변화</p>
           </div>
           <div style={{ display: "flex", gap: 12 }}>
             <ChartLegend color="var(--w-primary-normal)" label="클릭수" type="bar" />
@@ -321,16 +389,16 @@ function DetailBody({
           </div>
         </div>
         <DualChart labels={labels} clicks={clicks} ctrs={ctrs} />
-      </div>
+      </Card>
 
-      <div className="card" style={{ marginTop: 16, padding: 0, overflow: "hidden" }}>
+      <Card style={{ marginTop: 16, padding: 0, overflow: "hidden" }}>
         <div style={{ padding: "20px 22px 16px" }}>
-          <h3 className="section-title" style={{ marginBottom: 4 }}>일별 상세</h3>
-          <p className="section-sub" style={{ marginBottom: 0 }}>날짜별 핵심 지표 · 전일 대비 CTR 변화 포함</p>
+          <h3 className="font-bold text-[17px] leading-[1.3] tracking-[-0.012em] text-[var(--w-fg-strong)] m-0" style={{ marginBottom: 4 }}>일별 상세</h3>
+          <p className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)] mt-1" style={{ marginBottom: 0 }}>날짜별 핵심 지표 · 전일 대비 CTR 변화 포함</p>
         </div>
-        <table className="dtable">
+        <table className="w-full border-collapse">
           <thead>
-            <tr><th>날짜</th><th style={{ textAlign: "right" }}>클릭</th><th style={{ textAlign: "right" }}>CTR</th><th style={{ textAlign: "right" }}>지출</th><th style={{ width: 96, textAlign: "right" }}>전일 대비</th></tr>
+            <tr><th className="px-4 py-2.5 font-semibold text-[11.5px] leading-none tracking-[0.004em] text-[var(--w-fg-neutral)] border-b border-[var(--w-line-alternative)] text-left">날짜</th><th className="px-4 py-2.5 font-semibold text-[11.5px] leading-none tracking-[0.004em] text-[var(--w-fg-neutral)] border-b border-[var(--w-line-alternative)] text-left" style={{ textAlign: "right" }}>클릭</th><th className="px-4 py-2.5 font-semibold text-[11.5px] leading-none tracking-[0.004em] text-[var(--w-fg-neutral)] border-b border-[var(--w-line-alternative)] text-left" style={{ textAlign: "right" }}>CTR</th><th className="px-4 py-2.5 font-semibold text-[11.5px] leading-none tracking-[0.004em] text-[var(--w-fg-neutral)] border-b border-[var(--w-line-alternative)] text-left" style={{ textAlign: "right" }}>지출</th><th className="px-4 py-2.5 font-semibold text-[11.5px] leading-none tracking-[0.004em] text-[var(--w-fg-neutral)] border-b border-[var(--w-line-alternative)] text-left" style={{ width: 96, textAlign: "right" }}>전일 대비</th></tr>
           </thead>
           <tbody>
             {data.daily.map((row, i) => {
@@ -339,12 +407,12 @@ function DetailBody({
               const up = delta != null && delta > 0;
               const flat = delta != null && Math.abs(delta) < 0.01;
               return (
-                <tr key={i} className="dtable__row">
-                  <td style={{ font: "600 13px/1 var(--w-font-sans)", color: "var(--w-fg-strong)" }}>{shortDate(row.date)}</td>
-                  <td className="dtable__num">{fmt(row.clicks)}</td>
-                  <td className="dtable__num">{row.ctr.toFixed(2)}%</td>
-                  <td className="dtable__num">{fmtKRW(row.spend)}</td>
-                  <td className="dtable__num">
+                <tr key={i} className="group">
+                  <td className="px-4 py-3 border-b border-[var(--w-line-alternative)] group-hover:bg-[var(--w-bg-neutral)] font-semibold text-[13px] leading-none text-[var(--w-fg-strong)]">{shortDate(row.date)}</td>
+                  <td className="px-4 py-3 border-b border-[var(--w-line-alternative)] group-hover:bg-[var(--w-bg-neutral)] text-right font-medium text-[13px] leading-none [font-family:var(--w-font-mono)] text-[var(--w-fg-strong)]">{fmt(row.clicks)}</td>
+                  <td className="px-4 py-3 border-b border-[var(--w-line-alternative)] group-hover:bg-[var(--w-bg-neutral)] text-right font-medium text-[13px] leading-none [font-family:var(--w-font-mono)] text-[var(--w-fg-strong)]">{row.ctr.toFixed(2)}%</td>
+                  <td className="px-4 py-3 border-b border-[var(--w-line-alternative)] group-hover:bg-[var(--w-bg-neutral)] text-right font-medium text-[13px] leading-none [font-family:var(--w-font-mono)] text-[var(--w-fg-strong)]">{fmtKRW(row.spend)}</td>
+                  <td className="px-4 py-3 border-b border-[var(--w-line-alternative)] group-hover:bg-[var(--w-bg-neutral)] text-right font-medium text-[13px] leading-none [font-family:var(--w-font-mono)] text-[var(--w-fg-strong)]">
                     {delta == null ? <span style={{ color: "var(--w-fg-alternative)" }}>—</span>
                       : flat ? <span style={{ color: "var(--w-fg-neutral)" }}>±0.00%p</span>
                       : <span style={{ display: "inline-flex", alignItems: "center", gap: 4, color: up ? "var(--w-status-positive)" : "var(--w-status-negative)" }}><Icon name={up ? "trend-up" : "trend-down"} size={12} />{(up ? "+" : "")}{delta.toFixed(2)}%p</span>}
@@ -354,8 +422,8 @@ function DetailBody({
             })}
           </tbody>
         </table>
-        <div style={{ padding: "12px 22px 18px" }}><span className="field__hint">Meta 인사이트 기준 · 데이터는 몇 시간 단위로 갱신돼요</span></div>
-      </div>
+        <div style={{ padding: "12px 22px 18px" }}><span className="font-medium text-[12px] leading-[1.5] text-[var(--w-fg-alternative)]">Meta 인사이트 기준 · 데이터는 몇 시간 단위로 갱신돼요</span></div>
+      </Card>
     </>
   );
 }
@@ -365,8 +433,8 @@ function OptCard({ icon, good, title, lines, children }: { icon: IconName; good:
     <div style={{ display: "flex", gap: 14, padding: 14, border: "1px solid var(--w-line-alternative)", borderRadius: 12 }}>
       <div style={{ width: 36, height: 36, borderRadius: 10, background: good ? "rgba(0,191,64,0.10)" : "rgba(255,146,0,0.12)", color: good ? "var(--w-status-positive)" : "var(--w-status-cautionary)", display: "grid", placeItems: "center", flex: "0 0 auto" }}><Icon name={icon} size={18} /></div>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ font: "600 14px/1.4 var(--w-font-sans)", color: "var(--w-fg-strong)" }}>{title}</div>
-        {lines.map((l, j) => <div key={j} style={{ font: "500 12.5px/1.55 var(--w-font-sans)", color: "var(--w-fg-neutral)", marginTop: 4 }}>{l}</div>)}
+        <div className="font-semibold text-[14px] leading-[1.4] text-[var(--w-fg-strong)]">{title}</div>
+        {lines.map((l, j) => <div key={j} className="font-medium text-[12.5px] leading-[1.55] text-[var(--w-fg-neutral)]" style={{ marginTop: 4 }}>{l}</div>)}
       </div>
       {children && <div style={{ flex: "0 0 auto", alignSelf: "center" }}>{children}</div>}
     </div>
@@ -404,10 +472,10 @@ function AbTestTab({
   if (abInfo) {
     return (
       <>
-        <div className="card" style={{ marginBottom: 16 }}>
-          <h3 className="section-title">실험 설정</h3>
-          <hr className="divider" />
-          <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: "10px 16px", font: "500 13px/1.5 var(--w-font-sans)" }}>
+        <Card style={{ marginBottom: 16 }}>
+          <h3 className="font-bold text-[17px] leading-[1.3] tracking-[-0.012em] text-[var(--w-fg-strong)] m-0">실험 설정</h3>
+          <hr className="h-px bg-[var(--w-line-neutral)] my-[18px] border-0" />
+          <div className="font-medium text-[13px] leading-[1.5]" style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: "10px 16px" }}>
             <span style={{ color: "var(--w-fg-alternative)" }}>비교 축</span>
             <span style={{ color: "var(--w-fg-strong)", fontWeight: 600 }}>{AXIS_LABEL[abInfo.axis] ?? abInfo.axis}</span>
             <span style={{ color: "var(--w-fg-alternative)" }}>A안</span>
@@ -417,7 +485,7 @@ function AbTestTab({
             <span style={{ color: "var(--w-fg-alternative)" }}>시작일</span>
             <span style={{ color: "var(--w-fg-neutral)" }}>{abInfo.startDate}</span>
           </div>
-        </div>
+        </Card>
         {insightsWithAds?.ads ? (
           <AbTestResultCard
             axis={abInfo.axis}
@@ -428,10 +496,10 @@ function AbTestTab({
             demoMode={process.env.NEXT_PUBLIC_META_APP_MODE === "development"}
           />
         ) : (
-          <div className="card" style={{ padding: "32px", display: "flex", flexDirection: "column", alignItems: "center", gap: 10, textAlign: "center" }}>
-            <div className="spinner" style={{ width: 24, height: 24 }} />
-            <div style={{ font: "500 13px/1.3 var(--w-font-sans)", color: "var(--w-fg-neutral)" }}>성과 데이터를 불러오는 중…</div>
-          </div>
+          <Card className="flex flex-col items-center gap-2.5 text-center" style={{ padding: "32px" }}>
+            <div className="rounded-full border-[2.4px] border-[var(--w-line-normal)] border-t-[var(--w-primary-normal)] animate-[spin_0.85s_linear_infinite] w-6 h-6" />
+            <div className="font-medium text-[13px] leading-[1.3] text-[var(--w-fg-neutral)]">성과 데이터를 불러오는 중…</div>
+          </Card>
         )}
       </>
     );
@@ -441,10 +509,10 @@ function AbTestTab({
   return (
     <>
       {/* 생성 섹션 */}
-      <div className="card" style={{ marginBottom: 16 }}>
-        <h3 className="section-title">A/B 테스트 시작하기</h3>
-        <p className="section-sub">같은 캠페인에서 두 가지 소재를 비교해 더 좋은 광고를 찾아요.</p>
-        <hr className="divider" />
+      <Card style={{ marginBottom: 16 }}>
+        <h3 className="font-bold text-[17px] leading-[1.3] tracking-[-0.012em] text-[var(--w-fg-strong)] m-0">A/B 테스트 시작하기</h3>
+        <p className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)] mt-1">같은 캠페인에서 두 가지 소재를 비교해 더 좋은 광고를 찾아요.</p>
+        <hr className="h-px bg-[var(--w-line-neutral)] my-[18px] border-0" />
 
         {createMode === null && (
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
@@ -474,33 +542,33 @@ function AbTestTab({
                 <Icon name="sparkles" size={18} />
               </div>
               <div>
-                <div style={{ font: "600 14px/1.3 var(--w-font-sans)", color: "var(--w-fg-strong)", marginBottom: 4 }}>광고 만들기로 이동해요</div>
-                <p style={{ font: "500 13px/1.55 var(--w-font-sans)", color: "var(--w-fg-neutral)", margin: 0 }}>
+                <div className="font-semibold text-[14px] leading-[1.3] text-[var(--w-fg-strong)]" style={{ marginBottom: 4 }}>광고 만들기로 이동해요</div>
+                <p className="font-medium text-[13px] leading-[1.55] text-[var(--w-fg-neutral)]" style={{ margin: 0 }}>
                   STEP 02 → "A/B 시험으로 집행" 체크 → 비교 축(헤드라인 / 카피 / 이미지) 선택 → STEP 03에서 집행하면 자동으로 A/B 테스트가 등록돼요.
                 </p>
               </div>
             </div>
             <div style={{ display: "flex", gap: 8 }}>
-              <button className="btn btn--primary" type="button" onClick={() => router.push(`/create?prefill=campaign:${campaignId}`)}>
+              <Button variant="primary" type="button" onClick={() => router.push(`/create?prefill=campaign:${campaignId}`)}>
                 <Icon name="sparkles" size={14} /> 광고 만들기로 이동
-              </button>
-              <button className="btn btn--ghost" type="button" onClick={() => setCreateMode(null)}>취소</button>
+              </Button>
+              <Button variant="ghost" type="button" onClick={() => setCreateMode(null)}>취소</Button>
             </div>
           </div>
         )}
-      </div>
+      </Card>
 
       {/* 예시 섹션 */}
       {MOCK_AB_DEMO && (
         <>
           <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", borderRadius: 8, background: "var(--w-bg-alternative)", marginBottom: 12 }}>
             <Icon name="eye" size={14} style={{ color: "var(--w-fg-alternative)" }} />
-            <span style={{ font: "500 12.5px/1.4 var(--w-font-sans)", color: "var(--w-fg-neutral)" }}>아래는 A/B 테스트 결과 예시예요.</span>
+            <span className="font-medium text-[12.5px] leading-[1.4] text-[var(--w-fg-neutral)]">아래는 A/B 테스트 결과 예시예요.</span>
           </div>
-          <div className="card" style={{ marginBottom: 16, opacity: 0.85 }}>
-            <h3 className="section-title">실험 설정 (예시)</h3>
-            <hr className="divider" />
-            <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: "10px 16px", font: "500 13px/1.5 var(--w-font-sans)" }}>
+          <Card style={{ marginBottom: 16, opacity: 0.85 }}>
+            <h3 className="font-bold text-[17px] leading-[1.3] tracking-[-0.012em] text-[var(--w-fg-strong)] m-0">실험 설정 (예시)</h3>
+            <hr className="h-px bg-[var(--w-line-neutral)] my-[18px] border-0" />
+            <div className="font-medium text-[13px] leading-[1.5]" style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: "10px 16px" }}>
               <span style={{ color: "var(--w-fg-alternative)" }}>비교 축</span>
               <span style={{ color: "var(--w-fg-strong)", fontWeight: 600 }}>{AXIS_LABEL[MOCK_AB_DEMO.abInfo.axis]}</span>
               <span style={{ color: "var(--w-fg-alternative)" }}>A안</span>
@@ -508,7 +576,7 @@ function AbTestTab({
               <span style={{ color: "var(--w-fg-alternative)" }}>B안</span>
               <span style={{ color: "var(--w-fg-neutral)" }}>{MOCK_AB_DEMO.abInfo.variantB}</span>
             </div>
-          </div>
+          </Card>
           <AbTestResultCard
             axis={MOCK_AB_DEMO.abInfo.axis}
             variantA={MOCK_AB_DEMO.abInfo.variantA}
@@ -528,17 +596,16 @@ function CreateOptionCard({ icon, title, desc, onClick }: { icon: IconName; titl
     <button
       type="button"
       onClick={onClick}
-      className="card"
-      style={{ textAlign: "left", cursor: "pointer", padding: "18px 16px", display: "flex", flexDirection: "column", gap: 10, border: "1.5px solid var(--w-line-alternative)", transition: "border-color 160ms" }}
+      className="bg-[var(--w-bg-elevated)] border border-[var(--w-line-normal)] rounded-2xl text-left cursor-pointer flex flex-col gap-2.5 p-[18px_16px] transition-[border-color] duration-[160ms] hover:border-[var(--w-line-normal)]"
     >
       <div style={{ width: 40, height: 40, borderRadius: 10, background: "var(--w-primary-soft)", color: "var(--w-primary-normal)", display: "grid", placeItems: "center" }}>
         <Icon name={icon} size={20} />
       </div>
       <div>
-        <div style={{ font: "600 14px/1.4 var(--w-font-sans)", color: "var(--w-fg-strong)", marginBottom: 4 }}>{title}</div>
-        <p style={{ font: "500 12.5px/1.55 var(--w-font-sans)", color: "var(--w-fg-neutral)", margin: 0 }}>{desc}</p>
+        <div className="font-semibold text-[14px] leading-[1.4] text-[var(--w-fg-strong)]" style={{ marginBottom: 4 }}>{title}</div>
+        <p className="font-medium text-[12.5px] leading-[1.55] text-[var(--w-fg-neutral)]" style={{ margin: 0 }}>{desc}</p>
       </div>
-      <div style={{ display: "flex", alignItems: "center", gap: 4, font: "600 12.5px/1 var(--w-font-sans)", color: "var(--w-primary-normal)", marginTop: 4 }}>
+      <div className="flex items-center gap-1 font-semibold text-[12.5px] leading-none text-[var(--w-primary-normal)]" style={{ marginTop: 4 }}>
         선택하기 <Icon name="arrow-right" size={13} />
       </div>
     </button>
@@ -559,7 +626,7 @@ function ExistingAdsForm({ campaignId, onCancel }: { campaignId: string; onCance
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       <div>
-        <div style={{ font: "600 13px/1.3 var(--w-font-sans)", color: "var(--w-fg-strong)", marginBottom: 8 }}>비교 축</div>
+        <div className="font-semibold text-[13px] leading-[1.3] text-[var(--w-fg-strong)]" style={{ marginBottom: 8 }}>비교 축</div>
         <div style={{ display: "flex", gap: 8 }}>
           {AXIS_OPTIONS.map((o) => (
             <button
@@ -582,25 +649,23 @@ function ExistingAdsForm({ campaignId, onCancel }: { campaignId: string; onCance
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
         <div>
-          <div style={{ font: "600 13px/1.3 var(--w-font-sans)", color: "var(--w-fg-strong)", marginBottom: 6 }}>A안 — 광고 ID</div>
+          <div className="font-semibold text-[13px] leading-[1.3] text-[var(--w-fg-strong)]" style={{ marginBottom: 6 }}>A안 — 광고 ID</div>
           <input
             type="text"
-            className="input"
+            className="w-full bg-[var(--w-bg-elevated)] border border-[var(--w-line-normal)] rounded-xl px-3.5 py-3 font-medium text-[14px] leading-[1.5] text-[var(--w-fg-strong)] tracking-[0.004em] outline-none transition-[border-color,box-shadow] duration-[120ms] focus:border-[var(--w-primary-normal)] focus:shadow-[0_0_0_4px_rgba(0,102,255,0.14)] placeholder:text-[var(--w-fg-alternative)]"
             placeholder="예: act_123456789"
             value={adA}
             onChange={(e) => setAdA(e.target.value)}
-            style={{ width: "100%" }}
           />
         </div>
         <div>
-          <div style={{ font: "600 13px/1.3 var(--w-font-sans)", color: "var(--w-fg-strong)", marginBottom: 6 }}>B안 — 광고 ID</div>
+          <div className="font-semibold text-[13px] leading-[1.3] text-[var(--w-fg-strong)]" style={{ marginBottom: 6 }}>B안 — 광고 ID</div>
           <input
             type="text"
-            className="input"
+            className="w-full bg-[var(--w-bg-elevated)] border border-[var(--w-line-normal)] rounded-xl px-3.5 py-3 font-medium text-[14px] leading-[1.5] text-[var(--w-fg-strong)] tracking-[0.004em] outline-none transition-[border-color,box-shadow] duration-[120ms] focus:border-[var(--w-primary-normal)] focus:shadow-[0_0_0_4px_rgba(0,102,255,0.14)] placeholder:text-[var(--w-fg-alternative)]"
             placeholder="예: act_987654321"
             value={adB}
             onChange={(e) => setAdB(e.target.value)}
-            style={{ width: "100%" }}
           />
         </div>
       </div>
@@ -608,22 +673,22 @@ function ExistingAdsForm({ campaignId, onCancel }: { campaignId: string; onCance
       <div style={{ padding: "10px 14px", borderRadius: 8, background: "rgba(255,146,0,0.08)", border: "1px solid rgba(255,146,0,0.25)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
           <Icon name="info" size={14} style={{ color: "var(--w-status-cautionary)", flex: "0 0 auto" }} />
-          <span style={{ font: "500 12.5px/1.4 var(--w-font-sans)", color: "var(--w-fg-neutral)" }}>
+          <span className="font-medium text-[12.5px] leading-[1.4] text-[var(--w-fg-neutral)]">
             실제 집행은 Meta 광고 관리자에서 이루어져요. 광고 ID 입력 후 결과 추적만 AdFlow에서 해요.
           </span>
         </div>
       </div>
 
       <div style={{ display: "flex", gap: 8 }}>
-        <button
-          className="btn btn--primary"
+        <Button
+          variant="primary"
           type="button"
           disabled={!adA.trim() || !adB.trim()}
           title="추후 지원 예정"
         >
           <Icon name="chart" size={14} /> 결과 추적 시작 (준비 중)
-        </button>
-        <button className="btn btn--ghost" type="button" onClick={onCancel}>취소</button>
+        </Button>
+        <Button variant="ghost" type="button" onClick={onCancel}>취소</Button>
       </div>
     </div>
   );
@@ -631,12 +696,12 @@ function ExistingAdsForm({ campaignId, onCancel }: { campaignId: string; onCance
 
 function DetailErrorCard({ icon = "warn", title, reason, ctaLabel, onAction }: { icon?: IconName; title: string; reason: string; ctaLabel: string; onAction: () => void }) {
   return (
-    <div className="card" style={{ padding: "40px 32px", display: "flex", flexDirection: "column", alignItems: "center", gap: 12, textAlign: "center" }}>
+    <Card className="py-10 px-8 flex flex-col items-center gap-3 text-center">
       <div style={{ width: 56, height: 56, borderRadius: "50%", background: "rgba(255,66,66,0.10)", color: "var(--w-status-negative)", display: "grid", placeItems: "center" }}><Icon name={icon} size={24} /></div>
-      <div style={{ font: "700 17px/1.3 var(--w-font-sans)", color: "var(--w-fg-strong)" }}>{title}</div>
-      <div style={{ font: "500 13px/1.5 var(--w-font-sans)", color: "var(--w-fg-neutral)", maxWidth: 380 }}>{reason}</div>
-      <button className="btn btn--secondary" type="button" style={{ marginTop: 8 }} onClick={onAction}>{ctaLabel}</button>
-    </div>
+      <div className="font-bold text-[17px] leading-[1.3] text-[var(--w-fg-strong)]">{title}</div>
+      <div className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)]" style={{ maxWidth: 380 }}>{reason}</div>
+      <Button variant="secondary" type="button" style={{ marginTop: 8 }} onClick={onAction}>{ctaLabel}</Button>
+    </Card>
   );
 }
 
@@ -656,14 +721,18 @@ const PLACEMENT_LABELS: Record<string, string> = {
 function ConfigRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <>
-      <span style={{ color: "var(--w-fg-alternative)", font: "500 12.5px/1.6 var(--w-font-sans)", whiteSpace: "nowrap" }}>{label}</span>
-      <span style={{ color: "var(--w-fg-strong)", font: "500 13px/1.6 var(--w-font-sans)" }}>{value}</span>
+      <span className="font-medium text-[12.5px] leading-[1.6] text-[var(--w-fg-alternative)] whitespace-nowrap">{label}</span>
+      <span className="font-medium text-[13px] leading-[1.6] text-[var(--w-fg-strong)]">{value}</span>
     </>
   );
 }
 
 function CampaignConfigurationTab({ c, isLoading, campaignId, onRefetch, isAbCampaign }: { c: CampaignSummary | undefined; isLoading: boolean; campaignId: string; onRefetch: () => void; isAbCampaign: boolean }) {
   const showToast = useToast();
+  const { get: getAutoRelaunch, setEnabled: setAutoRelaunchEnabled } = useAutoRelaunch();
+  const arEntry = getAutoRelaunch(campaignId);
+  const arEnabled = arEntry?.enabled ?? false;
+  const canToggleAr = !!c?.endDate && c?.status !== "ended";
   const [editingSchedule, setEditingSchedule] = useState(false);
   const [budgetVal, setBudgetVal] = useState("");
   const [startDateVal, setStartDateVal] = useState("");
@@ -864,9 +933,9 @@ function CampaignConfigurationTab({ c, isLoading, campaignId, onRefetch, isAbCam
 
   if (isLoading || !c) {
     return (
-      <div className="card" style={{ display: "flex", justifyContent: "center", padding: "40px 32px" }}>
-        <div className="spinner" style={{ width: 28, height: 28 }} />
-      </div>
+      <Card className="flex justify-center py-10 px-8">
+        <div className="rounded-full border-[2.4px] border-[var(--w-line-normal)] border-t-[var(--w-primary-normal)] animate-[spin_0.85s_linear_infinite] w-7 h-7" />
+      </Card>
     );
   }
 
@@ -885,63 +954,63 @@ function CampaignConfigurationTab({ c, isLoading, campaignId, onRefetch, isAbCam
 
   return (
     <>
-      <div className="card" style={{ marginBottom: 16 }}>
-        <h3 className="section-title">기본 정보</h3>
-        <hr className="divider" />
+      <Card style={{ marginBottom: 16 }}>
+        <h3 className="font-bold text-[17px] leading-[1.3] tracking-[-0.012em] text-[var(--w-fg-strong)] m-0">기본 정보</h3>
+        <hr className="h-px bg-[var(--w-line-neutral)] my-[18px] border-0" />
         <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: "12px 24px", alignItems: "center" }}>
           <ConfigRow label="캠페인 목표" value={c.goal} />
-          <ConfigRow label="상태" value={<span className={`chip chip--${STATUS_CHIP[c.status]?.chip ?? "neutral"}`}><span className="chip__dot" />{STATUS_CHIP[c.status]?.label ?? c.status}</span>} />
-          <ConfigRow label="Campaign ID" value={<span style={{ font: "500 12px/1 var(--w-font-mono)", color: "var(--w-fg-neutral)" }}>{campaignId.slice(-10)}</span>} />
+          <ConfigRow label="상태" value={<Chip variant={(STATUS_CHIP[c.status]?.chip ?? "neutral") as ChipVariant} dot>{STATUS_CHIP[c.status]?.label ?? c.status}</Chip>} />
+          <ConfigRow label="Campaign ID" value={<span className="font-medium text-[12px] leading-none [font-family:var(--w-font-mono)] text-[var(--w-fg-neutral)]">{campaignId.slice(-10)}</span>} />
         </div>
-      </div>
+      </Card>
 
-      <div className="card" style={{ marginBottom: 16 }}>
-        <div className="between" style={{ marginBottom: 0 }}>
-          <h3 className="section-title" style={{ marginBottom: 0 }}>일정 · 예산</h3>
+      <Card style={{ marginBottom: 16 }}>
+        <div className="flex items-center justify-between gap-3" style={{ marginBottom: 0 }}>
+          <h3 className="font-bold text-[17px] leading-[1.3] tracking-[-0.012em] text-[var(--w-fg-strong)] m-0" style={{ marginBottom: 0 }}>일정 · 예산</h3>
           {!editingSchedule && c.status !== "ended" && (
-            <button className="btn btn--ghost btn--sm" type="button" onClick={openScheduleEdit}>
+            <Button variant="ghost" size="sm" type="button" onClick={openScheduleEdit}>
               <Icon name="edit" size={13} /> 수정
-            </button>
+            </Button>
           )}
         </div>
-        <hr className="divider" />
+        <hr className="h-px bg-[var(--w-line-neutral)] my-[18px] border-0" />
         {editingSchedule ? (
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             <div>
-              <div style={{ font: "600 12.5px/1.3 var(--w-font-sans)", color: "var(--w-fg-strong)", marginBottom: 6 }}>일 예산 (₩)</div>
+              <div className="font-semibold text-[12.5px] leading-[1.3] text-[var(--w-fg-strong)]" style={{ marginBottom: 6 }}>일 예산 (₩)</div>
               <input
-                className="input"
+                className="w-full bg-[var(--w-bg-elevated)] border border-[var(--w-line-normal)] rounded-xl px-3.5 py-3 font-medium text-[14px] leading-[1.5] text-[var(--w-fg-strong)] tracking-[0.004em] outline-none transition-[border-color,box-shadow] duration-[120ms] focus:border-[var(--w-primary-normal)] focus:shadow-[0_0_0_4px_rgba(0,102,255,0.14)] placeholder:text-[var(--w-fg-alternative)]"
                 type="number"
                 min={10000}
                 step={1000}
                 value={budgetVal}
                 onChange={(e) => setBudgetVal(e.target.value)}
-                style={{ width: "100%", maxWidth: 220 }}
+                style={{ maxWidth: 220 }}
               />
               {bigBudgetChange && (
                 <div style={{ marginTop: 6, display: "flex", alignItems: "center", gap: 6, padding: "6px 10px", borderRadius: 8, background: "rgba(255,146,0,0.08)", border: "1px solid rgba(255,146,0,0.25)" }}>
                   <Icon name="warn" size={13} style={{ color: "var(--w-status-cautionary)", flex: "0 0 auto" }} />
-                  <span style={{ font: "500 12px/1.4 var(--w-font-sans)", color: "var(--w-fg-neutral)" }}>큰 예산 변경은 성과 안정화 구간이 재시작될 수 있어요</span>
+                  <span className="font-medium text-[12px] leading-[1.4] text-[var(--w-fg-neutral)]">큰 예산 변경은 성과 안정화 구간이 재시작될 수 있어요</span>
                 </div>
               )}
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
               <div>
-                <div style={{ font: "600 12.5px/1.3 var(--w-font-sans)", color: "var(--w-fg-strong)", marginBottom: 6 }}>시작일</div>
+                <div className="font-semibold text-[12.5px] leading-[1.3] text-[var(--w-fg-strong)]" style={{ marginBottom: 6 }}>시작일</div>
                 <DatePicker value={startDateVal} onChange={setStartDateVal} aria-label="시작일" />
               </div>
               <div>
-                <div style={{ font: "600 12.5px/1.3 var(--w-font-sans)", color: "var(--w-fg-strong)", marginBottom: 6 }}>종료일</div>
+                <div className="font-semibold text-[12.5px] leading-[1.3] text-[var(--w-fg-strong)]" style={{ marginBottom: 6 }}>종료일</div>
                 <DatePicker value={endDateVal} onChange={setEndDateVal} placeholder="종료일 없음" aria-label="종료일" />
               </div>
             </div>
             <div style={{ display: "flex", gap: 8 }}>
-              <button className="btn btn--primary btn--sm" type="button" disabled={saving} onClick={saveSchedule}>
+              <Button variant="primary" size="sm" type="button" disabled={saving} onClick={saveSchedule}>
                 {saving ? "저장 중…" : "저장"}
-              </button>
-              <button className="btn btn--ghost btn--sm" type="button" disabled={saving} onClick={() => setEditingSchedule(false)}>
+              </Button>
+              <Button variant="ghost" size="sm" type="button" disabled={saving} onClick={() => setEditingSchedule(false)}>
                 취소
-              </button>
+              </Button>
             </div>
           </div>
         ) : (
@@ -951,33 +1020,33 @@ function CampaignConfigurationTab({ c, isLoading, campaignId, onRefetch, isAbCam
             <ConfigRow label="일 예산" value={c.dailyBudget ? fmtKRW(c.dailyBudget) : dash} />
           </div>
         )}
-      </div>
+      </Card>
 
-      <div className="card" style={{ marginBottom: 16 }}>
-        <div className="between" style={{ marginBottom: 0 }}>
-          <h3 className="section-title" style={{ marginBottom: 0 }}>소재</h3>
+      <Card style={{ marginBottom: 16 }}>
+        <div className="flex items-center justify-between gap-3" style={{ marginBottom: 0 }}>
+          <h3 className="font-bold text-[17px] leading-[1.3] tracking-[-0.012em] text-[var(--w-fg-strong)] m-0" style={{ marginBottom: 0 }}>소재</h3>
           {!editingCreative && c.status !== "ended" && (
             isAbCampaign ? (
-              <span title="A/B 시험 중에는 소재 수정 불가" style={{ display: "inline-flex", alignItems: "center", gap: 4, font: "500 12px/1 var(--w-font-sans)", color: "var(--w-fg-alternative)" }}>
+              <span title="A/B 시험 중에는 소재 수정 불가" className="inline-flex items-center gap-1 font-medium text-[12px] leading-none text-[var(--w-fg-alternative)]">
                 <Icon name="lock" size={13} /> A/B 시험 중
               </span>
             ) : (
-              <button className="btn btn--ghost btn--sm" type="button" onClick={openCreativeEdit}>
+              <Button variant="ghost" size="sm" type="button" onClick={openCreativeEdit}>
                 <Icon name="edit" size={13} /> 수정
-              </button>
+              </Button>
             )
           )}
         </div>
-        <hr className="divider" />
+        <hr className="h-px bg-[var(--w-line-neutral)] my-[18px] border-0" />
         {editingCreative ? (
           <>
             {c.status === "issue" && c.issueReason && (
               <div style={{ marginBottom: 14, padding: "10px 14px", borderRadius: 8, background: "rgba(255,66,66,0.06)", border: "1px solid rgba(255,66,66,0.25)", display: "flex", gap: 8 }}>
                 <Icon name="warn" size={14} style={{ color: "var(--w-status-negative)", flex: "0 0 auto", marginTop: 1 }} />
                 <div>
-                  <div style={{ font: "600 13px/1.3 var(--w-font-sans)", color: "var(--w-status-negative)" }}>거절 사유: {c.issueReason.summary}</div>
+                  <div className="font-semibold text-[13px] leading-[1.3] text-[var(--w-status-negative)]">거절 사유: {c.issueReason.summary}</div>
                   {c.issueReason.message !== c.issueReason.summary && (
-                    <div style={{ font: "500 12px/1.5 var(--w-font-sans)", color: "var(--w-fg-neutral)", marginTop: 4 }}>{c.issueReason.message.slice(0, 200)}</div>
+                    <div className="font-medium text-[12px] leading-[1.5] text-[var(--w-fg-neutral)]" style={{ marginTop: 4 }}>{c.issueReason.message.slice(0, 200)}</div>
                   )}
                 </div>
               </div>
@@ -985,26 +1054,26 @@ function CampaignConfigurationTab({ c, isLoading, campaignId, onRefetch, isAbCam
             {c.status === "live" && (
               <div style={{ marginBottom: 14, padding: "10px 14px", borderRadius: 8, background: "rgba(255,146,0,0.08)", border: "1px solid rgba(255,146,0,0.25)", display: "flex", gap: 8 }}>
                 <Icon name="warn" size={14} style={{ color: "var(--w-status-cautionary)", flex: "0 0 auto", marginTop: 1 }} />
-                <span style={{ font: "500 12px/1.4 var(--w-font-sans)", color: "var(--w-fg-neutral)" }}>소재 교체는 <strong>성과 안정화 구간 재시작 + 재심사</strong>를 일으켜요. 검토 동안 이전 소재가 잠시 노출될 수 있어요.</span>
+                <span className="font-medium text-[12px] leading-[1.4] text-[var(--w-fg-neutral)]">소재 교체는 <strong>성과 안정화 구간 재시작 + 재심사</strong>를 일으켜요. 검토 동안 이전 소재가 잠시 노출될 수 있어요.</span>
               </div>
             )}
             {c.status === "paused" && (
               <div style={{ marginBottom: 14, padding: "10px 14px", borderRadius: 8, background: "var(--w-bg-alternative)", display: "flex", gap: 8 }}>
                 <Icon name="info" size={14} style={{ color: "var(--w-fg-alternative)", flex: "0 0 auto", marginTop: 1 }} />
-                <span style={{ font: "500 12px/1.4 var(--w-font-sans)", color: "var(--w-fg-neutral)" }}>재개 시 새 소재로 검토받아요.</span>
+                <span className="font-medium text-[12px] leading-[1.4] text-[var(--w-fg-neutral)]">재개 시 새 소재로 검토받아요.</span>
               </div>
             )}
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               <div>
-                <div style={{ font: "600 12.5px/1.3 var(--w-font-sans)", color: "var(--w-fg-strong)", marginBottom: 6 }}>헤드라인</div>
-                <input className="input" type="text" value={creativeHeadline} onChange={(e) => setCreativeHeadline(e.target.value)} style={{ width: "100%" }} />
+                <div className="font-semibold text-[12.5px] leading-[1.3] text-[var(--w-fg-strong)]" style={{ marginBottom: 6 }}>헤드라인</div>
+                <input className="w-full bg-[var(--w-bg-elevated)] border border-[var(--w-line-normal)] rounded-xl px-3.5 py-3 font-medium text-[14px] leading-[1.5] text-[var(--w-fg-strong)] tracking-[0.004em] outline-none transition-[border-color,box-shadow] duration-[120ms] focus:border-[var(--w-primary-normal)] focus:shadow-[0_0_0_4px_rgba(0,102,255,0.14)] placeholder:text-[var(--w-fg-alternative)]" type="text" value={creativeHeadline} onChange={(e) => setCreativeHeadline(e.target.value)} />
               </div>
               <div>
-                <div style={{ font: "600 12.5px/1.3 var(--w-font-sans)", color: "var(--w-fg-strong)", marginBottom: 6 }}>본문</div>
-                <textarea className="input" rows={3} value={creativePrimaryText} onChange={(e) => setCreativePrimaryText(e.target.value)} style={{ width: "100%", resize: "vertical" }} />
+                <div className="font-semibold text-[12.5px] leading-[1.3] text-[var(--w-fg-strong)]" style={{ marginBottom: 6 }}>본문</div>
+                <textarea className="w-full bg-[var(--w-bg-elevated)] border border-[var(--w-line-normal)] rounded-xl px-3.5 py-3 font-medium text-[14px] leading-[1.5] text-[var(--w-fg-strong)] tracking-[0.004em] outline-none transition-[border-color,box-shadow] duration-[120ms] focus:border-[var(--w-primary-normal)] focus:shadow-[0_0_0_4px_rgba(0,102,255,0.14)] placeholder:text-[var(--w-fg-alternative)]" rows={3} value={creativePrimaryText} onChange={(e) => setCreativePrimaryText(e.target.value)} style={{ resize: "vertical" }} />
               </div>
               <div>
-                <div style={{ font: "600 12.5px/1.3 var(--w-font-sans)", color: "var(--w-fg-strong)", marginBottom: 8 }}>이미지</div>
+                <div className="font-semibold text-[12.5px] leading-[1.3] text-[var(--w-fg-strong)]" style={{ marginBottom: 8 }}>이미지</div>
                 <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
                   {([{ val: "keep", label: "그대로 유지" }, { val: "upload", label: "직접 업로드" }] as const).map(({ val, label }) => (
                     <button key={val} type="button" onClick={() => setImageMode(val)}
@@ -1018,24 +1087,24 @@ function CampaignConfigurationTab({ c, isLoading, campaignId, onRefetch, isAbCam
                 </div>
                 {imageMode === "upload" && (
                   <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                    <label className="btn btn--secondary btn--sm" style={{ cursor: "pointer" }}>
+                    <label className={buttonVariants({ variant: "secondary", size: "sm" })} style={{ cursor: "pointer" }}>
                       <Icon name="upload" size={13} /> 파일 선택
                       <input type="file" accept="image/*" style={{ display: "none" }} onChange={handleImageFile} />
                     </label>
-                    {imageFile && <span style={{ font: "500 12px/1.3 var(--w-font-sans)", color: "var(--w-fg-neutral)" }}>{imageFile.name}</span>}
+                    {imageFile && <span className="font-medium text-[12px] leading-[1.3] text-[var(--w-fg-neutral)]">{imageFile.name}</span>}
                     {imageDataUrl && <img src={imageDataUrl} alt="" style={{ width: 48, height: 48, borderRadius: 8, objectFit: "cover" }} />}
                   </div>
                 )}
               </div>
               <div style={{ display: "flex", gap: 8 }}>
-                <button className="btn btn--primary btn--sm" type="button"
+                <Button variant="primary" size="sm" type="button"
                   disabled={savingCreative || !creativeHeadline.trim() || !creativePrimaryText.trim() || (imageMode === "upload" && !imageDataUrl)}
                   onClick={submitCreative}>
                   {savingCreative ? "교체 중…" : "소재 교체"}
-                </button>
-                <button className="btn btn--ghost btn--sm" type="button" disabled={savingCreative} onClick={() => setEditingCreative(false)}>
+                </Button>
+                <Button variant="ghost" size="sm" type="button" disabled={savingCreative} onClick={() => setEditingCreative(false)}>
                   취소
-                </button>
+                </Button>
               </div>
             </div>
             {showCreativeConfirm && (
@@ -1059,32 +1128,32 @@ function CampaignConfigurationTab({ c, isLoading, campaignId, onRefetch, isAbCam
             <ConfigRow label="본문" value={c.primaryText ?? dash} />
             <ConfigRow label="CTA" value={c.cta ? (CTA_LABELS[c.cta] ?? c.cta) : dash} />
             <ConfigRow label="랜딩 URL" value={c.landingUrl
-              ? <a href={c.landingUrl} target="_blank" rel="noreferrer" style={{ color: "var(--w-primary-normal)", wordBreak: "break-all", font: "500 12.5px/1.4 var(--w-font-sans)" }}>{c.landingUrl}</a>
+              ? <a href={c.landingUrl} target="_blank" rel="noreferrer" className="font-medium text-[12.5px] leading-[1.4]" style={{ color: "var(--w-primary-normal)", wordBreak: "break-all" }}>{c.landingUrl}</a>
               : dash}
             />
           </div>
         </div>
         )}
-      </div>
+      </Card>
 
-      <div className="card">
-        <div className="between" style={{ marginBottom: 0 }}>
-          <h3 className="section-title" style={{ marginBottom: 0 }}>타겟팅</h3>
+      <Card>
+        <div className="flex items-center justify-between gap-3" style={{ marginBottom: 0 }}>
+          <h3 className="font-bold text-[17px] leading-[1.3] tracking-[-0.012em] text-[var(--w-fg-strong)] m-0" style={{ marginBottom: 0 }}>타겟팅</h3>
           {!editingTargeting && c.status !== "ended" && (
-            <button className="btn btn--ghost btn--sm" type="button" onClick={openTargetingEdit}>
+            <Button variant="ghost" size="sm" type="button" onClick={openTargetingEdit}>
               <Icon name="edit" size={13} /> 수정
-            </button>
+            </Button>
           )}
         </div>
-        <hr className="divider" />
+        <hr className="h-px bg-[var(--w-line-neutral)] my-[18px] border-0" />
         {editingTargeting ? (
           <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
             <div>
-              <div style={{ font: "600 12.5px/1.3 var(--w-font-sans)", color: "var(--w-fg-strong)", marginBottom: 10 }}>연령</div>
+              <div className="font-semibold text-[12.5px] leading-[1.3] text-[var(--w-fg-strong)]" style={{ marginBottom: 10 }}>연령</div>
               <AgeRange value={ageRange} onChange={setAgeRange} />
             </div>
             <div>
-              <div style={{ font: "600 12.5px/1.3 var(--w-font-sans)", color: "var(--w-fg-strong)", marginBottom: 8 }}>성별</div>
+              <div className="font-semibold text-[12.5px] leading-[1.3] text-[var(--w-fg-strong)]" style={{ marginBottom: 8 }}>성별</div>
               <div style={{ display: "flex", gap: 8 }}>
                 {[{ label: "모두", val: [] as number[] }, { label: "남성", val: [1] }, { label: "여성", val: [2] }].map(({ label, val }) => {
                   const active = val.length === 0 ? genders.length === 0 : genders.length === 1 && genders[0] === val[0];
@@ -1101,7 +1170,7 @@ function CampaignConfigurationTab({ c, isLoading, campaignId, onRefetch, isAbCam
               </div>
             </div>
             <div>
-              <div style={{ font: "600 12.5px/1.3 var(--w-font-sans)", color: "var(--w-fg-strong)", marginBottom: 8 }}>국가</div>
+              <div className="font-semibold text-[12.5px] leading-[1.3] text-[var(--w-fg-strong)]" style={{ marginBottom: 8 }}>국가</div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                 {COUNTRIES.map((ct) => {
                   const on = targetCountries.includes(ct.code);
@@ -1117,16 +1186,16 @@ function CampaignConfigurationTab({ c, isLoading, campaignId, onRefetch, isAbCam
                 })}
               </div>
               {targetCountries.length === 0 && (
-                <div style={{ marginTop: 6, font: "500 12px/1.4 var(--w-font-sans)", color: "var(--w-status-negative)" }}>국가를 최소 1개 선택해주세요</div>
+                <div className="font-medium text-[12px] leading-[1.4] text-[var(--w-status-negative)]" style={{ marginTop: 6 }}>국가를 최소 1개 선택해주세요</div>
               )}
             </div>
             <div style={{ display: "flex", gap: 8 }}>
-              <button className="btn btn--primary btn--sm" type="button" disabled={savingTargeting || targetCountries.length === 0} onClick={saveTargeting}>
+              <Button variant="primary" size="sm" type="button" disabled={savingTargeting || targetCountries.length === 0} onClick={saveTargeting}>
                 {savingTargeting ? "저장 중…" : "저장"}
-              </button>
-              <button className="btn btn--ghost btn--sm" type="button" disabled={savingTargeting} onClick={() => setEditingTargeting(false)}>
+              </Button>
+              <Button variant="ghost" size="sm" type="button" disabled={savingTargeting} onClick={() => setEditingTargeting(false)}>
                 취소
-              </button>
+              </Button>
             </div>
           </div>
         ) : (
@@ -1136,26 +1205,26 @@ function CampaignConfigurationTab({ c, isLoading, campaignId, onRefetch, isAbCam
             <ConfigRow label="국가" value={c.countries?.length ? c.countries.join(", ") : dash} />
           </div>
         )}
-      </div>
+      </Card>
 
-      <div className="card" style={{ marginTop: 16 }}>
-        <div className="between" style={{ marginBottom: 0 }}>
-          <h3 className="section-title" style={{ marginBottom: 0 }}>입찰 · 배치</h3>
+      <Card style={{ marginTop: 16 }}>
+        <div className="flex items-center justify-between gap-3" style={{ marginBottom: 0 }}>
+          <h3 className="font-bold text-[17px] leading-[1.3] tracking-[-0.012em] text-[var(--w-fg-strong)] m-0" style={{ marginBottom: 0 }}>입찰 · 배치</h3>
           {!editingBid && c.status !== "ended" && (
-            <button className="btn btn--ghost btn--sm" type="button" onClick={openBidEdit}>
+            <Button variant="ghost" size="sm" type="button" onClick={openBidEdit}>
               <Icon name="edit" size={13} /> 수정
-            </button>
+            </Button>
           )}
         </div>
-        <hr className="divider" />
+        <hr className="h-px bg-[var(--w-line-neutral)] my-[18px] border-0" />
         {editingBid ? (
           <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
             <div style={{ padding: "10px 14px", borderRadius: 8, background: "rgba(255,146,0,0.08)", border: "1px solid rgba(255,146,0,0.25)", display: "flex", alignItems: "center", gap: 8 }}>
               <Icon name="warn" size={13} style={{ color: "var(--w-status-cautionary)", flex: "0 0 auto" }} />
-              <span style={{ font: "500 12px/1.4 var(--w-font-sans)", color: "var(--w-fg-neutral)" }}>입찰 전략·배치 변경은 성과 안정화 구간이 재시작될 수 있어요</span>
+              <span className="font-medium text-[12px] leading-[1.4] text-[var(--w-fg-neutral)]">입찰 전략·배치 변경은 성과 안정화 구간이 재시작될 수 있어요</span>
             </div>
             <div>
-              <div style={{ font: "600 12.5px/1.3 var(--w-font-sans)", color: "var(--w-fg-strong)", marginBottom: 8 }}>입찰 전략</div>
+              <div className="font-semibold text-[12.5px] leading-[1.3] text-[var(--w-fg-strong)]" style={{ marginBottom: 8 }}>입찰 전략</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {([
                   { val: "LOWEST_COST_WITHOUT_CAP", label: "최저 비용 (상한 없음)", desc: "Meta가 예산 내에서 가장 낮은 비용으로 결과를 최대화해요" },
@@ -1166,23 +1235,23 @@ function CampaignConfigurationTab({ c, isLoading, campaignId, onRefetch, isAbCam
                     style={{ textAlign: "left", padding: "10px 14px", borderRadius: 10, cursor: "pointer",
                       border: bidStrategy === val ? "1.5px solid var(--w-primary-normal)" : "1.5px solid var(--w-line-alternative)",
                       background: bidStrategy === val ? "var(--w-primary-soft)" : "var(--w-bg-normal)" }}>
-                    <div style={{ font: "600 13px/1.3 var(--w-font-sans)", color: bidStrategy === val ? "var(--w-primary-press)" : "var(--w-fg-strong)" }}>{label}</div>
-                    <div style={{ font: "500 12px/1.4 var(--w-font-sans)", color: "var(--w-fg-neutral)", marginTop: 3 }}>{desc}</div>
+                    <div className="font-semibold text-[13px] leading-[1.3]" style={{ color: bidStrategy === val ? "var(--w-primary-press)" : "var(--w-fg-strong)" }}>{label}</div>
+                    <div className="font-medium text-[12px] leading-[1.4] text-[var(--w-fg-neutral)]" style={{ marginTop: 3 }}>{desc}</div>
                   </button>
                 ))}
               </div>
             </div>
             {bidStrategy !== "LOWEST_COST_WITHOUT_CAP" && (
               <div>
-                <div style={{ font: "600 12.5px/1.3 var(--w-font-sans)", color: "var(--w-fg-strong)", marginBottom: 6 }}>
+                <div className="font-semibold text-[12.5px] leading-[1.3] text-[var(--w-fg-strong)]" style={{ marginBottom: 6 }}>
                   {bidStrategy === "COST_CAP" ? "목표 비용 (₩)" : "입찰 상한 (₩)"}
                 </div>
-                <input className="input" type="number" min={100} step={100} value={bidAmount}
-                  onChange={(e) => setBidAmount(e.target.value)} style={{ width: "100%", maxWidth: 220 }} />
+                <input className="w-full bg-[var(--w-bg-elevated)] border border-[var(--w-line-normal)] rounded-xl px-3.5 py-3 font-medium text-[14px] leading-[1.5] text-[var(--w-fg-strong)] tracking-[0.004em] outline-none transition-[border-color,box-shadow] duration-[120ms] focus:border-[var(--w-primary-normal)] focus:shadow-[0_0_0_4px_rgba(0,102,255,0.14)] placeholder:text-[var(--w-fg-alternative)]" type="number" min={100} step={100} value={bidAmount}
+                  onChange={(e) => setBidAmount(e.target.value)} style={{ maxWidth: 220 }} />
               </div>
             )}
             <div>
-              <div style={{ font: "600 12.5px/1.3 var(--w-font-sans)", color: "var(--w-fg-strong)", marginBottom: 8 }}>플랫폼</div>
+              <div className="font-semibold text-[12.5px] leading-[1.3] text-[var(--w-fg-strong)]" style={{ marginBottom: 8 }}>플랫폼</div>
               <div style={{ display: "flex", gap: 8 }}>
                 {([{ val: "both", label: "FB + IG" }, { val: "facebook", label: "페이스북만" }, { val: "instagram", label: "인스타그램만" }] as const).map(({ val, label }) => (
                   <button key={val} type="button" onClick={() => setEditPlatforms(val)}
@@ -1196,7 +1265,7 @@ function CampaignConfigurationTab({ c, isLoading, campaignId, onRefetch, isAbCam
               </div>
             </div>
             <div>
-              <div style={{ font: "600 12.5px/1.3 var(--w-font-sans)", color: "var(--w-fg-strong)", marginBottom: 8 }}>배치</div>
+              <div className="font-semibold text-[12.5px] leading-[1.3] text-[var(--w-fg-strong)]" style={{ marginBottom: 8 }}>배치</div>
               <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
                 {([{ val: "auto", label: "자동 (Advantage+)" }, { val: "manual", label: "수동" }] as const).map(({ val, label }) => (
                   <button key={val} type="button" onClick={() => {
@@ -1238,12 +1307,12 @@ function CampaignConfigurationTab({ c, isLoading, campaignId, onRefetch, isAbCam
               )}
             </div>
             <div style={{ display: "flex", gap: 8 }}>
-              <button className="btn btn--primary btn--sm" type="button" disabled={savingBid} onClick={saveBid}>
+              <Button variant="primary" size="sm" type="button" disabled={savingBid} onClick={saveBid}>
                 {savingBid ? "저장 중…" : "저장"}
-              </button>
-              <button className="btn btn--ghost btn--sm" type="button" disabled={savingBid} onClick={() => setEditingBid(false)}>
+              </Button>
+              <Button variant="ghost" size="sm" type="button" disabled={savingBid} onClick={() => setEditingBid(false)}>
                 취소
-              </button>
+              </Button>
             </div>
           </div>
         ) : (
@@ -1260,7 +1329,156 @@ function CampaignConfigurationTab({ c, isLoading, campaignId, onRefetch, isAbCam
             <ConfigRow label="배치" value={placementLabel} />
           </div>
         )}
-      </div>
+      </Card>
+
+      <Card style={{ marginBottom: 16 }}>
+        <h3 className="font-bold text-[17px] leading-[1.3] tracking-[-0.012em] text-[var(--w-fg-strong)] m-0">자동 재게재</h3>
+        <hr className="h-px bg-[var(--w-line-neutral)] my-[18px] border-0" />
+        <div className="flex items-start gap-3">
+          <div style={{ paddingTop: 2, flex: "0 0 auto" }}>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={arEnabled}
+              disabled={!canToggleAr}
+              onClick={() => canToggleAr && setAutoRelaunchEnabled(campaignId, !arEnabled)}
+              style={{
+                width: 36, height: 20, borderRadius: 999, border: "none",
+                cursor: canToggleAr ? "pointer" : "not-allowed",
+                background: !canToggleAr ? "var(--w-line-normal)" : arEnabled ? "var(--w-primary-normal)" : "var(--w-line-normal)",
+                position: "relative", transition: "background 160ms", padding: 0,
+              }}
+            >
+              <span style={{ position: "absolute", top: 2, left: arEnabled ? 18 : 2, width: 16, height: 16, borderRadius: "50%", background: "#fff", boxShadow: "0 1px 3px rgba(0,0,0,0.18)", transition: "left 160ms" }} />
+            </button>
+          </div>
+          <div>
+            <div className="font-semibold text-[13.5px] leading-[1.3] text-[var(--w-fg-strong)]">
+              {arEnabled ? "켜져 있어요" : "꺼져 있어요"}
+            </div>
+            <p className="font-normal text-[13px] leading-[1.5] text-[var(--w-fg-neutral)] mt-[3px] mb-0">
+              {!canToggleAr && c?.status === "ended"
+                ? "종료된 캠페인은 자동 재게재를 변경할 수 없어요."
+                : !canToggleAr
+                ? "종료일을 설정해야 켤 수 있어요."
+                : "성과가 목표를 통과하면 종료 후 알림 받아요. 매번 직접 확인 후 게재돼요."}
+            </p>
+            {arEnabled && arEntry?.cycleCount && arEntry.cycleCount > 1 && (
+              <div className="font-medium text-[12px] leading-none text-[var(--w-fg-alternative)]" style={{ marginTop: 6 }}>
+                누적 {arEntry.cycleCount - 1}번 재게재됐어요
+              </div>
+            )}
+          </div>
+        </div>
+      </Card>
     </>
+  );
+}
+
+function EvidenceText({ evidence }: { evidence: WinnerEvidence }) {
+  if (evidence.kind === "kpi-target") {
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+        <div className="font-semibold text-[13px] leading-[1.3] text-[var(--w-status-positive)]">🏆 KPI 목표 모두 통과</div>
+        {evidence.passed.map((p, i) => (
+          <div key={i} className="font-medium text-[12.5px] leading-[1.4] text-[var(--w-fg-neutral)]">
+            {p.kpi.toUpperCase()} {p.current.toFixed(2)} (목표 {p.direction === "gte" ? "≥" : "≤"}{p.target})
+          </div>
+        ))}
+      </div>
+    );
+  }
+  const labels: Record<string, string> = {
+    OUTCOME_TRAFFIC: "트래픽 광고",
+    OUTCOME_AWARENESS: "인지도 광고",
+    OUTCOME_ENGAGEMENT: "참여 광고",
+  };
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+      <div className="font-semibold text-[13px] leading-[1.3] text-[var(--w-status-positive)]">
+        🏆 {labels[evidence.objective] ?? "광고"} 호조 기준 통과
+      </div>
+      {evidence.passed.map((p, i) => (
+        <div key={i} className="font-medium text-[12.5px] leading-[1.4] text-[var(--w-fg-neutral)]">
+          {p.metric} {p.current.toFixed(2)} (기준 {p.threshold})
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function RelaunchConfirmModal({
+  campaignName, evidence, cycleCount, onlyOnce, onOnlyOnceChange,
+  busy, error, onRelaunch, onEditOriginal, onClose,
+}: {
+  campaignName: string;
+  evidence: WinnerEvidence | null;
+  cycleCount: number;
+  onlyOnce: boolean;
+  onOnlyOnceChange: (v: boolean) => void;
+  busy: boolean;
+  error: string | null;
+  onRelaunch: () => void;
+  onEditOriginal: () => void;
+  onClose: () => void;
+}) {
+  return (
+    <div style={{
+      position: "fixed", inset: 0, zIndex: 300,
+      background: "rgba(0,0,0,0.45)", display: "flex", alignItems: "center", justifyContent: "center",
+    }} onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div style={{
+        background: "var(--w-bg-elevated)", borderRadius: 16, boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
+        padding: "28px 28px 24px", maxWidth: 500, width: "calc(100vw - 32px)",
+        display: "flex", flexDirection: "column", gap: 18,
+      }}>
+        <div>
+          <div className="font-bold text-[18px] leading-[1.25] tracking-[-0.016em] text-[var(--w-fg-strong)]">
+            자동 재게재 — &apos;{campaignName}&apos;
+          </div>
+          {cycleCount > 1 && (
+            <div className="font-medium text-[12.5px] leading-none text-[var(--w-fg-alternative)]" style={{ marginTop: 6 }}>
+              📊 누적 {cycleCount}번째 사이클
+            </div>
+          )}
+        </div>
+
+        {evidence ? (
+          <div style={{ padding: "14px 16px", borderRadius: 10, background: "rgba(0,191,64,0.06)", border: "1px solid rgba(0,191,64,0.20)" }}>
+            <EvidenceText evidence={evidence} />
+          </div>
+        ) : (
+          <div style={{ padding: "12px 16px", borderRadius: 10, background: "var(--w-bg-alternative)" }}>
+            <div className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)]">
+              원본과 동일한 카피·이미지·타겟·예산으로 새 캠페인을 게재해요.
+            </div>
+          </div>
+        )}
+
+        {error && (
+          <div style={{ padding: "10px 14px", borderRadius: 8, background: "rgba(255,66,66,0.06)", border: "1px solid rgba(255,66,66,0.25)" }}>
+            <div className="font-medium text-[12.5px] leading-[1.4] text-[var(--w-status-negative)]">{error}</div>
+          </div>
+        )}
+
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input type="checkbox" checked={onlyOnce} onChange={(e) => onOnlyOnceChange(e.target.checked)} style={{ width: 15, height: 15 }} />
+          <span className="font-medium text-[13px] leading-[1.4] text-[var(--w-fg-neutral)]">
+            이번 사이클만 — 다음엔 자동 재게재 끄기
+          </span>
+        </label>
+
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <Button variant="secondary" type="button" onClick={onEditOriginal} style={{ flex: "0 0 auto" }}>
+            원본을 수정해서 만들기
+          </Button>
+          <div style={{ flex: 1 }} />
+          <Button variant="ghost" type="button" onClick={onClose} disabled={busy}>닫기</Button>
+          <Button variant="primary" type="button" onClick={onRelaunch} disabled={busy}>
+            {busy ? "처리 중…" : "재게재"}
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 }

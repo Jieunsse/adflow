@@ -19,6 +19,7 @@ const TYPE_ICON: Record<string, IconName> = {
   perf: "message",
   weekly: "doc",
   "ad-status": "bell",
+  "auto-relaunch-ready": "sparkles",
 };
 
 export default function NotificationBell() {
@@ -33,6 +34,9 @@ export default function NotificationBell() {
     if (n.type === "ad-status" && n.campaignId) {
       setOpen(false);
       router.push(`/campaigns/${n.campaignId}`);
+    } else if (n.type === "auto-relaunch-ready" && n.campaignId) {
+      setOpen(false);
+      router.push(`/campaigns/${n.campaignId}?relaunch=1`);
     }
   };
 
@@ -141,7 +145,7 @@ export default function NotificationBell() {
 }
 
 function NotifRow({ notif, isRead, onClick }: { notif: Notification; isRead: boolean; onClick?: () => void }) {
-  const clickable = notif.type === "ad-status" && !!notif.campaignId;
+  const clickable = (notif.type === "ad-status" || notif.type === "auto-relaunch-ready") && !!notif.campaignId;
   return (
     <div
       onClick={clickable ? onClick : undefined}

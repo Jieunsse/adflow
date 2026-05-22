@@ -6,6 +6,8 @@
 
 import { useState } from "react";
 import Icon from "@shared/ui/Icon";
+import { Button } from "@shared/ui/Button";
+import { cn } from "@shared/lib/cn";
 import type { ValidationIssue } from "@features/launch-validation";
 
 type Props = {
@@ -24,7 +26,6 @@ export default function PreLaunchSafetyModal({ issues, onClose, onConfirm }: Pro
   const handleAction = (issue: ValidationIssue) => {
     if (!issue.action) return;
     if (issue.action.href) {
-      // 절대 URL = 외부 (Meta 비즈니스 스위트 등) → 새 탭. 상대 경로 = 같은 앱 내 페이지 → 같은 탭 이동.
       const href = issue.action.href;
       if (href.startsWith("http://") || href.startsWith("https://")) {
         window.open(href, "_blank", "noopener,noreferrer");
@@ -44,34 +45,36 @@ export default function PreLaunchSafetyModal({ issues, onClose, onConfirm }: Pro
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal" style={{ width: 520, maxHeight: "80vh", display: "flex", flexDirection: "column" }} onClick={(e) => e.stopPropagation()}>
-        <div style={{ padding: "26px 26px 12px" }}>
+    <div
+      className="fixed inset-0 z-[100] bg-[rgba(15,17,21,0.45)] dark:bg-[rgba(0,0,0,0.6)] grid place-items-center p-10 animate-[fadeIn_120ms_ease]"
+      onClick={onClose}
+    >
+      <div
+        className="bg-[var(--w-bg-elevated)] border border-[var(--w-line-alternative)] rounded-2xl shadow-[0_30px_80px_rgba(0,0,0,0.20)] max-w-[90vw] max-h-[90vh] overflow-auto animate-[popIn_140ms_ease] w-[520px] flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="p-[26px_26px_12px]">
           <div
-            style={{
-              width: 44,
-              height: 44,
-              borderRadius: 12,
-              background: hasBlock ? "rgba(255,66,66,0.10)" : "rgba(255,176,32,0.12)",
-              color: hasBlock ? "var(--w-status-negative)" : "var(--w-status-cautionary)",
-              display: "grid",
-              placeItems: "center",
-              marginBottom: 14,
-            }}
+            className={cn(
+              "w-11 h-11 rounded-xl grid place-items-center mb-3.5",
+              hasBlock
+                ? "bg-[rgba(255,66,66,0.10)] text-[var(--w-status-negative)]"
+                : "bg-[rgba(255,176,32,0.12)] text-[var(--w-status-cautionary)]"
+            )}
           >
             <Icon name="warn" size={20} />
           </div>
-          <h3 style={{ font: "700 17px/1.35 var(--w-font-display)", color: "var(--w-fg-strong)", letterSpacing: "-0.01em", margin: 0 }}>
+          <h3 className="font-bold text-[17px] leading-[1.35] tracking-[-0.01em] text-[var(--w-fg-strong)] m-0">
             {hasBlock ? "광고 게재 전에 해결할 게 있어요" : "광고 게재 전에 확인해주세요"}
           </h3>
-          <p style={{ font: "500 13px/1.5 var(--w-font-sans)", color: "var(--w-fg-neutral)", margin: "8px 0 0" }}>
+          <p className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)] mt-2 mb-0">
             {hasBlock
               ? "아래 항목을 해결해야 광고가 정상적으로 노출돼요."
               : "아래 항목을 확인한 뒤 광고를 게재할 수 있어요."}
           </p>
         </div>
 
-        <div style={{ padding: "8px 26px 16px", overflowY: "auto", flex: 1, display: "flex", flexDirection: "column", gap: 12 }}>
+        <div className="px-[26px] pb-4 pt-2 overflow-y-auto flex-1 flex flex-col gap-3">
           {blockers.map((issue) => (
             <IssueCard key={issue.rule} issue={issue} onAction={handleAction} />
           ))}
@@ -80,32 +83,32 @@ export default function PreLaunchSafetyModal({ issues, onClose, onConfirm }: Pro
           ))}
 
           {!hasBlock && warnings.length > 0 && (
-            <label style={{ display: "flex", alignItems: "flex-start", gap: 10, marginTop: 4 }}>
+            <label className="flex items-start gap-2.5 mt-1">
               <input
                 type="checkbox"
-                style={{ marginTop: 3 }}
+                className="mt-[3px]"
                 checked={acknowledged}
                 onChange={(e) => setAcknowledged(e.target.checked)}
               />
-              <span style={{ font: "500 13px/1.5 var(--w-font-sans)", color: "var(--w-fg-strong)" }}>
+              <span className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-strong)]">
                 위 항목을 확인했어요. 그대로 광고를 게재할게요.
               </span>
             </label>
           )}
         </div>
 
-        <div className="modal__foot">
-          <button className="btn btn--ghost" type="button" onClick={onClose}>
+        <div className="flex gap-2 justify-end px-6 py-[18px] border-t border-[var(--w-line-alternative)] mt-5">
+          <Button variant="ghost" type="button" onClick={onClose}>
             취소
-          </button>
-          <button
-            className="btn btn--primary"
+          </Button>
+          <Button
+            variant="primary"
             type="button"
             disabled={!canProceed}
             onClick={onConfirm}
           >
             <Icon name="megaphone" size={14} /> 광고 게재 진행
-          </button>
+          </Button>
         </div>
       </div>
     </div>
@@ -115,27 +118,30 @@ export default function PreLaunchSafetyModal({ issues, onClose, onConfirm }: Pro
 function IssueCard({ issue, onAction }: { issue: ValidationIssue; onAction: (i: ValidationIssue) => void }) {
   const isBlock = issue.severity === "block";
   return (
-    <div
-      className={"callout " + (isBlock ? "callout--danger" : "callout--warn")}
-      style={{ alignItems: "flex-start" }}
-    >
+    <div className={cn(
+      "flex items-start gap-2.5 px-[14px] py-3 rounded-[10px] border",
+      isBlock
+        ? "bg-[rgba(255,66,66,0.08)] border-[rgba(255,66,66,0.20)] text-[var(--w-status-negative)]"
+        : "bg-[rgba(255,146,0,0.10)] border-[rgba(255,146,0,0.24)] text-[var(--w-status-cautionary)]"
+    )}>
       <Icon name={isBlock ? "warn" : "info"} size={16} />
-      <div style={{ flex: 1 }}>
-        <div style={{ font: "600 13.5px/1.4 var(--w-font-sans)", color: "var(--w-fg-strong)", marginBottom: 4 }}>
+      <div className="flex-1">
+        <div className="font-semibold text-[13.5px] leading-[1.4] text-[var(--w-fg-strong)] mb-1">
           {issue.title}
         </div>
-        <div style={{ font: "500 12.5px/1.55 var(--w-font-sans)", color: "var(--w-fg-normal)" }}>
+        <div className="font-medium text-[12.5px] leading-[1.55] text-[var(--w-fg-normal)]">
           {issue.message}
         </div>
         {issue.action && (
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             type="button"
-            className="btn btn--ghost btn--sm"
-            style={{ marginTop: 8 }}
+            className="mt-2"
             onClick={() => onAction(issue)}
           >
             {issue.action.label} <Icon name="arrow-right" size={12} />
-          </button>
+          </Button>
         )}
       </div>
     </div>

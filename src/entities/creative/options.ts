@@ -58,6 +58,7 @@ export const OUTCOME_TO_CTA: Record<string, CtaId> = {
   engagement_page_likes: 'like_page', // LIKE_PAGE — 페이지 팔로우
   engagement_messages:   'message',   // MESSAGE_PAGE — 메시지 받기
   leads_call:            'call',      // CALL_NOW — 전화 받기
+  boost_post:            'learn',     // LEARN_MORE — 콘텐츠 홍보 (Boost Post)
   awareness:             'learn',     // LEARN_MORE — 인지도
   leads:                 'buy',       // SHOP_NOW — 잠재고객 Instant Form (Phase 2)
   sales:                 'buy',       // SHOP_NOW — 매출 (Phase 2)
@@ -77,6 +78,7 @@ export const OUTCOME_TO_OBJECTIVE: Record<OutcomeChip, Objective> = {
   engagement_page_likes: 'OUTCOME_ENGAGEMENT',
   engagement_messages:   'OUTCOME_ENGAGEMENT',
   leads_call:            'OUTCOME_LEADS',
+  boost_post:            'OUTCOME_ENGAGEMENT',
   awareness:             'OUTCOME_AWARENESS',
   leads:                 'OUTCOME_LEADS',
   sales:                 'OUTCOME_SALES',
@@ -195,6 +197,19 @@ export const OBJECTIVES_PHASE1 = [
     outcomeLabel: '전화 문의 받기',
     copyTone: '전화 한 통의 가치 강조·"바로 연결됩니다"·통화 시간 안내',
   },
+  {
+    id: 'boost_post' as const,
+    iconName: 'instagram' as const,
+    metaObjective: 'OUTCOME_ENGAGEMENT' as const,
+    optimizationGoal: 'POST_ENGAGEMENT' as const,
+    destinationType: null,
+    promotedObject: 'page' as const,
+    defaultCta: 'learn' as const,
+    defaultLink: 'page_url' as const,
+    label: '콘텐츠 홍보',
+    outcomeLabel: '기존 게시물 홍보하기',
+    copyTone: '게시물 참여 확대·자연스러운 노출·광고 느낌 최소화',
+  },
 ] as const
 
 // Phase 2 — 추가 인프라(Pixel/Lead Form/App SDK) 필요. UI 상 "곧 열려요" 칩으로 잔존.
@@ -264,4 +279,5 @@ export const GOAL_RESULT: Record<ObjectivePhase1Id, { noun: string; costLabel: s
   engagement_page_likes: { noun: '페이지 좋아요', costLabel: '좋아요당 비용' },
   engagement_messages:   { noun: '대화',          costLabel: '대화당 비용' },
   leads_call:            { noun: '통화',          costLabel: '통화당 비용' },
+  boost_post:            { noun: '참여',          costLabel: '참여당 비용' },
 }

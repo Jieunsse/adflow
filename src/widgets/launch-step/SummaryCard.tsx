@@ -5,6 +5,7 @@
 
 import { useSession } from "next-auth/react";
 import Icon from "@shared/ui/Icon";
+import { Card } from "@shared/ui/Card";
 import { Badge } from "@shared/ui/primitives";
 import { fmtKRW } from "@shared/lib/format";
 import { OBJECTIVES_PHASE1, OBJECTIVES_PHASE2 } from "@entities/creative/options";
@@ -28,7 +29,6 @@ export default function SummaryCard() {
     return Math.max(1, Math.round((b.getTime() - a.getTime()) / 86400000) + 1);
   })();
 
-  // PRD §13.10 — goal 단위 라벨. outcome chip 이 SSOT. metaObjective N:1 매핑이라 chip id 로 찾아야 정확.
   const selectedGoal = creative.state.outcome
     ? [...OBJECTIVES_PHASE1, ...OBJECTIVES_PHASE2].find((o) => o.id === creative.state.outcome)
     : null;
@@ -51,8 +51,8 @@ export default function SummaryCard() {
     : "인스타그램만";
 
   return (
-    <div className="card">
-      <h3 className="section-title" style={{ marginBottom: 14 }}>집행 요약</h3>
+    <Card>
+      <h3 className="m-0 font-bold text-[17px] leading-[1.3] tracking-[-0.012em] text-[var(--w-fg-strong)] mb-3.5">집행 요약</h3>
       <div>
         <SumRow label="캠페인 목표" value={goalLabel} sub={goalSub} />
         <SumRow label="구매 유형" value="경매(Auction)" />
@@ -77,27 +77,27 @@ export default function SummaryCard() {
           </>
         )}
       </div>
-      <hr className="divider" />
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-        <span style={{ font: "500 12px/1 var(--w-font-sans)", color: "var(--w-fg-normal)" }}>Meta 연결 상태</span>
+      <hr className="h-px bg-[var(--w-line-neutral)] my-[18px] border-0" />
+      <div className="flex items-center justify-between mb-3">
+        <span className="font-medium text-[12px] leading-none text-[var(--w-fg-normal)]">Meta 연결 상태</span>
         {accountConnected ? <Badge kind="success" dot live>연결됨</Badge> : <Badge kind="warn" dot>미연결</Badge>}
       </div>
-      <div className="checklist">
+      <div className="flex flex-col gap-2.5">
         <CheckRow on={hasCreative}>광고 소재 준비</CheckRow>
         <CheckRow on={accountConnected}>광고 계정·페이지 연결</CheckRow>
         <CheckRow on={!!launched}>Meta API 집행 완료</CheckRow>
       </div>
-    </div>
+    </Card>
   );
 }
 
 function SumRow({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
-    <div style={{ display: "flex", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px solid var(--w-line-alternative)" }}>
-      <span style={{ font: "500 12.5px/1 var(--w-font-sans)", color: "var(--w-fg-normal)" }}>{label}</span>
-      <div style={{ textAlign: "right" }}>
-        <span style={{ font: "600 13px/1 var(--w-font-sans)", color: "var(--w-fg-strong)" }}>{value}</span>
-        {sub && <div style={{ font: "500 11.5px/1 var(--w-font-mono)", color: "var(--w-fg-neutral)", marginTop: 4 }}>{sub}</div>}
+    <div className="flex justify-between py-2.5 border-b border-[var(--w-line-alternative)]">
+      <span className="font-medium text-[12.5px] leading-none text-[var(--w-fg-normal)]">{label}</span>
+      <div className="text-right">
+        <span className="font-semibold text-[13px] leading-none text-[var(--w-fg-strong)]">{value}</span>
+        {sub && <div className="font-medium text-[11.5px] leading-none font-[var(--w-font-mono)] text-[var(--w-fg-neutral)] mt-1">{sub}</div>}
       </div>
     </div>
   );
@@ -105,8 +105,8 @@ function SumRow({ label, value, sub }: { label: string; value: string; sub?: str
 
 function CheckRow({ on, children }: { on: boolean; children: React.ReactNode }) {
   return (
-    <div className="checklist__item">
-      <span className={"checklist__check" + (on ? "" : " checklist__check--off")}>
+    <div className="flex items-center gap-2.5 font-medium text-[13px] leading-[1.4] text-[var(--w-fg-normal)]">
+      <span className={`w-[18px] h-[18px] rounded-full grid place-items-center text-[11px] ${on ? "bg-[var(--w-primary-soft)] text-[var(--w-primary-press)]" : "bg-[var(--w-bg-alternative)] text-[var(--w-fg-alternative)]"}`}>
         {on ? <Icon name="check" size={11} /> : ""}
       </span>
       <span>{children}</span>

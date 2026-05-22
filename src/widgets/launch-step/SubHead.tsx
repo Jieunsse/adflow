@@ -1,13 +1,11 @@
-// launch-step 내부의 작은 helper — 섹션 제목+부제 묶음.
-
 export default function SubHead({ title, subtitle }: { title: string; subtitle?: string }) {
   return (
-    <div style={{ marginBottom: 12 }}>
-      <div style={{ font: "600 14px/1.3 var(--w-font-sans)", color: "var(--w-fg-strong)", letterSpacing: "-0.004em" }}>
+    <div className="mb-3">
+      <div className="font-semibold text-[14px] leading-[1.3] tracking-[-0.004em] text-[var(--w-fg-strong)]">
         {title}
       </div>
       {subtitle && (
-        <div style={{ font: "400 13px/1.45 var(--w-font-sans)", color: "var(--w-fg-neutral)", marginTop: 4 }}>
+        <div className="font-normal text-[13px] leading-[1.45] text-[var(--w-fg-neutral)] mt-1">
           {subtitle}
         </div>
       )}

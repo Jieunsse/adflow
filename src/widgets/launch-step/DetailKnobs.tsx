@@ -20,6 +20,7 @@ import AudienceKnob from "./AudienceKnob";
 import PlacementKnob from "./PlacementKnob";
 import FrequencyCapKnob from "./FrequencyCapKnob";
 import ABCreativeKnob from "./ABCreativeKnob";
+import AutoRelaunchToggle from "./AutoRelaunchToggle";
 
 export default function DetailKnobs() {
   const showToast = useToast();
@@ -38,25 +39,28 @@ export default function DetailKnobs() {
   return (
     <>
       <BidStrategyKnob />
-      <hr className="divider" />
+      <hr className="h-px bg-[var(--w-line-neutral)] my-[18px] border-0" />
 
       <AudienceKnob />
-      <hr className="divider" />
+      <hr className="h-px bg-[var(--w-line-neutral)] my-[18px] border-0" />
 
       <PlacementKnob />
-      <hr className="divider" />
+      <hr className="h-px bg-[var(--w-line-neutral)] my-[18px] border-0" />
 
       {showFrequencyCap && (
         <>
           <FrequencyCapKnob />
-          <hr className="divider" />
+          <hr className="h-px bg-[var(--w-line-neutral)] my-[18px] border-0" />
         </>
       )}
 
-      <label style={{ display: "flex", alignItems: "flex-start", gap: 10, marginBottom: 10 }}>
+      <AutoRelaunchToggle />
+      <hr className="h-px bg-[var(--w-line-neutral)] my-[18px] border-0" />
+
+      <label className="flex items-start gap-2.5 mb-2.5">
         <input
           type="checkbox"
-          style={{ marginTop: 3 }}
+          className="mt-[3px]"
           checked={state.autoPauseGuardrailEnabled}
           onChange={(e) => {
             dispatch({ type: "SET_AUTO_PAUSE_GUARDRAIL", enabled: e.target.checked });
@@ -64,10 +68,10 @@ export default function DetailKnobs() {
           }}
         />
         <div>
-          <div style={{ display: "flex", alignItems: "center", gap: 6, font: "600 13.5px/1.3 var(--w-font-sans)", color: "var(--w-fg-strong)" }}>
+          <div className="flex items-center gap-1.5 font-semibold text-[13.5px] leading-[1.3] text-[var(--w-fg-strong)]">
             성과 기준 미달 시 자동 광고중단 <Badge kind="neutral">곧 연동</Badge>
           </div>
-          <p style={{ font: "400 13px/1.5 var(--w-font-sans)", color: "var(--w-fg-neutral)", margin: "3px 0 0" }}>
+          <p className="font-normal text-[13px] leading-[1.5] text-[var(--w-fg-neutral)] mt-[3px] mb-0">
             첫 3일 동안 {result.costLabel} 기준으로 광고 계정 평균 대비 2배 넘으면 자동으로 일시정지해요.
           </p>
         </div>

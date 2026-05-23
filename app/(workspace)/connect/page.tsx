@@ -16,6 +16,30 @@ import { cn } from "@shared/lib/cn";
 
 type AccountInfo = { connected: boolean; accountId: string; accountName: string; currency: string };
 
+async function applyIgToken({ update, showToast, onSuccess }: {
+  update: (data: Record<string, unknown>) => Promise<unknown>;
+  showToast: (msg: string) => void;
+  onSuccess?: () => void;
+}) {
+  try {
+    const r = await fetch("/api/instagram/token");
+    const data = await r.json() as { igAccessToken?: string; igUserId?: string; igUsername?: string; error?: string };
+    console.log("[IG connect] token response:", r.status, data.error ?? (data.igAccessToken ? "token ok" : "no token"));
+    if (!r.ok || !data.igAccessToken) {
+      showToast(`토큰 저장 실패 (${r.status}) — ${data.error ?? "토큰 없음"}`);
+      return false;
+    }
+    const newSession = await update({ igAccessToken: data.igAccessToken, igUserId: data.igUserId, igUsername: data.igUsername });
+    console.log("[IG] update result:", (newSession as Record<string, unknown>)?.igAccessToken ? "igAccessToken present" : "igAccessToken MISSING", newSession);
+    showToast("Instagram 게시 권한이 연결됐어요");
+    onSuccess?.();
+    return true;
+  } catch (e) {
+    showToast(`토큰 요청 오류 — ${e instanceof Error ? e.message : String(e)}`);
+    return false;
+  }
+}
+
 async function fetchAccount(): Promise<AccountInfo> {
   const res = await fetch("/api/account");
   const data = await res.json();
@@ -75,20 +99,14 @@ export default function ConnectPage() {
   const [pickerOpen, setPickerOpen] = useState<PickerKind | null>(null);
   const [confirmDisconnect, setConfirmDisconnect] = useState(false);
   const [reauthing, setReauthing] = useState(false);
+  const [applyingToken, setApplyingToken] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
+    console.log("[IG connect] search:", window.location.search, "igLinked:", params.get("igLinked"));
     if (params.get("igLinked") === "1") {
       window.history.replaceState({}, "", "/connect");
-      fetch("/api/instagram/token")
-        .then(r => r.ok ? r.json() : null)
-        .then((data: { igAccessToken: string; igUserId: string; igUsername: string } | null) => {
-          if (data?.igAccessToken) {
-            return update({ igAccessToken: data.igAccessToken, igUserId: data.igUserId, igUsername: data.igUsername });
-          }
-        })
-        .then(() => showToast("Instagram 비즈니스 계정이 연결됐어요"))
-        .catch(() => showToast("Instagram 연결 중 오류가 발생했어요"));
+      applyIgToken({ update, showToast, onSuccess: () => window.location.reload() });
     }
     if (params.get("igError")) {
       window.history.replaceState({}, "", "/connect");
@@ -189,6 +207,12 @@ export default function ConnectPage() {
             pageId={session?.pageId ?? null}
             igAccessToken={session?.igAccessToken ?? null}
             disabled={tokenExpired}
+            applyingToken={applyingToken}
+            onApplyToken={async () => {
+              setApplyingToken(true);
+              await applyIgToken({ update, showToast, onSuccess: () => window.location.reload() });
+              setApplyingToken(false);
+            }}
             onReload={() => {
               queryClient.invalidateQueries({ queryKey: ["picker-list", "page"] });
               setPickerOpen("page");
@@ -403,11 +427,12 @@ function PageCard({ name, id, picture, disabled, onChange }: { name: string; id:
   );
 }
 
-function InstagramCard({ username, id, picture, pageId, igAccessToken, disabled, onReload }: {
-  username: string | null; id: string | null; picture: string | null; pageId: string | null; igAccessToken: string | null; disabled: boolean; onReload: () => void;
+function InstagramCard({ username, id, picture, pageId, igAccessToken, disabled, applyingToken, onApplyToken, onReload }: {
+  username: string | null; id: string | null; picture: string | null; pageId: string | null; igAccessToken: string | null; disabled: boolean; applyingToken: boolean; onApplyToken: () => void; onReload: () => void;
 }) {
   const linked = !!id;
   const insightsAuthorized = !!igAccessToken;
+  const publishAuthorized = !!igAccessToken;
   const linkInstagramUrl = pageId
     ? `https://www.facebook.com/${pageId}/settings/?tab=linked_accounts`
     : "https://accountscenter.facebook.com/connected_experiences";
@@ -446,6 +471,16 @@ function InstagramCard({ username, id, picture, pageId, igAccessToken, disabled,
             {insightsAuthorized
               ? <span className="inline-flex items-center gap-[5px] px-[9px] py-[3px] rounded-full font-semibold text-[11.5px] leading-none text-[var(--w-status-positive)] bg-[rgba(0,191,64,0.10)] dark:bg-[rgba(73,229,125,0.14)] dark:text-[#49e57d]"><span className="w-1.5 h-1.5 rounded-full bg-[var(--w-status-positive)] dark:bg-[#49e57d]" /> 인사이트 권한</span>
               : !disabled && <a className={buttonVariants({ variant: "secondary", size: "sm" })} href="/api/instagram/connect"><Icon name="chart" size={13} /> 인사이트 권한 받기</a>}
+            {linked && (
+              publishAuthorized
+                ? <span className="inline-flex items-center gap-[5px] px-[9px] py-[3px] rounded-full font-semibold text-[11.5px] leading-none text-[var(--w-status-positive)] bg-[rgba(0,191,64,0.10)] dark:bg-[rgba(73,229,125,0.14)] dark:text-[#49e57d]"><span className="w-1.5 h-1.5 rounded-full bg-[var(--w-status-positive)] dark:bg-[#49e57d]" /> 게시 권한</span>
+                : !disabled && <span className="inline-flex items-center gap-[5px] px-2.5 py-1 rounded-full font-semibold text-[12px] leading-none text-[var(--w-status-cautionary)] bg-[rgba(255,146,0,0.12)]"><Icon name="warn" size={12} /> 게시 권한 없음</span>
+            )}
+            {linked && !disabled && (
+              <a className={buttonVariants({ variant: "ghost", size: "sm" })} href="/api/instagram/connect">
+                <Icon name="refresh" size={13} /> 재연결
+              </a>
+            )}
             {!linked && !disabled && (
               <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
                 <a
@@ -467,6 +502,15 @@ function InstagramCard({ username, id, picture, pageId, igAccessToken, disabled,
           <div className={cn("flex items-center gap-2.5 p-[10px_12px] rounded-[10px] font-medium text-[12.5px] leading-[1.5] mt-3.5", "bg-[var(--w-bg-alternative)] text-[var(--w-fg-alternative)] border border-[var(--w-line-alternative)]")}>
             <Icon name="lock" size={13} />
             <span>재인증 후 확인할 수 있어요.</span>
+          </div>
+        )}
+        {linked && !publishAuthorized && !disabled && (
+          <div className={cn("flex items-center gap-2.5 p-[10px_12px] rounded-[10px] font-medium text-[12.5px] leading-[1.5] mt-3.5", "bg-[rgba(255,146,0,0.10)] border border-[rgba(255,146,0,0.24)] text-[var(--w-status-cautionary)]")}>
+            <Icon name="warn" size={14} />
+            <span style={{ flex: 1 }}>게시 권한 토큰이 없어요. <strong>재연결</strong> 후에도 해결 안 되면 <strong>수동 토큰 적용</strong>을 눌러보세요.</span>
+            <Button variant="ghost" size="sm" type="button" onClick={onApplyToken} disabled={applyingToken}>
+              <Icon name="refresh" size={13} /> {applyingToken ? "적용 중…" : "수동 토큰 적용"}
+            </Button>
           </div>
         )}
       </div>

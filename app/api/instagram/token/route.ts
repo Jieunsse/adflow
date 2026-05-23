@@ -1,20 +1,15 @@
 import { NextResponse, type NextRequest } from "next/server"
-import { getServerSession } from "next-auth"
-import { authOptions } from "@/lib/auth"
+import { getToken } from "next-auth/jwt"
+import { popIgPending } from "@/lib/ig-token-store"
 
 export async function GET(req: NextRequest) {
-  const session = await getServerSession(authOptions)
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  const jwtToken = await getToken({ req })
+  const storeKey = (jwtToken?.sub ?? jwtToken?.email ?? jwtToken?.jti) as string | undefined
 
-  const raw = req.cookies.get("adflow_ig_pending")?.value
-  if (!raw) return NextResponse.json({ error: "No pending connection" }, { status: 404 })
+  if (!storeKey) return NextResponse.json({ error: "세션이 없어요. 다시 로그인해주세요." }, { status: 401 })
 
-  try {
-    const data = JSON.parse(raw) as { igAccessToken: string; igUserId: string; igUsername: string }
-    const res = NextResponse.json(data)
-    res.cookies.delete("adflow_ig_pending")
-    return res
-  } catch {
-    return NextResponse.json({ error: "Invalid pending data" }, { status: 400 })
-  }
+  const data = popIgPending(storeKey)
+  if (!data) return NextResponse.json({ error: "No pending connection" }, { status: 404 })
+
+  return NextResponse.json(data)
 }

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import Icon, { type IconName } from "@shared/ui/Icon";
 import { useTheme, type ThemeChoice } from "@shared/lib/useTheme";
@@ -25,14 +26,7 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
   {
     label: "메인",
     items: [
-      {
-        href: "/dashboard",
-        label: "대시보드",
-        icon: "grid",
-        children: [
-          { href: "/dashboard/business-portfolio", label: "비즈니스 포트폴리오", icon: "image" },
-        ],
-      },
+      { href: "/dashboard", label: "대시보드", icon: "grid" },
       { href: "/create", label: "광고 만들기", icon: "sparkles", chip: "AI" },
     ],
   },
@@ -43,7 +37,24 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
       { href: "/ab-tests", label: "A/B 테스트", icon: "chart" },
       { href: "/approvals", label: "승인 대기", icon: "clock", countVariant: "warn" },
       { href: "/library", label: "소재 라이브러리", icon: "folder" },
-      { href: "/posts", label: "Instagram 게시", icon: "image" },
+    ],
+  },
+  {
+    label: "채널 관리",
+    items: [
+      {
+        href: "/instagram",
+        label: "Instagram",
+        icon: "instagram",
+        children: [
+          { href: "/instagram", label: "인사이트", icon: "chart" },
+          { href: "/instagram/posts", label: "게시", icon: "image" },
+          { href: "/instagram/stories", label: "스토리", icon: "play" },
+          { href: "/instagram/partnerships", label: "파트너십", icon: "users" },
+          { href: "/instagram/messages", label: "메시지", icon: "message" },
+        ],
+      },
+      { href: "/facebook", label: "Facebook", icon: "facebook", chip: "Beta" },
     ],
   },
   {
@@ -77,7 +88,7 @@ function countClass(variant: "warn" | "primary" | undefined, active: boolean) {
   });
 }
 
-function linkClass(active: boolean, isSub = false) {
+function linkClass(active: boolean, isSub = false, isParent = false) {
   return cn(
     "flex items-center gap-[11px] rounded-lg",
     "font-semibold leading-none tracking-[-0.003em]",
@@ -85,7 +96,9 @@ function linkClass(active: boolean, isSub = false) {
     "transition-[background,color] duration-[120ms]",
     isSub ? "h-[34px] pl-9 pr-3 text-[12.5px]" : "h-[38px] px-3 text-[13.5px]",
     active
-      ? "bg-[var(--w-primary-soft)] text-[var(--w-primary-press)]"
+      ? isParent
+        ? "bg-transparent text-[var(--w-primary-press)] hover:bg-[var(--w-bg-neutral)]"
+        : "bg-[var(--w-primary-soft)] text-[var(--w-primary-press)]"
       : isSub
         ? "bg-transparent text-[var(--w-fg-neutral)] hover:bg-[var(--w-bg-neutral)] hover:text-[var(--w-fg-strong)]"
         : "bg-transparent text-[#121212] dark:text-[var(--w-fg-neutral)] hover:bg-[var(--w-bg-neutral)] hover:text-[var(--w-fg-strong)]"
@@ -103,6 +116,40 @@ export default function Sidebar() {
   const adAccountName = session?.adAccountName;
   const pageName = session?.pageName;
   const connected = !!(adAccountName && pageName);
+
+  const [openItems, setOpenItems] = useState<Set<string>>(() => {
+    const open = new Set<string>();
+    for (const group of NAV_GROUPS) {
+      for (const item of group.items) {
+        if (item.children?.some((c) => pathname === c.href || pathname.startsWith(c.href + "/"))) {
+          open.add(item.href);
+        }
+      }
+    }
+    return open;
+  });
+
+  useEffect(() => {
+    for (const group of NAV_GROUPS) {
+      for (const item of group.items) {
+        if (item.children?.some((c) => pathname === c.href || pathname.startsWith(c.href + "/"))) {
+          setOpenItems((prev) => {
+            if (prev.has(item.href)) return prev;
+            return new Set([...prev, item.href]);
+          });
+        }
+      }
+    }
+  }, [pathname]);
+
+  function toggleItem(href: string) {
+    setOpenItems((prev) => {
+      const next = new Set(prev);
+      if (next.has(href)) next.delete(href);
+      else next.add(href);
+      return next;
+    });
+  }
 
   // /approvals 배지 — review + issue 캠페인 합. 같은 queryKey 로 /campaigns·/approvals 페이지와 캐시 공유.
   // 광고 계정 연결 전(=session 없거나 미연결)엔 fetch 안 함 (401 무한 호출 회피).
@@ -148,28 +195,50 @@ export default function Sidebar() {
             </div>
             {group.items.map((it) => {
               const hasChildren = !!it.children?.length;
-              const active = hasChildren
-                ? pathname === it.href
-                : pathname === it.href || pathname.startsWith(it.href + "/");
+              const active = pathname === it.href || pathname.startsWith(it.href + "/");
               const liveCount = it.href === "/approvals" ? approvalsCount : it.count;
+              const isOpen = hasChildren && openItems.has(it.href);
               return (
                 <div key={it.href}>
-                  <Link href={it.href} className={linkClass(active)}>
-                    <span className="w-[18px] h-[18px] grid place-items-center">
-                      <Icon name={it.icon} size={18} />
-                    </span>
-                    <span>{it.label}</span>
-                    {it.chip && (
-                      <span className={countClass(undefined, active)}>{it.chip}</span>
-                    )}
-                    {liveCount != null && liveCount > 0 && (
-                      <span className={countClass(it.countVariant, active)}>{liveCount}</span>
-                    )}
-                  </Link>
-                  {hasChildren &&
-                    it.children!.map((child) => {
-                      const childActive =
-                        pathname === child.href || pathname.startsWith(child.href + "/");
+                  {hasChildren ? (
+                    <button
+                      type="button"
+                      onClick={() => toggleItem(it.href)}
+                      className={cn(linkClass(active, false, true), "w-full")}
+                    >
+                      <span className="w-[18px] h-[18px] grid place-items-center">
+                        <Icon name={it.icon} size={18} />
+                      </span>
+                      <span>{it.label}</span>
+                      {it.chip && (
+                        <span className={countClass(undefined, active)}>{it.chip}</span>
+                      )}
+                      <span className={cn("ml-auto transition-transform duration-200", isOpen && "rotate-180")}>
+                        <Icon name="chev-down" size={14} />
+                      </span>
+                    </button>
+                  ) : (
+                    <Link href={it.href} className={linkClass(active)}>
+                      <span className="w-[18px] h-[18px] grid place-items-center">
+                        <Icon name={it.icon} size={18} />
+                      </span>
+                      <span>{it.label}</span>
+                      {it.chip && (
+                        <span className={countClass(undefined, active)}>{it.chip}</span>
+                      )}
+                      {liveCount != null && liveCount > 0 && (
+                        <span className={countClass(it.countVariant, active)}>{liveCount}</span>
+                      )}
+                    </Link>
+                  )}
+                  {hasChildren && isOpen && (() => {
+                    const bestMatch = it.children!.reduce<NavItem | null>((best, c) => {
+                      const matches = pathname === c.href || pathname.startsWith(c.href + "/");
+                      if (!matches) return best;
+                      return !best || c.href.length > best.href.length ? c : best;
+                    }, null);
+                    return it.children!.map((child) => {
+                      const childActive = child.href === bestMatch?.href;
                       return (
                         <Link key={child.href} href={child.href} className={linkClass(childActive, true)}>
                           <span className="w-4 h-4 grid place-items-center">
@@ -178,7 +247,8 @@ export default function Sidebar() {
                           <span>{child.label}</span>
                         </Link>
                       );
-                    })}
+                    });
+                  })()}
                 </div>
               );
             })}

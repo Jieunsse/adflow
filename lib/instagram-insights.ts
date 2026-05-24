@@ -1,4 +1,4 @@
-import { GRAPH, getPageToken, getIgUserId } from "./instagram-graph"
+import { GRAPH, IG_GRAPH, getPageToken, getIgUserId } from "./instagram-graph"
 
 export type IgPost = {
   id: string
@@ -106,9 +106,9 @@ export async function debugInstagramInsights(
   return debug
 }
 
-async function fetchMediaInsights(mediaId: string, token: string): Promise<{ saved: number; reach: number }> {
+async function fetchMediaInsights(mediaId: string, token: string, graphBase: string): Promise<{ saved: number; reach: number }> {
   try {
-    const res = await fetch(`${GRAPH}/${mediaId}/insights?metric=saved,reach&access_token=${token}`)
+    const res = await fetch(`${graphBase}/${mediaId}/insights?metric=saved,reach&access_token=${token}`)
     if (!res.ok) return { saved: 0, reach: 0 }
     const body = await res.json() as { data?: Array<{ name: string; values: Array<{ value: number }> }> }
     const pick = (name: string) => body.data?.find(d => d.name === name)?.values[0]?.value ?? 0
@@ -118,13 +118,13 @@ async function fetchMediaInsights(mediaId: string, token: string): Promise<{ sav
   }
 }
 
-async function fetchInsightsWithToken(igUserId: string, token: string): Promise<IgAccountInsights> {
+async function fetchInsightsWithToken(igUserId: string, token: string, graphBase: string): Promise<IgAccountInsights> {
   // profile_views 는 v22+ 부터 metric_type=total_value 필수. reach 는 기존 period 기반.
   const [accountRes, reachRes, profileViewsRes, mediaRes] = await Promise.all([
-    fetch(`${GRAPH}/${igUserId}?fields=followers_count,username&access_token=${token}`),
-    fetch(`${GRAPH}/${igUserId}/insights?metric=reach&period=days_28&access_token=${token}`),
-    fetch(`${GRAPH}/${igUserId}/insights?metric=profile_views&metric_type=total_value&period=day&access_token=${token}`),
-    fetch(`${GRAPH}/${igUserId}/media?fields=id,caption,media_url,thumbnail_url,like_count,comments_count,timestamp&limit=5&access_token=${token}`),
+    fetch(`${graphBase}/${igUserId}?fields=followers_count,username&access_token=${token}`),
+    fetch(`${graphBase}/${igUserId}/insights?metric=reach&period=days_28&access_token=${token}`),
+    fetch(`${graphBase}/${igUserId}/insights?metric=profile_views&metric_type=total_value&period=day&access_token=${token}`),
+    fetch(`${graphBase}/${igUserId}/media?fields=id,caption,media_url,thumbnail_url,like_count,comments_count,timestamp&limit=5&access_token=${token}`),
   ])
 
   // account 가 실패하면 IG 계정 식별 자체가 안 된 거라 mock 으로 떨어뜨림.
@@ -149,7 +149,7 @@ async function fetchInsightsWithToken(igUserId: string, token: string): Promise<
   const followers = account.followers_count ?? 0
 
   const rawMedia = mediaData.data ?? []
-  const mediaInsights = await Promise.all(rawMedia.map(m => fetchMediaInsights(m.id, token)))
+  const mediaInsights = await Promise.all(rawMedia.map(m => fetchMediaInsights(m.id, token, graphBase)))
   const posts: IgPost[] = rawMedia.map((m, i) => ({
     id: m.id,
     mediaUrl: m.thumbnail_url ?? m.media_url ?? "",
@@ -177,7 +177,7 @@ export async function getInstagramInsights(
   // Instagram Business Login 토큰이 있으면 page token 없이 직접 호출
   if (igAccessToken && igUserIdHint) {
     try {
-      return await fetchInsightsWithToken(igUserIdHint, igAccessToken)
+      return await fetchInsightsWithToken(igUserIdHint, igAccessToken, IG_GRAPH)
     } catch {
       return IG_MOCK_GOOD
     }
@@ -191,7 +191,7 @@ export async function getInstagramInsights(
     const igUserId = igUserIdHint || (await getIgUserId(pageId, pageToken))
     if (!igUserId) return IG_MOCK_GOOD
 
-    return await fetchInsightsWithToken(igUserId, pageToken)
+    return await fetchInsightsWithToken(igUserId, pageToken, GRAPH)
   } catch {
     return IG_MOCK_GOOD
   }

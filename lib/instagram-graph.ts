@@ -1,4 +1,6 @@
 export const GRAPH = "https://graph.facebook.com/v20.0"
+// Instagram Business Login 토큰(IGAAX...)은 이 엔드포인트 전용
+export const IG_GRAPH = "https://graph.instagram.com"
 
 export async function getPageToken(pageId: string, userToken: string): Promise<string | null> {
   try {

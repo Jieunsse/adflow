@@ -1,4 +1,4 @@
-import { GRAPH, getPageToken, getIgUserId } from "./instagram-graph"
+import { GRAPH, IG_GRAPH, getPageToken, getIgUserId } from "./instagram-graph"
 
 const STATUS_POLL_INTERVAL_MS = 1500
 const STATUS_POLL_MAX = 8
@@ -49,22 +49,22 @@ async function resolveIgCreds(opts: {
   igAccessToken?: string
   pageId?: string
   accessToken?: string
-}): Promise<{ igUserId: string; token: string } | null> {
+}): Promise<{ igUserId: string; token: string; graphBase: string } | null> {
   if (opts.igUserId && opts.igAccessToken) {
-    return { igUserId: opts.igUserId, token: opts.igAccessToken }
+    return { igUserId: opts.igUserId, token: opts.igAccessToken, graphBase: IG_GRAPH }
   }
   if (!opts.pageId || !opts.accessToken) return null
   const pageToken = await getPageToken(opts.pageId, opts.accessToken)
   if (!pageToken) return null
   const igUserId = opts.igUserId || (await getIgUserId(opts.pageId, pageToken))
   if (!igUserId) return null
-  return { igUserId, token: pageToken }
+  return { igUserId, token: pageToken, graphBase: GRAPH }
 }
 
 // container 상태가 FINISHED 될 때까지 폴링 (사진은 보통 1-2초).
-async function waitForContainer(containerId: string, token: string): Promise<{ ready: boolean; status: string }> {
+async function waitForContainer(containerId: string, token: string, graphBase: string): Promise<{ ready: boolean; status: string }> {
   for (let i = 0; i < STATUS_POLL_MAX; i++) {
-    const res = await fetch(`${GRAPH}/${containerId}?fields=status_code&access_token=${token}`)
+    const res = await fetch(`${graphBase}/${containerId}?fields=status_code&access_token=${token}`)
     if (!res.ok) return { ready: false, status: "fetch_failed" }
     const data = await res.json() as { status_code?: string }
     const status = data.status_code ?? "UNKNOWN"
@@ -86,9 +86,9 @@ export async function publishPhoto(opts: {
   const creds = await resolveIgCreds(opts)
   if (!creds) return { ok: false, error: "Instagram 계정이 연결되지 않았어요. /connect 에서 먼저 IG 를 연결해 주세요." }
 
-  const { igUserId, token } = creds
+  const { igUserId, token, graphBase } = creds
 
-  const containerRes = await fetch(`${GRAPH}/${igUserId}/media`, {
+  const containerRes = await fetch(`${graphBase}/${igUserId}/media`, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({
@@ -106,12 +106,12 @@ export async function publishPhoto(opts: {
     }
   }
 
-  const ready = await waitForContainer(containerBody.id, token)
+  const ready = await waitForContainer(containerBody.id, token, graphBase)
   if (!ready.ready) {
     return { ok: false, error: `container 준비 실패 (${ready.status})` }
   }
 
-  const publishRes = await fetch(`${GRAPH}/${igUserId}/media_publish`, {
+  const publishRes = await fetch(`${graphBase}/${igUserId}/media_publish`, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({
@@ -130,7 +130,7 @@ export async function publishPhoto(opts: {
 
   let permalink: string | undefined
   try {
-    const linkRes = await fetch(`${GRAPH}/${publishBody.id}?fields=permalink&access_token=${token}`)
+    const linkRes = await fetch(`${graphBase}/${publishBody.id}?fields=permalink&access_token=${token}`)
     if (linkRes.ok) {
       const linkBody = await linkRes.json() as { permalink?: string }
       permalink = linkBody.permalink
@@ -151,7 +151,7 @@ export async function getRecentMedia(opts: {
   if (!creds) return { ok: true, items: RECENT_MEDIA_MOCK, mock: true }
   const limit = opts.limit ?? 5
   const res = await fetch(
-    `${GRAPH}/${creds.igUserId}/media?fields=id,caption,media_url,thumbnail_url,permalink,timestamp&limit=${limit}&access_token=${creds.token}`
+    `${creds.graphBase}/${creds.igUserId}/media?fields=id,caption,media_url,thumbnail_url,permalink,timestamp&limit=${limit}&access_token=${creds.token}`
   )
   if (!res.ok) {
     const body = await res.json().catch(() => ({})) as { error?: { message?: string } }

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 
-const GRAPH = "https://graph.facebook.com/v20.0"
+const IG_GRAPH = "https://graph.instagram.com"
 
 type CallResult = {
   permission: string
@@ -42,13 +42,13 @@ export async function GET() {
   // 1) instagram_business_manage_insights
   results.push(await call(
     "instagram_business_manage_insights",
-    `${GRAPH}/${igUserId}/insights?metric=reach&period=days_28&access_token=${token}`,
+    `${IG_GRAPH}/${igUserId}/insights?metric=reach&period=days_28&access_token=${token}`,
   ))
 
   // 2) instagram_business_content_publish — container 만 생성 (publish 안 함)
   const containerCall = await call(
     "instagram_business_content_publish",
-    `${GRAPH}/${igUserId}/media`,
+    `${IG_GRAPH}/${igUserId}/media`,
     {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -64,22 +64,22 @@ export async function GET() {
   // 3) instagram_business_manage_messages
   results.push(await call(
     "instagram_business_manage_messages",
-    `${GRAPH}/${igUserId}/conversations?platform=instagram&access_token=${token}`,
+    `${IG_GRAPH}/${igUserId}/conversations?platform=instagram&access_token=${token}`,
   ))
 
   // 4) instagram_business_manage_comments — 미디어 1개 ID 뽑아서 comments 조회
-  const mediaList = await fetch(`${GRAPH}/${igUserId}/media?fields=id&limit=1&access_token=${token}`)
+  const mediaList = await fetch(`${IG_GRAPH}/${igUserId}/media?fields=id&limit=1&access_token=${token}`)
   const mediaBody = await mediaList.json().catch(() => ({})) as { data?: Array<{ id: string }>; error?: unknown }
   const mediaId = mediaBody.data?.[0]?.id
   if (mediaId) {
     results.push(await call(
       "instagram_business_manage_comments",
-      `${GRAPH}/${mediaId}/comments?access_token=${token}`,
+      `${IG_GRAPH}/${mediaId}/comments?access_token=${token}`,
     ))
   } else {
     results.push({
       permission: "instagram_business_manage_comments",
-      endpoint: `${GRAPH}/${igUserId}/media?limit=1`,
+      endpoint: `${IG_GRAPH}/${igUserId}/media?limit=1`,
       ok: false,
       status: mediaList.status,
       body: { note: "미디어가 없거나 조회 실패 — comments 호출 불가", mediaListBody: mediaBody },
@@ -87,7 +87,7 @@ export async function GET() {
   }
 
   // 토큰에 실제로 포함된 scope 목록
-  const permRes = await fetch(`${GRAPH}/me/permissions?access_token=${token}`)
+  const permRes = await fetch(`${IG_GRAPH}/me/permissions?access_token=${token}`)
   const permBody = await permRes.json().catch(() => ({})) as {
     data?: Array<{ permission: string; status: string }>
   }

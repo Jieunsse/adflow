@@ -19,7 +19,7 @@ type MediaItem = {
 };
 
 type MediaResp = { ok: true; items: MediaItem[] } | { ok: false; error: string };
-type CommentsResp = { ok: true; items: IgComment[]; mock?: boolean } | { ok: false; error: string };
+type CommentsResp = { ok: true; items: IgComment[]; mock?: boolean; devFallback?: boolean } | { ok: false; error: string };
 type RepliesResp = { ok: true; items: IgComment[]; mock?: boolean } | { ok: false; error: string };
 type MutateResp = { ok: true; mock?: boolean } | { ok: false; error: string };
 type CreateResp = { ok: true; id: string; mock?: boolean } | { ok: false; error: string };
@@ -52,6 +52,7 @@ export default function CommentsPage() {
   const [commentsLoading, setCommentsLoading] = useState(false);
   const [commentsErr, setCommentsErr] = useState<string | null>(null);
   const [commentsMock, setCommentsMock] = useState(false);
+  const [commentsDevFallback, setCommentsDevFallback] = useState(false);
 
   const [replies, setReplies] = useState<Record<string, IgComment[]>>({});
   const [repliesOpen, setRepliesOpen] = useState<Record<string, boolean>>({});
@@ -105,6 +106,8 @@ export default function CommentsPage() {
     setCommentsLoading(true);
     setCommentsErr(null);
     setComments([]);
+    setCommentsMock(false);
+    setCommentsDevFallback(false);
     setReplies({});
     setRepliesOpen({});
     try {
@@ -113,6 +116,7 @@ export default function CommentsPage() {
       if (data.ok) {
         setComments(data.items);
         setCommentsMock(!!data.mock);
+        setCommentsDevFallback(!!(data as { devFallback?: boolean }).devFallback);
       } else {
         setCommentsErr(data.error);
       }
@@ -335,7 +339,12 @@ export default function CommentsPage() {
                   <div className="text-[12.5px] text-[var(--w-fg-alternative)] py-10 text-center">아직 댓글이 없어요.</div>
                 ) : (
                   <ul className="flex flex-col gap-0.5">
-                    {commentsMock && (
+                    {commentsDevFallback && (
+                      <li className="text-[11px] text-[var(--w-fg-alternative)] mb-2 px-1">
+                        앱 심사 전 개발 환경 — 샘플 댓글을 표시해요.
+                      </li>
+                    )}
+                    {commentsMock && !commentsDevFallback && (
                       <li className="text-[11px] text-[var(--w-fg-alternative)] mb-2 px-1">
                         연결된 IG 계정이 없어 샘플 데이터를 보여줘요.
                       </li>

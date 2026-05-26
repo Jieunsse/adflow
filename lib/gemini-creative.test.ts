@@ -16,7 +16,7 @@ describe("buildCreativePrompt — persona 주입", () => {
     expect(prompt).not.toContain("관심 키워드:");
   });
 
-  it("persona 있고 customerDescription 있을 때 맥락 줄 포함", () => {
+  it("persona 있고 customerDescription 있을 때 customerDescription 이 오디언스 라인", () => {
     const prompt = buildCreativePrompt({
       ...BASE,
       persona: {
@@ -25,8 +25,9 @@ describe("buildCreativePrompt — persona 주입", () => {
         interests: ["뷰티", "헬스케어"],
       },
     });
-    expect(prompt).toContain("타겟 오디언스: 20대 직장여성");
-    expect(prompt).toContain("타겟 고객 맥락: 피부 트러블에 민감한 고객");
+    // ADR-022 / issue#12 — customerDescription 이 타겟 오디언스 라인의 기본값
+    expect(prompt).toContain("타겟 오디언스: 피부 트러블에 민감한 고객");
+    expect(prompt).not.toContain("타겟 고객 맥락:");
     expect(prompt).toContain("관심 키워드: 뷰티, 헬스케어");
   });
 

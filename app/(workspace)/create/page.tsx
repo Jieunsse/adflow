@@ -23,6 +23,8 @@ import CreativeStep from "@widgets/creative-step";
 import LaunchStep from "@widgets/launch-step";
 import PostLaunchChecklist from "@widgets/post-launch-checklist";
 import { autoModeFromObjective } from "@features/switch-mode/objective-routing";
+import { readBrandProfile } from "@features/brand-profile/model/useBrandProfileStorage";
+import { readPersonas } from "@features/brand-profile/model/usePersonasStorage";
 
 const GRADIENTS = [
   "linear-gradient(135deg, #0066ff 0%, #6541f2 60%, #00bdde 100%)",
@@ -120,8 +122,31 @@ export default function CreatePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [prefillCampaignId, prefillHandled]);
 
+  // ChannelInsights AI 제안 → /create 진입. outcome·outcomeHint prefill 후 intro 자동 통과.
+  const channelInsightsFrom = searchParams.get("from") === "channel-insights";
+  const channelInsightsOutcome = searchParams.get("outcome");
+  const channelInsightsHint = searchParams.get("outcomeHint");
+  const [channelInsightsHandled, setChannelInsightsHandled] = useState(false);
+  useEffect(() => {
+    if (channelInsightsHandled || !channelInsightsFrom) return;
+    setChannelInsightsHandled(true);
+    if (channelInsightsOutcome && OBJECTIVES_ALL.some((o) => o.id === channelInsightsOutcome)) {
+      creative.dispatch({ type: "SET_OUTCOME", outcome: channelInsightsOutcome as (typeof OBJECTIVES_ALL)[number]["id"] });
+      setIntroCompleted(true);
+      setStep(channelInsightsOutcome === "boost_post" ? 1 : 0);
+    }
+    if (channelInsightsHint) {
+      creative.dispatch({ type: "SET_OUTCOME_HINT", hint: channelInsightsHint });
+    }
+    router.replace("/create");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [channelInsightsHandled, channelInsightsFrom]);
+
   const [brand, setBrand] = useSessionStorage("adflow_brand", "");
   const [target, setTarget] = useSessionStorage("adflow_target", "");
+  const [personaIdRaw, setPersonaIdRaw] = useSessionStorage("adflow_personaId", "");
+  const personaId = personaIdRaw || null;
+  const setPersonaId = (id: string | null) => setPersonaIdRaw(id ?? "");
   const [displayedHeadlines, setDisplayedHeadlines] = useState<string[] | null>(null);
   const [headlineIdx, setHeadlineIdx] = useState(0);
   const [displayedPrimaryTexts, setDisplayedPrimaryTexts] = useState<[string, string, string] | null>(null);
@@ -180,8 +205,29 @@ export default function CreatePage() {
       return;
     }
     const startedAt = Date.now();
+    const bp = readBrandProfile();
+    const personaEntry = personaId ? readPersonas().find((pe) => pe.id === personaId) : undefined;
     generateMutation.mutate(
-      { brand, target, tone: creative.state.tone, outcome: creative.state.outcome, hint: creative.state.outcomeHint },
+      {
+        brand: bp.brandVoice || brand,
+        target: target || undefined,
+        tone: bp.tone ?? creative.state.tone,
+        outcome: creative.state.outcome,
+        hint: creative.state.outcomeHint,
+        brandProfile: {
+          brandVoice: bp.brandVoice,
+          prohibitedWords: bp.prohibitedWords,
+          requiredPhrases: bp.requiredPhrases,
+          requiredHashtags: bp.requiredHashtags,
+        },
+        persona: personaEntry
+          ? {
+              name: personaEntry.name,
+              customerDescription: personaEntry.customerDescription,
+              interests: personaEntry.interests,
+            }
+          : undefined,
+      },
       {
         onSuccess: (data) => {
           setDisplayedHeadlines(data.headlines);
@@ -324,6 +370,8 @@ export default function CreatePage() {
               setBrand={setBrand}
               target={target}
               setTarget={setTarget}
+              personaId={personaId}
+              setPersonaId={setPersonaId}
               tone={creative.state.tone}
               setTone={(id: ToneId) => creative.dispatch({ type: "SET_TONE", tone: id })}
               onChangeOutcome={handleChangeOutcome}
@@ -345,6 +393,16 @@ export default function CreatePage() {
               onNext={() => {
                 const autoMode = autoModeFromObjective(creative.state.objective);
                 if (autoMode) launch.dispatch({ type: "SET_MODE", mode: autoMode });
+                if (personaId) {
+                  const pe = readPersonas().find((p) => p.id === personaId);
+                  if (pe) {
+                    creative.dispatch({
+                      type: "SET_TARGETING",
+                      targeting: { ageMin: pe.ageMin ?? 18, ageMax: pe.ageMax ?? 65, genders: pe.genders ?? [] },
+                    });
+                    launch.dispatch({ type: "SET_PERSONA_LOCATION", value: pe.location ?? [] });
+                  }
+                }
                 setStep(1);
               }}
               imageDataUrl={launch.state.imageDataUrl}

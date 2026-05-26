@@ -43,6 +43,7 @@ const baseLaunch: LaunchState = {
   ageMax: 39,
   gender: "all",
   countries: ["KR"],
+  personaLocation: [],
   delivery: "PAUSED",
   imageDataUrl: null,
   launchedCampaign: null,

@@ -9,12 +9,27 @@ import {
 } from "@entities/creative/options";
 import { AD_COPYWRITER_SYSTEM_PROMPT } from "@/lib/prompts/ad-copywriter";
 
+export interface BrandProfileContext {
+  brandVoice?: string;
+  prohibitedWords?: string;
+  requiredPhrases?: string;
+  requiredHashtags?: string;
+}
+
+export interface PersonaContext {
+  name: string;
+  customerDescription?: string;
+  interests?: string[];
+}
+
 export interface GenerateCreativeParams {
   brand: string;
-  target: string;
+  target?: string;
   tone: ToneId;
   outcome: ObjectiveId;
   hint?: string;
+  brandProfile?: BrandProfileContext;
+  persona?: PersonaContext;
 }
 
 // Meta spec: 1=male, 2=female, [] = all (unspecified)
@@ -63,17 +78,28 @@ function requireEnv(key: string): string {
   return v;
 }
 
-const PROMPT = (p: GenerateCreativeParams) => {
+export function buildCreativePrompt(p: GenerateCreativeParams): string {
   const outcomeDef = OBJECTIVES_ALL.find((o) => o.id === p.outcome)!;
   const hintLine = p.hint?.trim() ? `\n추가 요청: ${p.hint.trim()}` : "";
+  const bp = p.brandProfile;
+  const prohibitedLine = bp?.prohibitedWords?.trim() ? `\n금지어 (절대 사용 금지): ${bp.prohibitedWords.trim()}` : "";
+  const requiredPhrasesLine = bp?.requiredPhrases?.trim() ? `\n반드시 포함할 문구: ${bp.requiredPhrases.trim()}` : "";
+  const requiredHashtagsLine = bp?.requiredHashtags?.trim() ? `\n필수 해시태그 (Instagram): ${bp.requiredHashtags.trim()}` : "";
+  const audienceLine = p.target?.trim() || p.persona?.name || "";
+  const personaContextLine = p.persona?.customerDescription?.trim()
+    ? `\n타겟 고객 맥락: ${p.persona.customerDescription.trim()}`
+    : "";
+  const personaInterestsLine = p.persona?.interests?.length
+    ? `\n관심 키워드: ${p.persona.interests.join(", ")}`
+    : "";
   return `
 아래 정보를 바탕으로 Facebook/Instagram 광고 소재를 작성해주세요.
 
 브랜드/제품: ${p.brand}
-타겟 오디언스: ${p.target}
+타겟 오디언스: ${audienceLine}${personaContextLine}${personaInterestsLine}
 톤앤매너: ${TONE_PROMPT_DESC[p.tone]}
 원하는 결과: ${outcomeDef.outcomeLabel} (Meta ${outcomeDef.metaObjective})
-카피 방향: ${outcomeDef.copyTone}${hintLine}
+카피 방향: ${outcomeDef.copyTone}${hintLine}${prohibitedLine}${requiredPhrasesLine}${requiredHashtagsLine}
 
 다음 JSON 형식으로 응답하세요:
 {
@@ -90,7 +116,7 @@ const PROMPT = (p: GenerateCreativeParams) => {
   }
 }
 `.trim();
-};
+}
 
 const TEXT_MODELS = ["gemini-2.0-flash", "gemini-2.5-flash"];
 
@@ -168,7 +194,7 @@ export const geminiCreative = {
     params: GenerateCreativeParams,
   ): Promise<GenerateCreativeResult> {
     const apiKey = requireEnv("GOOGLE_AI_API_KEY");
-    const text = await generateWithFallback(apiKey, PROMPT(params));
+    const text = await generateWithFallback(apiKey, buildCreativePrompt(params));
 
     let parsed: {
       headlines: string[];

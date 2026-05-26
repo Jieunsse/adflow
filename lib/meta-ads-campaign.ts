@@ -27,6 +27,7 @@ export interface CreateCampaignParams {
   ageMax: number
   genders?: number[]   // Meta spec: 1=male, 2=female, empty/omitted = all
   countries: string[]  // ISO 3166-1 alpha-2 (at least one required)
+  location?: string[]  // Persona 자유 태그 — V1: geo_locations.countries 에 추가, Meta 오류 시 무시
   linkUrl: string
   ctaType: string      // Meta call_to_action.type e.g. LEARN_MORE, SHOP_NOW
   status: 'ACTIVE' | 'PAUSED'
@@ -196,7 +197,7 @@ function buildAdSetBody(params: CreateCampaignParams, plan: LaunchPlan, campaign
       // Advantage+ audience(simple 모드)는 Meta 가 age_max ≥ 65 를 강제(subcode 1870189). 유저 선택값은 권장 사항으로 격하됨.
       age_max: params.mode === 'simple' ? Math.max(params.ageMax, 65) : params.ageMax,
       ...(params.genders && params.genders.length > 0 ? { genders: params.genders } : {}),
-      geo_locations: { countries: params.countries },
+      geo_locations: { countries: [...params.countries, ...(params.location ?? [])] },
       targeting_automation: { advantage_audience: params.mode === 'simple' ? 1 : 0 },
       ...plan.placement,
     },

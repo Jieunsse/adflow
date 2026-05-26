@@ -41,6 +41,7 @@ export type LaunchParams = {
   ageMax: number;
   genders: number[];   // Meta 규격 — 1=남성, 2=여성, [] = 전체
   countries: string[]; // ISO 3166-1 alpha-2
+  location?: string[]; // Persona 자유 태그 — V1 은 Meta API 시도 후 오류 시 폴백
   linkUrl: string;
   cta: CtaId;
   status: "ACTIVE" | "PAUSED";
@@ -111,6 +112,7 @@ export type LaunchState = {
   ageMax: number;
   gender: Gender;
   countries: string[];
+  personaLocation: string[];
   delivery: DeliveryStatus;
   imageDataUrl: string | null;
 
@@ -140,6 +142,7 @@ export type LaunchAction =
   | { type: "SET_AGE_RANGE"; min: number; max: number }
   | { type: "SET_GENDER"; value: Gender }
   | { type: "SET_COUNTRIES"; value: string[] }
+  | { type: "SET_PERSONA_LOCATION"; value: string[] }
   | { type: "SET_DELIVERY"; value: DeliveryStatus }
   | { type: "SET_IMAGE_DATA_URL"; value: string | null }
   | { type: "SET_LAUNCHED_CAMPAIGN"; value: LaunchedCampaign }
@@ -178,6 +181,7 @@ export const INITIAL_LAUNCH_STATE: LaunchState = {
   ageMax: 39,
   gender: "all",
   countries: ["KR"],
+  personaLocation: [],
   delivery: "PAUSED",
   imageDataUrl: null,
 
@@ -228,6 +232,7 @@ function reducer(state: LaunchState, action: LaunchAction): LaunchState {
     case "SET_AGE_RANGE":            return { ...state, ageMin: action.min, ageMax: action.max };
     case "SET_GENDER":               return { ...state, gender: action.value };
     case "SET_COUNTRIES":            return { ...state, countries: action.value };
+    case "SET_PERSONA_LOCATION":     return { ...state, personaLocation: action.value };
     case "SET_DELIVERY":             return { ...state, delivery: action.value };
     case "SET_IMAGE_DATA_URL":       return { ...state, imageDataUrl: action.value };
     case "SET_LAUNCHED_CAMPAIGN":    return { ...state, launchedCampaign: action.value };

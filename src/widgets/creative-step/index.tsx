@@ -14,6 +14,8 @@ interface Props {
   setBrand: (v: string) => void;
   target: string;
   setTarget: (v: string) => void;
+  personaId: string | null;
+  setPersonaId: (id: string | null) => void;
   tone: ToneId;
   setTone: (id: ToneId) => void;
   /** SelectedGoalCard 의 "광고 목표 변경" → intro 복귀. page.tsx 가 outcome=null dispatch. */
@@ -46,6 +48,8 @@ export default function CreativeStep(p: Props) {
         setBrand={p.setBrand}
         target={p.target}
         setTarget={p.setTarget}
+        personaId={p.personaId}
+        setPersonaId={p.setPersonaId}
         tone={p.tone}
         setTone={p.setTone}
         onChangeOutcome={p.onChangeOutcome}

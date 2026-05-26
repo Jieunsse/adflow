@@ -72,6 +72,7 @@ type CampaignRequestBody = {
   abTestAxis?: string
   abTestVariantB?: { axis?: string; headline?: string; primaryText?: string; imageDataUrl?: string }
   skipAdCreation?: boolean
+  location?: string[]
 }
 
 const VALID_AB_AXES: ReadonlySet<AbTestAxisParam> = new Set(['headline', 'primary_text', 'image'])
@@ -89,7 +90,7 @@ export async function POST(req: NextRequest) {
   const adAccountId = resolveAdAccountId(session.adAccountId)
   return withRouteHandler(true, '', async () => {
       const body = (await req.json()) as CampaignRequestBody
-      const { headline, primaryText, dailyBudget, startDate, endDate, ageMin, ageMax, linkUrl, cta, imageDataUrl } = body
+      const { headline, primaryText, dailyBudget, startDate, endDate, ageMin, ageMax, linkUrl, cta, imageDataUrl, location } = body
 
       const skipAdCreation = body.skipAdCreation === true
       if (skipAdCreation && process.env.NEXT_PUBLIC_META_APP_MODE !== 'development') {
@@ -212,38 +213,47 @@ export async function POST(req: NextRequest) {
         abTestVariantB = { axis: 'headline', headline: variantBHeadline }
       }
 
-      const result = await metaAds.createCampaign(
-        {
-          headline,
-          primaryText: primaryText ?? '',
-          dailyBudget,
-          startDate,
-          endDate,
-          ageMin: ageMin ?? 18,
-          ageMax: ageMax ?? 65,
-          genders,
-          countries,
-          linkUrl: linkUrl ?? '',
-          ctaType,
-          status,
-          imageDataUrl: resolvedImageDataUrl,
-          objective,
-          goalId,
-          bidStrategy,
-          bidAmount,
-          placements,
-          platforms,
-          abTestEnabled: abTestEnabled || undefined,
-          abTestAxis,
-          abTestVariantB,
-          pixelId,
-          mode: body.mode,
-          skipAdCreation,
-        },
-        accessToken,
-        adAccountId,
-        pageId,
-      )
+      const campaignParams = {
+        headline,
+        primaryText: primaryText ?? '',
+        dailyBudget,
+        startDate,
+        endDate,
+        ageMin: ageMin ?? 18,
+        ageMax: ageMax ?? 65,
+        genders,
+        countries,
+        linkUrl: linkUrl ?? '',
+        ctaType,
+        status: status as 'ACTIVE' | 'PAUSED',
+        imageDataUrl: resolvedImageDataUrl,
+        objective,
+        goalId,
+        bidStrategy,
+        bidAmount,
+        placements,
+        platforms,
+        abTestEnabled: abTestEnabled || undefined,
+        abTestAxis,
+        abTestVariantB,
+        pixelId,
+        mode: body.mode,
+        skipAdCreation,
+      }
+      const extraLocation = Array.isArray(location) && location.length > 0
+        ? location.map(String)
+        : undefined
+
+      let result
+      if (extraLocation) {
+        try {
+          result = await metaAds.createCampaign({ ...campaignParams, location: extraLocation }, accessToken, adAccountId, pageId)
+        } catch {
+          result = await metaAds.createCampaign(campaignParams, accessToken, adAccountId, pageId)
+        }
+      } else {
+        result = await metaAds.createCampaign(campaignParams, accessToken, adAccountId, pageId)
+      }
 
       // PRD-ab-testing.md §7.5 — 개발모드 + A/B 활성 시 fake adIds 두 개 합성.
       // lib/meta-ads.ts 는 skipAdCreation 시 adSet 까지만 만들고 끝. route 가 mock_ad_{campaignId}_a/b 발급.

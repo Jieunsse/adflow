@@ -73,6 +73,7 @@ export function buildLaunchParams(
     ageMax: launch.ageMax,
     genders: uiToGenders(launch.gender),
     countries: launch.countries,
+    location: launch.personaLocation.length ? launch.personaLocation : undefined,
     linkUrl: launch.landingUrl.trim(),
     cta: creative.cta,
     status: effectiveStatus,

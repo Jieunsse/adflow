@@ -13,6 +13,11 @@
   text-rendering: optimizeLegibility;
 }
 [data-theme="dark"] .adflow { color-scheme: dark; }
+
+/* Workspace shell pages: keep body bg in sync with .adflow so overscroll/HMR/route transition
+   never reveals the legacy dark body bg (--bg-base: #080D18) underneath. */
+body:has(.adflow) { background: #f7f7f8; }
+[data-theme="dark"] body:has(.adflow) { background: #212225; }
 .adflow a { color: inherit; text-decoration: none; }
 .adflow input, .adflow textarea, .adflow select, .adflow button { font-family: inherit; }
 .adflow :focus-visible { outline: 2px solid var(--w-primary-normal); outline-offset: 2px; }

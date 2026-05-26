@@ -2,6 +2,7 @@ import { GRAPH, getPageToken, getIgUserId } from "./instagram-graph"
 
 export type IgConversationSummary = {
   id: string
+  participantId: string
   participantHandle: string
   participantPictureUrl?: string
   preview: string
@@ -31,11 +32,11 @@ export type IgThread = {
 export const IG_INBOX_MOCK: IgInbox = {
   mock: true,
   conversations: [
-    { id: "c1", participantHandle: "minji_lee",   preview: "사이즈 XL 도 있나요? 색상은 베이지 가능?", updatedAt: "2026-05-22T13:42:00Z" },
-    { id: "c2", participantHandle: "studio.kim",  preview: "협업 문의 드려요. 인스타 DM 이 편하실까요?",  updatedAt: "2026-05-22T09:15:00Z" },
-    { id: "c3", participantHandle: "yuna___",      preview: "주말 픽업 가능한가요? 토요일 오후 2시",        updatedAt: "2026-05-21T18:20:00Z" },
-    { id: "c4", participantHandle: "daily.shop",   preview: "감사합니다! 잘 받았어요 ✨",                    updatedAt: "2026-05-20T20:05:00Z" },
-    { id: "c5", participantHandle: "j_eunji",      preview: "광고 보고 연락 드려요. 가격 안내 부탁 ​드릴게요", updatedAt: "2026-05-19T11:30:00Z" },
+    { id: "c1", participantId: "mock-1", participantHandle: "minji_lee",   preview: "사이즈 XL 도 있나요? 색상은 베이지 가능?", updatedAt: "2026-05-22T13:42:00Z" },
+    { id: "c2", participantId: "mock-2", participantHandle: "studio.kim",  preview: "협업 문의 드려요. 인스타 DM 이 편하실까요?",  updatedAt: "2026-05-22T09:15:00Z" },
+    { id: "c3", participantId: "mock-3", participantHandle: "yuna___",      preview: "주말 픽업 가능한가요? 토요일 오후 2시",        updatedAt: "2026-05-21T18:20:00Z" },
+    { id: "c4", participantId: "mock-4", participantHandle: "daily.shop",   preview: "감사합니다! 잘 받았어요 ✨",                    updatedAt: "2026-05-20T20:05:00Z" },
+    { id: "c5", participantId: "mock-5", participantHandle: "j_eunji",      preview: "광고 보고 연락 드려요. 가격 안내 부탁 ​드릴게요", updatedAt: "2026-05-19T11:30:00Z" },
   ],
 }
 
@@ -135,6 +136,7 @@ async function fetchInboxWithToken(igUserId: string, token: string): Promise<IgI
     const pictureUrl = other?.id ? await fetchParticipantPicture(other.id, token) : undefined
     return {
       id: row.id,
+      participantId: other?.id ?? '',
       participantHandle: handle,
       participantPictureUrl: pictureUrl,
       preview: truncate(lastMsg?.message ?? '', 70),
@@ -219,4 +221,32 @@ export async function getInstagramThread(
   } catch {
     return getMockThread(conversationId)
   }
+}
+
+export async function sendInstagramMessage(
+  recipientId: string,
+  text: string,
+  pageId: string | undefined,
+  userToken: string | undefined,
+): Promise<{ messageId: string }> {
+  if (!pageId || !userToken) throw new Error('no_session')
+  const pageToken = await getPageToken(pageId, userToken)
+  if (!pageToken) throw new Error('no_page_token')
+  const igUserId = await getIgUserId(pageId, pageToken)
+  if (!igUserId) throw new Error('no_ig_user')
+
+  const res = await fetch(`${GRAPH}/${igUserId}/messages`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      recipient: { id: recipientId },
+      message: { text },
+    }),
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({})) as { error?: { message?: string } }
+    throw new Error(err.error?.message ?? 'send_failed')
+  }
+  const data = await res.json() as { message_id?: string }
+  return { messageId: data.message_id ?? '' }
 }

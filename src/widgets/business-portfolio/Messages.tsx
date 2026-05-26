@@ -128,8 +128,9 @@ function MessageBubble({ m }: { m: { from: 'me' | 'them'; text: string; attachme
   );
 }
 
-function Composer({ conversationId }: { conversationId: string }) {
+function Composer({ conversationId, participantId, isMock }: { conversationId: string; participantId: string; isMock: boolean }) {
   const [text, setText] = useState("");
+  const [sending, setSending] = useState(false);
   const taRef = useRef<HTMLTextAreaElement>(null);
   const qc = useQueryClient();
 
@@ -146,40 +147,53 @@ function Composer({ conversationId }: { conversationId: string }) {
     ta.style.overflowY = ta.scrollHeight > 140 ? "auto" : "hidden";
   }, [text]);
 
-  const send = () => {
+  const send = async () => {
     const value = text.trim();
-    if (!value) return;
+    if (!value || sending) return;
+
     const now = new Date().toISOString();
-    const newMsg: IgMessage = {
-      id: `local-${Date.now()}`,
-      from: "me",
-      text: value,
-      createdAt: now,
-    };
+    const tempId = `local-${Date.now()}`;
+    const newMsg: IgMessage = { id: tempId, from: "me", text: value, createdAt: now };
+    const preview = value.length > 70 ? `${value.slice(0, 69)}…` : value;
+
     qc.setQueryData<IgThread>(["ig-thread", conversationId], (old) =>
       old ? { ...old, messages: [...old.messages, newMsg] } : old,
     );
     qc.setQueryData<IgInbox>(["ig-conversations"], (old) => {
       if (!old) return old;
-      const conversations = old.conversations.map(c =>
-        c.id === conversationId
-          ? { ...c, preview: value.length > 70 ? `${value.slice(0, 69)}…` : value, updatedAt: now }
-          : c,
-      );
-      return { ...old, conversations };
+      return { ...old, conversations: old.conversations.map(c =>
+        c.id === conversationId ? { ...c, preview, updatedAt: now } : c,
+      )};
     });
     setText("");
     taRef.current?.focus();
+
+    if (isMock) return;
+
+    setSending(true);
+    try {
+      await fetch(`/api/instagram/conversations/${conversationId}/messages`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ recipientId: participantId, text: value }),
+      }).then(r => { if (!r.ok) throw new Error("send_failed") });
+    } catch {
+      qc.setQueryData<IgThread>(["ig-thread", conversationId], (old) =>
+        old ? { ...old, messages: old.messages.filter(m => m.id !== tempId) } : old,
+      );
+    } finally {
+      setSending(false);
+    }
   };
 
   const onKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
       e.preventDefault();
-      send();
+      void send();
     }
   };
 
-  const disabled = text.trim().length === 0;
+  const disabled = text.trim().length === 0 || sending;
 
   return (
     <div className="border-t border-[var(--w-line-alternative)] py-3 px-4 flex items-end gap-2">
@@ -212,7 +226,7 @@ function Composer({ conversationId }: { conversationId: string }) {
   );
 }
 
-function ThreadPanel({ conversationId }: { conversationId: string | null }) {
+function ThreadPanel({ conversationId, participantId }: { conversationId: string | null; participantId: string }) {
   const q = useQuery({
     queryKey: ["ig-thread", conversationId],
     queryFn: async (): Promise<IgThread> => {
@@ -249,10 +263,10 @@ function ThreadPanel({ conversationId }: { conversationId: string | null }) {
     );
   }
 
-  return <ThreadView thread={q.data} conversationId={conversationId} />;
+  return <ThreadView thread={q.data} conversationId={conversationId} participantId={participantId} />;
 }
 
-function ThreadView({ thread, conversationId }: { thread: IgThread; conversationId: string }) {
+function ThreadView({ thread, conversationId, participantId }: { thread: IgThread; conversationId: string; participantId: string }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const el = scrollRef.current;
@@ -278,7 +292,7 @@ function ThreadView({ thread, conversationId }: { thread: IgThread; conversation
           thread.messages.map(m => <MessageBubble key={m.id} m={m} />)
         )}
       </div>
-      <Composer conversationId={conversationId} />
+      <Composer conversationId={conversationId} participantId={participantId} isMock={thread.mock} />
     </div>
   );
 }
@@ -314,6 +328,7 @@ export default function Messages() {
 
   const inbox = inboxQ.data;
   const conversations = inbox.conversations;
+  const selectedConv = conversations.find(c => c.id === selected) ?? null;
 
   return (
     <div className="flex flex-col gap-3">
@@ -346,7 +361,7 @@ export default function Messages() {
               )}
             </div>
           </div>
-          <ThreadPanel conversationId={selected} />
+          <ThreadPanel conversationId={selected} participantId={selectedConv?.participantId ?? ""} />
         </div>
       </Card>
     </div>

@@ -5,6 +5,7 @@
 
 import { useCallback, useMemo } from "react";
 import { useScopedStorage } from "./storage/useScopedStorage";
+import { syncDelete, syncUpsert } from "./supabase-sync";
 
 const LIBRARY_KEY = "adflow_library_v1";
 
@@ -44,7 +45,9 @@ export function useLibrary() {
   const save = useCallback(
     (item: NewLibraryItem): string => {
       const id = newLibraryId();
-      setList((prev) => [{ id, savedAt: Date.now(), ...item }, ...prev]);
+      const entry = { id, savedAt: Date.now(), ...item };
+      setList((prev) => [entry, ...prev]);
+      syncUpsert("library_items", { id, saved_at: entry.savedAt, data: entry });
       return id;
     },
     [setList],
@@ -53,6 +56,7 @@ export function useLibrary() {
   const remove = useCallback(
     (id: string) => {
       setList((prev) => prev.filter((x) => x.id !== id));
+      syncDelete("library_items", "id", id);
     },
     [setList],
   );

@@ -4,6 +4,7 @@
 // 키: `auto-relaunch:<campaignId>`, 패턴: useKpiTargets / useLibrary 와 동일.
 
 import { useCallback } from "react";
+import { syncUpsert } from "./supabase-sync";
 
 export type AutoRelaunchEntry = {
   campaignId: string;
@@ -30,6 +31,7 @@ function writeEntry(entry: AutoRelaunchEntry): void {
   try {
     localStorage.setItem(KEY(entry.campaignId), JSON.stringify(entry));
   } catch {}
+  syncUpsert("auto_relaunch_states", { campaign_id: entry.campaignId, data: entry, updated_at: entry.updatedAt });
 }
 
 export function useAutoRelaunch() {

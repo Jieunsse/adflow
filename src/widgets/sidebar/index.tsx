@@ -55,7 +55,21 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
           { href: "/instagram/messages", label: "메시지", icon: "message" },
         ],
       },
-      { href: "/facebook", label: "Facebook", icon: "facebook" },
+      {
+        href: "/facebook",
+        label: "Facebook",
+        icon: "facebook",
+        children: [
+          { href: "/facebook", label: "인사이트", icon: "chart" },
+          { href: "/facebook/posts", label: "게시물", icon: "image" },
+        ],
+      },
+    ],
+  },
+  {
+    label: "브랜드 & 정책",
+    items: [
+      { href: "/brand-profile", label: "브랜드 프로필", icon: "asterisk" },
     ],
   },
   {
@@ -183,7 +197,7 @@ export default function Sidebar() {
         </div>
       </Link>
 
-      <nav className="flex flex-col gap-0.5 flex-1">
+      <nav className="flex flex-col gap-0.5 flex-1 min-h-0 overflow-y-auto -mx-3.5 px-3.5">
         {NAV_GROUPS.map((group, gi) => (
           <div key={group.label}>
             <div
@@ -209,7 +223,13 @@ export default function Sidebar() {
                     >
                       <span
                         className="w-[18px] h-[18px] grid place-items-center"
-                        style={it.icon === "instagram" ? { color: "#E1306C" } : undefined}
+                        style={
+                          it.icon === "instagram"
+                            ? { color: "#E1306C" }
+                            : it.icon === "facebook"
+                              ? { color: "#1877F2" }
+                              : undefined
+                        }
                       >
                         <Icon name={it.icon} size={18} />
                       </span>

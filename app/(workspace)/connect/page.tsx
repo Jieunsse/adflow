@@ -314,11 +314,13 @@ function AdAccountCard({ name, id, currency, status, disabled, onChange }: {
                 <span className="font-medium text-[12.5px] leading-none [font-family:var(--w-font-mono)] text-[var(--w-fg-neutral)]">{currency}</span>
               </div>
             )}
-            <IdField
-              label="광고 계정 ID"
-              id={id}
-              desc="Meta 광고 계정의 고유 번호. 결제·문의 시 Meta에 알려주는 값이에요."
-            />
+            <div className="mt-4 mb-1.5">
+              <IdField
+                label="광고 계정 ID"
+                id={id}
+                desc="Meta 광고 계정의 고유 번호. 결제·문의 시 Meta에 알려주는 값이에요."
+              />
+            </div>
           </div>
           <div className="flex flex-col gap-2.5 items-end flex-none">
             {status === "disabled"
@@ -404,11 +406,13 @@ function PageCard({ name, id, picture, disabled, onChange }: { name: string; id:
             <div className="font-semibold text-[11px] leading-[1.45] tracking-[0.04em] uppercase text-[var(--w-fg-neutral)]" style={{ color: "var(--w-fg-alternative)", marginBottom: 6 }}>페이스북 페이지</div>
             <div className="font-bold text-[16.5px] leading-[1.35] [font-family:var(--w-font-display)] tracking-[-0.012em]" style={{ color: disabled ? "var(--w-fg-neutral)" : "var(--w-fg-strong)" }}>{name}</div>
             <div className="font-medium text-[12.5px] leading-[1.5] text-[var(--w-fg-neutral)]" style={{ marginTop: 6 }}>광고가 이 페이지 명의로 게재돼요.</div>
-            <IdField
-              label="페이지 ID"
-              id={id}
-              desc="광고가 게재되는 페이스북 페이지의 고유 번호."
-            />
+            <div className="mt-4 mb-1.5">
+              <IdField
+                label="페이지 ID"
+                id={id}
+                desc="광고가 게재되는 페이스북 페이지의 고유 번호."
+              />
+            </div>
           </div>
         </div>
         {disabled && (
@@ -424,6 +428,17 @@ function PageCard({ name, id, picture, disabled, onChange }: { name: string; id:
         )}
       </div>
     </div>
+  );
+}
+
+function PermCheck({ label }: { label: string }) {
+  return (
+    <span className="inline-flex items-center gap-[5px] font-semibold text-[12.5px] leading-none text-[var(--w-status-positive)] dark:text-[#49e57d]">
+      <span className="inline-grid place-items-center w-[14px] h-[14px] rounded-full bg-[var(--w-status-positive)] text-white dark:bg-[#49e57d] dark:text-[#0b1c12]">
+        <Icon name="check" size={9} strokeWidth={3.5} />
+      </span>
+      {label}
+    </span>
   );
 }
 
@@ -456,6 +471,16 @@ function InstagramCard({ username, id, picture, pageId, igAccessToken, disabled,
                 ? "선택한 페이스북 페이지에 연결된 Instagram 계정의 인사이트를 보여드려요."
                 : "선택한 페이스북 페이지에 Instagram 비즈니스 계정이 연결돼 있지 않아요. 페이지 설정에서 Instagram 계정을 연결한 뒤 아래 [다시 불러오기]를 눌러주세요."}
             </div>
+            {linked && !disabled && (
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-4 mb-1.5">
+                {insightsAuthorized
+                  ? <PermCheck label="인사이트 권한" />
+                  : <a className="inline-flex items-center gap-[5px] font-semibold text-[12.5px] leading-none text-[var(--w-primary-normal)] hover:underline" href="/api/instagram/connect"><Icon name="chart" size={13} /> 인사이트 권한 받기</a>}
+                {publishAuthorized
+                  ? <PermCheck label="게시 권한" />
+                  : <span className="inline-flex items-center gap-[5px] font-semibold text-[12.5px] leading-none text-[var(--w-status-cautionary)]"><Icon name="warn" size={12} /> 게시 권한 없음</span>}
+              </div>
+            )}
             {id && (
               <IdField
                 label="Instagram 비즈니스 ID"
@@ -468,14 +493,6 @@ function InstagramCard({ username, id, picture, pageId, igAccessToken, disabled,
             {linked
               ? <span className="inline-flex items-center gap-[5px] px-[9px] py-[3px] rounded-full font-semibold text-[11.5px] leading-none text-[var(--w-status-positive)] bg-[rgba(0,191,64,0.10)] dark:bg-[rgba(73,229,125,0.14)] dark:text-[#49e57d]"><span className="w-1.5 h-1.5 rounded-full bg-[var(--w-status-positive)] dark:bg-[#49e57d]" /> 연결됨</span>
               : <span className="inline-flex items-center gap-[5px] px-2.5 py-1 rounded-full font-semibold text-[12px] leading-none text-[var(--w-status-cautionary)] bg-[rgba(255,146,0,0.12)]"><Icon name="warn" size={12} /> 미연결</span>}
-            {insightsAuthorized
-              ? <span className="inline-flex items-center gap-[5px] px-[9px] py-[3px] rounded-full font-semibold text-[11.5px] leading-none text-[var(--w-status-positive)] bg-[rgba(0,191,64,0.10)] dark:bg-[rgba(73,229,125,0.14)] dark:text-[#49e57d]"><span className="w-1.5 h-1.5 rounded-full bg-[var(--w-status-positive)] dark:bg-[#49e57d]" /> 인사이트 권한</span>
-              : !disabled && <a className={buttonVariants({ variant: "secondary", size: "sm" })} href="/api/instagram/connect"><Icon name="chart" size={13} /> 인사이트 권한 받기</a>}
-            {linked && (
-              publishAuthorized
-                ? <span className="inline-flex items-center gap-[5px] px-[9px] py-[3px] rounded-full font-semibold text-[11.5px] leading-none text-[var(--w-status-positive)] bg-[rgba(0,191,64,0.10)] dark:bg-[rgba(73,229,125,0.14)] dark:text-[#49e57d]"><span className="w-1.5 h-1.5 rounded-full bg-[var(--w-status-positive)] dark:bg-[#49e57d]" /> 게시 권한</span>
-                : !disabled && <span className="inline-flex items-center gap-[5px] px-2.5 py-1 rounded-full font-semibold text-[12px] leading-none text-[var(--w-status-cautionary)] bg-[rgba(255,146,0,0.12)]"><Icon name="warn" size={12} /> 게시 권한 없음</span>
-            )}
             {linked && !disabled && (
               <a className={buttonVariants({ variant: "ghost", size: "sm" })} href="/api/instagram/connect">
                 <Icon name="refresh" size={13} /> 재연결

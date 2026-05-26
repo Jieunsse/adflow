@@ -2,11 +2,10 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { syncUpsert } from "@shared/lib/supabase-sync";
-import type { ToneId } from "@entities/creative/options";
 import type { SopSection } from "@features/sop/model/useSopStorage";
-
 export interface BrandProfile {
-  tone?: ToneId;
+  brandDescription?: string;
+  tone?: string;
   brandVoice?: string;
   prohibitedWords?: string;
   customerVoiceSummary?: string;
@@ -78,6 +77,17 @@ export function readBrandProfile(): BrandProfile {
     profiles[0];
   const { id: _id, name: _name, isDefault: _isDefault, ...bp } = entry;
   return bp;
+}
+
+export function readActiveBrandProfileEntry(): BrandProfileEntry | null {
+  const profiles = readProfiles();
+  if (!profiles.length) return null;
+  const activeId = getActiveId();
+  return (
+    profiles.find((p) => p.id === activeId) ??
+    profiles.find((p) => p.isDefault) ??
+    profiles[0]
+  );
 }
 
 export function appendToBrandProfile(

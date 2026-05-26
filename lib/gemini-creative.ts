@@ -7,13 +7,21 @@ import {
   OBJECTIVES_ALL,
   type ObjectiveId,
 } from "@entities/creative/options";
+
+function toneText(tone: string): string {
+  return TONE_PROMPT_DESC[tone as ToneId] ?? tone;
+}
 import { AD_COPYWRITER_SYSTEM_PROMPT } from "@/lib/prompts/ad-copywriter";
+import type { SopSection } from "@features/sop/model/useSopStorage";
 
 export interface BrandProfileContext {
+  brandDescription?: string;
   brandVoice?: string;
+  customerVoiceSummary?: string;
   prohibitedWords?: string;
   requiredPhrases?: string;
   requiredHashtags?: string;
+  policy?: SopSection[];
 }
 
 export interface PersonaContext {
@@ -25,7 +33,7 @@ export interface PersonaContext {
 export interface GenerateCreativeParams {
   brand: string;
   target?: string;
-  tone: ToneId;
+  tone: string;
   outcome: ObjectiveId;
   hint?: string;
   brandProfile?: BrandProfileContext;
@@ -78,28 +86,67 @@ function requireEnv(key: string): string {
   return v;
 }
 
+function buildPolicyLines(bp: BrandProfileContext): string {
+  const styleProhibited = bp.prohibitedWords?.trim() ?? "";
+  const policyProhibited = bp.policy
+    ?.find((s): s is Extract<SopSection, { type: "prohibited_words" }> => s.type === "prohibited_words")
+    ?.data.words.join(", ") ?? "";
+  const allProhibited = [styleProhibited, policyProhibited].filter(Boolean).join(", ");
+  const prohibitedLine = allProhibited ? `\n금지어 (절대 사용 금지): ${allProhibited}` : "";
+
+  const lengthSection = bp.policy?.find(
+    (s): s is Extract<SopSection, { type: "length_limits" }> => s.type === "length_limits",
+  );
+  let lengthLine = "";
+  if (lengthSection) {
+    const parts: string[] = [];
+    if (lengthSection.data.headline != null) parts.push(`헤드라인 ${lengthSection.data.headline}자 이내`);
+    if (lengthSection.data.body != null) parts.push(`본문 ${lengthSection.data.body}자 이내`);
+    if (lengthSection.data.hashtagCount != null) parts.push(`해시태그 ${lengthSection.data.hashtagCount}개 이내`);
+    if (parts.length) lengthLine = `\n글자 제한: ${parts.join(", ")}`;
+  }
+
+  const ctaSection = bp.policy?.find(
+    (s): s is Extract<SopSection, { type: "cta_restrictions" }> => s.type === "cta_restrictions",
+  );
+  let ctaLine = "";
+  if (ctaSection) {
+    const parts: string[] = [];
+    if (ctaSection.data.blacklist.length) parts.push(`금지 CTA: ${ctaSection.data.blacklist.join(", ")}`);
+    if (ctaSection.data.note?.trim()) parts.push(ctaSection.data.note.trim());
+    if (parts.length) ctaLine = `\nCTA 제한: ${parts.join(" / ")}`;
+  }
+
+  const requiredPhrasesLine = bp.requiredPhrases?.trim() ? `\n반드시 포함할 문구: ${bp.requiredPhrases.trim()}` : "";
+  const requiredHashtagsLine = bp.requiredHashtags?.trim() ? `\n필수 해시태그 (Instagram): ${bp.requiredHashtags.trim()}` : "";
+
+  return prohibitedLine + lengthLine + ctaLine + requiredPhrasesLine + requiredHashtagsLine;
+}
+
 export function buildCreativePrompt(p: GenerateCreativeParams): string {
   const outcomeDef = OBJECTIVES_ALL.find((o) => o.id === p.outcome)!;
   const hintLine = p.hint?.trim() ? `\n추가 요청: ${p.hint.trim()}` : "";
   const bp = p.brandProfile;
-  const prohibitedLine = bp?.prohibitedWords?.trim() ? `\n금지어 (절대 사용 금지): ${bp.prohibitedWords.trim()}` : "";
-  const requiredPhrasesLine = bp?.requiredPhrases?.trim() ? `\n반드시 포함할 문구: ${bp.requiredPhrases.trim()}` : "";
-  const requiredHashtagsLine = bp?.requiredHashtags?.trim() ? `\n필수 해시태그 (Instagram): ${bp.requiredHashtags.trim()}` : "";
-  const audienceLine = p.target?.trim() || p.persona?.name || "";
-  const personaContextLine = p.persona?.customerDescription?.trim()
-    ? `\n타겟 고객 맥락: ${p.persona.customerDescription.trim()}`
-    : "";
+
+  const brandLine = bp?.brandDescription?.trim() ?? p.brand;
+  const brandVoiceLine = bp?.brandVoice?.trim() ? `\n브랜드 보이스: ${bp.brandVoice.trim()}` : "";
+
+  const audienceLine = p.persona?.customerDescription?.trim() || p.target?.trim() || p.persona?.name || "";
+  const customerVoiceLine = bp?.customerVoiceSummary?.trim() ? `\n고객 언어: ${bp.customerVoiceSummary.trim()}` : "";
   const personaInterestsLine = p.persona?.interests?.length
     ? `\n관심 키워드: ${p.persona.interests.join(", ")}`
     : "";
+
+  const policyLines = bp ? buildPolicyLines(bp) : "";
+
   return `
 아래 정보를 바탕으로 Facebook/Instagram 광고 소재를 작성해주세요.
 
-브랜드/제품: ${p.brand}
-타겟 오디언스: ${audienceLine}${personaContextLine}${personaInterestsLine}
-톤앤매너: ${TONE_PROMPT_DESC[p.tone]}
+브랜드/제품: ${brandLine}${brandVoiceLine}
+타겟 오디언스: ${audienceLine}${customerVoiceLine}${personaInterestsLine}
+톤앤매너: ${toneText(p.tone)}
 원하는 결과: ${outcomeDef.outcomeLabel} (Meta ${outcomeDef.metaObjective})
-카피 방향: ${outcomeDef.copyTone}${hintLine}${prohibitedLine}${requiredPhrasesLine}${requiredHashtagsLine}
+카피 방향: ${outcomeDef.copyTone}${hintLine}${policyLines}
 
 다음 JSON 형식으로 응답하세요:
 {
@@ -159,7 +206,7 @@ async function generateWithFallback(
 export interface SuggestImagePromptParams {
   headline: string;
   primaryText: string;
-  tone: ToneId;
+  tone: string;
 }
 
 export interface SuggestImagePromptResult {
@@ -173,7 +220,7 @@ const IMAGE_PROMPT_TEMPLATE = (p: SuggestImagePromptParams) =>
 
 광고 헤드라인: ${p.headline}
 광고 본문: ${p.primaryText}
-톤앤매너: ${TONE_PROMPT_DESC[p.tone]}
+톤앤매너: ${toneText(p.tone)}
 
 규칙:
 - 1:1 정사각형 광고 이미지에 적합한 구도

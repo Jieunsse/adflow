@@ -8,7 +8,6 @@ import Icon from "@shared/ui/Icon";
 import { Button } from "@shared/ui/Button";
 import { useToast } from "@shared/ui/Toast";
 import { cn } from "@shared/lib/cn";
-import { TONES, type ToneId } from "@entities/creative/options";
 import {
   useBrandProfilesStorage,
   type BrandProfileEntry,
@@ -47,6 +46,25 @@ function Field({ label, hint, children }: { label: string; hint?: string; childr
   );
 }
 
+function ReadField({ label, value }: { label: string; value?: string }) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <span className="font-semibold text-[14px] leading-[1.3] tracking-[-0.008em] text-[var(--w-fg-strong)]">
+        {label}
+      </span>
+      {value ? (
+        <p className="m-0 font-medium text-[14px] leading-[1.6] tracking-[0.004em] text-[var(--w-fg-strong)] whitespace-pre-wrap">
+          {value}
+        </p>
+      ) : (
+        <p className="m-0 font-medium text-[13px] leading-[1.5] text-[var(--w-fg-alternative)] italic">
+          미입력
+        </p>
+      )}
+    </div>
+  );
+}
+
 export default function BrandProfileDetailPage() {
   const params = useParams<{ id: string }>();
   const id = params.id;
@@ -64,7 +82,8 @@ export default function BrandProfileDetailPage() {
   const [editingPersona, setEditingPersona] = useState<PersonaEntry | "new" | null>(null);
 
   const [name, setName] = useState("");
-  const [tone, setTone] = useState<ToneId | "">("");
+  const [tone, setTone] = useState("");
+  const [brandDescription, setBrandDescription] = useState("");
   const [brandVoice, setBrandVoice] = useState("");
   const [prohibitedWords, setProhibitedWords] = useState("");
   const [customerVoiceSummary, setCustomerVoiceSummary] = useState("");
@@ -82,6 +101,7 @@ export default function BrandProfileDetailPage() {
     if (!loaded) {
       setName(p.name);
       setTone(p.tone ?? "");
+      setBrandDescription(p.brandDescription ?? "");
       setBrandVoice(p.brandVoice ?? "");
       setProhibitedWords(p.prohibitedWords ?? "");
       setCustomerVoiceSummary(p.customerVoiceSummary ?? "");
@@ -99,6 +119,7 @@ export default function BrandProfileDetailPage() {
       ...entry,
       name: name.trim() || "새 프로필",
       tone: tone || undefined,
+      brandDescription: brandDescription.trim() || undefined,
       brandVoice: brandVoice.trim() || undefined,
       prohibitedWords: prohibitedWords.trim() || undefined,
       customerVoiceSummary: customerVoiceSummary.trim() || undefined,
@@ -185,7 +206,21 @@ export default function BrandProfileDetailPage() {
         ))}
       </div>
 
-      {tab === "style" && (
+      {tab === "style" && !isOwner && (
+        <div className="flex flex-col gap-5 pt-4">
+          <ReadField label="프로필 이름" value={name} />
+          <ReadField label="광고 느낌 (Tone)" value={tone} />
+          <ReadField label="브랜드 설명" value={brandDescription} />
+          <ReadField label="브랜드 보이스 (Brand Voice)" value={brandVoice} />
+          <ReadField label="금지어" value={prohibitedWords} />
+          <ReadField label="필수 문구" value={requiredPhrases} />
+          <ReadField label="필수 해시태그" value={requiredHashtags} />
+          <ReadField label="이미지 가이드" value={imageGuide} />
+          <ReadField label="고객 목소리 요약 (Customer Voice)" value={customerVoiceSummary} />
+        </div>
+      )}
+
+      {tab === "style" && isOwner && (
         <div className="flex flex-col gap-5 pt-4">
           <Field label="프로필 이름">
             <input
@@ -196,43 +231,36 @@ export default function BrandProfileDetailPage() {
             />
           </Field>
 
-          <Field label="광고 느낌 (Tone)" hint="광고 만들기에서 기본 선택 톤이 돼요.">
-            <div className="flex gap-2 flex-wrap">
-              {TONES.map((t) => (
-                <button
-                  key={t.id}
-                  type="button"
-                  className={cn(
-                    "inline-flex items-center gap-1.5 px-[14px] py-2 rounded-full border border-[var(--w-line-normal)] bg-[var(--w-bg-elevated)] font-medium text-[13px] leading-none text-[var(--w-fg-strong)] cursor-pointer transition-[background,border-color,color] duration-[120ms]",
-                    tone === t.id &&
-                      "bg-[var(--w-fg-strong)] text-[var(--w-bg-elevated)] border-[var(--w-fg-strong)]"
-                  )}
-                  onClick={() => setTone(t.id)}
-                >
-                  {t.label}
-                </button>
-              ))}
-              {tone && (
-                <button
-                  type="button"
-                  className="inline-flex items-center gap-1 px-3 py-2 rounded-full border border-[var(--w-line-normal)] bg-[var(--w-bg-elevated)] font-medium text-[12px] leading-none text-[var(--w-fg-neutral)] cursor-pointer hover:bg-[var(--w-bg-neutral)]"
-                  onClick={() => setTone("")}
-                >
-                  <Icon name="x" size={11} /> 선택 해제
-                </button>
-              )}
-            </div>
+          <Field label="광고 느낌 (Tone)" hint="광고 만들기에서 기본 톤으로 적용돼요. AI 카피 생성에 반영됩니다.">
+            <input
+              className="w-full px-[14px] py-3 border border-[var(--w-line-normal)] rounded-xl bg-[var(--w-bg-elevated)] font-medium text-[14px] leading-[1.5] tracking-[0.004em] text-[var(--w-fg-strong)] outline-none transition-[border-color,box-shadow] duration-[120ms] placeholder:text-[var(--w-fg-alternative)] focus:border-[var(--w-primary-normal)] focus:shadow-[0_0_0_4px_rgba(0,102,255,0.14)]"
+              value={tone}
+              onChange={(e) => setTone(e.target.value)}
+              placeholder="예) 친근하고 유머러스하게, 전문적이고 신뢰감 있게"
+            />
           </Field>
 
           <Field
-            label="브랜드 설명 (Brand Voice)"
+            label="브랜드 설명"
             hint="제품·서비스 소개, 타겟, 강점을 적어주세요. AI 카피 생성의 베이스가 돼요."
           >
             <textarea
               className={cn(TEXTAREA_CLS, "min-h-[96px]")}
+              value={brandDescription}
+              onChange={(e) => setBrandDescription(e.target.value)}
+              placeholder={"예) 20대 여성을 위한 비건 스킨케어 브랜드 '그린루틴'.\n대표 제품은 수분크림으로 자극 없는 성분이 강점이에요."}
+            />
+          </Field>
+
+          <Field
+            label="브랜드 보이스 (Brand Voice)"
+            hint="브랜드가 말하는 방식·어조 가이드. 카피 문체에 반영돼요."
+          >
+            <textarea
+              className={cn(TEXTAREA_CLS, "min-h-[64px]")}
               value={brandVoice}
               onChange={(e) => setBrandVoice(e.target.value)}
-              placeholder={"예) 20대 여성을 위한 비건 스킨케어 브랜드 '그린루틴'.\n대표 제품은 수분크림으로 자극 없는 성분이 강점이에요."}
+              placeholder="예) 친근하고 솔직하게. 과장 없이 담백하게 이야기해요."
             />
           </Field>
 
@@ -319,23 +347,32 @@ export default function BrandProfileDetailPage() {
           <p className="m-0 font-medium text-[13.5px] leading-[1.5] text-[var(--w-fg-neutral)]">
             이 브랜드 프로필의 타겟 고객 페르소나를 정의하세요. AI 카피 생성 시 활용돼요.
           </p>
-          {personas.length > 0 && (
+          {personas.length > 0 ? (
             <div className="grid grid-cols-2 gap-3">
               {personas.map((p) => (
                 <PersonaCard
                   key={p.id}
                   persona={p}
-                  onEdit={() => setEditingPersona(p)}
+                  canEdit={isOwner}
+                  onEdit={() => isOwner && setEditingPersona(p)}
                   onDelete={() => deletePersona(p.id)}
                 />
               ))}
             </div>
+          ) : (
+            !isOwner && (
+              <p className="m-0 font-medium text-[13px] leading-[1.5] text-[var(--w-fg-alternative)] italic">
+                아직 정의된 페르소나가 없어요
+              </p>
+            )
           )}
-          <div>
-            <Button variant="secondary" type="button" onClick={() => setEditingPersona("new")}>
-              + 페르소나 추가
-            </Button>
-          </div>
+          {isOwner && (
+            <div>
+              <Button variant="secondary" type="button" onClick={() => setEditingPersona("new")}>
+                + 페르소나 추가
+              </Button>
+            </div>
+          )}
         </div>
       )}
 

@@ -16,14 +16,14 @@ import { getMockCampaign, getMockCampaignAdIds, seedMockAdRows } from "@/lib/moc
 import Icon from "@shared/ui/Icon";
 import { useToast } from "@shared/ui/Toast";
 import { useLibrary } from "@shared/lib/library";
-import { TONES, CTAS, OBJECTIVES_ALL, type ToneId, type CtaId } from "@entities/creative/options";
+import { TONES, CTAS, OBJECTIVES_ALL, type CtaId } from "@entities/creative/options";
 import Stepper from "./_components/Stepper";
 import GoalIntro from "@widgets/goal-intro";
 import CreativeStep from "@widgets/creative-step";
 import LaunchStep from "@widgets/launch-step";
 import PostLaunchChecklist from "@widgets/post-launch-checklist";
 import { autoModeFromObjective } from "@features/switch-mode/objective-routing";
-import { readBrandProfile } from "@features/brand-profile/model/useBrandProfileStorage";
+import { readBrandProfile, readActiveBrandProfileEntry } from "@features/brand-profile/model/useBrandProfileStorage";
 import { readPersonas } from "@features/brand-profile/model/usePersonasStorage";
 
 const GRADIENTS = [
@@ -195,7 +195,7 @@ export default function CreatePage() {
     creative.dispatch({ type: "SET_HEADLINE", headline: loaded.headline });
     if (loaded.primary != null) creative.dispatch({ type: "SET_PRIMARY_TEXT", primaryText: loaded.primary });
 
-    if (loaded.tone && TONES.some((t) => t.id === loaded.tone)) creative.dispatch({ type: "SET_TONE", tone: loaded.tone as ToneId });
+    if (loaded.tone) creative.dispatch({ type: "SET_TONE", tone: loaded.tone });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -206,19 +206,23 @@ export default function CreatePage() {
     }
     const startedAt = Date.now();
     const bp = readBrandProfile();
+    const bpEntry = readActiveBrandProfileEntry();
     const personaEntry = personaId ? readPersonas().find((pe) => pe.id === personaId) : undefined;
     generateMutation.mutate(
       {
-        brand: bp.brandVoice || brand,
+        brand: bp.brandDescription || brand,
         target: target || undefined,
         tone: bp.tone ?? creative.state.tone,
         outcome: creative.state.outcome,
         hint: creative.state.outcomeHint,
         brandProfile: {
+          brandDescription: bp.brandDescription,
           brandVoice: bp.brandVoice,
+          customerVoiceSummary: bp.customerVoiceSummary,
           prohibitedWords: bp.prohibitedWords,
           requiredPhrases: bp.requiredPhrases,
           requiredHashtags: bp.requiredHashtags,
+          policy: bpEntry?.policy,
         },
         persona: personaEntry
           ? {
@@ -373,7 +377,7 @@ export default function CreatePage() {
               personaId={personaId}
               setPersonaId={setPersonaId}
               tone={creative.state.tone}
-              setTone={(id: ToneId) => creative.dispatch({ type: "SET_TONE", tone: id })}
+              setTone={(id) => creative.dispatch({ type: "SET_TONE", tone: id })}
               onChangeOutcome={handleChangeOutcome}
               generating={generating}
               generated={generated}

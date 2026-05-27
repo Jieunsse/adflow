@@ -9,36 +9,6 @@ import type { PersonaEntry } from "../model/usePersonasStorage";
 
 const GENDER_LABEL: Record<number, string> = { 1: "남", 2: "여" };
 
-function MaleFigure() {
-  return (
-    <svg width="56" height="56" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="28" cy="16" r="10" fill="rgba(255,255,255,0.7)" />
-      <path d="M8 52c0-11.046 8.954-20 20-20s20 8.954 20 20" fill="rgba(255,255,255,0.5)" />
-    </svg>
-  );
-}
-
-function FemaleFigure() {
-  return (
-    <svg width="56" height="56" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="28" cy="16" r="10" fill="rgba(255,255,255,0.7)" />
-      <path d="M14 52c0-7.732 6.268-14 14-14s14 6.268 14 14" fill="rgba(255,255,255,0.5)" />
-      <path d="M20 38c-2 4-2 8 8 10 10-2 10-6 8-10" fill="rgba(255,255,255,0.35)" />
-    </svg>
-  );
-}
-
-function AllFigure() {
-  return (
-    <svg width="64" height="56" viewBox="0 0 64 56" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="22" cy="16" r="9" fill="rgba(255,255,255,0.55)" />
-      <path d="M2 52c0-11.046 8.954-18 20-18s20 6.954 20 18" fill="rgba(255,255,255,0.35)" />
-      <circle cx="44" cy="16" r="9" fill="rgba(255,255,255,0.7)" />
-      <path d="M24 52c0-11.046 8.954-18 20-18s20 6.954 20 18" fill="rgba(255,255,255,0.5)" />
-    </svg>
-  );
-}
-
 const GENDER_BG: Record<"male" | "female" | "all", string> = {
   male: "linear-gradient(160deg, #C8DCFA 0%, #A8C4F0 100%)",
   female: "linear-gradient(160deg, #FFE8DC 0%, #FFD0BE 100%)",
@@ -73,24 +43,33 @@ export default function PersonaCard({ persona, canEdit = true, onEdit, onDelete 
 
   return (
     <Card
-      style={{ padding: 0, overflow: "hidden", display: "flex", flexDirection: "column", cursor: canEdit ? "pointer" : "default", transition: "border-color 120ms ease" }}
+      className={`p-0 overflow-hidden flex flex-col transition-[border-color] duration-[120ms] ease-in-out ${canEdit ? "cursor-pointer" : "cursor-default"}`}
       onClick={canEdit ? onEdit : undefined}
     >
-      <div style={{ position: "relative", aspectRatio: "16 / 10", background: GENDER_BG[genderType], display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 16, color: "#fff", gap: 8 }}>
-        <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          {genderType === "male" && <MaleFigure />}
-          {genderType === "female" && <FemaleFigure />}
-          {genderType === "all" && <AllFigure />}
+      <div
+        className="relative aspect-[16/10] flex flex-col items-center justify-center overflow-hidden"
+        style={{ background: GENDER_BG[genderType] }}
+      >
+        <div className="flex-1 flex items-end justify-center gap-4 w-full">
+          {genderType === "male" && (
+            <Image src="/personas/avatar-male.png" alt="남성 페르소나" width={160} height={160} className="object-contain object-bottom" />
+          )}
+          {genderType === "female" && (
+            <Image src="/personas/avatar-female.png" alt="여성 페르소나" width={160} height={160} className="object-contain object-bottom" />
+          )}
+          {genderType === "all" && (
+            <>
+              <Image src="/personas/avatar-male.png" alt="남성 페르소나" width={120} height={120} className="object-contain object-bottom" />
+              <Image src="/personas/avatar-female.png" alt="여성 페르소나" width={120} height={120} className="object-contain object-bottom" />
+            </>
+          )}
         </div>
-        <div
-          style={{ width: "100%", letterSpacing: "-0.014em", textShadow: "0 2px 8px rgba(0,0,0,0.28)" }}
-          className="font-bold text-[16px] leading-[1.35] [font-family:var(--w-font-display)]"
-        >
+        <div className="w-full px-4 pb-3 font-bold text-[16px] leading-[1.35] tracking-[-0.014em] [font-family:var(--w-font-display)] [text-shadow:0_2px_8px_rgba(0,0,0,0.28)] text-white">
           {persona.name}
         </div>
       </div>
-      <div style={{ padding: 14, display: "flex", flexDirection: "column", gap: 10, flex: 1 }}>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+      <div className="flex flex-col gap-[10px] p-[14px] flex-1">
+        <div className="flex flex-wrap gap-[6px]">
           {ageLabel && <Chip variant="neutral">{ageLabel}</Chip>}
           <Chip variant="neutral">{genderLabel}</Chip>
           {(persona.interests ?? []).slice(0, 3).map((i) => (
@@ -98,16 +77,13 @@ export default function PersonaCard({ persona, canEdit = true, onEdit, onDelete 
           ))}
         </div>
         {persona.customerDescription && (
-          <div
-            style={{ display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden", color: "var(--w-fg-neutral)" }}
-            className="font-medium text-[13px] leading-[1.55]"
-          >
+          <div className="font-medium text-[13px] leading-[1.55] text-[var(--w-fg-neutral)] line-clamp-2">
             {persona.customerDescription}
           </div>
         )}
         {canEdit && (
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", marginTop: "auto", paddingTop: 10, borderTop: "1px solid var(--w-line-alternative)" }}>
-            <Button variant="ghost" size="sm" style={{ color: "var(--w-fg-alternative)" }} onClick={(e) => { e.stopPropagation(); onDelete(); }}>
+          <div className="flex items-center justify-end mt-auto pt-[10px] border-t border-[var(--w-line-alternative)]">
+            <Button variant="ghost" size="sm" className="text-[var(--w-fg-alternative)]" onClick={(e) => { e.stopPropagation(); onDelete(); }}>
               <Icon name="x" size={14} />
             </Button>
           </div>

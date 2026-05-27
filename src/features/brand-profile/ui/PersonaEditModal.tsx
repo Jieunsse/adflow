@@ -33,7 +33,7 @@ function TagInput({
           className={cn(INPUT_CLS, "flex-1")}
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); add(); }}}
+          onKeyDown={(e) => { if (e.key === "Enter" && !e.nativeEvent.isComposing) { e.preventDefault(); add(); }}}
           placeholder={placeholder}
         />
         <button

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Icon from "@shared/ui/Icon";
 import { Button } from "@shared/ui/Button";
 import {
@@ -189,7 +189,7 @@ function FormActions({ hasExisting, canSave, onClear, onClose, onSubmit }: FormS
       <div>
         {hasExisting && (
           <Button variant="ghost" type="button" onClick={onClear}>
-            <Icon name="x" size={12} /> 비우기
+            비우기
           </Button>
         )}
       </div>
@@ -242,7 +242,7 @@ function ProhibitedWordsForm({
         <label className="font-semibold text-[12px] text-[var(--w-fg-alternative)] uppercase tracking-[0.06em]">
           금지 단어
         </label>
-        <div className="flex flex-wrap gap-1.5 min-h-[44px] border border-[var(--w-line-normal)] rounded-xl px-3 py-2.5 bg-[var(--w-bg)]">
+        <div className="flex flex-wrap gap-1.5 min-h-[28px] py-1">
           {words.length === 0 && (
             <span className="font-medium text-[12.5px] text-[var(--w-fg-alternative)] self-center">
               아래 입력란에 단어를 적고 Enter 또는 쉼표로 추가
@@ -270,6 +270,11 @@ function ProhibitedWordsForm({
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={(e) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+              e.preventDefault();
+              if (canSave) submit();
+              return;
+            }
             if ((e.key === "Enter" || e.key === ",") && !e.nativeEvent.isComposing) {
               e.preventDefault();
               commit();
@@ -442,9 +447,7 @@ function CtaRestrictionsForm({
           <label className="font-semibold text-[12px] text-[var(--w-fg-alternative)] uppercase tracking-[0.06em]">
             금지 CTA
           </label>
-          <div
-            className="flex flex-wrap gap-1.5 min-h-[40px] border border-[var(--w-line-normal)] rounded-xl px-3 py-2 bg-[var(--w-bg)]"
-          >
+          <div className="flex flex-wrap gap-1.5 min-h-[28px] py-1">
             {blacklist.length === 0 && (
               <span className="font-medium text-[12.5px] text-[var(--w-fg-alternative)] self-center">
                 금지하고 싶은 CTA 문구를 추가
@@ -475,6 +478,11 @@ function CtaRestrictionsForm({
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={(e) => {
+              if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+                e.preventDefault();
+                if (canSave) submit();
+                return;
+              }
               if ((e.key === "Enter" || e.key === ",") && !e.nativeEvent.isComposing) {
                 e.preventDefault();
                 commit();
@@ -551,7 +559,7 @@ function RequiredChipListForm({
         <label className="font-semibold text-[12px] text-[var(--w-fg-alternative)] uppercase tracking-[0.06em]">
           {label}
         </label>
-        <div className="flex flex-wrap gap-1.5 min-h-[44px] border border-[var(--w-line-normal)] rounded-xl px-3 py-2.5 bg-[var(--w-bg)]">
+        <div className="flex flex-wrap gap-1.5 min-h-[28px] py-1">
           {items.length === 0 && (
             <span className="font-medium text-[12.5px] text-[var(--w-fg-alternative)] self-center">
               아래 입력란에 {itemLabel}를 적고 Enter 또는 쉼표로 추가
@@ -579,6 +587,11 @@ function RequiredChipListForm({
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={(e) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+              e.preventDefault();
+              if (items.length > 0) onSave(items);
+              return;
+            }
             if ((e.key === "Enter" || e.key === ",") && !e.nativeEvent.isComposing) {
               e.preventDefault();
               commit();
@@ -618,10 +631,36 @@ function FreeTextForm({
   onClose: () => void;
   hasExisting: boolean;
 }) {
-  const [text, setText] = useState<string>(initial.text);
+  const [lines, setLines] = useState<string[]>(
+    initial.text ? initial.text.split("\n").filter((l) => l.trim()) : [""]
+  );
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  const canSave = text.trim().length > 0;
-  const submit = () => onSave({ text: text.trim() });
+  const canSave = lines.some((l) => l.trim().length > 0);
+  const submit = () => onSave({ text: lines.filter((l) => l.trim()).join("\n") });
+
+  const update = (idx: number, val: string) =>
+    setLines((prev) => prev.map((l, i) => (i === idx ? val : l)));
+
+  const remove = (idx: number) => {
+    setLines((prev) => {
+      const next = prev.filter((_, i) => i !== idx);
+      return next.length === 0 ? [""] : next;
+    });
+    setTimeout(() => {
+      const focusIdx = Math.max(0, idx - 1);
+      inputRefs.current[focusIdx]?.focus();
+    }, 0);
+  };
+
+  const addLine = (afterIdx: number) => {
+    setLines((prev) => {
+      const next = [...prev];
+      next.splice(afterIdx + 1, 0, "");
+      return next;
+    });
+    setTimeout(() => inputRefs.current[afterIdx + 1]?.focus(), 0);
+  };
 
   return (
     <>
@@ -629,17 +668,53 @@ function FreeTextForm({
         <label className="font-semibold text-[12px] text-[var(--w-fg-alternative)] uppercase tracking-[0.06em]">
           룰
         </label>
-        <textarea
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          placeholder={SOP_FREETEXT_PLACEHOLDER[type]}
-          rows={8}
-          autoFocus
-          className="w-full bg-[var(--w-bg-elevated)] border border-[var(--w-line-normal)] rounded-xl px-3.5 py-3 font-medium text-[13.5px] leading-[1.7] text-[var(--w-fg-strong)] outline-none transition-[border-color,box-shadow] duration-[120ms] focus:border-[var(--w-primary-normal)] focus:shadow-[0_0_0_4px_rgba(0,102,255,0.14)] placeholder:text-[var(--w-fg-alternative)] resize-y"
-        />
-        <div className="font-medium text-[11.5px] text-[var(--w-fg-alternative)]">
-          한 줄에 한 가지 룰씩 적으면 카드에서 bullet 으로 표시돼요.
+        <div className="flex flex-col gap-1.5">
+          {lines.map((line, idx) => (
+            <div key={idx} className="flex items-center gap-1.5">
+              <input
+                ref={(el) => { inputRefs.current[idx] = el; }}
+                value={line}
+                autoFocus={idx === 0}
+                onChange={(e) => update(idx, e.target.value)}
+                onKeyDown={(e) => {
+                  if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+                    e.preventDefault();
+                    if (canSave) submit();
+                    return;
+                  }
+                  if (e.key === "Enter" && !e.nativeEvent.isComposing) {
+                    e.preventDefault();
+                    addLine(idx);
+                    return;
+                  }
+                  if (e.key === "Backspace" && line === "" && lines.length > 1) {
+                    e.preventDefault();
+                    remove(idx);
+                  }
+                }}
+                placeholder={idx === 0 ? SOP_FREETEXT_PLACEHOLDER[type] : ""}
+                className="flex-1 bg-[var(--w-bg-elevated)] border border-[var(--w-line-normal)] rounded-xl px-3.5 py-2.5 font-medium text-[13.5px] leading-[1.5] text-[var(--w-fg-strong)] outline-none transition-[border-color,box-shadow] duration-[120ms] focus:border-[var(--w-primary-normal)] focus:shadow-[0_0_0_4px_rgba(0,102,255,0.14)] placeholder:text-[var(--w-fg-alternative)]"
+              />
+              {lines.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => remove(idx)}
+                  aria-label="삭제"
+                  className="border-none bg-transparent cursor-pointer p-1 inline-flex items-center text-[var(--w-fg-alternative)] hover:text-[var(--w-fg-strong)] transition-colors"
+                >
+                  <Icon name="x" size={12} />
+                </button>
+              )}
+            </div>
+          ))}
         </div>
+        <button
+          type="button"
+          onClick={() => addLine(lines.length - 1)}
+          className="self-start border-none bg-transparent cursor-pointer font-medium text-[12px] text-[var(--w-fg-alternative)] hover:text-[var(--w-primary-normal)] transition-colors px-0 py-0.5 flex items-center gap-1"
+        >
+          <Icon name="plus" size={12} /> 항목 추가
+        </button>
       </div>
       <FormActions
         hasExisting={hasExisting}

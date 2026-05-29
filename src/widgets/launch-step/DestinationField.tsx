@@ -32,6 +32,7 @@ export default function DestinationField() {
   const { state, dispatch } = useLaunchDraft();
   const { state: creative, dispatch: creativeDispatch } = useCreativeDraft();
   const { data: session } = useSession();
+  const [urlTouched, setUrlTouched] = useState(false);
 
   const outcomeId = creative.outcome;
   const goalDef = outcomeId ? OBJECTIVES_PHASE1.find((g) => g.id === outcomeId) : null;
@@ -52,7 +53,9 @@ export default function DestinationField() {
   });
   const activePage = pagesData?.pages.find((p) => p.id === session?.pageId);
 
-  const httpsOk = state.landingUrl.trim().startsWith("https://");
+  const urlValue = state.landingUrl.trim();
+  const httpsOk = urlValue.startsWith("https://");
+  const showUrlError = urlTouched && urlValue.length > 0 && !httpsOk;
   const [overrideOpen, setOverrideOpen] = useState(false);
 
   const ctaPicker = ctaMode === "user_choice" ? (
@@ -90,11 +93,12 @@ export default function DestinationField() {
           className="w-full px-[14px] py-3 border border-[var(--w-line-normal)] rounded-xl bg-[var(--w-bg-elevated)] font-medium text-[14px] leading-[1.5] tracking-[0.004em] text-[var(--w-fg-strong)] outline-none transition-[border-color,box-shadow] duration-[120ms] placeholder:text-[var(--w-fg-alternative)] focus:border-[var(--w-primary-normal)] focus:shadow-[0_0_0_4px_rgba(0,102,255,0.14)]"
           value={state.landingUrl}
           onChange={(e) => dispatch({ type: "SET_LANDING_URL", value: e.target.value })}
+          onBlur={() => setUrlTouched(true)}
           placeholder="https://example.com/landing"
           type="url"
           inputMode="url"
         />
-        {!httpsOk && (
+        {showUrlError && (
           <div className="font-medium text-[12px] leading-[1.5] tracking-[0.008em] text-[var(--w-status-negative)] mt-2">
             https:// 로 시작해야 해요.
           </div>
@@ -151,11 +155,12 @@ export default function DestinationField() {
             className="w-full px-[14px] py-3 border border-[var(--w-line-normal)] rounded-xl bg-[var(--w-bg-elevated)] font-medium text-[14px] leading-[1.5] tracking-[0.004em] text-[var(--w-fg-strong)] outline-none transition-[border-color,box-shadow] duration-[120ms] placeholder:text-[var(--w-fg-alternative)] focus:border-[var(--w-primary-normal)] focus:shadow-[0_0_0_4px_rgba(0,102,255,0.14)]"
             value={state.landingUrl}
             onChange={(e) => dispatch({ type: "SET_LANDING_URL", value: e.target.value })}
+            onBlur={() => setUrlTouched(true)}
             placeholder="https://example.com/landing"
             type="url"
             inputMode="url"
           />
-          {!httpsOk && (
+          {showUrlError && (
             <div className="font-medium text-[12px] leading-[1.5] tracking-[0.008em] text-[var(--w-status-negative)] mt-2">
               https:// 로 시작해야 해요.
             </div>

@@ -60,6 +60,8 @@ export type LaunchParams = {
   abTestVariantB?: AbTestVariantB;
   // Meta App 개발 모드 호환 — true 면 서버가 Campaign + AdSet 까지만 만들고 응답
   skipAdCreation?: boolean;
+  // 캠페인 이름에 포함할 브랜드명 (Brand Profile 이름 또는 자유텍스트 앞 20자)
+  brandName?: string;
 };
 
 // A/B 모드면 adIds 두 개. 단일 광고면 기존 adId. STEP 03 인사이트 분기에서 adIds 존재로 A/B 판정.

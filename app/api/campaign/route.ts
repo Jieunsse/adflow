@@ -73,6 +73,7 @@ type CampaignRequestBody = {
   abTestVariantB?: { axis?: string; headline?: string; primaryText?: string; imageDataUrl?: string }
   skipAdCreation?: boolean
   location?: string[]
+  brandName?: string
 }
 
 const VALID_AB_AXES: ReadonlySet<AbTestAxisParam> = new Set(['headline', 'primary_text', 'image'])
@@ -90,7 +91,7 @@ export async function POST(req: NextRequest) {
   const adAccountId = resolveAdAccountId(session.adAccountId)
   return withRouteHandler(true, '', async () => {
       const body = (await req.json()) as CampaignRequestBody
-      const { headline, primaryText, dailyBudget, startDate, endDate, ageMin, ageMax, linkUrl, cta, imageDataUrl, location } = body
+      const { headline, primaryText, dailyBudget, startDate, endDate, ageMin, ageMax, linkUrl, cta, imageDataUrl, location, brandName } = body
 
       const skipAdCreation = body.skipAdCreation === true
       if (skipAdCreation && process.env.NEXT_PUBLIC_META_APP_MODE !== 'development') {
@@ -213,6 +214,21 @@ export async function POST(req: NextRequest) {
         abTestVariantB = { axis: 'headline', headline: variantBHeadline }
       }
 
+      // leads_call 목표는 전화번호를 Meta AdSet.promoted_object 와 CTA value 에 주입해야 함.
+      let phoneNumber: string | undefined
+      if (goalId === 'leads_call' && pageId) {
+        try {
+          const phoneRes = await fetch(
+            `https://graph.facebook.com/v20.0/${pageId}?fields=phone&access_token=${accessToken}`,
+            { signal: AbortSignal.timeout(5000) }
+          )
+          if (phoneRes.ok) {
+            const phoneData = (await phoneRes.json()) as { phone?: string }
+            phoneNumber = phoneData.phone ?? undefined
+          }
+        } catch { /* 전화번호 조회 실패 시 무시 — Meta 가 없는 전화번호로 거절 */ }
+      }
+
       const campaignParams = {
         headline,
         primaryText: primaryText ?? '',
@@ -239,6 +255,8 @@ export async function POST(req: NextRequest) {
         pixelId,
         mode: body.mode,
         skipAdCreation,
+        phoneNumber,
+        brandName: typeof brandName === 'string' ? brandName.slice(0, 20) : undefined,
       }
       const extraLocation = Array.isArray(location) && location.length > 0
         ? location.map(String)

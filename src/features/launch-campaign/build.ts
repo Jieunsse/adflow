@@ -48,7 +48,7 @@ export async function validateAdImage(dataUrl: string): Promise<ImageValidationR
 export function buildLaunchParams(
   creative: CreativeState,
   launch: LaunchState,
-  opts: { skipAdCreation: boolean },
+  opts: { skipAdCreation: boolean; brandName?: string },
 ): LaunchParams {
   const dailyBudget = parseInt(launch.budget.replace(/[^\d]/g, ""), 10) || 0;
   // PRD-ab-testing.md §2.1 v0.2 Q4 — 개발모드(skipAdCreation)에서도 A/B 분기 활성. status 만 PAUSED 강제.
@@ -89,6 +89,7 @@ export function buildLaunchParams(
     abTestAxis: abActive ? launch.abTestAxis ?? undefined : undefined,
     abTestVariantB: abActive ? variantB ?? undefined : undefined,
     skipAdCreation: opts.skipAdCreation || undefined,
+    brandName: opts.brandName || undefined,
   };
 }
 

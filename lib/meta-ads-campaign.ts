@@ -32,6 +32,8 @@ export interface CreateCampaignParams {
   ctaType: string      // Meta call_to_action.type e.g. LEARN_MORE, SHOP_NOW
   status: 'ACTIVE' | 'PAUSED'
   imageDataUrl?: string // optional — data:image/...;base64,...
+  phoneNumber?: string  // leads_call 전용 — promoted_object.phone_number + CTA value.link(tel:) 에 주입
+  brandName?: string    // 캠페인 이름 조합용 (최대 20자)
 
   // PRD §13 — Phase 1 goal id (예: 'leads_call'). 제공되면 OBJECTIVES_PHASE1 entry 에서
   // optimization_goal · destination_type · promoted_object 를 전부 도출. objective 보다 우선.
@@ -148,7 +150,13 @@ function deriveLaunchPlan(params: CreateCampaignParams, pageId: string): LaunchP
       ? 'LANDING_PAGE_VIEWS'
       : goalDef.optimizationGoal
     destinationType = goalDef.destinationType ?? undefined
-    if (goalDef.promotedObject === 'page') promotedObject = { page_id: pageId }
+    if (goalDef.promotedObject === 'page') {
+      promotedObject = { page_id: pageId }
+      // leads_call 은 전화번호를 promoted_object 에 포함해야 Meta가 PHONE_CALL destination 을 수락함.
+      if (goalDef.id === 'leads_call' && params.phoneNumber) {
+        promotedObject.phone_number = params.phoneNumber
+      }
+    }
   } else {
     // 레거시 — objective 만 받은 경우. PRD §13 이전 호출 흐름 회귀 보호.
     objective = params.objective ?? 'OUTCOME_TRAFFIC'
@@ -169,8 +177,12 @@ function deriveLaunchPlan(params: CreateCampaignParams, pageId: string): LaunchP
 }
 
 function buildCampaignBody(params: CreateCampaignParams, plan: LaunchPlan): Record<string, unknown> {
+  const goalDef = params.goalId ? OBJECTIVES_PHASE1.find((g) => g.id === params.goalId) : null
+  const goalLabel = goalDef?.label ?? plan.objective.replace('OUTCOME_', '')
+  const mmdd = params.startDate.slice(5, 7) + params.startDate.slice(8, 10)
+  const brandPart = params.brandName ? ` — ${params.brandName}` : ''
   return {
-    name: `AdFlow — ${params.headline}`,
+    name: `AdFlow${brandPart} — ${goalLabel} — ${params.headline} — ${mmdd}`,
     objective: plan.objective,
     status: plan.status,
     special_ad_categories: [],
@@ -211,11 +223,13 @@ function buildAdSetBody(params: CreateCampaignParams, plan: LaunchPlan, campaign
 // A/B 시험 시 변형(variant) 라벨 — Meta Ads Manager 에서 한 눈에 A/B 구분되도록 name 에 prefix.
 type VariantTag = '' | 'A' | 'B'
 
-// PRD §13 — Messenger 광고는 call_to_action.value.app_destination = 'MESSENGER' 가 필요.
-// 다른 CTA 는 value 불요. 추후 CALL_NOW 의 phone_number 등 확장 가능.
-function buildCtaForCreative(ctaType: string): Record<string, unknown> {
+// PRD §13 — Messenger 광고는 app_destination = 'MESSENGER', CALL_NOW 는 tel: 링크가 필요.
+function buildCtaForCreative(ctaType: string, phoneNumber?: string): Record<string, unknown> {
   if (ctaType === 'MESSAGE_PAGE') {
     return { type: ctaType, value: { app_destination: 'MESSENGER' } }
+  }
+  if (ctaType === 'CALL_NOW' && phoneNumber) {
+    return { type: ctaType, value: { link: `tel:${phoneNumber}` } }
   }
   return { type: ctaType }
 }
@@ -243,7 +257,7 @@ function buildCreativeBody(
         message: override.primaryText,
         link: params.linkUrl,
         name: override.headline,
-        call_to_action: buildCtaForCreative(params.ctaType),
+        call_to_action: buildCtaForCreative(params.ctaType, params.phoneNumber),
         ...(override.imageHash ? { image_hash: override.imageHash } : {}),
       },
     },

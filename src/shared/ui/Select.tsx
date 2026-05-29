@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import Icon from "./Icon";
 
 export interface SelectOption {
@@ -17,22 +18,38 @@ interface Props {
 
 export function Select({ value, onChange, options, placeholder = "선택해주세요" }: Props) {
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const [rect, setRect] = useState<{ top: number; left: number; width: number } | null>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!open) return;
+    const reposition = () => {
+      const r = triggerRef.current?.getBoundingClientRect();
+      if (r) setRect({ top: r.bottom + 6, left: r.left, width: r.width });
+    };
+    reposition();
     function onDown(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      const t = e.target as Node;
+      if (triggerRef.current?.contains(t) || menuRef.current?.contains(t)) return;
+      setOpen(false);
     }
     document.addEventListener("mousedown", onDown);
-    return () => document.removeEventListener("mousedown", onDown);
+    window.addEventListener("scroll", reposition, true);
+    window.addEventListener("resize", reposition);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      window.removeEventListener("scroll", reposition, true);
+      window.removeEventListener("resize", reposition);
+    };
   }, [open]);
 
   const selected = options.find((o) => o.value === value);
 
   return (
-    <div ref={ref} style={{ position: "relative" }}>
+    <div style={{ position: "relative" }}>
       <button
+        ref={triggerRef}
         type="button"
         onClick={() => setOpen((v) => !v)}
         style={{
@@ -67,14 +84,16 @@ export function Select({ value, onChange, options, placeholder = "선택해주�
         />
       </button>
 
-      {open && (
+      {open && rect && createPortal(
         <div
+          ref={menuRef}
+          className="adflow"
           style={{
-            position: "absolute",
-            top: "calc(100% + 6px)",
-            left: 0,
-            right: 0,
-            zIndex: 200,
+            position: "fixed",
+            top: rect.top,
+            left: rect.left,
+            width: rect.width,
+            zIndex: 1000,
             background: "var(--w-bg-elevated)",
             border: "1px solid var(--w-line-normal)",
             borderRadius: 12,
@@ -114,7 +133,8 @@ export function Select({ value, onChange, options, placeholder = "선택해주�
               </button>
             );
           })}
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

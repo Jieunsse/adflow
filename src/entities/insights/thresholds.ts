@@ -9,3 +9,7 @@ export const HIGH_CPC_KRW = 2000;
 export const HIGH_FREQUENCY = 3.0;
 export const HIGH_CPM_KRW = 8000;
 export const GOOD_ENGAGEMENT_RATE = 2.5;
+
+// ADR-030 — 가짜 성과 의심(클릭↔랜딩 누수) 판정.
+export const MIN_LINK_CLICKS_FOR_FAKE = 50; // 표본 가드
+export const LOW_LANDING_RATE_PCT = 50;     // 랜딩 도착률 < 50% = Substance 미달

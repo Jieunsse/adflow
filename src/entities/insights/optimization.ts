@@ -215,6 +215,14 @@ export type Suggestion =
       action?: SuggestionAction;
     }
   | {
+      // ADR-030 — 가짜 성과 의심. 별도 액션 없음(점검 안내만).
+      kind: "fake-performance";
+      severity: "warn";
+      title: string;
+      detail: string[];
+      action?: SuggestionAction;
+    }
+  | {
       kind: "increase-budget";
       severity: "info";
       title: string;

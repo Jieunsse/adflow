@@ -10,11 +10,12 @@ import AgeRange from "@shared/ui/AgeRange";
 import { COUNTRIES } from "@shared/lib/geo-options";
 import { KpiCard } from "@shared/ui/primitives";
 import DualChart, { ChartLegend } from "@shared/ui/DualChart";
-import { fmt, fmtKRW, shortDate, campaignDateInfo, campaignGradient } from "@shared/lib/format";
+import { fmt, fmtKRW, shortDate, campaignDateInfo, campaignRunDays, campaignGradient } from "@shared/lib/format";
 import { useApiMutation } from "@shared/lib/api/useApiMutation";
 import { useToast } from "@shared/ui/Toast";
 import ConfirmModal from "@shared/ui/ConfirmModal";
 import { suggestOptimizations, assessAutomationReadiness, type Suggestion } from "@entities/insights/optimization";
+import { isFakePerformance, type FakePerformanceEvidence } from "@entities/insights/fake-performance";
 import { abVariantLabel, type AbTestAxis } from "@entities/campaign/model";
 import { loadLaunchedCampaign } from "@entities/campaign/launched-storage";
 import { judgeAbTest, rowToKpi } from "@entities/insights/ab-verdict";
@@ -297,7 +298,15 @@ function DetailBody({
   const isPaused = c.status === "paused";
   const isIssue = c.status === "issue";
   const metrics = { impressions: data.impressions, clicks: data.clicks, ctr: data.ctr, spend: data.spend };
-  const suggestions: Suggestion[] = suggestOptimizations(metrics, dailyBudget);
+  const baseSuggestions = suggestOptimizations(metrics, dailyBudget);
+  // ADR-030 — 가짜 성과 의심은 CampaignSummary(actions[]) 기준. 감지 시 모순되는 예산 증액 제안은 숨기고 점검 카드를 앞세움.
+  const fakePerf = isFakePerformance(
+    { impressions: c.impressions, ctr: c.ctr, linkClick: c.linkClick ?? 0, landingPageView: c.landingPageView },
+    campaignRunDays(c.startDate, c.endDate),
+  );
+  const suggestions: Suggestion[] = fakePerf.fake && fakePerf.evidence
+    ? [fakePerfSuggestion(fakePerf.evidence), ...baseSuggestions.filter((s) => s.kind !== "increase-budget")]
+    : baseSuggestions;
   const readiness = assessAutomationReadiness(metrics, data.daily.length);
 
   return (
@@ -426,6 +435,21 @@ function DetailBody({
       </Card>
     </>
   );
+}
+
+// ADR-030 — 증거 + 점검 3갈래. "의심" 을 항상 포함하고 별도 액션 버튼은 두지 않음.
+function fakePerfSuggestion(e: FakePerformanceEvidence): Suggestion {
+  return {
+    kind: "fake-performance",
+    severity: "warn",
+    title: "가짜 성과 의심 — 클릭은 많은데 도착이 적어요",
+    detail: [
+      `CTR ${e.ctr.toFixed(2)}%로 좋아 보이지만, 링크 클릭의 ${e.dropRate}%가 페이지 도착 전에 이탈했어요 (도착률 ${e.landingRate}%).`,
+      `① 랜딩 페이지가 모바일에서 빠르게 뜨는지·링크가 올바른지 확인해보세요.`,
+      `② 광고 메시지와 페이지 첫 화면의 메시지가 일치하는지 점검해보세요.`,
+      `③ 클릭 후 이탈이 많다면 타겟을 더 정교하게 좁혀보세요.`,
+    ],
+  };
 }
 
 function OptCard({ icon, good, title, lines, children }: { icon: IconName; good: boolean; title: string; lines: string[]; children?: React.ReactNode }) {

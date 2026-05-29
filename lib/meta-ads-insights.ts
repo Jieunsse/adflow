@@ -41,6 +41,9 @@ export interface CampaignSummary {
   clicks: number
   ctr: number   // %
   spend: number // KRW
+  // ADR-030 — 가짜 성과 의심 판정용. actions[] 에서 추출. action 부재 시 undefined(= 픽셀 미측정 → 판정 안 함).
+  linkClick?: number
+  landingPageView?: number
   issueReason: CampaignIssueReason | null  // /approvals 에서 노출. status='issue' 일 때만 채워지는 경향 (Meta 가 review 단계에서도 줄 수 있음)
   // PRD-ab-testing.md §4.4 — mock 시연 캠페인의 A/B 시드. live API 매핑은 채우지 않음.
   abTestEnabled?: boolean
@@ -138,7 +141,7 @@ interface RawCampaign {
     }
     ads?: { data?: Array<{ id: string }> }
   }> }
-  insights?: { data?: Array<{ impressions?: string; clicks?: string; ctr?: string; spend?: string }> }
+  insights?: { data?: Array<{ impressions?: string; clicks?: string; ctr?: string; spend?: string; actions?: Array<{ action_type?: string; value?: string }> }> }
   issues_info?: RawIssueInfo[]
 }
 
@@ -146,7 +149,7 @@ const CAMPAIGN_FIELDS = (period: InsightsPeriod) => [
   'id', 'name', 'effective_status', 'objective', 'start_time', 'stop_time', 'daily_budget',
   'issues_info',
   'adsets.limit(1){id,daily_budget,bid_strategy,bid_amount,targeting{age_min,age_max,genders,geo_locations,publisher_platforms,facebook_positions,instagram_positions},ads.limit(1){id}}',
-  `insights.date_preset(${presetFor(period)}){impressions,clicks,ctr,spend}`,
+  `insights.date_preset(${presetFor(period)}){impressions,clicks,ctr,spend,actions}`,
 ].join(',')
 
 function pickIssueReason(issues: RawIssueInfo[] | undefined): CampaignIssueReason | null {
@@ -193,6 +196,13 @@ function mapRawCampaign(c: RawCampaign): CampaignSummary {
     ? Math.round(parseFloat(ins.ctr) * 100) / 100
     : impressions > 0 ? Math.round((clicks / impressions) * 10000) / 100 : 0
   const spend = Math.round(parseFloat(ins?.spend ?? '0'))
+  // ADR-030 — action 부재 = undefined(픽셀 미측정). 존재하면 숫자(0 포함).
+  const actionVal = (type: string): number | undefined => {
+    const f = ins?.actions?.find((a) => a.action_type === type)
+    return f ? Math.round(Number(f.value ?? 0)) : undefined
+  }
+  const linkClick = actionVal('link_click')
+  const landingPageView = actionVal('landing_page_view')
   const dailyBudgetRaw = c.daily_budget ?? adset?.daily_budget
   const obj = c.objective ?? ''
   const tgt = adset?.targeting
@@ -224,6 +234,7 @@ function mapRawCampaign(c: RawCampaign): CampaignSummary {
     adId: adset?.ads?.data?.[0]?.id ?? null,
     dailyBudget: dailyBudgetRaw != null && Number.isFinite(Number(dailyBudgetRaw)) ? Math.round(Number(dailyBudgetRaw)) : null,
     impressions, clicks, ctr, spend,
+    linkClick, landingPageView,
     issueReason: pickIssueReason(c.issues_info),
     ageMin: tgt?.age_min,
     ageMax: tgt?.age_max,

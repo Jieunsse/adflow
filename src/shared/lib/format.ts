@@ -55,6 +55,16 @@ export function campaignDateInfo(
   return { daysLine, progressLine };
 }
 
+// ADR-030 — 집행 경과일(가짜 성과 게이트 MIN_DAYS 용). 종료된 캠페인은 endDate 까지로 캡.
+export function campaignRunDays(startDate: string | null, endDate: string | null): number {
+  if (!startDate) return 0;
+  const start = Date.parse(startDate);
+  if (!Number.isFinite(start)) return 0;
+  const endTs = endDate ? Date.parse(endDate) : NaN;
+  const cap = Number.isFinite(endTs) ? Math.min(Date.now(), endTs) : Date.now();
+  return Math.max(0, Math.floor((cap - start) / 86400000) + 1);
+}
+
 export function maskId(id: string | null | undefined, visible: number = 4): string {
   if (!id) return "—";
   if (id.length <= visible) return "•".repeat(id.length);

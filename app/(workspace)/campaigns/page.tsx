@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import Icon, { type IconName } from "@shared/ui/Icon";
 import { EmptyState } from "@shared/ui/primitives";
-import { fmt, fmtKRW, campaignDateInfo, campaignGradient } from "@shared/lib/format";
+import { fmt, fmtKRW, campaignDateInfo, campaignRunDays, campaignGradient } from "@shared/lib/format";
+import { isFakePerformance } from "@entities/insights/fake-performance";
 import { useApiMutation } from "@shared/lib/api/useApiMutation";
 import { useToast } from "@shared/ui/Toast";
 import { Button, buttonVariants } from "@shared/ui/Button";
@@ -35,6 +36,19 @@ type ControlResult = { ok: true };
 function CampaignStatusChip({ status }: { status: string }) {
   const def = STATUS_DEF[status as StatusFilter] ?? { label: status, chip: "neutral" };
   return <Chip variant={def.chip as ChipVariant} dot>{def.label}</Chip>;
+}
+
+// ADR-030 — 상태칩과 별개의 직교 신호. "의심" 을 항상 포함.
+function FakePerfBadge() {
+  return (
+    <span
+      title="클릭은 많은데 페이지 도착이 적어요 — 상세 성과 탭에서 점검 제안을 확인하세요"
+      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full font-semibold text-[11px] leading-none whitespace-nowrap"
+      style={{ background: "rgba(255,146,0,0.14)", color: "var(--w-status-cautionary)" }}
+    >
+      <Icon name="warn" size={11} /> 가짜 성과 의심
+    </span>
+  );
 }
 
 const OBJECTIVE_VARIANT: Record<string, ChipVariant> = {
@@ -308,6 +322,7 @@ export default function CampaignsPage() {
                     const isIssue = c.status === "issue";
                     const { daysLine, progressLine } = campaignDateInfo(c.startDate, c.endDate, c.status);
                     const spendPct = c.dailyBudget && c.dailyBudget > 0 ? Math.min(100, Math.round((c.spend / c.dailyBudget) * 100)) : null;
+                    const isFakePerf = isFakePerformance({ impressions: c.impressions, ctr: c.ctr, linkClick: c.linkClick ?? 0, landingPageView: c.landingPageView }, campaignRunDays(c.startDate, c.endDate)).fake;
                     return (
                       <tr
                         key={c.id}
@@ -334,7 +349,12 @@ export default function CampaignsPage() {
                           </div>
                         </td>
                         <td className="py-3.5 px-3.5 border-b border-[var(--w-line-alternative)] font-medium text-[13px] leading-[1.4] text-[var(--w-fg-strong)] align-middle" style={{ textAlign: "center" }}><CampaignObjectiveChip goal={c.goal} objective={c.objective} /></td>
-                        <td className="py-3.5 px-3.5 border-b border-[var(--w-line-alternative)] font-medium text-[13px] leading-[1.4] text-[var(--w-fg-strong)] align-middle" style={{ textAlign: "center" }}><CampaignStatusChip status={c.status} /></td>
+                        <td className="py-3.5 px-3.5 border-b border-[var(--w-line-alternative)] font-medium text-[13px] leading-[1.4] text-[var(--w-fg-strong)] align-middle" style={{ textAlign: "center" }}>
+                          <div style={{ display: "inline-flex", flexDirection: "column", alignItems: "center", gap: 5 }}>
+                            <CampaignStatusChip status={c.status} />
+                            {isFakePerf && <FakePerfBadge />}
+                          </div>
+                        </td>
                         <td className="py-3.5 px-3.5 border-b border-[var(--w-line-alternative)] font-medium text-[13px] leading-[1.4] text-[var(--w-fg-strong)] align-middle" onClick={() => goDetail(c.id)} style={{ cursor: "pointer", textAlign: "center" }}>
                           <div style={{ font: "500 12.5px/1 var(--w-font-sans)", color: "var(--w-fg-strong)" }}>{daysLine}</div>
                           <div style={{ font: "500 11px/1 var(--w-font-mono)", color: "var(--w-fg-alternative)", marginTop: 4 }}>{progressLine}</div>

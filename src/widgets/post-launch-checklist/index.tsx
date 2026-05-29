@@ -20,6 +20,12 @@ interface Item {
   action?: React.ReactNode;
 }
 
+const CONVERSION_TRACKING_ITEM: Item = {
+  title: "최종 전환까지 추적하고 있나요?",
+  body: "클릭·노출이 좋아도 구매·설치·신청이 안 따라오면 가짜 성과예요. 캠페인 페이지에서 전환까지 확인하세요.",
+  status: "info",
+};
+
 type CampaignBucket = "live" | "review" | "paused" | "ended" | "issue";
 interface CampaignBrief { status: CampaignBucket; impressions: number }
 
@@ -153,6 +159,7 @@ function BrowseChecklist({ onRestart }: { onRestart: () => void }) {
         </Button>
       ) : undefined,
     },
+    CONVERSION_TRACKING_ITEM,
   ];
 
   return (
@@ -256,6 +263,7 @@ export default function PostLaunchChecklist({ onRestart }: { onRestart: () => vo
         </Button>
       ) : undefined,
     },
+    CONVERSION_TRACKING_ITEM,
   ];
 
   if (launched.abTestAxis && launched.adIds) {

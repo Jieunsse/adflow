@@ -19,6 +19,9 @@ export const MOCK_CAMPAIGN_SUMMARIES: CampaignSummary[] = [
     clicks: 4926,
     ctr: 2.67,
     spend: 482000,
+    // ADR-030 데모 — CTR 2.67%(Vanity ✓)인데 도착률 35%(Substance ✗) = 가짜 성과 의심.
+    linkClick: 4200,
+    landingPageView: 1470,
     issueReason: null,
     // PRD-ab-testing.md §4.4 — 시연 A/B 캠페인. startDate 가 과거(>7일) 라 winner case 즉시 노출.
     abTestEnabled: true,
@@ -138,6 +141,9 @@ export const MOCK_CAMPAIGN_SUMMARIES: CampaignSummary[] = [
     clicks: 7521,
     ctr: 2.40,
     spend: 1085000,
+    // ADR-030 데모 — 도착률 70%(Substance ✓) = 정상. 뱃지 대비용.
+    linkClick: 6800,
+    landingPageView: 4760,
     issueReason: null,
     primaryText: '봄의 향기를 담은 라벤더 라떼, 기간 한정 신메뉴. 지금 주문하세요.',
     cta: 'ORDER_NOW',
@@ -165,6 +171,9 @@ export const MOCK_CAMPAIGN_SUMMARIES: CampaignSummary[] = [
     clicks: 3814,
     ctr: 2.67,
     spend: 372500,
+    // ADR-030 데모 — 도착률 75%(Substance ✓) = 정상.
+    linkClick: 3400,
+    landingPageView: 2550,
     issueReason: null,
     primaryText: '주말만의 특별한 베이커리 세트. 갓 구운 빵과 음료의 완벽한 조합!',
     cta: 'ORDER_NOW',

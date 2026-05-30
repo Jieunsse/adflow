@@ -1,11 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 import { geminiCreative, type GenerateCreativeParams } from '@/lib/gemini-creative'
 import { OBJECTIVES_ALL } from '@entities/creative/options'
 import { withRouteHandler, ValidationError } from '@/lib/route-handler'
+import { DEMO_CREATIVE_RESULT } from '@/lib/demo/content'
 
 const VALID_OUTCOMES = new Set(OBJECTIVES_ALL.map((o) => o.id))
 
 export async function POST(req: NextRequest) {
+  const session = await getServerSession(authOptions)
+  if (session?.browseMode) {
+    return NextResponse.json(DEMO_CREATIVE_RESULT)
+  }
   return withRouteHandler(
     geminiCreative.isConfigured,
     'GOOGLE_AI_API_KEY 가 .env.local 에 설정되지 않았어요.',

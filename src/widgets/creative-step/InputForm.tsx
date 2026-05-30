@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import Icon from "@shared/ui/Icon";
 import { Badge } from "@shared/ui/primitives";
 import { Button } from "@shared/ui/Button";
@@ -10,6 +11,7 @@ import { Select } from "@shared/ui/Select";
 import { cn } from "@shared/lib/cn";
 import { OBJECTIVES_PHASE1, TONES, COPY_HOOKS, findHook, type CopyHook } from "@entities/creative/options";
 import SelectedGoalCard from "@entities/creative/ui/SelectedGoalCard";
+import { BROWSE_IG_ACCOUNT } from "@shared/lib/browse-connection";
 import { useCreativeDraft } from "@entities/creative/model";
 import { useBrandProfileStorage } from "@features/brand-profile/model/useBrandProfileStorage";
 import { usePersonasStorage } from "@features/brand-profile/model/usePersonasStorage";
@@ -39,8 +41,12 @@ interface Props {
 
 export default function InputForm(p: Props) {
   const router = useRouter();
+  const { data: session, status } = useSession();
+  const browseMode = !!session?.browseMode;
+  const igName = browseMode ? BROWSE_IG_ACCOUNT.name : null;
+  const igUsername = browseMode ? BROWSE_IG_ACCOUNT.username : session?.igUsername ?? null;
   const creative = useCreativeDraft();
-  const { profile: bp, profiles, activeId, setActiveId } = useBrandProfileStorage();
+  const { profile: bp, profiles, activeId, setActiveId } = useBrandProfileStorage(browseMode);
   const copyRefs = bp.copyReferences ?? [];
   const bpBrand = bp.brandDescription ?? "";
   const bpTone = bp.tone;
@@ -66,18 +72,17 @@ export default function InputForm(p: Props) {
 
   const [contextExpanded, setContextExpanded] = useState(!isProfileMode);
   const [hooksExpanded, setHooksExpanded] = useState(false);
-  const [activeVer, setActiveVer] = useState(0);
   const [showNoBrandProfileModal, setShowNoBrandProfileModal] = useState(false);
   const [showQuickCreate, setShowQuickCreate] = useState(false);
   const [showProfilePicker, setShowProfilePicker] = useState(false);
 
   useEffect(() => {
-    if (hasBrandProfile) return;
+    if (status === "loading" || browseMode || hasBrandProfile) return;
     let dismissed: string | null = null;
     try { dismissed = sessionStorage.getItem("adflow_brand_modal_dismissed"); } catch {}
     if (!dismissed) setShowNoBrandProfileModal(true);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [status, browseMode]);
 
   const switchInputMode = (mode: "profile" | "custom") => {
     setInputMode(mode);
@@ -312,6 +317,26 @@ export default function InputForm(p: Props) {
         {/* 이번 광고 */}
         <SelectedGoalCard onChange={p.onChangeOutcome} />
 
+        {/* 페이지 팔로우 목표: 어떤 계정의 팔로워를 늘릴지 = 연결된 인스타그램 계정 */}
+        {creative.state.outcome === "engagement_page_likes" && igUsername && (
+          <Card className="mb-[18px] p-[18px] flex items-center gap-3">
+            <div
+              className="grid place-items-center shrink-0"
+              style={{ width: 40, height: 40, borderRadius: 10, background: "var(--w-bg-alternative)", color: "var(--w-fg-neutral)" }}
+            >
+              <Icon name="instagram" size={20} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div style={{ font: "500 11.5px/1 var(--w-font-sans)", color: "var(--w-fg-neutral)", marginBottom: 5 }}>
+                팔로워를 늘릴 계정
+              </div>
+              <div style={{ font: "700 14px/1.3 var(--w-font-sans)", color: "var(--w-fg-strong)" }}>
+                {igName ? `${igName} (@${igUsername})` : `@${igUsername}`}
+              </div>
+            </div>
+          </Card>
+        )}
+
         {showStaleBanner && (
           <div
             className="flex items-start gap-2.5 px-[14px] py-3 rounded-[10px] bg-[rgba(255,146,0,0.10)] border border-[rgba(255,146,0,0.24)]"
@@ -391,104 +416,112 @@ export default function InputForm(p: Props) {
             </div>
           )}
 
-          {p.hooks.length === 3 && (
-            <div className="rounded-xl border border-[var(--w-line-normal)] overflow-hidden">
-              <button
-                type="button"
-                onClick={() => setHooksExpanded((v) => !v)}
-                className="w-full flex items-center justify-between px-4 py-3 bg-[var(--w-bg-elevated)] hover:bg-[var(--w-bg-alternative)] transition-colors duration-[120ms] cursor-pointer"
-              >
-                <div className="flex items-center gap-2 flex-wrap min-w-0">
-                  <span className="font-semibold text-[13px] text-[var(--w-fg-strong)] shrink-0">설득 방식</span>
-                  <span className="inline-flex items-center gap-1 px-2 py-[3px] rounded-full bg-[var(--w-accent-violet-soft)] text-[var(--w-accent-violet)] font-semibold text-[11px] leading-none shrink-0">
-                    <Icon name="sparkles" size={10} /> AI 추천
+          <div className="rounded-xl border border-[var(--w-line-normal)] overflow-hidden">
+            <button
+              type="button"
+              onClick={() => setHooksExpanded((v) => !v)}
+              className="w-full flex items-center justify-between px-4 py-3 bg-[var(--w-bg-elevated)] hover:bg-[var(--w-bg-alternative)] transition-colors duration-[120ms] cursor-pointer"
+            >
+              <div className="flex items-center gap-2 flex-wrap min-w-0">
+                <span className="font-semibold text-[13px] text-[var(--w-fg-strong)] shrink-0">마케팅 전략</span>
+                <span className="inline-flex items-center gap-1 px-2 py-[3px] rounded-full bg-[var(--w-accent-violet-soft)] text-[var(--w-accent-violet)] font-semibold text-[11px] leading-none shrink-0">
+                  <Icon name="sparkles" size={10} /> AI 추천
+                </span>
+                {!hooksExpanded && p.hooks.map((h, i) => (
+                  <span key={i} className="inline-flex items-center px-2.5 py-[3px] rounded-full bg-[var(--w-primary-soft)] text-[var(--w-primary-press)] font-semibold text-[11.5px] leading-none shrink-0">
+                    {findHook(h).ko}
                   </span>
-                  {!hooksExpanded && p.hooks.map((h, i) => (
-                    <span key={i} className="inline-flex items-center px-2.5 py-[3px] rounded-full bg-[var(--w-primary-soft)] text-[var(--w-primary-press)] font-semibold text-[11.5px] leading-none shrink-0">
-                      {findHook(h).ko}
-                    </span>
-                  ))}
-                  {!hooksExpanded && (
-                    <span className="font-medium text-[11.5px] text-[var(--w-fg-alternative)] shrink-0">직접 바꿀 수 있어요</span>
-                  )}
+                ))}
+                {!hooksExpanded && (
+                  <span className="font-medium text-[11.5px] text-[var(--w-fg-alternative)] shrink-0">
+                    {p.hooks.length === 0 ? "칩을 골라 채워요" : "직접 바꿀 수 있어요"}
+                  </span>
+                )}
+              </div>
+              <Icon
+                name="chev-down"
+                size={16}
+                className={cn("text-[var(--w-fg-neutral)] shrink-0 ml-2 transition-transform duration-[160ms]", hooksExpanded && "rotate-180")}
+              />
+            </button>
+            {hooksExpanded && (
+              <div className="flex flex-col gap-4 px-4 py-4 border-t border-[var(--w-line-normal)]">
+                <p className="m-0 font-medium text-[12.5px] leading-[1.5] text-[var(--w-fg-neutral)]">
+                  본문 3개는 각각 다른 마케팅 전략을 활용해요.<br />
+                  칩을 고르면 <span className="text-[var(--w-fg-strong)]">VER 01</span> 부터 차례로 채워져요.<br />
+                  비운 칸은 AI가 골라요.
+                </p>
+
+                <div className="flex flex-wrap gap-1.5">
+                  {COPY_HOOKS.map((hk) => {
+                    const active = p.hooks.includes(hk.id);
+                    const full = p.hooks.length >= 3;
+                    const disabled = !active && full;
+                    return (
+                      <button
+                        key={hk.id}
+                        type="button"
+                        title={hk.uiDesc}
+                        disabled={disabled}
+                        onClick={() => {
+                          if (active) p.setHooks(p.hooks.filter((h) => h !== hk.id));
+                          else if (!full) p.setHooks([...p.hooks, hk.id]);
+                        }}
+                        className={cn(
+                          "inline-flex items-center px-3 py-1.5 rounded-full border font-medium text-[12.5px] leading-none transition-[background,border-color,color,opacity] duration-[120ms]",
+                          active
+                            ? "border-[var(--w-primary-normal)] bg-[rgba(0,102,255,0.08)] text-[var(--w-primary-press)] font-semibold cursor-pointer"
+                            : disabled
+                            ? "border-[var(--w-line-normal)] text-[var(--w-fg-neutral)] opacity-50 cursor-not-allowed"
+                            : "border-[var(--w-line-normal)] text-[var(--w-fg-strong)] hover:border-[var(--w-fg-normal)] cursor-pointer"
+                        )}
+                      >
+                        {hk.ko}
+                      </button>
+                    );
+                  })}
                 </div>
-                <Icon
-                  name="chev-down"
-                  size={16}
-                  className={cn("text-[var(--w-fg-neutral)] shrink-0 ml-2 transition-transform duration-[160ms]", hooksExpanded && "rotate-180")}
-                />
-              </button>
-              {hooksExpanded && (
-                <div className="flex flex-col gap-4 px-4 py-4 border-t border-[var(--w-line-normal)]">
-                  <p className="m-0 font-medium text-[12.5px] leading-[1.5] text-[var(--w-fg-neutral)]">
-                    본문 3개를 각각 다른 설득 방식으로 써요. <span className="text-[var(--w-fg-strong)]">VER 0{activeVer + 1}</span> 에 적용할 방식을 골라보세요.
-                  </p>
 
-                  <div className="flex flex-wrap gap-1.5">
-                    {COPY_HOOKS.map((hk) => {
-                      const active = hk.id === p.hooks[activeVer];
-                      return (
-                        <button
-                          key={hk.id}
-                          type="button"
-                          title={hk.uiDesc}
-                          onClick={() => {
-                            const next = [...p.hooks];
-                            next[activeVer] = hk.id;
-                            p.setHooks(next);
-                          }}
-                          className={cn(
-                            "inline-flex items-center px-3 py-1.5 rounded-full border font-medium text-[12.5px] leading-none cursor-pointer transition-[background,border-color,color] duration-[120ms]",
-                            active
-                              ? "border-[var(--w-primary-normal)] bg-[rgba(0,102,255,0.08)] text-[var(--w-primary-press)] font-semibold"
-                              : "border-[var(--w-line-normal)] text-[var(--w-fg-strong)] hover:border-[var(--w-fg-normal)]"
-                          )}
-                        >
-                          {hk.ko}
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  <div className="flex gap-2">
-                    {p.hooks.map((h, i) => {
-                      const isActive = i === activeVer;
-                      const def = findHook(h);
-                      return (
-                        <button
-                          key={i}
-                          type="button"
-                          onClick={() => setActiveVer(i)}
-                          className={cn(
-                            "flex-1 aspect-square flex flex-col items-start gap-5 p-4 rounded-xl border text-left cursor-pointer transition-[border-color,background] duration-[120ms]",
-                            isActive
-                              ? "border-[var(--w-primary-normal)] bg-[var(--w-primary-soft)]"
-                              : "border-[var(--w-line-normal)] bg-[var(--w-bg-elevated)] hover:border-[var(--w-fg-normal)]"
-                          )}
-                        >
-                          <div className="flex items-center gap-3 w-full">
-                            <div
-                              className={cn(
-                                "w-9 h-9 rounded-xl flex items-center justify-center shrink-0",
-                                isActive ? "bg-[var(--w-primary-normal)] text-white" : "bg-[var(--w-bg-alternative)] text-[var(--w-fg-neutral)]"
-                              )}
-                            >
-                              <Icon name={def.icon} size={18} />
-                            </div>
-                            <div className="flex flex-col gap-0.5 min-w-0">
-                              <span className="font-[600] text-[11px] leading-none text-[var(--w-fg-neutral)] tracking-[0.04em] uppercase">VER 0{i + 1}</span>
-                              <span className="font-bold text-[18px] leading-[1.25] text-[var(--w-fg-strong)]">{def.ko}</span>
-                            </div>
+                <div className="flex gap-2">
+                  {Array.from({ length: 3 }).map((_, i) => {
+                    const id = p.hooks[i];
+                    const def = id ? findHook(id) : null;
+                    return (
+                      <div
+                        key={i}
+                        className={cn(
+                          "flex-1 aspect-square flex flex-col items-start gap-5 p-4 rounded-xl border text-left transition-[border-color,background] duration-[120ms]",
+                          def
+                            ? "border-[var(--w-primary-normal)] bg-[var(--w-primary-soft)]"
+                            : "border-dashed border-[var(--w-line-normal)] bg-[var(--w-bg-elevated)]"
+                        )}
+                      >
+                        <div className="flex items-center gap-3 w-full">
+                          <div
+                            className={cn(
+                              "w-9 h-9 rounded-xl flex items-center justify-center shrink-0",
+                              def ? "bg-[var(--w-primary-normal)] text-white" : "bg-[var(--w-bg-alternative)] text-[var(--w-fg-neutral)]"
+                            )}
+                          >
+                            {def ? <Icon name={def.icon} size={18} /> : <span className="font-bold text-[15px]">{i + 1}</span>}
                           </div>
-                          <span className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)] whitespace-pre-line">{def.uiDesc}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
+                          <div className="flex flex-col gap-0.5 min-w-0">
+                            <span className="font-[600] text-[11px] leading-none text-[var(--w-fg-neutral)] tracking-[0.04em] uppercase">VER 0{i + 1}</span>
+                            <span className={cn("font-bold text-[18px] leading-[1.25]", def ? "text-[var(--w-fg-strong)]" : "text-[var(--w-fg-neutral)]")}>
+                              {def ? def.ko : "선택하기"}
+                            </span>
+                          </div>
+                        </div>
+                        <span className="mt-auto font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)] whitespace-pre-line">
+                          {def ? def.uiDesc : "칩을 골라\n채워 주세요"}
+                        </span>
+                      </div>
+                    );
+                  })}
                 </div>
-              )}
-            </div>
-          )}
+              </div>
+            )}
+          </div>
         </div>
 
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 24 }}>

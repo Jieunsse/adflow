@@ -16,7 +16,7 @@ import { getMockCampaign, getMockCampaignAdIds, seedMockAdRows } from "@/lib/moc
 import Icon from "@shared/ui/Icon";
 import { useToast } from "@shared/ui/Toast";
 import { useLibrary } from "@shared/lib/library";
-import { TONES, CTAS, OBJECTIVES_ALL, recommendedHooks, type CtaId, type CopyHook } from "@entities/creative/options";
+import { TONES, CTAS, OBJECTIVES_ALL, type CtaId, type CopyHook } from "@entities/creative/options";
 import Stepper from "./_components/Stepper";
 import GoalIntro from "@widgets/goal-intro";
 import CreativeStep from "@widgets/creative-step";
@@ -158,6 +158,7 @@ export default function CreatePage() {
   const [headlineIdx, setHeadlineIdx] = useState(0);
   const [displayedPrimaryTexts, setDisplayedPrimaryTexts] = useState<[string, string, string] | null>(null);
   const [displayedHooks, setDisplayedHooks] = useState<[CopyHook, CopyHook, CopyHook] | null>(null);
+  const [proofPointsCited, setProofPointsCited] = useState<[boolean, boolean, boolean] | null>(null);
   const [primaryTextIdx, setPrimaryTextIdx] = useState(0);
   const [elapsed, setElapsed] = useState(0);
   const [savedId, setSavedId] = useState<string | null>(null);
@@ -171,9 +172,9 @@ export default function CreatePage() {
     setSavedId(null);
   }, [displayedHeadlines, headlineIdx, creative.state.primaryText, creative.state.cta]);
 
-  // 카피 훅 기본값 = outcome 추천 풀. outcome 바뀌면 추천으로 리셋 (ADR-029).
+  // 카피 훅 = 사용자가 칩으로 직접 채움. outcome 바뀌면 비움(빈 칸은 생성 시 AI가 결정).
   useEffect(() => {
-    if (creative.state.outcome) setHooks(recommendedHooks(creative.state.outcome));
+    setHooks([]);
   }, [creative.state.outcome]);
 
   // 둘러보기 모드 1회 자동 시드 — 비어있는 입력값에만 placeholder 텍스트를 채워 데모 진입을 매끄럽게.
@@ -264,12 +265,14 @@ export default function CreatePage() {
           customerVoiceSummary: bp.customerVoiceSummary,
           policy: bpEntry?.policy,
           copyReferences: selectedCopyTexts,
+          proofPoints: bp.proofPoints,
         } : {
           brandDescription: bp.brandDescription,
           brandVoice: bp.brandVoice,
           customerVoiceSummary: bp.customerVoiceSummary,
           policy: bpEntry?.policy,
           copyReferences: selectedCopyTexts,
+          proofPoints: bp.proofPoints,
         },
         persona: personaEntry
           ? {
@@ -292,6 +295,7 @@ export default function CreatePage() {
           setHeadlineIdx(0);
           setDisplayedPrimaryTexts(data.primaryTexts);
           setDisplayedHooks(data.hooks);
+          setProofPointsCited(data.proofPointsCited ?? null);
           setPrimaryTextIdx(0);
           creative.dispatch({ type: "SET_HEADLINE", headline: data.headlines[0] });
           // PRD §5.4.2 (5) — STEP 02 디테일 A/B 시험 B안 풀로 사용. 재생성 시 후보 교체 → DetailKnobs 의 sync useEffect 가 B안 reset.
@@ -375,8 +379,11 @@ export default function CreatePage() {
   // PRD §13.10.6 — intro 완료 여부로 분기. 카드 클릭만으론 자동 진입 안 함, "다음" 버튼이 명시적 commit.
   const showIntro = !introCompleted;
 
+  // 둘러보기 모드 — 콘텐츠를 화면 세로 중앙에 배치 (빈 공간 있을 때만 중앙, 길면 위부터)
+  const browseMode = !!session?.browseMode;
+
   return (
-    <div className="px-12 py-9 pb-16 max-w-[1280px] w-full mx-auto flex flex-col gap-7 min-h-[calc(100vh-64px)]" data-screen-label="광고 만들기">
+    <div className={`px-12 py-9 pb-16 max-w-[1280px] w-full mx-auto flex flex-col gap-7 min-h-[calc(100vh-64px)]${browseMode ? " justify-center" : ""}`} data-screen-label="광고 만들기">
       <div className="flex justify-between items-end gap-6">
         <div>
           <span className="font-semibold text-[11px] leading-[1.45] tracking-[0.04em] uppercase text-[var(--w-fg-neutral)]">광고 만들기</span>
@@ -414,14 +421,10 @@ export default function CreatePage() {
       )}
 
       {showIntro ? (
-        <div className="flex flex-1 items-center justify-center">
-          <div className="w-full">
-            <GoalIntro onNext={() => {
-              setIntroCompleted(true);
-              setStep(creative.state.outcome === 'boost_post' ? 1 : 0);
-            }} />
-          </div>
-        </div>
+        <GoalIntro onNext={() => {
+          setIntroCompleted(true);
+          setStep(creative.state.outcome === 'boost_post' ? 1 : 0);
+        }} />
       ) : (
         <>
           <Stepper step={step} setStep={setStep} completed={completed} stepValid={stepValid} />
@@ -446,6 +449,7 @@ export default function CreatePage() {
               hooks={hooks}
               setHooks={setHooks}
               displayedHooks={displayedHooks}
+              proofPointsCited={proofPointsCited}
               headlines={displayedHeadlines}
               headlineIdx={headlineIdx}
               onSelectHeadline={handleSelectHeadline}

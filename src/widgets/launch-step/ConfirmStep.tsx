@@ -25,12 +25,11 @@ interface Props {
   goSettings: () => void;
   devModeOn: boolean;
   testAccountActive: boolean;
-  testAccountId: string | undefined;
 }
 
 export default function ConfirmStep({
   onBack, canLaunch, canSkipLaunch, onLaunch, onSkipLaunch,
-  mutation, goSettings, devModeOn, testAccountActive, testAccountId,
+  mutation, goSettings, devModeOn, testAccountActive,
 }: Props) {
   const router = useRouter();
   const { data: session } = useSession();
@@ -86,27 +85,15 @@ export default function ConfirmStep({
           <Icon name="warn" size={14} /> 아직 광고 소재가 없어요. STEP 01에서 소재를 만들면 집행할 수 있어요.
         </div>
       )}
-      {!accountConnected && browseMode && (
-        <div className="font-medium text-[12px] leading-[1.5] tracking-[0.008em] text-[var(--w-fg-neutral)] flex items-center gap-1.5 flex-wrap" style={{ marginBottom: 12 }}>
-          <Icon name="info" size={13} /> 둘러보기 모드 — 실제 게재 대신 모의 흐름이 진행돼요. 실제 집행은 계정 연결 후 가능해요.
-          <Button variant="ghost" size="sm" type="button" onClick={goSettings}>계정 연결하러 가기 →</Button>
-        </div>
-      )}
       {!accountConnected && !browseMode && (
         <div className="font-medium text-[12px] leading-[1.5] tracking-[0.008em] text-[var(--w-status-cautionary)] flex items-center gap-1.5 flex-wrap" style={{ marginBottom: 12 }}>
           <Icon name="warn" size={14} /> 광고 계정·페이지가 연결되지 않아 집행할 수 없어요.
           <Button variant="ghost" size="sm" type="button" onClick={goSettings}>계정 연결하러 가기 →</Button>
         </div>
       )}
-      {session?.pixelId ? (
+      {session?.pixelId && (
         <div className="font-medium text-[12px] leading-[1.5] tracking-[0.008em] text-[var(--w-fg-neutral)] flex items-center gap-1.5" style={{ marginBottom: 12, color: "var(--w-primary-press)" }}>
           <Icon name="check" size={13} strokeWidth={3} /> Pixel 추적 중 — {session.pixelName ?? session.pixelId}
-        </div>
-      ) : (
-        <div className="font-medium text-[12px] leading-[1.5] tracking-[0.008em] text-[var(--w-fg-neutral)] flex items-center gap-1.5 flex-wrap" style={{ marginBottom: 12 }}>
-          <Icon name="info" size={13} />
-          Pixel이 연결되지 않았어요. 연결하면 광고 클릭 후 사이트 방문을 추적할 수 있어요.
-          <Button variant="ghost" size="sm" type="button" onClick={() => router.push("/connect")}>Pixel 연결하러 가기 →</Button>
         </div>
       )}
       {mutation.isError && (
@@ -118,7 +105,7 @@ export default function ConfirmStep({
 
       <div className="flex items-center justify-between gap-3" style={{ marginTop: 8 }}>
         <Button variant="secondary" type="button" onClick={onBack}>
-          <Icon name="arrow-left" size={14} /> 이전
+          이전
         </Button>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8 }}>
           <span style={{ font: "500 12px/1 var(--w-font-sans)", color: "var(--w-fg-neutral)", display: "inline-flex", alignItems: "center", gap: 4 }}>
@@ -127,27 +114,14 @@ export default function ConfirmStep({
           <Button variant="primary" size="lg" type="button" disabled={!canLaunch} onClick={onLaunch}>
             {mutation.isPending ? (
               <><div className="rounded-full border-[2.4px] border-[var(--w-line-normal)] border-t-[var(--w-primary-normal)] animate-[spin_0.85s_linear_infinite]" style={{ width: 16, height: 16 }} /> Meta에 전송 중…</>
+            ) : browseMode ? (
+              state.delivery === "ACTIVE" ? "Meta에 광고 게재하기" : "Meta에 광고 등록하기"
             ) : (
-              <><Icon name="megaphone" size={16} /> {browseMode
-                ? (state.delivery === "ACTIVE" ? "Meta에 광고 게재하기 (둘러보기 모드)" : "Meta에 광고 등록하기 (둘러보기 모드)")
-                : (state.delivery === "ACTIVE" ? "Meta에 광고 게재하기" : "Meta에 광고 등록하기 (일시중지)")}</>
+              <><Icon name="megaphone" size={16} /> {state.delivery === "ACTIVE" ? "Meta에 광고 게재하기" : "Meta에 광고 등록하기 (일시중지)"}</>
             )}
           </Button>
         </div>
       </div>
-
-      {devModeOn && testAccountActive && (
-        <Card style={{ marginTop: 24, padding: 16, borderStyle: "dashed", background: "var(--w-bg-alternative)" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-            <Icon name="info" size={14} />
-            <span style={{ font: "600 13px/1.4 var(--w-font-sans)", color: "var(--w-fg-strong)" }}>Meta 테스트 광고 계정 활성화</span>
-          </div>
-          <p style={{ font: "500 12.5px/1.55 var(--w-font-sans)", color: "var(--w-fg-normal)", margin: 0 }}>
-            위 게재 버튼이 <strong>{testAccountId}</strong> 로 Campaign → AdSet → AdCreative → Ad 까지 전체 호출돼요.
-            실제 노출·과금은 없어요. 인사이트는 0 으로 반환돼요.
-          </p>
-        </Card>
-      )}
 
       {devModeOn && !testAccountActive && (
         <Card style={{ marginTop: 24, padding: 16, borderStyle: "dashed", background: "var(--w-bg-alternative)" }}>

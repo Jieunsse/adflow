@@ -9,6 +9,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useCreativeDraft } from "@entities/creative/model";
 import { useLaunchDraft, type LaunchParams, type LaunchResponse } from "@entities/campaign/model";
 import { saveLaunchedCampaign } from "@entities/campaign/launched-storage";
+import { createBrowseCampaign } from "@entities/campaign/browse/seed";
+import type { MetaObjectiveParam } from "@/lib/meta-ads";
 import { OBJECTIVES_PHASE1, type ObjectivePhase1Id } from "@entities/creative/options";
 import { LAUNCH_PROFILES } from "@entities/launch-objective/profile";
 import { useApiMutation } from "@shared/lib/api/useApiMutation";
@@ -133,8 +135,28 @@ export default function LaunchStep({ onNext, goSettings, goCreative, brandName }
       const launched = buildLaunchedCampaign(mock, params);
       dispatch({ type: "SET_LAUNCHED_CAMPAIGN", value: launched });
       saveLaunchedCampaign(launched);
+      // ADR-033 — Browse Mode 시연 레이어. 목록 merge·상세 빨리감기가 이 레코드를 단일 소스로 사용.
+      const BROWSE_OBJECTIVES = new Set<MetaObjectiveParam>(["OUTCOME_TRAFFIC", "OUTCOME_AWARENESS", "OUTCOME_ENGAGEMENT", "OUTCOME_LEADS"]);
+      const objective = BROWSE_OBJECTIVES.has(params.objective as MetaObjectiveParam) ? (params.objective as MetaObjectiveParam) : "OUTCOME_TRAFFIC";
+      createBrowseCampaign({
+        id: mock.campaignId,
+        name: `${(brandName ?? "내 캠페인").trim()} — ${params.headline}`,
+        headline: params.headline,
+        primaryText: params.primaryText,
+        cta: params.cta,
+        imageUrl: params.imageDataUrl ?? "",
+        objective,
+        dailyBudget: params.dailyBudget,
+        startDate: params.startDate,
+        ageMin: params.ageMin,
+        ageMax: params.ageMax,
+        genders: params.genders,
+        countries: params.countries,
+      });
       addNotification({ type: "launch", message: launchSuccessMessage(params) });
       if (state.autoRelaunchEnabled) setAutoRelaunch(mock.campaignId, true);
+      // 둘러보기 모드 — 기술적 ID 패널을 건너뛰고 바로 STEP 03 마무리 점검으로.
+      onNext();
       return;
     }
     launchMutation.mutate(params, {
@@ -281,7 +303,6 @@ export default function LaunchStep({ onNext, goSettings, goCreative, brandName }
                 goSettings={goSettings}
                 devModeOn={devModeOn}
                 testAccountActive={testAccountActive}
-                testAccountId={testAccountId}
               />
             )}
           </>

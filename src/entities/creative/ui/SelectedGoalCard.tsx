@@ -6,9 +6,12 @@
 //
 // 텍스트는 label 한 줄 + Meta enum 한 줄. label+outcomeLabel 결합 분기 제거.
 
+import { useSession } from "next-auth/react";
+import { cn } from "@shared/lib/cn";
 import Icon from "@shared/ui/Icon";
 import { Card } from "@shared/ui/Card";
 import { Button } from "@shared/ui/Button";
+import { BROWSE_IG_ACCOUNT } from "@shared/lib/browse-connection";
 import { OBJECTIVES_PHASE1, OBJECTIVES_PHASE2 } from "@entities/creative/options";
 import { useCreativeDraft } from "@entities/creative/model";
 
@@ -20,6 +23,8 @@ interface Props {
 }
 
 export default function SelectedGoalCard({ onChange, changeLabel = "광고 목표 변경" }: Props) {
+  const { data: session } = useSession();
+  const browseMode = !!session?.browseMode;
   const creative = useCreativeDraft();
   const outcome = creative.state.outcome;
   const goal = outcome
@@ -27,32 +32,60 @@ export default function SelectedGoalCard({ onChange, changeLabel = "광고 목�
     : null;
 
   return (
-    <Card className="mb-[18px] p-[18px] flex items-center gap-4">
-      <div
-        style={{
-          width: 52,
-          height: 52,
-          borderRadius: "50%",
-          background: "var(--w-primary-soft)",
-          color: "var(--w-accent-violet)",
-          display: "grid",
-          placeItems: "center",
-          flex: "0 0 auto",
-        }}
-      >
-        <Icon name={goal?.iconName ?? "target"} size={24} strokeWidth={1.7} />
-      </div>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ font: "500 11.5px/1 var(--w-font-sans)", color: "var(--w-fg-neutral)", marginBottom: 6 }}>
-          선택한 광고 목표
+    <>
+      <Card className={cn("p-[18px] flex items-center gap-4", browseMode ? "mb-2" : "mb-[18px]")}>
+        <div
+          style={{
+            width: 52,
+            height: 52,
+            borderRadius: "50%",
+            background: "var(--w-primary-soft)",
+            color: "var(--w-accent-violet)",
+            display: "grid",
+            placeItems: "center",
+            flex: "0 0 auto",
+          }}
+        >
+          <Icon name={browseMode ? "instagram" : goal?.iconName ?? "target"} size={24} strokeWidth={1.7} />
         </div>
-        <div style={{ font: "700 16px/1.3 var(--w-font-sans)", color: "var(--w-fg-strong)" }}>
-          {goal ? goal.label : "선택 안 됨"}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ font: "500 11.5px/1 var(--w-font-sans)", color: "var(--w-fg-neutral)", marginBottom: 6 }}>
+            선택한 광고 목표
+          </div>
+          <div style={{ font: "700 16px/1.3 var(--w-font-sans)", color: "var(--w-fg-strong)" }}>
+            {goal ? goal.label : "선택 안 됨"}
+          </div>
         </div>
-      </div>
-      <Button variant="ghost" size="sm" type="button" onClick={onChange}>
-        {changeLabel}
-      </Button>
-    </Card>
+        <Button variant="ghost" size="sm" type="button" onClick={onChange}>
+          {changeLabel}
+        </Button>
+      </Card>
+      {browseMode && (
+        <Card className="mb-[18px] px-[18px] py-3 flex items-center gap-3">
+          <div
+            style={{
+              width: 32,
+              height: 32,
+              borderRadius: "50%",
+              background: "var(--w-primary-soft)",
+              color: "var(--w-accent-violet)",
+              display: "grid",
+              placeItems: "center",
+              flex: "0 0 auto",
+            }}
+          >
+            <Icon name="instagram" size={16} strokeWidth={1.7} />
+          </div>
+          <div style={{ minWidth: 0 }}>
+            <div style={{ font: "600 13.5px/1.3 var(--w-font-sans)", color: "var(--w-fg-strong)" }}>
+              @{BROWSE_IG_ACCOUNT.username}
+            </div>
+            <div style={{ font: "500 11.5px/1.3 var(--w-font-sans)", color: "var(--w-fg-neutral)" }}>
+              {BROWSE_IG_ACCOUNT.name}
+            </div>
+          </div>
+        </Card>
+      )}
+    </>
   );
 }

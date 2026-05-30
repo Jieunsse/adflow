@@ -18,7 +18,8 @@ export default function SummaryCard() {
   const launch = useLaunchDraft();
   const { data: session } = useSession();
 
-  const accountConnected = !!(session?.adAccountId && session?.pageId);
+  const browseMode = !!session?.browseMode;
+  const accountConnected = browseMode || !!(session?.adAccountId && session?.pageId);
   const hasCreative = creative.state.headline.trim().length > 0;
   const launched = launch.state.launchedCampaign;
 

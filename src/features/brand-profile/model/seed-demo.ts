@@ -1,6 +1,7 @@
 import type { BrandProfileEntry } from "./useBrandProfileStorage";
 import type { PersonaEntry } from "./usePersonasStorage";
 import type { ReferenceMaterial } from "@shared/lib/referenceMaterials";
+import type { ProductEntry } from "@shared/lib/products";
 
 const DEMO_PROFILE_ID = "demo-greenroutine-001";
 
@@ -16,6 +17,34 @@ const DEMO_PROFILE: BrandProfileEntry = {
     "'바르고 나면 촉촉해요', '향이 자극적이지 않아서 좋아요', '민감한 피부인데 전혀 자극 없어요' 같은 리뷰가 많아요.",
   imageGuide:
     "자연광 느낌의 밝고 깨끗한 톤. 배경은 흰색 또는 연한 베이지. 로고는 우측 하단. 인물이 나오는 경우 미소 짓는 자연스러운 표정.",
+  proofPoints: [
+    "재구매율 38%",
+    "누적 판매 12만 개",
+    "리뷰 평점 4.8/5 (2,400+건)",
+    "비건 인증(한국비건인증원)",
+    "2024 올리브영 어워즈 스킨케어 부문 수상",
+    "EWG 그린 등급 전성분",
+  ],
+  copyReferences: [
+    {
+      id: "demo-copyref-001",
+      text: "민감한 피부에도 순하게, 매일 쓰는 비건 루틴.",
+      source: "manual",
+      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 20).toISOString(),
+    },
+    {
+      id: "demo-copyref-002",
+      text: "오늘도 촉촉하게. 그린루틴 수분 크림 한 통이면 충분해요.",
+      source: "ig",
+      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 12).toISOString(),
+    },
+    {
+      id: "demo-copyref-003",
+      text: "향은 은은하게, 자극은 없이. 무향·무색소 비건 스킨케어.",
+      source: "ig",
+      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5).toISOString(),
+    },
+  ],
   policy: [
     {
       type: "prohibited_words",
@@ -154,17 +183,116 @@ const DEMO_MATERIALS: ReferenceMaterial[] = [
   },
 ];
 
+// 둘러보기 모드 제품 목업 — 소재 라이브러리(lib/mock-library.ts)의 그린루틴 제품군과 이미지를 공유한다.
+const DEMO_PRODUCTS: ProductEntry[] = [
+  {
+    id: "demo-product-serum",
+    brandProfileId: DEMO_PROFILE_ID,
+    name: "식물성 수분 세럼",
+    description:
+      "화학 첨가물 없이 식물성 수분 성분만 담은 세럼. 한 방울이면 결이 보송하게 정돈돼요. 비건 인증·무향·무색소.",
+    imageUrl: "/demo/library/serum.jpg",
+    price: "29,000원",
+    createdAt: Date.now() - 1000 * 60 * 60 * 24 * 20,
+  },
+  {
+    id: "demo-product-cleanser",
+    brandProfileId: DEMO_PROFILE_ID,
+    name: "식물성 클렌저",
+    description:
+      "식물성 거품이 결을 부드럽게 감싸 담백하게 마무리되는 클렌저. 자극적인 향 대신 무향·무색소. 비건 인증.",
+    imageUrl: "/demo/library/cleanser.jpg",
+    price: "18,000원",
+    createdAt: Date.now() - 1000 * 60 * 60 * 24 * 18,
+  },
+  {
+    id: "demo-product-toner",
+    brandProfileId: DEMO_PROFILE_ID,
+    name: "식물성 토너",
+    description:
+      "자극 없이 결을 정돈하는 무향·무색소 토너. 화학 향료 대신 식물성 수분 성분만 담아 담백하게 마무리돼요. 비건 인증.",
+    imageUrl: "/demo/library/toner.jpg",
+    price: "22,000원",
+    createdAt: Date.now() - 1000 * 60 * 60 * 24 * 16,
+  },
+  {
+    id: "demo-product-pad",
+    brandProfileId: DEMO_PROFILE_ID,
+    name: "토너 패드",
+    description:
+      "패드 한 장이면 결 정돈 끝. 식물성 수분 성분을 그대로 담았어요. 비건 인증·무향·무색소라 예민한 날에도 편하게.",
+    imageUrl: "/demo/library/pad.jpg",
+    price: "24,000원",
+    createdAt: Date.now() - 1000 * 60 * 60 * 24 * 14,
+  },
+  {
+    id: "demo-product-pack",
+    brandProfileId: DEMO_PROFILE_ID,
+    name: "수분 시트 팩",
+    description:
+      "건조하고 예민해지는 날, 식물성 수분 성분을 담은 시트 팩으로 결을 부드럽게 달래줘요. 비건 인증·무향·무색소.",
+    imageUrl: "/demo/library/pack.jpg",
+    price: "19,000원",
+    createdAt: Date.now() - 1000 * 60 * 60 * 24 * 12,
+  },
+  {
+    id: "demo-product-cream",
+    brandProfileId: DEMO_PROFILE_ID,
+    name: "수분 크림",
+    description:
+      "식물성 성분만 담아 바르고 나면 촉촉하게 감기는 무향·무색소 수분 크림. 정기 구독으로 끊김 없이 채울 수도 있어요. 비건 인증.",
+    imageUrl: "/demo/library/cream.jpg",
+    price: "32,000원",
+    createdAt: Date.now() - 1000 * 60 * 60 * 24 * 10,
+  },
+  {
+    id: "demo-product-suncream",
+    brandProfileId: DEMO_PROFILE_ID,
+    name: "식물성 선크림",
+    description:
+      "백탁 없이 산뜻하게 발리는 비건 선크림. 끈적임 없이 가볍게, 무향·무색소로 자극은 줄였어요. 데일리 자외선 차단.",
+    imageUrl: "/demo/library/suncream.png",
+    price: "26,000원",
+    createdAt: Date.now() - 1000 * 60 * 60 * 24 * 8,
+  },
+  {
+    id: "demo-product-lipbalm",
+    brandProfileId: DEMO_PROFILE_ID,
+    name: "비건 립밤",
+    description:
+      "식물성 보습 성분을 담은 비건 립밤. 무향으로 자극 없이, 하루 종일 촉촉하게 발려요. 비건 인증·무색소.",
+    imageUrl: "/demo/library/lipbalm.png",
+    price: "12,000원",
+    createdAt: Date.now() - 1000 * 60 * 60 * 24 * 6,
+  },
+];
+
 const PROFILES_KEY = "adflow:brand-profiles";
 const PERSONAS_KEY = "adflow:personas";
+const PRODUCTS_KEY_PREFIX = "adflow:products:";
 const MATERIALS_KEY_PREFIX = "adflow:ref-materials:";
+const SEED_VERSION_KEY = "adflow:brand-profiles:seed-version";
+// 데모 프로필 스키마가 바뀌면 이 값을 올린다 — 옛 localStorage 의 데모 항목이 한 번 새 시드로 교체된다 (browse/store.ts 패턴).
+const SEED_VERSION = "2026-05-30-products";
 
 export function seedDemoIfEmpty(): void {
   if (typeof window === "undefined") return;
   try {
     const existing = localStorage.getItem(PROFILES_KEY);
     const parsed: BrandProfileEntry[] = existing ? JSON.parse(existing) : [];
-    if (parsed.length > 0) return;
-    localStorage.setItem(PROFILES_KEY, JSON.stringify([DEMO_PROFILE]));
+    const versionStale = localStorage.getItem(SEED_VERSION_KEY) !== SEED_VERSION;
+    const hasDemo = parsed.some((p) => p.id === DEMO_PROFILE_ID);
+
+    // 빈 상태면 신규 시드. 데모가 이미 있고 시드 버전이 낡았으면 데모 항목만 새 스키마로 교체(사용자 프로필은 보존).
+    if (parsed.length > 0 && !(versionStale && hasDemo)) {
+      localStorage.setItem(SEED_VERSION_KEY, SEED_VERSION);
+      return;
+    }
+
+    const others = parsed.filter((p) => p.id !== DEMO_PROFILE_ID);
+    localStorage.setItem(PROFILES_KEY, JSON.stringify([DEMO_PROFILE, ...others]));
+    localStorage.setItem(SEED_VERSION_KEY, SEED_VERSION);
+
     const existingPersonas: PersonaEntry[] = (() => {
       try {
         return JSON.parse(localStorage.getItem(PERSONAS_KEY) ?? "[]") as PersonaEntry[];
@@ -175,9 +303,10 @@ export function seedDemoIfEmpty(): void {
     const filtered = existingPersonas.filter((p) => p.brandProfileId !== DEMO_PROFILE_ID);
     localStorage.setItem(PERSONAS_KEY, JSON.stringify([...filtered, ...DEMO_PERSONAS]));
 
+    const productsKey = `${PRODUCTS_KEY_PREFIX}${DEMO_PROFILE_ID}`;
+    localStorage.setItem(productsKey, JSON.stringify(DEMO_PRODUCTS));
+
     const materialsKey = `${MATERIALS_KEY_PREFIX}${DEMO_PROFILE_ID}`;
-    if (!localStorage.getItem(materialsKey)) {
-      localStorage.setItem(materialsKey, JSON.stringify(DEMO_MATERIALS));
-    }
+    localStorage.setItem(materialsKey, JSON.stringify(DEMO_MATERIALS));
   } catch {}
 }

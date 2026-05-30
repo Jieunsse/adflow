@@ -6,6 +6,7 @@
 //   - pending          → 로딩 카드
 //   - idle             → "집행 설정 후 버튼을 눌러주세요" 빈 카드
 
+import { useSession } from "next-auth/react";
 import Icon from "@shared/ui/Icon";
 import { Button } from "@shared/ui/Button";
 import { Card } from "@shared/ui/Card";
@@ -27,6 +28,8 @@ interface Props {
 
 export default function LaunchStatusPanel({ mutation, onNext }: Props) {
   const launched = useLaunchDraft().state.launchedCampaign;
+  const { data: session } = useSession();
+  const browseMode = !!session?.browseMode;
 
   if (launched) {
     return launched.skipped
@@ -59,6 +62,8 @@ export default function LaunchStatusPanel({ mutation, onNext }: Props) {
       </Card>
     );
   }
+
+  if (browseMode) return null;
 
   return (
     <Card className="text-center p-[32px_20px]">

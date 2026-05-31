@@ -97,6 +97,7 @@ export default function BrandProfileEditPage() {
   const [brandVoice, setBrandVoice] = useState("");
   const [customerVoiceSummary, setCustomerVoiceSummary] = useState("");
   const [imageGuide, setImageGuide] = useState("");
+  const [proofPointsText, setProofPointsText] = useState("");
 
   useEffect(() => {
     if (profiles.length === 0 && !loaded) return;
@@ -112,6 +113,7 @@ export default function BrandProfileEditPage() {
       setBrandVoice(p.brandVoice ?? "");
       setCustomerVoiceSummary(p.customerVoiceSummary ?? "");
       setImageGuide(p.imageGuide ?? "");
+      setProofPointsText((p.proofPoints ?? []).join("\n"));
       setLoaded(true);
     }
     setEntry(p);
@@ -119,6 +121,10 @@ export default function BrandProfileEditPage() {
 
   const saveStyle = () => {
     if (!entry) return;
+    const proofPoints = proofPointsText
+      .split("\n")
+      .map((s) => s.trim())
+      .filter(Boolean);
     const updated: BrandProfileEntry = {
       ...entry,
       name: name.trim() || "새 프로필",
@@ -127,6 +133,7 @@ export default function BrandProfileEditPage() {
       brandVoice: brandVoice.trim() || undefined,
       customerVoiceSummary: customerVoiceSummary.trim() || undefined,
       imageGuide: imageGuide.trim() || undefined,
+      proofPoints: proofPoints.length ? proofPoints : undefined,
     };
     saveProfile(updated);
     setEntry(updated);
@@ -215,6 +222,7 @@ export default function BrandProfileEditPage() {
           <ReadField label="브랜드 보이스 (Brand Voice)" value={brandVoice} />
           <ReadField label="브랜드 미감 (이미지 가이드)" value={imageGuide} />
           <ReadField label="고객 목소리 요약 (Customer Voice)" value={customerVoiceSummary} />
+          <ReadField label="근거 자료 (Proof Point)" value={proofPointsText} />
           <CopyReferenceSection
             refs={entry.copyReferences ?? []}
             canEdit={false}
@@ -285,6 +293,18 @@ export default function BrandProfileEditPage() {
               value={customerVoiceSummary}
               onChange={(e) => setCustomerVoiceSummary(e.target.value)}
               placeholder="예) '바르고 나면 촉촉해요', '향이 자극적이지 않아서 좋아요'라는 리뷰가 많아요."
+            />
+          </Field>
+
+          <Field
+            label="근거 자료 (Proof Point)"
+            hint="카피에 쓸 수 있는 검증된 성과·사회적 증거를 한 줄에 하나씩. 성과 수치(재구매율·판매량·별점·수상)는 여기 있는 것만 카피에 등장하고, 없는 수치는 AI가 지어내지 않아요."
+          >
+            <textarea
+              className={cn(TEXTAREA_CLS, "min-h-[96px]")}
+              value={proofPointsText}
+              onChange={(e) => setProofPointsText(e.target.value)}
+              placeholder={"예) 재구매율 73%\n누적 12만 개 판매\n별점 4.9 (리뷰 2,400건)\n2024 굿디자인 어워드 수상"}
             />
           </Field>
 

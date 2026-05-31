@@ -10,7 +10,6 @@ import { Chip, type ChipVariant } from "@shared/ui/Chip";
 import { Skeleton } from "@shared/ui/Skeleton";
 import { EmptyState } from "@shared/ui/primitives";
 import { cn } from "@shared/lib/cn";
-import { campaignGradient } from "@shared/lib/format";
 import { fetchCampaigns } from "@entities/campaign/api";
 import type { CampaignSummary, CampaignIssueReason } from "@/lib/meta-ads";
 
@@ -137,11 +136,8 @@ export default function ApprovalsPage() {
                   {filtered.map((c) => (
                     <tr key={c.id} className="group cursor-pointer" onClick={() => goDetail(c.id)}>
                       <td className={TD}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                          <div style={{ width: 38, height: 38, borderRadius: 8, background: campaignGradient(c.id), flex: "0 0 auto" }} />
-                          <div style={{ minWidth: 0 }}>
-                            <div style={{ font: "600 13.5px/1.35 var(--w-font-sans)", color: "var(--w-fg-strong)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.headline}</div>
-                          </div>
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ font: "600 13.5px/1.35 var(--w-font-sans)", color: "var(--w-fg-strong)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.headline}</div>
                         </div>
                       </td>
                       <td className={TD} style={{ textAlign: "center" }}>
@@ -290,7 +286,7 @@ function TableSkeleton() {
         <tbody>
           {[0, 1, 2, 3].map((i) => (
             <tr key={i}>
-              <td className={TD}><div style={{ display: "flex", gap: 12, alignItems: "center" }}><Skeleton className="w-[38px] h-[38px] rounded-lg flex-none" /><div style={{ flex: 1 }}><Skeleton className="h-[14px] w-[60%]" /></div></div></td>
+              <td className={TD}><div style={{ flex: 1 }}><Skeleton className="h-[14px] w-[60%]" /></div></td>
               <td className={TD}><Skeleton className="h-[22px] w-[60px] rounded-full mx-auto" /></td>
               <td className={TD}><Skeleton className="h-[22px] w-[70px] rounded-full mx-auto" /></td>
               <td className={TD}><Skeleton className="h-[14px] w-[70%]" /></td>

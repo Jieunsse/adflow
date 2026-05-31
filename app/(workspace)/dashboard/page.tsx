@@ -35,7 +35,7 @@ const STATUS_CHIP: Record<CampaignStatusBucket, { variant: ChipVariant; label: s
   paused:  { variant: "paused",  label: "일시정지" },
   review:  { variant: "review",  label: "검토 중" },
   ended:   { variant: "ended",   label: "종료" },
-  issue:   { variant: "issue",   label: "문제 있음" },
+  issue:   { variant: "issue",   label: "이슈" },
 };
 
 function StatusChip({ status }: { status: CampaignStatusBucket }) {

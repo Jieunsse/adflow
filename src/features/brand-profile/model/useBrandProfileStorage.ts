@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { syncUpsert } from "@shared/lib/supabase-sync";
+import { seedDemoIfEmpty } from "@features/brand-profile/model/seed-demo";
 import type { SopSection } from "@features/sop/model/useSopStorage";
 
 export type CopyReference = {
@@ -18,6 +19,8 @@ export interface BrandProfile {
   customerVoiceSummary?: string;
   imageGuide?: string;
   copyReferences?: CopyReference[];
+  /** 근거 자료 (ADR-031) — 카피에 성과·사회적 증거 수치를 넣을 수 있는 유일한 출처. */
+  proofPoints?: string[];
 }
 
 export interface BrandProfileEntry extends BrandProfile {
@@ -113,16 +116,17 @@ export function appendToBrandProfile(
   persistProfiles(profiles);
 }
 
-// For STEP 01 — reads active profile, exposes list for selector
-export function useBrandProfileStorage() {
+// For STEP 01 — reads active profile, exposes list for selector.
+// seedDemo: 둘러보기 모드 진입 시 비어있으면 데모 브랜드 프로필을 자동 주입 (ADR-033).
+export function useBrandProfileStorage(seedDemo = false) {
   const [profiles, setProfiles] = useState<BrandProfileEntry[]>([]);
   const [activeId, setActiveIdState] = useState<string | null>(null);
 
   useEffect(() => {
-    const p = readProfiles();
-    setProfiles(p);
+    if (seedDemo) seedDemoIfEmpty();
+    setProfiles(readProfiles());
     setActiveIdState(getActiveId());
-  }, []);
+  }, [seedDemo]);
 
   const activeEntry =
     profiles.find((p) => p.id === activeId) ??

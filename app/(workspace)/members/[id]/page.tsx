@@ -48,7 +48,7 @@ const STATUS_CHIP: Record<string, { label: string; chip: ChipVariant }> = {
   review: { label: "검토 중", chip: "review" },
   paused: { label: "일시정지", chip: "paused" },
   ended: { label: "종료", chip: "ended" },
-  issue: { label: "문제 있음", chip: "issue" },
+  issue: { label: "이슈", chip: "issue" },
 };
 
 const REVIEW_STATUS: Record<"pending" | "approved" | "rejected", { label: string; chip: ChipVariant }> = {

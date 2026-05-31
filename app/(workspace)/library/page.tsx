@@ -205,7 +205,7 @@ function CreativeCard({ item, onPreview, onDelete }: { item: LibraryItem; onPrev
       onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--w-line-normal)"; }}
       onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--w-line-alternative)"; }}
     >
-      <div style={{ position: "relative", aspectRatio: "16 / 10", background: item.gradient, display: "flex", alignItems: "flex-end", padding: 16, color: "#fff" }}>
+      <div style={{ position: "relative", aspectRatio: "16 / 10", background: item.gradient, backgroundImage: item.image ? `linear-gradient(to top, rgba(0,0,0,0.45), rgba(0,0,0,0) 55%), url(${item.image})` : undefined, backgroundSize: "cover", backgroundPosition: "center", display: "flex", alignItems: "flex-end", padding: 16, color: "#fff" }}>
         <div style={{ position: "absolute", top: 12, left: 12, display: "inline-flex", gap: 6 }}>
           <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full font-semibold text-xs leading-none tracking-[0.006em] whitespace-nowrap" style={{ background: "rgba(255,255,255,0.18)", color: "#fff" }}><Icon name="sparkles" size={12} /> {item.tag || "AI 생성"}</span>
         </div>
@@ -235,7 +235,7 @@ function CreativeRow({ item, onPreview, onDelete }: { item: LibraryItem; onPrevi
       onMouseEnter={(e) => (e.currentTarget.style.borderColor = "var(--w-line-normal)")}
       onMouseLeave={(e) => (e.currentTarget.style.borderColor = "var(--w-line-alternative)")}
     >
-      <div style={{ width: 80, height: 56, borderRadius: 8, background: item.gradient, flex: "0 0 auto" }} />
+      <div style={{ width: 80, height: 56, borderRadius: 8, background: item.gradient, backgroundImage: item.image ? `url(${item.image})` : undefined, backgroundSize: "cover", backgroundPosition: "center", flex: "0 0 auto" }} />
       <div style={{ minWidth: 0 }}>
         <div style={{ color: "var(--w-fg-strong)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} className="font-semibold text-[14.5px] leading-[1.4]">{item.headline}</div>
         <div style={{ marginTop: 3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "var(--w-fg-neutral)" }} className="font-medium text-[12.5px] leading-[1.5]">{item.brand}</div>
@@ -257,7 +257,7 @@ function PreviewModal({ item, onClose, onDelete, onCopy, onUse }: { item: Librar
   return (
     <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 100, background: "rgba(15,17,25,0.55)", backdropFilter: "blur(4px)", display: "grid", placeItems: "center", padding: 24 }}>
       <div onClick={(e) => e.stopPropagation()} style={{ width: "min(880px, 100%)", maxHeight: "calc(100vh - 48px)", overflow: "auto", background: "var(--w-bg-elevated)", borderRadius: 18, border: "1px solid var(--w-line-alternative)", boxShadow: "0 24px 64px rgba(0,0,0,0.25)" }}>
-        <div style={{ position: "relative", padding: "28px 32px 36px", background: item.gradient, color: "#fff" }}>
+        <div style={{ position: "relative", padding: "28px 32px 36px", background: item.gradient, backgroundImage: item.image ? `linear-gradient(to top, rgba(0,0,0,0.55), rgba(0,0,0,0.05) 70%), url(${item.image})` : undefined, backgroundSize: "cover", backgroundPosition: "center", color: "#fff" }}>
           <button type="button" onClick={onClose} title="닫기" style={{ position: "absolute", top: 14, right: 14, width: 34, height: 34, borderRadius: 10, border: "1px solid rgba(255,255,255,0.25)", background: "rgba(0,0,0,0.18)", color: "#fff", cursor: "pointer", display: "grid", placeItems: "center" }}><Icon name="x" size={16} /></button>
           <div style={{ display: "inline-flex", gap: 6, marginBottom: 14 }}>
             <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full font-semibold text-xs leading-none tracking-[0.006em] whitespace-nowrap" style={{ background: "rgba(255,255,255,0.18)", color: "#fff" }}><Icon name="sparkles" size={12} /> {item.tag || "AI 생성"}</span>

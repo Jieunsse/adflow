@@ -9,10 +9,21 @@ export default function MessagesPermissionBanner() {
         <Icon name="warn" size={18} />
       </div>
       <div className="flex-1 min-w-0">
-        <div style={{ font: "600 13.5px/1.4 var(--w-font-sans)", color: "var(--w-fg-strong)" }}>
+        <div
+          style={{
+            font: "600 13.5px/1.4 var(--w-font-sans)",
+            color: "var(--w-fg-strong)",
+          }}
+        >
           메시지 권한 미연결 — 샘플 데이터 표시 중
         </div>
-        <div style={{ font: "500 12px/1.5 var(--w-font-sans)", color: "var(--w-fg-neutral)", marginTop: 2 }}>
+        <div
+          style={{
+            font: "500 12px/1.5 var(--w-font-sans)",
+            color: "var(--w-fg-neutral)",
+            marginTop: 2,
+          }}
+        >
           Meta App Review 통과 후 실제 DM 이 보여요.
         </div>
       </div>

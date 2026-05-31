@@ -5,7 +5,12 @@ import { useState, useRef, useEffect, type KeyboardEvent } from "react";
 import Icon from "@shared/ui/Icon";
 import { Card } from "@shared/ui/Card";
 import { cn } from "@shared/lib/cn";
-import type { IgInbox, IgThread, IgConversationSummary, IgMessage } from "@/lib/instagram-messages";
+import type {
+  IgInbox,
+  IgThread,
+  IgConversationSummary,
+  IgMessage,
+} from "@/lib/instagram-messages";
 import MessagesPermissionBanner from "./MessagesPermissionBanner";
 
 function relativeTime(iso: string): string {
@@ -20,7 +25,10 @@ function relativeTime(iso: string): string {
   if (h < 24) return `${h}시간 전`;
   const d = Math.floor(h / 24);
   if (d < 7) return `${d}일 전`;
-  return new Date(iso).toLocaleDateString("ko-KR", { month: "short", day: "numeric" });
+  return new Date(iso).toLocaleDateString("ko-KR", {
+    month: "short",
+    day: "numeric",
+  });
 }
 
 function absoluteTime(iso: string): string {
@@ -28,7 +36,11 @@ function absoluteTime(iso: string): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "";
   const date = d.toLocaleDateString("ko-KR", { month: "long", day: "numeric" });
-  const time = d.toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit", hour12: false });
+  const time = d.toLocaleTimeString("ko-KR", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
   return `${date} ${time}`;
 }
 
@@ -36,7 +48,15 @@ function initial(handle: string): string {
   return (handle?.[0] ?? "?").toUpperCase();
 }
 
-function Avatar({ handle, pictureUrl, size = 36 }: { handle: string; pictureUrl?: string; size?: number }) {
+function Avatar({
+  handle,
+  pictureUrl,
+  size = 36,
+}: {
+  handle: string;
+  pictureUrl?: string;
+  size?: number;
+}) {
   if (pictureUrl) {
     return (
       <img
@@ -77,17 +97,39 @@ function ConversationRow({
           : "border-transparent bg-transparent hover:bg-[var(--w-bg-alternative)]",
       )}
     >
-      <Avatar handle={c.participantHandle} pictureUrl={c.participantPictureUrl} />
+      <Avatar
+        handle={c.participantHandle}
+        pictureUrl={c.participantPictureUrl}
+      />
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between gap-2">
-          <span style={{ font: "600 13.5px/1.3 var(--w-font-sans)", color: "var(--w-fg-strong)" }} className="truncate">
+          <span
+            style={{
+              font: "600 13.5px/1.3 var(--w-font-sans)",
+              color: "var(--w-fg-strong)",
+            }}
+            className="truncate"
+          >
             @{c.participantHandle}
           </span>
-          <span style={{ font: "500 11.5px/1 var(--w-font-sans)", color: "var(--w-fg-neutral)" }} className="flex-none">
+          <span
+            style={{
+              font: "500 11.5px/1 var(--w-font-sans)",
+              color: "var(--w-fg-neutral)",
+            }}
+            className="flex-none"
+          >
             {relativeTime(c.updatedAt)}
           </span>
         </div>
-        <div style={{ font: "500 12.5px/1.45 var(--w-font-sans)", color: "var(--w-fg-neutral)", marginTop: 2 }} className="truncate">
+        <div
+          style={{
+            font: "500 12.5px/1.45 var(--w-font-sans)",
+            color: "var(--w-fg-neutral)",
+            marginTop: 2,
+          }}
+          className="truncate"
+        >
           {c.preview || "(빈 메시지)"}
         </div>
       </div>
@@ -95,11 +137,23 @@ function ConversationRow({
   );
 }
 
-function MessageBubble({ m }: { m: { from: 'me' | 'them'; text: string; attachmentImageUrl?: string; createdAt: string } }) {
-  const mine = m.from === 'me';
+function MessageBubble({
+  m,
+}: {
+  m: {
+    from: "me" | "them";
+    text: string;
+    attachmentImageUrl?: string;
+    createdAt: string;
+  };
+}) {
+  const mine = m.from === "me";
   return (
     <div className={cn("flex w-full", mine ? "justify-end" : "justify-start")}>
-      <div className="max-w-[72%] flex flex-col gap-1" style={{ alignItems: mine ? "flex-end" : "flex-start" }}>
+      <div
+        className="max-w-[72%] flex flex-col gap-1"
+        style={{ alignItems: mine ? "flex-end" : "flex-start" }}
+      >
         {m.attachmentImageUrl && (
           <img
             src={m.attachmentImageUrl}
@@ -120,7 +174,12 @@ function MessageBubble({ m }: { m: { from: 'me' | 'them'; text: string; attachme
             {m.text}
           </div>
         )}
-        <span style={{ font: "500 11px/1 var(--w-font-sans)", color: "var(--w-fg-neutral)" }}>
+        <span
+          style={{
+            font: "500 11px/1 var(--w-font-sans)",
+            color: "var(--w-fg-neutral)",
+          }}
+        >
           {absoluteTime(m.createdAt)}
         </span>
       </div>
@@ -128,7 +187,15 @@ function MessageBubble({ m }: { m: { from: 'me' | 'them'; text: string; attachme
   );
 }
 
-function Composer({ conversationId, participantId, isMock }: { conversationId: string; participantId: string; isMock: boolean }) {
+function Composer({
+  conversationId,
+  participantId,
+  isMock,
+}: {
+  conversationId: string;
+  participantId: string;
+  isMock: boolean;
+}) {
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
   const taRef = useRef<HTMLTextAreaElement>(null);
@@ -153,7 +220,12 @@ function Composer({ conversationId, participantId, isMock }: { conversationId: s
 
     const now = new Date().toISOString();
     const tempId = `local-${Date.now()}`;
-    const newMsg: IgMessage = { id: tempId, from: "me", text: value, createdAt: now };
+    const newMsg: IgMessage = {
+      id: tempId,
+      from: "me",
+      text: value,
+      createdAt: now,
+    };
     const preview = value.length > 70 ? `${value.slice(0, 69)}…` : value;
 
     qc.setQueryData<IgThread>(["ig-thread", conversationId], (old) =>
@@ -161,9 +233,12 @@ function Composer({ conversationId, participantId, isMock }: { conversationId: s
     );
     qc.setQueryData<IgInbox>(["ig-conversations"], (old) => {
       if (!old) return old;
-      return { ...old, conversations: old.conversations.map(c =>
-        c.id === conversationId ? { ...c, preview, updatedAt: now } : c,
-      )};
+      return {
+        ...old,
+        conversations: old.conversations.map((c) =>
+          c.id === conversationId ? { ...c, preview, updatedAt: now } : c,
+        ),
+      };
     });
     setText("");
     taRef.current?.focus();
@@ -176,10 +251,14 @@ function Composer({ conversationId, participantId, isMock }: { conversationId: s
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ recipientId: participantId, text: value }),
-      }).then(r => { if (!r.ok) throw new Error("send_failed") });
+      }).then((r) => {
+        if (!r.ok) throw new Error("send_failed");
+      });
     } catch {
       qc.setQueryData<IgThread>(["ig-thread", conversationId], (old) =>
-        old ? { ...old, messages: old.messages.filter(m => m.id !== tempId) } : old,
+        old
+          ? { ...old, messages: old.messages.filter((m) => m.id !== tempId) }
+          : old,
       );
     } finally {
       setSending(false);
@@ -200,12 +279,16 @@ function Composer({ conversationId, participantId, isMock }: { conversationId: s
       <textarea
         ref={taRef}
         value={text}
-        onChange={e => setText(e.target.value)}
+        onChange={(e) => setText(e.target.value)}
         onKeyDown={onKeyDown}
         placeholder="메시지를 입력하세요."
         rows={1}
         className="flex-1 resize-none outline-none rounded-2xl py-2.5 px-3.5 bg-[var(--w-bg-alternative)] border border-transparent focus:border-[var(--w-primary-normal)] focus:bg-[var(--w-bg-normal)] transition-colors"
-        style={{ font: "500 13.5px/1.5 var(--w-font-sans)", color: "var(--w-fg-strong)", maxHeight: 140 }}
+        style={{
+          font: "500 13.5px/1.5 var(--w-font-sans)",
+          color: "var(--w-fg-strong)",
+          maxHeight: 140,
+        }}
       />
       <button
         type="button"
@@ -226,11 +309,19 @@ function Composer({ conversationId, participantId, isMock }: { conversationId: s
   );
 }
 
-function ThreadPanel({ conversationId, participantId }: { conversationId: string | null; participantId: string }) {
+function ThreadPanel({
+  conversationId,
+  participantId,
+}: {
+  conversationId: string | null;
+  participantId: string;
+}) {
   const q = useQuery({
     queryKey: ["ig-thread", conversationId],
     queryFn: async (): Promise<IgThread> => {
-      const res = await fetch(`/api/instagram/conversations/${conversationId}/messages`);
+      const res = await fetch(
+        `/api/instagram/conversations/${conversationId}/messages`,
+      );
       if (!res.ok) throw new Error("스레드를 불러오지 못했어요");
       return res.json();
     },
@@ -240,16 +331,24 @@ function ThreadPanel({ conversationId, participantId }: { conversationId: string
 
   if (!conversationId) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center gap-3 text-[var(--w-fg-neutral)]" style={{ minHeight: 480 }}>
+      <div
+        className="flex-1 flex flex-col items-center justify-center gap-3 text-[var(--w-fg-neutral)]"
+        style={{ minHeight: 480 }}
+      >
         <Icon name="message" size={32} style={{ opacity: 0.4 }} />
-        <span style={{ font: "500 13px/1 var(--w-font-sans)" }}>왼쪽에서 대화를 선택해주세요.</span>
+        <span style={{ font: "500 13px/1 var(--w-font-sans)" }}>
+          왼쪽에서 대화를 선택해주세요.
+        </span>
       </div>
     );
   }
 
   if (q.isLoading) {
     return (
-      <div className="flex-1 flex items-center justify-center" style={{ minHeight: 480 }}>
+      <div
+        className="flex-1 flex items-center justify-center"
+        style={{ minHeight: 480 }}
+      >
         <div className="rounded-full border-[2.4px] border-[var(--w-line-normal)] border-t-[var(--w-primary-normal)] animate-[spin_0.85s_linear_infinite] w-[18px] h-[18px]" />
       </div>
     );
@@ -257,16 +356,33 @@ function ThreadPanel({ conversationId, participantId }: { conversationId: string
 
   if (q.isError || !q.data) {
     return (
-      <div className="flex-1 flex items-center justify-center text-[var(--w-fg-neutral)]" style={{ minHeight: 480 }}>
+      <div
+        className="flex-1 flex items-center justify-center text-[var(--w-fg-neutral)]"
+        style={{ minHeight: 480 }}
+      >
         대화를 불러오지 못했어요.
       </div>
     );
   }
 
-  return <ThreadView thread={q.data} conversationId={conversationId} participantId={participantId} />;
+  return (
+    <ThreadView
+      thread={q.data}
+      conversationId={conversationId}
+      participantId={participantId}
+    />
+  );
 }
 
-function ThreadView({ thread, conversationId, participantId }: { thread: IgThread; conversationId: string; participantId: string }) {
+function ThreadView({
+  thread,
+  conversationId,
+  participantId,
+}: {
+  thread: IgThread;
+  conversationId: string;
+  participantId: string;
+}) {
   const scrollRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const el = scrollRef.current;
@@ -279,20 +395,44 @@ function ThreadView({ thread, conversationId, participantId }: { thread: IgThrea
       <div className="h-14 flex-none flex items-center gap-3 px-4 border-b border-[var(--w-line-alternative)]">
         <Avatar handle={thread.participantHandle} size={32} />
         <div className="flex flex-col">
-          <span style={{ font: "600 14px/1.3 var(--w-font-sans)", color: "var(--w-fg-strong)" }}>@{thread.participantHandle}</span>
-          <span style={{ font: "500 11.5px/1 var(--w-font-sans)", color: "var(--w-fg-neutral)" }}>메시지 {thread.messages.length}건</span>
+          <span
+            style={{
+              font: "600 14px/1.3 var(--w-font-sans)",
+              color: "var(--w-fg-strong)",
+            }}
+          >
+            @{thread.participantHandle}
+          </span>
+          <span
+            style={{
+              font: "500 11.5px/1 var(--w-font-sans)",
+              color: "var(--w-fg-neutral)",
+            }}
+          >
+            메시지 {thread.messages.length}건
+          </span>
         </div>
       </div>
-      <div ref={scrollRef} className="flex-1 overflow-y-auto py-5 px-5 flex flex-col gap-4">
+      <div
+        ref={scrollRef}
+        className="flex-1 overflow-y-auto py-5 px-5 flex flex-col gap-4"
+      >
         {thread.messages.length === 0 ? (
-          <div className="flex-1 grid place-items-center text-[var(--w-fg-neutral)]" style={{ font: "500 13px/1 var(--w-font-sans)" }}>
+          <div
+            className="flex-1 grid place-items-center text-[var(--w-fg-neutral)]"
+            style={{ font: "500 13px/1 var(--w-font-sans)" }}
+          >
             메시지가 없어요.
           </div>
         ) : (
-          thread.messages.map(m => <MessageBubble key={m.id} m={m} />)
+          thread.messages.map((m) => <MessageBubble key={m.id} m={m} />)
         )}
       </div>
-      <Composer conversationId={conversationId} participantId={participantId} isMock={thread.mock} />
+      <Composer
+        conversationId={conversationId}
+        participantId={participantId}
+        isMock={thread.mock}
+      />
     </div>
   );
 }
@@ -315,16 +455,16 @@ export default function Messages() {
     es.addEventListener("message", (e) => {
       try {
         const event = JSON.parse(e.data) as {
-          type: string
-          conversationId: string
+          type: string;
+          conversationId: string;
           message: {
-            id: string
-            from_me: boolean
-            text: string
-            attachment_url?: string
-            created_at: string
-            participant_id: string
-          }
+            id: string;
+            from_me: boolean;
+            text: string;
+            attachment_url?: string;
+            created_at: string;
+            participant_id: string;
+          };
         };
         if (event.type !== "dm_new_message") return;
 
@@ -335,9 +475,10 @@ export default function Messages() {
           attachmentImageUrl: event.message.attachment_url,
           createdAt: event.message.created_at,
         };
-        const preview = event.message.text.length > 70
-          ? `${event.message.text.slice(0, 69)}…`
-          : event.message.text;
+        const preview =
+          event.message.text.length > 70
+            ? `${event.message.text.slice(0, 69)}…`
+            : event.message.text;
 
         // 스레드 캐시에 메시지 append
         qc.setQueryData<IgThread>(["ig-thread", event.conversationId], (old) =>
@@ -364,7 +505,9 @@ export default function Messages() {
     return (
       <Card className="flex flex-col items-center gap-3 py-10 px-5 text-[var(--w-fg-neutral)]">
         <div className="rounded-full border-[2.4px] border-[var(--w-line-normal)] border-t-[var(--w-primary-normal)] animate-[spin_0.85s_linear_infinite] w-[18px] h-[18px]" />
-        <span style={{ font: "500 13px/1 var(--w-font-sans)" }}>메시지함을 불러오는 중…</span>
+        <span style={{ font: "500 13px/1 var(--w-font-sans)" }}>
+          메시지함을 불러오는 중…
+        </span>
       </Card>
     );
   }
@@ -379,7 +522,7 @@ export default function Messages() {
 
   const inbox = inboxQ.data;
   const conversations = inbox.conversations;
-  const selectedConv = conversations.find(c => c.id === selected) ?? null;
+  const selectedConv = conversations.find((c) => c.id === selected) ?? null;
 
   return (
     <div className="flex flex-col gap-3">
@@ -388,20 +531,33 @@ export default function Messages() {
         <div className="flex" style={{ minHeight: 520 }}>
           <div className="w-[340px] flex-none border-r border-[var(--w-line-alternative)] flex flex-col">
             <div className="h-14 flex-none px-4 border-b border-[var(--w-line-alternative)] flex items-center justify-between">
-              <span style={{ font: "600 13.5px/1.3 var(--w-font-sans)", color: "var(--w-fg-strong)" }}>
+              <span
+                style={{
+                  font: "600 13.5px/1.3 var(--w-font-sans)",
+                  color: "var(--w-fg-strong)",
+                }}
+              >
                 메시지함
               </span>
-              <span style={{ font: "500 11.5px/1 var(--w-font-sans)", color: "var(--w-fg-neutral)" }}>
+              <span
+                style={{
+                  font: "500 11.5px/1 var(--w-font-sans)",
+                  color: "var(--w-fg-neutral)",
+                }}
+              >
                 {conversations.length}건
               </span>
             </div>
             <div className="flex-1 overflow-y-auto py-2 px-2 flex flex-col gap-1">
               {conversations.length === 0 ? (
-                <div className="flex-1 grid place-items-center text-center px-4 text-[var(--w-fg-neutral)]" style={{ font: "500 13px/1.5 var(--w-font-sans)" }}>
+                <div
+                  className="flex-1 grid place-items-center text-center px-4 text-[var(--w-fg-neutral)]"
+                  style={{ font: "500 13px/1.5 var(--w-font-sans)" }}
+                >
                   아직 받은 메시지가 없어요.
                 </div>
               ) : (
-                conversations.map(c => (
+                conversations.map((c) => (
                   <ConversationRow
                     key={c.id}
                     c={c}
@@ -412,7 +568,10 @@ export default function Messages() {
               )}
             </div>
           </div>
-          <ThreadPanel conversationId={selected} participantId={selectedConv?.participantId ?? ""} />
+          <ThreadPanel
+            conversationId={selected}
+            participantId={selectedConv?.participantId ?? ""}
+          />
         </div>
       </Card>
     </div>

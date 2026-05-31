@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { selectOutcome } from "./outcome-routing";
+import { selectOutcome, objectiveOf, ctaDefaultOf, isBoost, goalDefOf } from "./outcome-routing";
+import { OBJECTIVES_ALL } from "./options";
 
 // 회귀 안전망 — PRD §13.10 single-select 모델.
 // (a) 같은 chip 재선택 → 해제
@@ -70,5 +71,28 @@ describe("selectOutcome", () => {
     expect(result.outcome).toBe("engagement_page_likes");
     expect(result.objective).toBe("OUTCOME_ENGAGEMENT");
     expect(result.cta).toBe("like_page");
+  });
+});
+
+// 단일 source 가드 — 구 평면 Record(OUTCOME_TO_*)가 무가드 중복이던 자리.
+// selector 는 OBJECTIVES_ALL 만 읽으므로 모든 chip 이 자기 엔트리 값으로 해소돼야 한다.
+describe("outcome selectors (단일 source = OBJECTIVES_ALL)", () => {
+  it("모든 chip 의 objectiveOf/ctaDefaultOf/goalDefOf 가 엔트리와 일치", () => {
+    for (const g of OBJECTIVES_ALL) {
+      expect(objectiveOf(g.id)).toBe(g.metaObjective);
+      expect(ctaDefaultOf(g.id)).toBe(g.defaultCta);
+      expect(goalDefOf(g.id)).toBe(g);
+    }
+  });
+
+  it("null outcome → null 도출", () => {
+    expect(objectiveOf(null)).toBeNull();
+    expect(goalDefOf(null)).toBeNull();
+    expect(isBoost(null)).toBe(false);
+  });
+
+  it("isBoost 는 boost_post 에만 true", () => {
+    expect(isBoost("boost_post")).toBe(true);
+    expect(isBoost("traffic")).toBe(false);
   });
 });

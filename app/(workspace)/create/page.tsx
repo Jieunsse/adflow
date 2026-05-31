@@ -17,6 +17,7 @@ import Icon from "@shared/ui/Icon";
 import { useToast } from "@shared/ui/Toast";
 import { useLibrary } from "@shared/lib/library";
 import { TONES, CTAS, OBJECTIVES_ALL, type CtaId, type CopyHook } from "@entities/creative/options";
+import { isBoost } from "@entities/creative/outcome-routing";
 import Stepper from "./_components/Stepper";
 import GoalIntro from "@widgets/goal-intro";
 import CreativeStep from "@widgets/creative-step";
@@ -423,7 +424,7 @@ export default function CreatePage() {
       {showIntro ? (
         <GoalIntro onNext={() => {
           setIntroCompleted(true);
-          setStep(creative.state.outcome === 'boost_post' ? 1 : 0);
+          setStep(isBoost(creative.state.outcome) ? 1 : 0);
         }} />
       ) : (
         <>

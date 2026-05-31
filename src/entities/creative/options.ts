@@ -51,41 +51,12 @@ export const CTA_META_TYPE: Record<CtaId, string> = {
   call: 'CALL_NOW',
 }
 
-// 아웃컴 칩 선택 시 자동으로 결정되는 default CTA — 디테일 모드 유저는 STEP 02 에서 override 가능.
-// 매핑 키는 ObjectiveId (== OutcomeChip). 신규 goal 4개는 각자 맞는 CTA 로 지정.
-export const OUTCOME_TO_CTA: Record<string, CtaId> = {
-  traffic:               'learn',     // LEARN_MORE — 사이트 방문 유도
-  traffic_page_visit:    'learn',     // LEARN_MORE — 페이지 방문 유도
-  engagement:            'learn',     // LEARN_MORE — 게시물 참여
-  engagement_page_likes: 'like_page', // LIKE_PAGE — 페이지 팔로우
-  engagement_messages:   'message',   // MESSAGE_PAGE — 메시지 받기
-  leads_call:            'call',      // CALL_NOW — 전화 받기
-  boost_post:            'learn',     // LEARN_MORE — 콘텐츠 홍보 (Boost Post)
-  awareness:             'learn',     // LEARN_MORE — 인지도
-  leads:                 'buy',       // SHOP_NOW — 잠재고객 Instant Form (Phase 2)
-  sales:                 'buy',       // SHOP_NOW — 매출 (Phase 2)
-  app_promotion:         'buy',       // SHOP_NOW — 앱 설치 (Phase 2)
-}
-
 // 도메인 어휘 — .document/CONTEXT.md §Outcome / §Campaign Objective.
 // Outcome = STEP 01 사용자 입력 칩 (Phase 1 7 + Phase 2 3 = 10 종). Objective = 그 매핑 결과 (Meta enum).
+// chip → Meta objective / default CTA 매핑은 OBJECTIVES_PHASE1[].metaObjective / .defaultCta 가 단일 source.
+// 파생 룩업·selector 는 entities/creative/outcome-routing.ts.
 export type OutcomeChip = ObjectiveId
 export type Objective = MetaObjective
-
-// 아웃컴 칩 → Meta Campaign Objective 매핑. N:1 — 한 Meta objective 가 여러 chip 으로 표현될 수 있음.
-export const OUTCOME_TO_OBJECTIVE: Record<OutcomeChip, Objective> = {
-  traffic:               'OUTCOME_TRAFFIC',
-  traffic_page_visit:    'OUTCOME_TRAFFIC',
-  engagement:            'OUTCOME_ENGAGEMENT',
-  engagement_page_likes: 'OUTCOME_ENGAGEMENT',
-  engagement_messages:   'OUTCOME_ENGAGEMENT',
-  leads_call:            'OUTCOME_LEADS',
-  boost_post:            'OUTCOME_ENGAGEMENT',
-  awareness:             'OUTCOME_AWARENESS',
-  leads:                 'OUTCOME_LEADS',
-  sales:                 'OUTCOME_SALES',
-  app_promotion:         'OUTCOME_APP_PROMOTION',
-}
 
 export const IMAGE_ART: Record<ImageId, string> = {
   img1: 'art-cyan',

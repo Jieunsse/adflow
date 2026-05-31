@@ -11,7 +11,8 @@ import { useLaunchDraft, type LaunchParams, type LaunchResponse } from "@entitie
 import { saveLaunchedCampaign } from "@entities/campaign/launched-storage";
 import { createBrowseCampaign } from "@entities/campaign/browse/seed";
 import type { MetaObjectiveParam } from "@/lib/meta-ads";
-import { OBJECTIVES_PHASE1, type ObjectivePhase1Id } from "@entities/creative/options";
+import { type ObjectivePhase1Id } from "@entities/creative/options";
+import { isBoost, goalDefOf } from "@entities/creative/outcome-routing";
 import { LAUNCH_PROFILES } from "@entities/launch-objective/profile";
 import { useApiMutation } from "@shared/lib/api/useApiMutation";
 import { addNotification } from "@shared/lib/notifications";
@@ -69,8 +70,8 @@ export default function LaunchStep({ onNext, goSettings, goCreative, brandName }
   const showToast = useToast();
 
   const outcomeChip = creative.state.outcome;
-  const isBoostPost = outcomeChip === "boost_post";
-  const goalDef = outcomeChip ? OBJECTIVES_PHASE1.find((g) => g.id === outcomeChip) : null;
+  const isBoostPost = isBoost(outcomeChip);
+  const goalDef = goalDefOf(outcomeChip);
   const profile = outcomeChip && outcomeChip in LAUNCH_PROFILES
     ? LAUNCH_PROFILES[outcomeChip as ObjectivePhase1Id]
     : null;
@@ -83,8 +84,8 @@ export default function LaunchStep({ onNext, goSettings, goCreative, brandName }
     prevOutcomeRef.current = outcomeChip;
     if (prev === null || outcomeChip === null) return;
     dispatch({ type: "MIGRATE_FOR_OBJECTIVE_CHANGE" });
-    const prevLabel = OBJECTIVES_PHASE1.find((o) => o.id === prev)?.label ?? prev;
-    const nextLabel = OBJECTIVES_PHASE1.find((o) => o.id === outcomeChip)?.label ?? outcomeChip;
+    const prevLabel = goalDefOf(prev)?.label ?? prev;
+    const nextLabel = goalDefOf(outcomeChip)?.label ?? outcomeChip;
     showToast(`목표 변경됨: ${prevLabel} → ${nextLabel}. URL·고유 설정이 새 목표에 맞게 초기화됐어요.`);
   }, [outcomeChip, dispatch, showToast]);
 

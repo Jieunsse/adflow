@@ -72,6 +72,7 @@ export default function InputForm(p: Props) {
   const [showNoBrandProfileModal, setShowNoBrandProfileModal] = useState(false);
   const [showQuickCreate, setShowQuickCreate] = useState(false);
   const [showProfilePicker, setShowProfilePicker] = useState(false);
+  const [showPersonaModal, setShowPersonaModal] = useState(false);
 
   useEffect(() => {
     if (status === "loading" || browseMode || hasBrandProfile) return;
@@ -106,7 +107,17 @@ export default function InputForm(p: Props) {
   const prevLabel = prevOutcome ? OBJECTIVES_PHASE1.find((o) => o.id === prevOutcome)?.label ?? prevOutcome : "";
 
   const brandValue = isProfileMode ? bpBrand : p.brand;
-  const generateDisabled = p.generating || !brandValue.trim() || (!p.target.trim() && !p.personaId);
+  // 프로필 모드 + 페르소나 셀렉터가 있으면 페르소나가 오디언스 입력 — target 텍스트(데모 시드)에 의존하지 않음.
+  const personaRequired = isProfileMode && personas.length > 0;
+  const generateDisabled = p.generating || !brandValue.trim() || (!personaRequired && !p.target.trim());
+
+  const handleGenerate = () => {
+    if (personaRequired && !p.personaId) {
+      setShowPersonaModal(true);
+      return;
+    }
+    p.onGenerate();
+  };
 
   const profileName =
     profiles.find((pr) => pr.id === activeId)?.name ??
@@ -328,7 +339,7 @@ export default function InputForm(p: Props) {
                 새 목표에 맞게 다시 만드는 걸 추천해요.
               </p>
               <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
-                <Button variant="primary" size="sm" type="button" onClick={p.onGenerate} disabled={generateDisabled}>
+                <Button variant="primary" size="sm" type="button" onClick={handleGenerate} disabled={generateDisabled}>
                   <Icon name="sparkles" size={12} /> 다시 생성
                 </Button>
                 <Button variant="ghost" size="sm" type="button" onClick={() => creative.dispatch({ type: "CLEAR_PREVIOUS_OUTCOME" })}>
@@ -505,7 +516,7 @@ export default function InputForm(p: Props) {
           <span style={{ display: "inline-flex", alignItems: "center", gap: 6, font: "500 12px/1 var(--w-font-sans)", color: "var(--w-fg-normal)" }}>
             <Icon name="sparkles" size={14} style={{ color: "var(--w-accent-violet)" }} /> Gemini로 카피 생성
           </span>
-          <Button variant="primary" type="button" onClick={p.onGenerate} disabled={generateDisabled}>
+          <Button variant="primary" type="button" onClick={handleGenerate} disabled={generateDisabled}>
             {p.generating ? (
               <>
                 <div className="rounded-full border-[2.4px] border-[var(--w-line-normal)] border-t-[var(--w-primary-normal)] animate-[spin_0.85s_linear_infinite] w-[14px] h-[14px]" />
@@ -559,6 +570,56 @@ export default function InputForm(p: Props) {
                 style={{ width: "100%" }}
               >
                 이번만 직접 입력
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 페르소나 미선택 모달 — 카피 생성 차단 안내 */}
+      {showPersonaModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="w-full max-w-[400px] mx-4 rounded-2xl bg-[var(--w-bg-elevated)] shadow-[0_8px_32px_rgba(0,0,0,0.18)] p-7 flex flex-col gap-5">
+            <div className="flex flex-col gap-2">
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center"
+                style={{ background: "rgba(0,102,255,0.08)", color: "var(--w-primary-press)" }}
+              >
+                <Icon name="sparkles" size={20} />
+              </div>
+              <h3 className="m-0 font-bold text-[17px] leading-[1.3] tracking-[-0.012em] text-[var(--w-fg-strong)]">
+                페르소나를 먼저 선택해주세요
+              </h3>
+              <p className="m-0 font-medium text-[13.5px] leading-[1.6] text-[var(--w-fg-neutral)]">
+                누구에게 보여줄 광고인지 정해야
+                <br />
+                AI가 그 사람의 언어로 카피를 만들어요.
+              </p>
+            </div>
+            <div className="flex flex-col gap-2">
+              <Button
+                variant="primary"
+                size="lg"
+                type="button"
+                onClick={() => {
+                  setContextExpanded(true);
+                  setShowPersonaModal(false);
+                }}
+                style={{ width: "100%" }}
+              >
+                페르소나 선택하기
+              </Button>
+              <Button
+                variant="ghost"
+                size="lg"
+                type="button"
+                onClick={() => {
+                  setShowPersonaModal(false);
+                  setShowQuickCreate(true);
+                }}
+                style={{ width: "100%" }}
+              >
+                새 페르소나 만들기
               </Button>
             </div>
           </div>

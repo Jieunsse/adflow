@@ -329,7 +329,88 @@ const BILLING_FIELDS = [
   'funding_source_details',
 ].join(',')
 
+// ADR-038 §4 — ad study(SPLIT_TEST) 결과. Meta 가 셀별 유의성·winner 를 판정한다(엔진 z-검정 대신 채택).
+// 결과 JSON 형태는 버전·계정마다 편차가 있어 관대하게 파싱: 결과 엔트리가 하나도 없으면 "진행 중"(null)으로
+// 보고 cron 이 다음 폴에서 재시도, 결과가 있으면 유의 winner 셀(A/B)과 confidence 를 뽑는다.
+interface RawAdStudyResultEntry {
+  cell?: string
+  cell_name?: string
+  name?: string
+  winner?: boolean
+  is_winner?: boolean
+  is_significant?: boolean
+  significant?: boolean
+  confidence?: number | string
+  p_value?: number | string
+}
+interface RawAdStudyCell {
+  name?: string
+  results?: RawAdStudyResultEntry[] | { data?: RawAdStudyResultEntry[] }
+}
+interface RawAdStudy {
+  id?: string
+  cells?: { data?: RawAdStudyCell[] }
+  results?: RawAdStudyResultEntry[] | { data?: RawAdStudyResultEntry[] }
+}
+
+function toEntryArray(r: RawAdStudyResultEntry[] | { data?: RawAdStudyResultEntry[] } | undefined): RawAdStudyResultEntry[] {
+  if (!r) return []
+  return Array.isArray(r) ? r : (r.data ?? [])
+}
+
+// 셀 이름을 A/B 로 정규화 — 'A' / 'Cell A' / 'B안' 등 흔한 표기 흡수. 매칭 실패 시 null.
+function normalizeCell(name: string | undefined): 'A' | 'B' | null {
+  const s = (name ?? '').toUpperCase()
+  if (/\bA\b|^A|CELL A|챔피언/.test(s)) return 'A'
+  if (/\bB\b|^B|CELL B|챌린저/.test(s)) return 'B'
+  return null
+}
+
+function toConfidence(e: RawAdStudyResultEntry, significant: boolean): number {
+  const conf = e.confidence != null ? Number(e.confidence) : NaN
+  if (Number.isFinite(conf)) return Math.min(Math.max(conf > 1 ? conf / 100 : conf, 0), 1)
+  const p = e.p_value != null ? Number(e.p_value) : NaN
+  if (Number.isFinite(p)) return Math.min(Math.max(1 - (p > 1 ? p / 100 : p), 0), 1)
+  return significant ? 0.95 : 0.5
+}
+
+function parseAdStudyResult(data: RawAdStudy): { winner: 'A' | 'B' | null; confidence: number } | null {
+  // 모든 결과 엔트리 수집 (top-level results + 셀별 results). 셀 이름은 엔트리 자체 or 부모 셀에서.
+  const entries: Array<{ cell: 'A' | 'B' | null; e: RawAdStudyResultEntry }> = []
+  for (const e of toEntryArray(data.results)) {
+    entries.push({ cell: normalizeCell(e.cell ?? e.cell_name ?? e.name), e })
+  }
+  for (const cell of data.cells?.data ?? []) {
+    const cellName = normalizeCell(cell.name)
+    for (const e of toEntryArray(cell.results)) {
+      entries.push({ cell: normalizeCell(e.cell ?? e.cell_name ?? e.name) ?? cellName, e })
+    }
+  }
+  if (entries.length === 0) return null // 결과 미생성 = 스터디 진행 중
+
+  const sig = (e: RawAdStudyResultEntry) => e.winner === true || e.is_winner === true || e.is_significant === true || e.significant === true
+  const winnerEntry = entries.find((x) => sig(x.e) && x.cell !== null)
+  if (winnerEntry) {
+    return { winner: winnerEntry.cell, confidence: toConfidence(winnerEntry.e, true) }
+  }
+  // 유의 winner 없음 = inconclusive(챔피언 방어). confidence 는 보고된 값 중 최대 or 0.5.
+  const conf = entries.reduce((m, x) => Math.max(m, toConfidence(x.e, false)), 0.5)
+  return { winner: null, confidence: conf }
+}
+
 export const metaAdsInsights = {
+  // ADR-038 §4 — ad study 의 Meta 유의성 결과. null=진행 중(폴 재시도), winner=null=inconclusive(챔피언 방어).
+  async getSplitTestResult(studyId: string, token: string): Promise<{ winner: 'A' | 'B' | null; confidence: number } | null> {
+    try {
+      const data = await graphFetch<RawAdStudy>(
+        `/${studyId}?fields=id,results,cells{name,results}&access_token=${token}`,
+      )
+      return parseAdStudyResult(data)
+    } catch {
+      return null
+    }
+  },
+
   async checkAccount(token: string, accountId: string): Promise<AccountStatus> {
     const data = await graphFetch<{
       name: string

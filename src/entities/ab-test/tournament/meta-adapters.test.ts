@@ -4,10 +4,10 @@ import { createMetaKpiSource } from "./meta-kpi-source";
 import type { Tournament, TourRound, TournamentDelivery } from "./engine";
 
 vi.mock("@/lib/meta-ads-campaign", () => ({
-  metaAdsCampaign: { createCampaign: vi.fn() },
+  metaAdsCampaign: { createSplitTestStudy: vi.fn() },
 }));
 vi.mock("@/lib/meta-ads-insights", () => ({
-  metaAdsInsights: { getInsights: vi.fn() },
+  metaAdsInsights: { getInsights: vi.fn(), getSplitTestResult: vi.fn() },
 }));
 
 import { metaAdsCampaign } from "@/lib/meta-ads-campaign";
@@ -41,14 +41,16 @@ function round(over: Partial<TourRound> = {}): TourRound {
 describe("createMetaRoundLauncher", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("헤드라인 축 라운드를 A/B 2광고로 게재하고 adIds 를 반환한다", async () => {
-    vi.mocked(metaAdsCampaign.createCampaign).mockResolvedValue({
-      campaignId: "camp_9", adSetId: "as_9", adIds: ["ad_A", "ad_B"],
+  it("헤드라인 축 라운드를 ad_studies SPLIT_TEST 로 게재하고 study·adset·ad ID 를 반환한다", async () => {
+    vi.mocked(metaAdsCampaign.createSplitTestStudy).mockResolvedValue({
+      campaignId: "camp_9", adSetIds: ["as_A", "as_B"], adIds: ["ad_A", "ad_B"], studyId: "study_1",
     });
     const res = await createMetaRoundLauncher().launch(tour(), round());
 
-    expect(res).toEqual({ campaignId: "camp_9", adIds: ["ad_A", "ad_B"] });
-    const [params, token, accountId, pageId] = vi.mocked(metaAdsCampaign.createCampaign).mock.calls[0];
+    expect(res).toEqual({
+      campaignId: "camp_9", adIds: ["ad_A", "ad_B"], adSetIds: ["as_A", "as_B"], studyId: "study_1",
+    });
+    const [params, token, accountId, pageId] = vi.mocked(metaAdsCampaign.createSplitTestStudy).mock.calls[0];
     expect(token).toBe("tok");
     expect(accountId).toBe("act_1");
     expect(pageId).toBe("page_1");
@@ -59,25 +61,20 @@ describe("createMetaRoundLauncher", () => {
   });
 
   it("카피 축이면 variantB 가 primary_text 로 간다", async () => {
-    vi.mocked(metaAdsCampaign.createCampaign).mockResolvedValue({
-      campaignId: "c", adSetId: "a", adIds: ["x", "y"],
+    vi.mocked(metaAdsCampaign.createSplitTestStudy).mockResolvedValue({
+      campaignId: "c", adSetIds: ["x1", "y1"], adIds: ["x", "y"], studyId: "s",
     });
     await createMetaRoundLauncher().launch(
       tour(),
       round({ challenger: { headline: "촉촉 세럼", primaryText: "지금 50% 할인" } }),
     );
-    const [params] = vi.mocked(metaAdsCampaign.createCampaign).mock.calls[0];
+    const [params] = vi.mocked(metaAdsCampaign.createSplitTestStudy).mock.calls[0];
     expect(params.abTestAxis).toBe("primary_text");
     expect(params.abTestVariantB).toEqual({ axis: "primary_text", primaryText: "지금 50% 할인" });
   });
 
   it("delivery 없으면 던진다", async () => {
     await expect(createMetaRoundLauncher().launch(tour({ delivery: undefined }), round())).rejects.toThrow();
-  });
-
-  it("adIds 가 없으면(개발모드 등) 던진다", async () => {
-    vi.mocked(metaAdsCampaign.createCampaign).mockResolvedValue({ campaignId: "c", adSetId: "a" });
-    await expect(createMetaRoundLauncher().launch(tour(), round())).rejects.toThrow();
   });
 });
 
@@ -111,5 +108,44 @@ describe("createMetaKpiSource", () => {
       { ctr: 0, impressions: 0, clicks: 0, spend: 0 },
     ]);
     expect(metaAdsInsights.getInsights).not.toHaveBeenCalled();
+  });
+});
+
+const CELL_KPIS: [import("@entities/insights/ab-verdict").AdKpi, import("@entities/insights/ab-verdict").AdKpi] = [
+  { ctr: 1.5, impressions: 10000, clicks: 150, spend: 100000 },
+  { ctr: 2.5, impressions: 10000, clicks: 250, spend: 100000 },
+];
+
+describe("createMetaKpiSource.roundVerdict (Meta verdict 채택)", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("studyId 없으면 null (게재 전)", async () => {
+    const v = await createMetaKpiSource().roundVerdict!(tour(), round(), CELL_KPIS);
+    expect(v).toBeNull();
+    expect(metaAdsInsights.getSplitTestResult).not.toHaveBeenCalled();
+  });
+
+  it("스터디 미확정(null)이면 null → 결산 보류", async () => {
+    vi.mocked(metaAdsInsights.getSplitTestResult).mockResolvedValue(null);
+    const v = await createMetaKpiSource().roundVerdict!(tour(), round({ studyId: "s1" }), CELL_KPIS);
+    expect(v).toBeNull();
+  });
+
+  it("B 셀 유의 winner → winner verdict + winner B", async () => {
+    vi.mocked(metaAdsInsights.getSplitTestResult).mockResolvedValue({ winner: "B", confidence: 0.94 });
+    const v = await createMetaKpiSource().roundVerdict!(tour(), round({ studyId: "s1" }), CELL_KPIS);
+    expect(v).toEqual({
+      verdict: { state: "winner", ctrA: 1.5, ctrB: 2.5, confidence: 0.94 },
+      winner: "B",
+    });
+  });
+
+  it("유의 winner 없음(null)이면 inconclusive + 챔피언 방어(A)", async () => {
+    vi.mocked(metaAdsInsights.getSplitTestResult).mockResolvedValue({ winner: null, confidence: 0.6 });
+    const v = await createMetaKpiSource().roundVerdict!(tour(), round({ studyId: "s1" }), CELL_KPIS);
+    expect(v).toEqual({
+      verdict: { state: "inconclusive", ctrA: 1.5, ctrB: 2.5, confidence: 0.6 },
+      winner: "A",
+    });
   });
 });

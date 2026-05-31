@@ -21,6 +21,7 @@ import {
   type TourVariant,
   type TourRound,
   type TournamentDelivery,
+  type SettleResult,
 } from "./engine";
 
 type CreativeGen = { headlines: string[]; primaryTexts: string[] };
@@ -174,9 +175,11 @@ export function createServerRunner(deps: {
       fastForwardDays: 0,
       status: "running",
     };
-    const { campaignId, adIds } = await launcher.launch(t, round);
+    const { campaignId, adIds, adSetIds, studyId } = await launcher.launch(t, round);
     round.campaignId = campaignId;
     round.adIds = adIds;
+    round.adSetIds = adSetIds;
+    round.studyId = studyId;
     round.launchedAt = new Date(now()).toISOString();
     t.rounds = [...t.rounds, round];
     t.pendingChallenger = undefined;
@@ -201,8 +204,17 @@ export function createServerRunner(deps: {
     if (!r) return { status: "no-active" };
 
     const kpis = await kpiSource.roundKpis(t, r);
-    const result = judgeRoundKpis(kpis, elapsedDays(r, now()));
-    if (result.verdict.state === "insufficient") return { status: "insufficient" };
+    // ADR §4 정석 — ad study 의 Meta verdict 우선. 미확정(진행 중)이면 결산 보류, 다음 폴 재시도.
+    // roundVerdict 미구현 어댑터(데모/폴백)는 엔진 z-검정으로 판정.
+    let result: SettleResult;
+    if (kpiSource.roundVerdict) {
+      const mv = await kpiSource.roundVerdict(t, r, kpis);
+      if (!mv) return { status: "insufficient" };
+      result = { kpis, verdict: mv.verdict, rawWinner: mv.verdict.state === "winner" ? mv.winner : "A" };
+    } else {
+      result = judgeRoundKpis(kpis, elapsedDays(r, now()));
+      if (result.verdict.state === "insufficient") return { status: "insufficient" };
+    }
 
     r.verdict = result.verdict;
     r.rawWinner = result.rawWinner;

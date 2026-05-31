@@ -1,10 +1,9 @@
-// 실 게재 어댑터 (ADR-038 결정 4) — server-side only. 한 라운드 = 챔피언(A) vs 챌린저(B)
-// 2광고를 한 AdSet 에 게재. axis(헤드라인|카피)만 갈리고 나머지 필드는 공유한다.
+// 실 게재 어댑터 (ADR-038 결정 4) — server-side only. 한 라운드 = 챔피언(A) vs 챌린저(B)를
+// ad_studies SPLIT_TEST 로 게재한다: 셀 A·B 를 각각 독립 AdSet 으로 만들고 Meta 가 청중을 50/50
+// 분할·자체 유의성 winner 를 판정한다(ADR §4 정석). axis(헤드라인|카피)만 갈리고 나머지 필드는 공유.
 //
-// ADR §4 는 Meta ad study(SPLIT_TEST)+Meta verdict 를 정석으로 두지만, adstudy verdict 왕복은
-// 실계정 1회 검증 전까지 머지 보류다(§4 검증게이트). 그 전 경로 = 동일 AdSet 2광고 + 셀 insights
-// z-검정 폴백(meta-kpi-source → engine.settleRound). 검증된 createCampaign A/B 분기를 그대로 재사용한다.
-// 검증 통과 시 이 launch 만 /act_X/ad_studies 게재로 교체하면 KpiSource·엔진은 불변.
+// 판정은 Meta verdict 채택 — KpiSource.roundVerdict 가 studyId 로 ad study 결과를 읽어 엔진에 넘긴다
+// (z-검정 폴백 대체). studyId·adSetIds 는 라운드에 박혀 cron 폴러가 세션 없이 결산한다.
 
 import { metaAdsCampaign, type AbTestVariantBParam } from "@/lib/meta-ads-campaign";
 import type { ObjectivePhase1Id } from "@entities/creative/options";
@@ -32,7 +31,7 @@ export function createMetaRoundLauncher(): RoundLauncher {
       const rawAxis = deriveAxis(round.champion, round.challenger);
       const axis = rawAxis === "image" ? "headline" : rawAxis;
 
-      const result = await metaAdsCampaign.createCampaign(
+      const result = await metaAdsCampaign.createSplitTestStudy(
         {
           headline: round.champion.headline,
           primaryText: round.champion.primaryText,
@@ -58,8 +57,12 @@ export function createMetaRoundLauncher(): RoundLauncher {
         d.pageId,
       );
 
-      if (!result.adIds) throw new Error("A/B 광고 2개 생성에 실패했어요. 광고 계정 권한을 확인해주세요.");
-      return { campaignId: result.campaignId, adIds: result.adIds };
+      return {
+        campaignId: result.campaignId,
+        adIds: result.adIds,
+        adSetIds: result.adSetIds,
+        studyId: result.studyId,
+      };
     },
   };
 }

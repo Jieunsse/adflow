@@ -26,6 +26,8 @@ export type TourRound = {
   rawWinner?: "A" | "B"; // 승격 결과 — "B"=챌린저 유의 승격 / "A"=챔피언 방어(유의 승리 or inconclusive) (ADR-037)
   adKpis?: [AdKpi, AdKpi]; // 결산 시점 광고별 성과 스냅샷 (표시용)
   adIds?: [string, string]; // 실 게재 라운드의 챔피언(A)·챌린저(B) 광고 ID — KpiSource insights 키. 데모는 미사용
+  adSetIds?: [string, string]; // ad_studies SPLIT_TEST 셀별 AdSet(A=챔피언·B=챌린저). 데모는 미사용
+  studyId?: string; // Meta ad study(SPLIT_TEST) ID — KpiSource 가 Meta verdict 를 조회하는 키. 데모는 미사용
   launchedAt?: string; // 실 게재 시각 ISO — cron 이 MIN_ROUND_DAYS 경과 판정에 사용. 데모는 fastForwardDays 사용
   status: "running" | "settled";
 };

@@ -129,6 +129,47 @@ describe("createServerRunner", () => {
     expect(t?.champion).toEqual(round?.challenger);
   });
 
+  it("roundVerdict(Meta verdict) 가 B winner 면 z-검정 무관하게 settle + 챔피언 교체", async () => {
+    kpiSource = {
+      roundKpis: vi.fn().mockResolvedValue([
+        { ctr: 1.5, impressions: 100, clicks: 2, spend: 1000 }, // 노출 적어 z-검정이면 insufficient/무의미
+        { ctr: 2.5, impressions: 100, clicks: 3, spend: 1000 },
+      ]),
+      roundVerdict: vi.fn().mockResolvedValue({
+        verdict: { state: "winner", ctrA: 1.5, ctrB: 2.5, confidence: 0.95 },
+        winner: "B",
+      }),
+    };
+    const r = runner();
+    const id = await r.createTournament(baseSetup());
+    await r.proposeChallenger(id);
+    const round = await r.launchRound(id);
+    nowMs += 1 * 86400000; // 1일 — z-검정이면 MIN_ROUND_DAYS 미달이지만 Meta verdict 우선
+    const res = await r.pollAndSettle(id);
+
+    expect(res.status).toBe("settled");
+    if (res.status === "settled") expect(res.winnerIsB).toBe(true);
+    const t = await store.get(id);
+    expect(t?.champion).toEqual(round?.challenger);
+  });
+
+  it("roundVerdict 가 null(스터디 진행 중)이면 insufficient", async () => {
+    kpiSource = {
+      roundKpis: vi.fn().mockResolvedValue([
+        { ctr: 1.5, impressions: 50000, clicks: 500, spend: 200000 },
+        { ctr: 2.0, impressions: 50000, clicks: 1000, spend: 200000 },
+      ]),
+      roundVerdict: vi.fn().mockResolvedValue(null),
+    };
+    const r = runner();
+    const id = await r.createTournament(baseSetup());
+    await r.proposeChallenger(id);
+    await r.launchRound(id);
+    nowMs += (MIN_ROUND_DAYS + 5) * 86400000; // 기간은 충분하지만 Meta 미확정
+    const res = await r.pollAndSettle(id);
+    expect(res.status).toBe("insufficient");
+  });
+
   it("autoAdvance 는 챔피언 미확정(ai 부트스트랩) 시 게재하지 않는다", async () => {
     const r = runner();
     const id = await r.createTournament(

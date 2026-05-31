@@ -6,6 +6,19 @@ export const GRAPH = 'https://graph.facebook.com/v20.0'
 
 export interface MetaError { error: { message: string; code: number; error_subcode?: number; error_user_msg?: string; error_data?: string } }
 
+// graphFetch 가 던지는 Meta 그래프 에러. message 는 기존 평탄화 문자열 그대로 보존하고
+// code/subcode 를 구조화해 노출 — 호출자가 문자열을 regex 로 재파싱하지 않아도 됨.
+export class MetaApiError extends Error {
+  constructor(
+    message: string,
+    readonly code: number,
+    readonly subcode: number | undefined,
+  ) {
+    super(message)
+    this.name = 'MetaApiError'
+  }
+}
+
 export async function graphFetch<T extends object>(path: string, init: RequestInit = {}): Promise<T> {
   const url = path.startsWith('http') ? path : `${GRAPH}${path}`
   const res = await fetch(url, {
@@ -24,7 +37,11 @@ export async function graphFetch<T extends object>(path: string, init: RequestIn
       e.error_user_msg ?? '',
       e.error_data ? `data=${e.error_data}` : '',
     ].filter(Boolean).join(' | ')
-    throw new Error(`Meta API 오류 (${e.code}): ${e.message}${detail ? ` — ${detail}` : ''}`)
+    throw new MetaApiError(
+      `Meta API 오류 (${e.code}): ${e.message}${detail ? ` — ${detail}` : ''}`,
+      e.code,
+      e.error_subcode,
+    )
   }
   return json as T
 }

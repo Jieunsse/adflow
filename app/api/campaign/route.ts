@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { metaAds, type MetaObjectiveParam, type BidStrategyParam, type PlacementsParam, type PlatformsParam, type AbTestAxisParam, type AbTestVariantBParam } from '@/lib/meta-ads'
+import { metaAds, VALID_OBJECTIVES, type MetaObjectiveParam, type BidStrategyParam, type PlacementsParam, type PlatformsParam, type AbTestAxisParam, type AbTestVariantBParam } from '@/lib/meta-ads'
 import { withMetaSession } from '@/lib/meta-session'
 import { ValidationError } from '@/lib/route-handler'
 import { CTA_META_TYPE, OBJECTIVES_PHASE1, type CtaId, type ObjectivePhase1Id } from '@entities/creative/options'
@@ -35,8 +35,6 @@ async function fetchOgImageAsDataUrl(pageUrl: string): Promise<string | undefine
   }
 }
 
-// PRD §13 — leads_call goal 추가로 OUTCOME_LEADS 도 합법 objective.
-const VALID_OBJECTIVES: ReadonlySet<MetaObjectiveParam> = new Set(['OUTCOME_TRAFFIC', 'OUTCOME_AWARENESS', 'OUTCOME_ENGAGEMENT', 'OUTCOME_LEADS'])
 const VALID_GOAL_IDS: ReadonlySet<string> = new Set(OBJECTIVES_PHASE1.map((g) => g.id))
 const VALID_BID_STRATEGIES: ReadonlySet<BidStrategyParam> = new Set(['LOWEST_COST_WITHOUT_CAP', 'LOWEST_COST_WITH_BID_CAP', 'COST_CAP'])
 const VALID_PLATFORMS: ReadonlySet<PlatformsParam> = new Set(['both', 'facebook', 'instagram'])

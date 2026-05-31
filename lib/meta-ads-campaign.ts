@@ -1,11 +1,15 @@
 // Server-side only — campaign CRUD operations. Do not import from client components.
 
 import { OBJECTIVES_PHASE1, type ObjectivePhase1Id } from '@entities/creative/options'
-import { graphFetch } from './meta-ads-graph'
+import { graphFetch, MetaApiError } from './meta-ads-graph'
 
 // PRD §13 — leads_call goal 추가로 OUTCOME_LEADS 도 합법 objective.
 // 단 leads_form (Phase 2 Instant Form) 은 페이지 ToS · Lead Form 빌더 필요해서 별도 트랙.
 export type MetaObjectiveParam = 'OUTCOME_TRAFFIC' | 'OUTCOME_AWARENESS' | 'OUTCOME_ENGAGEMENT' | 'OUTCOME_LEADS'
+// 라우트 입력 검증용 — MetaObjectiveParam 과 동일 집합의 단일 출처.
+export const VALID_OBJECTIVES: ReadonlySet<MetaObjectiveParam> = new Set([
+  'OUTCOME_TRAFFIC', 'OUTCOME_AWARENESS', 'OUTCOME_ENGAGEMENT', 'OUTCOME_LEADS',
+])
 export type BidStrategyParam = 'LOWEST_COST_WITHOUT_CAP' | 'LOWEST_COST_WITH_BID_CAP' | 'COST_CAP'
 export type PlacementsParam = { mode: 'auto' } | { mode: 'manual'; positions: string[] }
 export type PlatformsParam = 'both' | 'facebook' | 'instagram'
@@ -354,10 +358,6 @@ export const metaAdsCampaign = {
 
       return { campaignId: campaign.id, adSetId: adSet.id, adId: ad.id }
     } catch (err) {
-      // graphFetch 가 MetaError 를 plain Error 메시지로 평탄화하므로 진단용으로 코드/서브코드를 재추출.
-      const errorMessage = err instanceof Error ? err.message : String(err)
-      const codeMatch = errorMessage.match(/오류 \((\d+)\)/)
-      const subcodeMatch = errorMessage.match(/subcode=(\d+)/)
       console.error('[meta-ads] createCampaign failed', {
         campaignId: campaign.id,
         adSetId,
@@ -366,9 +366,9 @@ export const metaAdsCampaign = {
         imageHash,
         pageId,
         accountId,
-        errorCode: codeMatch ? Number(codeMatch[1]) : undefined,
-        errorSubcode: subcodeMatch ? Number(subcodeMatch[1]) : undefined,
-        errorMessage,
+        errorCode: err instanceof MetaApiError ? err.code : undefined,
+        errorSubcode: err instanceof MetaApiError ? err.subcode : undefined,
+        errorMessage: err instanceof Error ? err.message : String(err),
       })
       try {
         await graphFetch<{ success?: boolean }>(`/${campaign.id}?access_token=${token}`, { method: 'DELETE' })
@@ -461,16 +461,13 @@ export const metaAdsCampaign = {
         studyId: study.id,
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : String(err)
-      const codeMatch = errorMessage.match(/오류 \((\d+)\)/)
-      const subcodeMatch = errorMessage.match(/subcode=(\d+)/)
       console.error('[meta-ads] createSplitTestStudy failed', {
         campaignId: campaign.id,
         pageId,
         accountId,
-        errorCode: codeMatch ? Number(codeMatch[1]) : undefined,
-        errorSubcode: subcodeMatch ? Number(subcodeMatch[1]) : undefined,
-        errorMessage,
+        errorCode: err instanceof MetaApiError ? err.code : undefined,
+        errorSubcode: err instanceof MetaApiError ? err.subcode : undefined,
+        errorMessage: err instanceof Error ? err.message : String(err),
       })
       try {
         await graphFetch<{ success?: boolean }>(`/${campaign.id}?access_token=${token}`, { method: 'DELETE' })

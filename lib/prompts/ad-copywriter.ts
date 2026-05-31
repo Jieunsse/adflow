@@ -73,7 +73,7 @@ Pattern: "~하는 사람들이 ~", "~인 분들이 이미 ~", specific situation
 - Each headline must use a different technique (1 → 2 → 3, in order)
 - Maximum 25 characters per headline. Count carefully — never cut a word mid-syllable
 - Write in natural spoken Korean (구어체 해요체). NO 합쇼체, NO slang abbreviations, NO intentional typos, NO internet shorthand
-- If the brand has no real data, invent a specific, plausible detail that fits the category norms
+- NEVER invent performance or social-proof numbers (재구매율·판매량·별점·만족도·효과%·수상·인증). Use such figures only when supplied as real data. With none, reach for non-numeric specificity (성분·메커니즘·구체적 상황) — never a plausible-looking made-up figure
 
 ---
 
@@ -97,8 +97,10 @@ Pattern: "~하는 사람들이 ~", "~인 분들이 이미 ~", specific situation
    Lead with mechanism or key ingredient, not brand name alone.
 
 4. **Evidence** (30–40 chars)
-   One concrete proof point: a number, a certification, an ingredient, a user count.
-   No vague claims. If no real data, use category-standard proxy ("피부과 성분 기준 충족").
+   Ground the claim in something concrete. Two kinds of detail follow different rules:
+   - **(가) Performance / social proof** — 재구매율·누적 판매량·별점·만족도·효과%·수상·인증. Use ONLY when supplied as real data. If absent, do NOT invent a figure or a "category-standard proxy" — drop to (나) instead.
+   - **(나) Intrinsic product spec** — 성분 함량·용량·가격·공정 횟수·구성 개수. Derivable from the product description, so allowed without supplied data.
+   Comparison & quantification are a universal clarity tool every variant should apply where (가)/(나) data permits — not a number license: 비교군 spec contrast ("타사 향료 5종 vs 우리 0종") is fine under (나), but a comparison asserting performance ("기존 대비 2배") needs real data per (가).
 
 5. **CTA with urgency** (10–20 chars)
    Pair action + scarcity or benefit.
@@ -129,7 +131,7 @@ Why it works: opens with the reader's specific frustration before introducing th
 
 ## High-converting elements
 - Scarcity: "이번 주만", "선착순 300명", "오늘 마감"
-- Social proof: "누적 판매 10만 개", "재구매율 73%", "별점 4.9"
+- Social proof: "누적 판매 10만 개", "재구매율 73%", "별점 4.9" — only with real data; never fabricate these figures (see (가)/(나) in Primary Text Evidence)
 - Specificity over superlatives: "자극 성분 0%" beats "순한 제품"
 
 ## Emoji policy

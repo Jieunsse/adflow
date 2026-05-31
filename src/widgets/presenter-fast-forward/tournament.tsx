@@ -9,7 +9,7 @@ import { Button } from "@shared/ui/Button";
 import { useToast } from "@shared/ui/Toast";
 import { roundAdKpis, deriveBeat, AXIS_LABEL, type Tournament } from "@entities/ab-test/tournament/tournament";
 import { resetTournamentDemo } from "@entities/ab-test/tournament/seed";
-import { settleActiveRound, autoAdvanceTournament } from "@entities/ab-test/tournament/runner";
+import { demoSettleRound, demoAutoAdvance } from "@entities/ab-test/tournament/client";
 import { usePresenterConsole } from "@shared/lib/usePresenterConsole";
 import { PresenterConsoleShell, ConsoleBigNumber, ConsoleInfoRow, ConsoleStatusBadge } from "./console-shell";
 
@@ -26,7 +26,7 @@ export default function PresenterTournamentBar({ t }: { t: Tournament }) {
   const fastForward = async () => {
     if (active) {
       // 라이브 라운드 결산만 — 결과를 화면에 남긴 뒤, 다음 +7 에서 다음 챌린저를 게재한다.
-      const res = settleActiveRound(t.id, active.fastForwardDays + 7);
+      const res = await demoSettleRound(t.id, active.fastForwardDays + 7);
       if (res.status === "settled") {
         const who = res.winnerIsB ? "챌린저(B)" : "챔피언(A)";
         const verb = res.winnerIsB ? "우세 — 다음 챔피언으로 승격" : "방어";
@@ -37,7 +37,7 @@ export default function PresenterTournamentBar({ t }: { t: Tournament }) {
       return;
     }
     // ADR-035 — 라이브 라운드가 없을 때만 다음 챌린저를 자동 생성·게재 (무인 체인).
-    if (t.mode === "auto") await autoAdvanceTournament(t.id);
+    if (t.mode === "auto") await demoAutoAdvance(t.id);
   };
 
   const reset = () => {

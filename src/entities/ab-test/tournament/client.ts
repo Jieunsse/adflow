@@ -10,14 +10,41 @@ import {
   confirmChampion,
   proposeChallenger,
   setManualChallenger,
-  launchRound,
   endTournament,
   resolveAnomaly,
   discardPendingChallenger,
   refillEnvelope,
 } from "./runner";
-import { getTournament, listTournaments } from "./tournament";
+import { getTournament, upsertTournament, listTournaments } from "./tournament";
 import type { Tournament, TourVariant } from "./tournament";
+import type { RoundSettleResult } from "./transitions";
+
+// 데모 mutation 을 stateless mock 라우트로 위임 — 현재 tournament 를 보내고 서버가 engine 으로 변형한 결과를
+// localStorage 에 upsert(변경 이벤트 발화)한다. 게재/결산/무인진행이 클라 내부가 아니라 서버에서 돈다.
+async function demoMutate(
+  id: string,
+  body: { action: string; days?: number },
+): Promise<{ tournament: Tournament | null; result?: RoundSettleResult }> {
+  const t = getTournament(id);
+  if (!t) return { tournament: null };
+  const data = await apiJson<{ tournament: Tournament; result?: RoundSettleResult }>("/api/tournaments/demo", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ tournament: t, ...body }),
+  });
+  if (data.tournament) upsertTournament(data.tournament);
+  return data;
+}
+
+// PresenterTournamentBar 전용 — 결산/무인진행을 데모 mock 라우트로 위임(서버에서 engine 실행).
+export async function demoSettleRound(id: string, days: number): Promise<RoundSettleResult> {
+  const { result } = await demoMutate(id, { action: "settle", days });
+  return result ?? { status: "no-active" };
+}
+
+export async function demoAutoAdvance(id: string): Promise<void> {
+  await demoMutate(id, { action: "auto-advance" });
+}
 
 export interface TournamentClient {
   isReal: boolean;
@@ -69,8 +96,8 @@ function demoClient(): TournamentClient {
       return snap(id);
     },
     async launch(id) {
-      launchRound(id);
-      return snap(id);
+      const { tournament } = await demoMutate(id, { action: "launch" });
+      return tournament;
     },
     async end(id) {
       endTournament(id);

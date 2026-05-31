@@ -10,18 +10,18 @@ import {
   upsertTournament,
   newTournamentId,
   nextAxis,
-  deriveAxis,
   buildChallenger,
   initialChampion,
-  settleRound,
   isEnvelopeExhausted,
   detectAnomaly,
-  roundCampaignId,
   type Tournament,
   type TourVariant,
   type TourRound,
   type VariationIntensity,
 } from "./tournament";
+import { applyLaunch, applySettle, type RoundSettleResult } from "./transitions";
+
+export type { RoundSettleResult } from "./transitions";
 
 type CreativeGen = { headlines: string[]; primaryTexts: string[] };
 
@@ -137,23 +137,12 @@ export function setManualChallenger(id: string, variant: TourVariant): void {
   upsertTournament(t);
 }
 
-// 게재 결정 → pending 챌린저를 라운드로 확정 게재. pending 없으면 null.
+// 게재 결정 → pending 챌린저를 라운드로 확정 게재. pending 없으면 null. (순수 로직 = transitions.applyLaunch)
 export function launchRound(id: string): TourRound | null {
   const t = getTournament(id);
-  if (!t || t.status === "completed" || t.rounds.some((r) => r.status === "running") || !t.pendingChallenger) return null;
-  const index = t.rounds.length + 1;
-  const round: TourRound = {
-    index,
-    axis: deriveAxis(t.champion, t.pendingChallenger),
-    campaignId: roundCampaignId(t.id, index),
-    champion: t.champion,
-    challenger: t.pendingChallenger,
-    fastForwardDays: 0,
-    status: "running",
-  };
-  t.rounds = [...t.rounds, round];
-  t.pendingChallenger = undefined;
-  upsertTournament(t);
+  if (!t) return null;
+  const { t: nt, round } = applyLaunch(t);
+  if (round) upsertTournament(nt);
   return round;
 }
 
@@ -166,61 +155,14 @@ export function endTournament(id: string): void {
   upsertTournament(t);
 }
 
-export type RoundSettleResult =
-  | { status: "no-active" }
-  | { status: "insufficient" }
-  | {
-      status: "settled";
-      round: TourRound;
-      winnerIsB: boolean;
-      winnerCtr: number;
-      ctrA: number;
-      ctrB: number;
-      badge: "winner" | "inconclusive";
-      completed: boolean;
-    };
-
-// 활성 라운드를 days 만큼 경과시킨 뒤 결산 + 챔피언 승격 + 봉투 정지 체크.
+// 활성 라운드를 days 만큼 경과시킨 뒤 결산 + 챔피언 승격 + 봉투 정지 체크. (순수 로직 = transitions.applySettle)
 // days=0 이면 현재 누적 fastForwardDays 로 판정 (빨리감기 후 결산용).
 export function settleActiveRound(id: string, days = 0): RoundSettleResult {
   const t = getTournament(id);
   if (!t) return { status: "no-active" };
-  const r = t.rounds.find((x) => x.status === "running");
-  if (!r) return { status: "no-active" };
-
-  r.fastForwardDays = Math.max(r.fastForwardDays, days);
-  const result = settleRound(r, t.championCtr, t.dailyBudget);
-  if (result.verdict.state === "insufficient") {
-    upsertTournament(t); // 누적 ff 저장
-    return { status: "insufficient" };
-  }
-
-  r.verdict = result.verdict;
-  r.rawWinner = result.rawWinner;
-  r.adKpis = result.kpis;
-  r.status = "settled";
-
-  const winnerIsB = result.rawWinner === "B";
-  t.champion = winnerIsB ? r.challenger : r.champion;
-  t.championCtr = winnerIsB ? result.verdict.ctrB : result.verdict.ctrA;
-  t.axisCursor += 1;
-  t.spentBudget += t.dailyBudget * r.fastForwardDays;
-
-  const exhausted = isEnvelopeExhausted(t);
-  // ADR-035 — manual-n 만 봉투 소진 시 즉시 완료. auto 는 winner-handling 브레이크로 surface(사람 처리).
-  if (t.mode === "manual-n" && exhausted) t.status = "completed";
-  upsertTournament(t);
-
-  return {
-    status: "settled",
-    round: r,
-    winnerIsB,
-    winnerCtr: t.championCtr,
-    ctrA: result.verdict.ctrA,
-    ctrB: result.verdict.ctrB,
-    badge: result.verdict.state === "winner" ? "winner" : "inconclusive",
-    completed: exhausted,
-  };
+  const { t: nt, result } = applySettle(t, days);
+  if (result.status !== "no-active") upsertTournament(nt); // insufficient 도 누적 ff 저장
+  return result;
 }
 
 /* ─── ADR-035 무인 루프 + 필요 브레이크 ──────────────────── */

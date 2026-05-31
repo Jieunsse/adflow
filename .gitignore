@@ -53,4 +53,9 @@ next-env.d.ts
 # axhub quality state (local-only)
 .axhub-state/
 
+# local scratch / agent issue tracker
+.scratch/
+# agent auto-memory (personal — do not commit)
+/memory/
+
 certificates

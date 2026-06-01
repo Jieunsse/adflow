@@ -1,0 +1,4994 @@
+{
+  "scriptCompleted": true,
+  "filesAnalyzed": 24,
+  "filesSkipped": [],
+  "results": [
+    {
+      "path": "app/api/cron/health/route.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 41,
+      "nonEmptyLines": 34,
+      "functions": [
+        {
+          "name": "GET",
+          "startLine": 14,
+          "endLine": 41,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "dynamic",
+          "line": 8,
+          "isDefault": false
+        },
+        {
+          "name": "runtime",
+          "line": 9,
+          "isDefault": false
+        },
+        {
+          "name": "GET",
+          "line": 14,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "GET",
+          "callee": "getLastSuccessfulRun",
+          "lineNumber": 17
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 19
+        },
+        {
+          "caller": "GET",
+          "callee": "String",
+          "lineNumber": 20
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 26
+        },
+        {
+          "caller": "GET",
+          "callee": "Date.now",
+          "lineNumber": 32
+        },
+        {
+          "caller": "GET",
+          "callee": "new Date(last.finished_at).getTime",
+          "lineNumber": 32
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 34
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 40
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 3,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "app/api/cron/tournament-poller/route.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 82,
+      "nonEmptyLines": 72,
+      "functions": [
+        {
+          "name": "authorized",
+          "startLine": 18,
+          "endLine": 22,
+          "params": [
+            "req"
+          ]
+        },
+        {
+          "name": "GET",
+          "startLine": 24,
+          "endLine": 82,
+          "params": [
+            "req"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "dynamic",
+          "line": 14,
+          "isDefault": false
+        },
+        {
+          "name": "runtime",
+          "line": 15,
+          "isDefault": false
+        },
+        {
+          "name": "maxDuration",
+          "line": 16,
+          "isDefault": false
+        },
+        {
+          "name": "GET",
+          "line": 24,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "authorized",
+          "callee": "req.headers.get",
+          "lineNumber": 21
+        },
+        {
+          "caller": "GET",
+          "callee": "authorized",
+          "lineNumber": 25
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 26
+        },
+        {
+          "caller": "GET",
+          "callee": "new Date().toISOString",
+          "lineNumber": 29
+        },
+        {
+          "caller": "GET",
+          "callee": "getRealTournamentRunner",
+          "lineNumber": 36
+        },
+        {
+          "caller": "GET",
+          "callee": "supabaseTournamentStore.list",
+          "lineNumber": 37
+        },
+        {
+          "caller": "GET",
+          "callee": "all.filter",
+          "lineNumber": 38
+        },
+        {
+          "caller": "GET",
+          "callee": "runner.pollAndSettle",
+          "lineNumber": 43
+        },
+        {
+          "caller": "GET",
+          "callee": "runner.autoAdvance",
+          "lineNumber": 49
+        },
+        {
+          "caller": "GET",
+          "callee": "supabaseTournamentStore.get",
+          "lineNumber": 53
+        },
+        {
+          "caller": "GET",
+          "callee": "deriveBeat",
+          "lineNumber": 55
+        },
+        {
+          "caller": "GET",
+          "callee": "pushTournamentConcluded",
+          "lineNumber": 58
+        },
+        {
+          "caller": "GET",
+          "callee": "Date.now",
+          "lineNumber": 63
+        },
+        {
+          "caller": "GET",
+          "callee": "errors.push",
+          "lineNumber": 71
+        },
+        {
+          "caller": "GET",
+          "callee": "String",
+          "lineNumber": 71
+        },
+        {
+          "caller": "GET",
+          "callee": "errors.push",
+          "lineNumber": 76
+        },
+        {
+          "caller": "GET",
+          "callee": "String",
+          "lineNumber": 76
+        },
+        {
+          "caller": "GET",
+          "callee": "recordCronRun",
+          "lineNumber": 78
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 81
+        }
+      ],
+      "metrics": {
+        "importCount": 4,
+        "exportCount": 4,
+        "functionCount": 2,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "app/api/notifications/stream/route.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 70,
+      "nonEmptyLines": 63,
+      "functions": [
+        {
+          "name": "hashToken",
+          "startLine": 10,
+          "endLine": 12,
+          "params": [
+            "token"
+          ]
+        },
+        {
+          "name": "GET",
+          "startLine": 14,
+          "endLine": 70,
+          "params": [
+            "req"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "dynamic",
+          "line": 7,
+          "isDefault": false
+        },
+        {
+          "name": "runtime",
+          "line": 8,
+          "isDefault": false
+        },
+        {
+          "name": "GET",
+          "line": 14,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "hashToken",
+          "callee": "createHash(\"sha256\").update(token).digest(\"hex\").slice",
+          "lineNumber": 11
+        },
+        {
+          "caller": "hashToken",
+          "callee": "createHash(\"sha256\").update(token).digest",
+          "lineNumber": 11
+        },
+        {
+          "caller": "hashToken",
+          "callee": "createHash(\"sha256\").update",
+          "lineNumber": 11
+        },
+        {
+          "caller": "hashToken",
+          "callee": "createHash",
+          "lineNumber": 11
+        },
+        {
+          "caller": "GET",
+          "callee": "getServerSession",
+          "lineNumber": 15
+        },
+        {
+          "caller": "GET",
+          "callee": "JSON.stringify",
+          "lineNumber": 17
+        },
+        {
+          "caller": "GET",
+          "callee": "JSON.stringify",
+          "lineNumber": 23
+        },
+        {
+          "caller": "GET",
+          "callee": "hashToken",
+          "lineNumber": 29
+        },
+        {
+          "caller": "start",
+          "callee": "addController",
+          "lineNumber": 39
+        },
+        {
+          "caller": "start",
+          "callee": "controller.close",
+          "lineNumber": 41
+        },
+        {
+          "caller": "abort",
+          "callee": "removeController",
+          "lineNumber": 48
+        },
+        {
+          "caller": "abort",
+          "callee": "activeController.close",
+          "lineNumber": 49
+        },
+        {
+          "caller": "start",
+          "callee": "req.signal.addEventListener",
+          "lineNumber": 52
+        },
+        {
+          "caller": "cancel",
+          "callee": "removeController",
+          "lineNumber": 57
+        }
+      ],
+      "metrics": {
+        "importCount": 2,
+        "exportCount": 3,
+        "functionCount": 2,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "app/api/tournaments/[id]/action/route.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 78,
+      "nonEmptyLines": 72,
+      "functions": [
+        {
+          "name": "POST",
+          "startLine": 32,
+          "endLine": 78,
+          "params": [
+            "req",
+            "{ params }"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "dynamic",
+          "line": 13,
+          "isDefault": false
+        },
+        {
+          "name": "runtime",
+          "line": 14,
+          "isDefault": false
+        },
+        {
+          "name": "POST",
+          "line": 32,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "POST",
+          "callee": "getServerSession",
+          "lineNumber": 34
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 36
+        },
+        {
+          "caller": "POST",
+          "callee": "ownerKeyFrom",
+          "lineNumber": 38
+        },
+        {
+          "caller": "POST",
+          "callee": "supabaseTournamentStore.get",
+          "lineNumber": 39
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 41
+        },
+        {
+          "caller": "POST",
+          "callee": "withRouteHandler",
+          "lineNumber": 44
+        },
+        {
+          "caller": "POST",
+          "callee": "req.json",
+          "lineNumber": 45
+        },
+        {
+          "caller": "POST",
+          "callee": "getRealTournamentRunner",
+          "lineNumber": 46
+        },
+        {
+          "caller": "POST",
+          "callee": "r.confirmChampion",
+          "lineNumber": 49
+        },
+        {
+          "caller": "POST",
+          "callee": "r.regenerateChampion",
+          "lineNumber": 52
+        },
+        {
+          "caller": "POST",
+          "callee": "r.proposeChallenger",
+          "lineNumber": 55
+        },
+        {
+          "caller": "POST",
+          "callee": "r.setManualChallenger",
+          "lineNumber": 59
+        },
+        {
+          "caller": "POST",
+          "callee": "r.launchRound",
+          "lineNumber": 62
+        },
+        {
+          "caller": "POST",
+          "callee": "r.resolveAnomaly",
+          "lineNumber": 65
+        },
+        {
+          "caller": "POST",
+          "callee": "r.discardPendingChallenger",
+          "lineNumber": 68
+        },
+        {
+          "caller": "POST",
+          "callee": "r.refillEnvelope",
+          "lineNumber": 71
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 76
+        },
+        {
+          "caller": "POST",
+          "callee": "supabaseTournamentStore.get",
+          "lineNumber": 76
+        }
+      ],
+      "metrics": {
+        "importCount": 4,
+        "exportCount": 3,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "app/api/tournaments/route.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 123,
+      "nonEmptyLines": 113,
+      "functions": [
+        {
+          "name": "requireRealSession",
+          "startLine": 25,
+          "endLine": 38,
+          "params": []
+        },
+        {
+          "name": "GET",
+          "startLine": 40,
+          "endLine": 46,
+          "params": []
+        },
+        {
+          "name": "POST",
+          "startLine": 75,
+          "endLine": 123,
+          "params": [
+            "req"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "dynamic",
+          "line": 13,
+          "isDefault": false
+        },
+        {
+          "name": "runtime",
+          "line": 14,
+          "isDefault": false
+        },
+        {
+          "name": "GET",
+          "line": 40,
+          "isDefault": false
+        },
+        {
+          "name": "POST",
+          "line": 75,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "requireRealSession",
+          "callee": "getServerSession",
+          "lineNumber": 26
+        },
+        {
+          "caller": "requireRealSession",
+          "callee": "NextResponse.json",
+          "lineNumber": 27
+        },
+        {
+          "caller": "requireRealSession",
+          "callee": "NextResponse.json",
+          "lineNumber": 29
+        },
+        {
+          "caller": "requireRealSession",
+          "callee": "ownerKeyFrom",
+          "lineNumber": 36
+        },
+        {
+          "caller": "GET",
+          "callee": "requireRealSession",
+          "lineNumber": 41
+        },
+        {
+          "caller": "GET",
+          "callee": "withRouteHandler",
+          "lineNumber": 43
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 44
+        },
+        {
+          "caller": "GET",
+          "callee": "supabaseTournamentStore.listByOwner",
+          "lineNumber": 44
+        },
+        {
+          "caller": "POST",
+          "callee": "requireRealSession",
+          "lineNumber": 76
+        },
+        {
+          "caller": "POST",
+          "callee": "withRouteHandler",
+          "lineNumber": 78
+        },
+        {
+          "caller": "POST",
+          "callee": "req.json",
+          "lineNumber": 79
+        },
+        {
+          "caller": "POST",
+          "callee": "b.productName?.trim",
+          "lineNumber": 80
+        },
+        {
+          "caller": "POST",
+          "callee": "b.linkUrl?.trim",
+          "lineNumber": 81
+        },
+        {
+          "caller": "POST",
+          "callee": "b.productName.trim",
+          "lineNumber": 104
+        },
+        {
+          "caller": "POST",
+          "callee": "getRealTournamentRunner().createTournament",
+          "lineNumber": 120
+        },
+        {
+          "caller": "POST",
+          "callee": "getRealTournamentRunner",
+          "lineNumber": 120
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 121
+        }
+      ],
+      "metrics": {
+        "importCount": 5,
+        "exportCount": 4,
+        "functionCount": 3,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "lib/meta-ads-campaign.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 707,
+      "nonEmptyLines": 651,
+      "functions": [
+        {
+          "name": "buildPlatformOnlyTargeting",
+          "startLine": 80,
+          "endLine": 83,
+          "params": [
+            "platforms"
+          ]
+        },
+        {
+          "name": "buildPlacementTargeting",
+          "startLine": 86,
+          "endLine": 109,
+          "params": [
+            "p"
+          ]
+        },
+        {
+          "name": "toUnixKST",
+          "startLine": 111,
+          "endLine": 114,
+          "params": [
+            "date",
+            "endOfDay"
+          ]
+        },
+        {
+          "name": "uploadAdImage",
+          "startLine": 116,
+          "endLine": 125,
+          "params": [
+            "dataUrl",
+            "token",
+            "accountId"
+          ]
+        },
+        {
+          "name": "deriveLaunchPlan",
+          "startLine": 138,
+          "endLine": 181,
+          "params": [
+            "params",
+            "pageId"
+          ]
+        },
+        {
+          "name": "buildCampaignBody",
+          "startLine": 183,
+          "endLine": 195,
+          "params": [
+            "params",
+            "plan"
+          ]
+        },
+        {
+          "name": "buildAdSetBody",
+          "startLine": 197,
+          "endLine": 225,
+          "params": [
+            "params",
+            "plan",
+            "campaignId"
+          ]
+        },
+        {
+          "name": "buildCtaForCreative",
+          "startLine": 231,
+          "endLine": 239,
+          "params": [
+            "ctaType",
+            "phoneNumber"
+          ]
+        },
+        {
+          "name": "buildCreativeBody",
+          "startLine": 249,
+          "endLine": 271,
+          "params": [
+            "params",
+            "pageId",
+            "override",
+            "variant"
+          ]
+        },
+        {
+          "name": "buildAdBody",
+          "startLine": 273,
+          "endLine": 287,
+          "params": [
+            "adSetId",
+            "creativeId",
+            "status",
+            "headline",
+            "variant"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "VALID_OBJECTIVES",
+          "line": 10,
+          "isDefault": false
+        },
+        {
+          "name": "buildPlacementTargeting",
+          "line": 86,
+          "isDefault": false
+        },
+        {
+          "name": "metaAdsCampaign",
+          "line": 289,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "buildPlacementTargeting",
+          "callee": "publisherPlatforms.add",
+          "lineNumber": 95
+        },
+        {
+          "caller": "buildPlacementTargeting",
+          "callee": "facebookPositions.add",
+          "lineNumber": 95
+        },
+        {
+          "caller": "buildPlacementTargeting",
+          "callee": "publisherPlatforms.add",
+          "lineNumber": 96
+        },
+        {
+          "caller": "buildPlacementTargeting",
+          "callee": "instagramPositions.add",
+          "lineNumber": 96
+        },
+        {
+          "caller": "buildPlacementTargeting",
+          "callee": "publisherPlatforms.add",
+          "lineNumber": 97
+        },
+        {
+          "caller": "buildPlacementTargeting",
+          "callee": "instagramPositions.add",
+          "lineNumber": 97
+        },
+        {
+          "caller": "buildPlacementTargeting",
+          "callee": "publisherPlatforms.add",
+          "lineNumber": 98
+        },
+        {
+          "caller": "buildPlacementTargeting",
+          "callee": "audienceNetworkPositions.add",
+          "lineNumber": 98
+        },
+        {
+          "caller": "buildPlacementTargeting",
+          "callee": "publisherPlatforms.add",
+          "lineNumber": 99
+        },
+        {
+          "caller": "buildPlacementTargeting",
+          "callee": "messengerPositions.add",
+          "lineNumber": 99
+        },
+        {
+          "caller": "toUnixKST",
+          "callee": "Math.floor",
+          "lineNumber": 113
+        },
+        {
+          "caller": "toUnixKST",
+          "callee": "d.getTime",
+          "lineNumber": 113
+        },
+        {
+          "caller": "uploadAdImage",
+          "callee": "dataUrl.includes",
+          "lineNumber": 117
+        },
+        {
+          "caller": "uploadAdImage",
+          "callee": "dataUrl.slice",
+          "lineNumber": 117
+        },
+        {
+          "caller": "uploadAdImage",
+          "callee": "dataUrl.indexOf",
+          "lineNumber": 117
+        },
+        {
+          "caller": "uploadAdImage",
+          "callee": "await graphFetch",
+          "lineNumber": 118
+        },
+        {
+          "caller": "uploadAdImage",
+          "callee": "JSON.stringify",
+          "lineNumber": 120
+        },
+        {
+          "caller": "uploadAdImage",
+          "callee": "Object.values",
+          "lineNumber": 122
+        },
+        {
+          "caller": "deriveLaunchPlan",
+          "callee": "OBJECTIVES_PHASE1.find",
+          "lineNumber": 141
+        },
+        {
+          "caller": "deriveLaunchPlan",
+          "callee": "buildPlacementTargeting",
+          "lineNumber": 176
+        },
+        {
+          "caller": "deriveLaunchPlan",
+          "callee": "Object.keys",
+          "lineNumber": 177
+        },
+        {
+          "caller": "deriveLaunchPlan",
+          "callee": "buildPlatformOnlyTargeting",
+          "lineNumber": 179
+        },
+        {
+          "caller": "buildCampaignBody",
+          "callee": "OBJECTIVES_PHASE1.find",
+          "lineNumber": 184
+        },
+        {
+          "caller": "buildCampaignBody",
+          "callee": "plan.objective.replace",
+          "lineNumber": 185
+        },
+        {
+          "caller": "buildCampaignBody",
+          "callee": "params.startDate.slice",
+          "lineNumber": 186
+        },
+        {
+          "caller": "buildCampaignBody",
+          "callee": "params.startDate.slice",
+          "lineNumber": 186
+        },
+        {
+          "caller": "buildAdSetBody",
+          "callee": "String",
+          "lineNumber": 205
+        },
+        {
+          "caller": "buildAdSetBody",
+          "callee": "String",
+          "lineNumber": 207
+        },
+        {
+          "caller": "buildAdSetBody",
+          "callee": "Math.max",
+          "lineNumber": 214
+        },
+        {
+          "caller": "buildAdSetBody",
+          "callee": "toUnixKST",
+          "lineNumber": 220
+        },
+        {
+          "caller": "buildAdSetBody",
+          "callee": "toUnixKST",
+          "lineNumber": 221
+        },
+        {
+          "caller": "buildCreativeBody",
+          "callee": "buildCtaForCreative",
+          "lineNumber": 264
+        },
+        {
+          "caller": "createCampaign",
+          "callee": "deriveLaunchPlan",
+          "lineNumber": 298
+        },
+        {
+          "caller": "createCampaign",
+          "callee": "uploadAdImage",
+          "lineNumber": 300
+        },
+        {
+          "caller": "post",
+          "callee": "graphFetch",
+          "lineNumber": 304
+        },
+        {
+          "caller": "post",
+          "callee": "JSON.stringify",
+          "lineNumber": 306
+        },
+        {
+          "caller": "createCampaign",
+          "callee": "await post",
+          "lineNumber": 309
+        },
+        {
+          "caller": "createCampaign",
+          "callee": "buildCampaignBody",
+          "lineNumber": 309
+        },
+        {
+          "caller": "createCampaign",
+          "callee": "await post",
+          "lineNumber": 317
+        },
+        {
+          "caller": "createCampaign",
+          "callee": "buildAdSetBody",
+          "lineNumber": 317
+        },
+        {
+          "caller": "createCampaign",
+          "callee": "await post",
+          "lineNumber": 342
+        },
+        {
+          "caller": "createCampaign",
+          "callee": "buildCreativeBody",
+          "lineNumber": 342
+        },
+        {
+          "caller": "createCampaign",
+          "callee": "await post",
+          "lineNumber": 344
+        },
+        {
+          "caller": "createCampaign",
+          "callee": "buildCreativeBody",
+          "lineNumber": 344
+        },
+        {
+          "caller": "createCampaign",
+          "callee": "await post",
+          "lineNumber": 346
+        },
+        {
+          "caller": "createCampaign",
+          "callee": "buildAdBody",
+          "lineNumber": 346
+        },
+        {
+          "caller": "createCampaign",
+          "callee": "await post",
+          "lineNumber": 348
+        },
+        {
+          "caller": "createCampaign",
+          "callee": "buildAdBody",
+          "lineNumber": 348
+        },
+        {
+          "caller": "createCampaign",
+          "callee": "await post",
+          "lineNumber": 354
+        },
+        {
+          "caller": "createCampaign",
+          "callee": "buildCreativeBody",
+          "lineNumber": 354
+        },
+        {
+          "caller": "createCampaign",
+          "callee": "await post",
+          "lineNumber": 356
+        },
+        {
+          "caller": "createCampaign",
+          "callee": "buildAdBody",
+          "lineNumber": 356
+        },
+        {
+          "caller": "createCampaign",
+          "callee": "console.error",
+          "lineNumber": 361
+        },
+        {
+          "caller": "createCampaign",
+          "callee": "String",
+          "lineNumber": 371
+        },
+        {
+          "caller": "createCampaign",
+          "callee": "await graphFetch",
+          "lineNumber": 374
+        },
+        {
+          "caller": "createSplitTestStudy",
+          "callee": "deriveLaunchPlan",
+          "lineNumber": 407
+        },
+        {
+          "caller": "createSplitTestStudy",
+          "callee": "uploadAdImage",
+          "lineNumber": 409
+        },
+        {
+          "caller": "post",
+          "callee": "graphFetch",
+          "lineNumber": 413
+        },
+        {
+          "caller": "post",
+          "callee": "JSON.stringify",
+          "lineNumber": 415
+        },
+        {
+          "caller": "createSplitTestStudy",
+          "callee": "await post",
+          "lineNumber": 426
+        },
+        {
+          "caller": "createSplitTestStudy",
+          "callee": "buildCampaignBody",
+          "lineNumber": 426
+        },
+        {
+          "caller": "createSplitTestStudy",
+          "callee": "String",
+          "lineNumber": 430
+        },
+        {
+          "caller": "createSplitTestStudy",
+          "callee": "Math.round",
+          "lineNumber": 430
+        },
+        {
+          "caller": "cell",
+          "callee": "await post",
+          "lineNumber": 432
+        },
+        {
+          "caller": "cell",
+          "callee": "buildAdSetBody",
+          "lineNumber": 433
+        },
+        {
+          "caller": "cell",
+          "callee": "await post",
+          "lineNumber": 437
+        },
+        {
+          "caller": "cell",
+          "callee": "buildCreativeBody",
+          "lineNumber": 437
+        },
+        {
+          "caller": "cell",
+          "callee": "await post",
+          "lineNumber": 438
+        },
+        {
+          "caller": "cell",
+          "callee": "buildAdBody",
+          "lineNumber": 438
+        },
+        {
+          "caller": "createSplitTestStudy",
+          "callee": "cell",
+          "lineNumber": 441
+        },
+        {
+          "caller": "createSplitTestStudy",
+          "callee": "cell",
+          "lineNumber": 442
+        },
+        {
+          "caller": "createSplitTestStudy",
+          "callee": "await post",
+          "lineNumber": 445
+        },
+        {
+          "caller": "createSplitTestStudy",
+          "callee": "`AdFlow Split — ${params.headline}`.slice",
+          "lineNumber": 446
+        },
+        {
+          "caller": "createSplitTestStudy",
+          "callee": "toUnixKST",
+          "lineNumber": 449
+        },
+        {
+          "caller": "createSplitTestStudy",
+          "callee": "toUnixKST",
+          "lineNumber": 450
+        },
+        {
+          "caller": "createSplitTestStudy",
+          "callee": "console.error",
+          "lineNumber": 464
+        },
+        {
+          "caller": "createSplitTestStudy",
+          "callee": "String",
+          "lineNumber": 470
+        },
+        {
+          "caller": "createSplitTestStudy",
+          "callee": "await graphFetch",
+          "lineNumber": 473
+        },
+        {
+          "caller": "setStatus",
+          "callee": "await graphFetch",
+          "lineNumber": 482
+        },
+        {
+          "caller": "setStatus",
+          "callee": "JSON.stringify",
+          "lineNumber": 484
+        },
+        {
+          "caller": "setAdSetDailyBudget",
+          "callee": "await graphFetch",
+          "lineNumber": 489
+        },
+        {
+          "caller": "setAdSetDailyBudget",
+          "callee": "JSON.stringify",
+          "lineNumber": 491
+        },
+        {
+          "caller": "setAdSetDailyBudget",
+          "callee": "String",
+          "lineNumber": 491
+        },
+        {
+          "caller": "pauseCampaign",
+          "callee": "metaAdsCampaign.setStatus",
+          "lineNumber": 496
+        },
+        {
+          "caller": "resumeCampaign",
+          "callee": "metaAdsCampaign.setStatus",
+          "lineNumber": 501
+        },
+        {
+          "caller": "resumeCampaign",
+          "callee": "metaAdsCampaign.setStatus",
+          "lineNumber": 502
+        },
+        {
+          "caller": "resumeCampaign",
+          "callee": "metaAdsCampaign.setStatus",
+          "lineNumber": 503
+        },
+        {
+          "caller": "updateAdSet",
+          "callee": "String",
+          "lineNumber": 523
+        },
+        {
+          "caller": "updateAdSet",
+          "callee": "applied.push",
+          "lineNumber": 524
+        },
+        {
+          "caller": "updateAdSet",
+          "callee": "toUnixKST",
+          "lineNumber": 527
+        },
+        {
+          "caller": "updateAdSet",
+          "callee": "applied.push",
+          "lineNumber": 528
+        },
+        {
+          "caller": "updateAdSet",
+          "callee": "toUnixKST",
+          "lineNumber": 531
+        },
+        {
+          "caller": "updateAdSet",
+          "callee": "applied.push",
+          "lineNumber": 532
+        },
+        {
+          "caller": "updateAdSet",
+          "callee": "applied.push",
+          "lineNumber": 536
+        },
+        {
+          "caller": "updateAdSet",
+          "callee": "String",
+          "lineNumber": 539
+        },
+        {
+          "caller": "updateAdSet",
+          "callee": "applied.push",
+          "lineNumber": 540
+        },
+        {
+          "caller": "updateAdSet",
+          "callee": "await graphFetch",
+          "lineNumber": 543
+        },
+        {
+          "caller": "updateAdSet",
+          "callee": "applied.push",
+          "lineNumber": 553
+        },
+        {
+          "caller": "updateAdSet",
+          "callee": "applied.push",
+          "lineNumber": 559
+        },
+        {
+          "caller": "updateAdSet",
+          "callee": "buildPlacementTargeting",
+          "lineNumber": 562
+        },
+        {
+          "caller": "updateAdSet",
+          "callee": "Object.assign",
+          "lineNumber": 563
+        },
+        {
+          "caller": "updateAdSet",
+          "callee": "applied.push",
+          "lineNumber": 564
+        },
+        {
+          "caller": "updateAdSet",
+          "callee": "await graphFetch",
+          "lineNumber": 568
+        },
+        {
+          "caller": "updateAdSet",
+          "callee": "JSON.stringify",
+          "lineNumber": 570
+        },
+        {
+          "caller": "replaceAdCreative",
+          "callee": "await graphFetch",
+          "lineNumber": 590
+        },
+        {
+          "caller": "replaceAdCreative",
+          "callee": "uploadAdImage",
+          "lineNumber": 599
+        },
+        {
+          "caller": "replaceAdCreative",
+          "callee": "await graphFetch",
+          "lineNumber": 604
+        },
+        {
+          "caller": "replaceAdCreative",
+          "callee": "JSON.stringify",
+          "lineNumber": 606
+        },
+        {
+          "caller": "replaceAdCreative",
+          "callee": "await graphFetch",
+          "lineNumber": 622
+        },
+        {
+          "caller": "replaceAdCreative",
+          "callee": "JSON.stringify",
+          "lineNumber": 624
+        },
+        {
+          "caller": "boostPost",
+          "callee": "await graphFetch",
+          "lineNumber": 650
+        },
+        {
+          "caller": "boostPost",
+          "callee": "JSON.stringify",
+          "lineNumber": 652
+        },
+        {
+          "caller": "boostPost",
+          "callee": "await graphFetch",
+          "lineNumber": 661
+        },
+        {
+          "caller": "boostPost",
+          "callee": "JSON.stringify",
+          "lineNumber": 663
+        },
+        {
+          "caller": "boostPost",
+          "callee": "new Date(`${startDate}T00:00:00+09:00`).toISOString",
+          "lineNumber": 670
+        },
+        {
+          "caller": "boostPost",
+          "callee": "new Date(`${endDate}T23:59:59+09:00`).toISOString",
+          "lineNumber": 671
+        },
+        {
+          "caller": "boostPost",
+          "callee": "await graphFetch",
+          "lineNumber": 684
+        },
+        {
+          "caller": "boostPost",
+          "callee": "JSON.stringify",
+          "lineNumber": 686
+        },
+        {
+          "caller": "boostPost",
+          "callee": "await graphFetch",
+          "lineNumber": 694
+        },
+        {
+          "caller": "boostPost",
+          "callee": "JSON.stringify",
+          "lineNumber": 696
+        }
+      ],
+      "metrics": {
+        "importCount": 2,
+        "exportCount": 3,
+        "functionCount": 10,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "lib/meta-ads-graph.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 47,
+      "nonEmptyLines": 42,
+      "functions": [
+        {
+          "name": "graphFetch",
+          "startLine": 22,
+          "endLine": 47,
+          "params": [
+            "path",
+            "init"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "MetaApiError",
+          "startLine": 11,
+          "endLine": 20,
+          "methods": [
+            "constructor"
+          ],
+          "properties": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "GRAPH",
+          "line": 5,
+          "isDefault": false
+        },
+        {
+          "name": "MetaApiError",
+          "line": 11,
+          "isDefault": false
+        },
+        {
+          "name": "graphFetch",
+          "line": 22,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "constructor",
+          "callee": "super",
+          "lineNumber": 17
+        },
+        {
+          "caller": "graphFetch",
+          "callee": "path.startsWith",
+          "lineNumber": 23
+        },
+        {
+          "caller": "graphFetch",
+          "callee": "fetch",
+          "lineNumber": 24
+        },
+        {
+          "caller": "graphFetch",
+          "callee": "res.json",
+          "lineNumber": 28
+        },
+        {
+          "caller": "graphFetch",
+          "callee": "[\n      e.error_subcode ? `subcode=${e.error_subcode}` : '',\n      e.error_user_msg ?? '',\n      e.error_data ? `data=${e.error_data}` : '',\n    ].filter(Boolean).join",
+          "lineNumber": 35
+        },
+        {
+          "caller": "graphFetch",
+          "callee": "[\n      e.error_subcode ? `subcode=${e.error_subcode}` : '',\n      e.error_user_msg ?? '',\n      e.error_data ? `data=${e.error_data}` : '',\n    ].filter",
+          "lineNumber": 35
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 3,
+        "functionCount": 1,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "lib/meta-ads-insights.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 658,
+      "nonEmptyLines": 608,
+      "functions": [
+        {
+          "name": "mapCampaignStatus",
+          "startLine": 81,
+          "endLine": 93,
+          "params": [
+            "effStatus",
+            "stopTime"
+          ]
+        },
+        {
+          "name": "toDateOnly",
+          "startLine": 95,
+          "endLine": 101,
+          "params": [
+            "iso"
+          ]
+        },
+        {
+          "name": "stripHeadline",
+          "startLine": 103,
+          "endLine": 106,
+          "params": [
+            "name"
+          ]
+        },
+        {
+          "name": "presetFor",
+          "startLine": 108,
+          "endLine": 110,
+          "params": [
+            "period"
+          ]
+        },
+        {
+          "name": "CAMPAIGN_FIELDS",
+          "startLine": 148,
+          "endLine": 153,
+          "params": [
+            "period"
+          ]
+        },
+        {
+          "name": "pickIssueReason",
+          "startLine": 155,
+          "endLine": 162,
+          "params": [
+            "issues"
+          ]
+        },
+        {
+          "name": "toAdSnapshot",
+          "startLine": 174,
+          "endLine": 188,
+          "params": [
+            "ad"
+          ]
+        },
+        {
+          "name": "mapRawCampaign",
+          "startLine": 190,
+          "endLine": 249,
+          "params": [
+            "c"
+          ]
+        },
+        {
+          "name": "toMinorUnitOrNull",
+          "startLine": 276,
+          "endLine": 280,
+          "params": [
+            "v"
+          ]
+        },
+        {
+          "name": "normalizeFundingSources",
+          "startLine": 282,
+          "endLine": 292,
+          "params": [
+            "raw"
+          ]
+        },
+        {
+          "name": "mapRawBilling",
+          "startLine": 294,
+          "endLine": 314,
+          "params": [
+            "accountId",
+            "raw"
+          ]
+        },
+        {
+          "name": "toEntryArray",
+          "startLine": 356,
+          "endLine": 359,
+          "params": [
+            "r"
+          ]
+        },
+        {
+          "name": "normalizeCell",
+          "startLine": 362,
+          "endLine": 367,
+          "params": [
+            "name"
+          ]
+        },
+        {
+          "name": "toConfidence",
+          "startLine": 369,
+          "endLine": 375,
+          "params": [
+            "e",
+            "significant"
+          ]
+        },
+        {
+          "name": "parseAdStudyResult",
+          "startLine": 377,
+          "endLine": 399,
+          "params": [
+            "data"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "metaAdsInsights",
+          "line": 401,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "mapCampaignStatus",
+          "callee": "String(effStatus ?? '').toUpperCase",
+          "lineNumber": 82
+        },
+        {
+          "caller": "mapCampaignStatus",
+          "callee": "String",
+          "lineNumber": 82
+        },
+        {
+          "caller": "mapCampaignStatus",
+          "callee": "Date.parse",
+          "lineNumber": 87
+        },
+        {
+          "caller": "mapCampaignStatus",
+          "callee": "Number.isFinite",
+          "lineNumber": 88
+        },
+        {
+          "caller": "mapCampaignStatus",
+          "callee": "Date.now",
+          "lineNumber": 88
+        },
+        {
+          "caller": "toDateOnly",
+          "callee": "/^(\\d{4}-\\d{2}-\\d{2})/.exec",
+          "lineNumber": 97
+        },
+        {
+          "caller": "toDateOnly",
+          "callee": "Date.parse",
+          "lineNumber": 99
+        },
+        {
+          "caller": "toDateOnly",
+          "callee": "Number.isFinite",
+          "lineNumber": 100
+        },
+        {
+          "caller": "toDateOnly",
+          "callee": "new Date(t).toISOString().slice",
+          "lineNumber": 100
+        },
+        {
+          "caller": "toDateOnly",
+          "callee": "new Date(t).toISOString",
+          "lineNumber": 100
+        },
+        {
+          "caller": "stripHeadline",
+          "callee": "/^AdFlow\\s*[—–\\-]\\s*(.+)$/.exec",
+          "lineNumber": 104
+        },
+        {
+          "caller": "stripHeadline",
+          "callee": "(m ? m[1] : name).trim",
+          "lineNumber": 105
+        },
+        {
+          "caller": "CAMPAIGN_FIELDS",
+          "callee": "[\n  'id', 'name', 'effective_status', 'objective', 'start_time', 'stop_time', 'daily_budget',\n  'issues_info',\n  'adsets.limit(1){id,daily_budget,bid_strategy,bid_amount,targeting{age_min,age_max,genders,geo_locations,publisher_platforms,facebook_positions,instagram_positions},ads.limit(1){id}}',\n  `insights.date_preset(${presetFor(period)}){impressions,clicks,ctr,spend,actions}`,\n].join",
+          "lineNumber": 148
+        },
+        {
+          "caller": "CAMPAIGN_FIELDS",
+          "callee": "presetFor",
+          "lineNumber": 152
+        },
+        {
+          "caller": "pickIssueReason",
+          "callee": "first.error_summary?.trim",
+          "lineNumber": 158
+        },
+        {
+          "caller": "pickIssueReason",
+          "callee": "first.error_message?.trim",
+          "lineNumber": 159
+        },
+        {
+          "caller": "toAdSnapshot",
+          "callee": "String(ad.effective_status ?? '').toUpperCase",
+          "lineNumber": 175
+        },
+        {
+          "caller": "toAdSnapshot",
+          "callee": "String",
+          "lineNumber": 175
+        },
+        {
+          "caller": "toAdSnapshot",
+          "callee": "POLL_STATUS_SET.has",
+          "lineNumber": 176
+        },
+        {
+          "caller": "toAdSnapshot",
+          "callee": "issue?.error_summary?.trim",
+          "lineNumber": 180
+        },
+        {
+          "caller": "toAdSnapshot",
+          "callee": "issue?.error_message?.trim",
+          "lineNumber": 180
+        },
+        {
+          "caller": "mapRawCampaign",
+          "callee": "Math.round",
+          "lineNumber": 193
+        },
+        {
+          "caller": "mapRawCampaign",
+          "callee": "Number",
+          "lineNumber": 193
+        },
+        {
+          "caller": "mapRawCampaign",
+          "callee": "Math.round",
+          "lineNumber": 194
+        },
+        {
+          "caller": "mapRawCampaign",
+          "callee": "Number",
+          "lineNumber": 194
+        },
+        {
+          "caller": "mapRawCampaign",
+          "callee": "Math.round",
+          "lineNumber": 196
+        },
+        {
+          "caller": "mapRawCampaign",
+          "callee": "parseFloat",
+          "lineNumber": 196
+        },
+        {
+          "caller": "mapRawCampaign",
+          "callee": "Math.round",
+          "lineNumber": 197
+        },
+        {
+          "caller": "mapRawCampaign",
+          "callee": "Math.round",
+          "lineNumber": 198
+        },
+        {
+          "caller": "mapRawCampaign",
+          "callee": "parseFloat",
+          "lineNumber": 198
+        },
+        {
+          "caller": "actionVal",
+          "callee": "ins?.actions?.find",
+          "lineNumber": 201
+        },
+        {
+          "caller": "actionVal",
+          "callee": "Math.round",
+          "lineNumber": 202
+        },
+        {
+          "caller": "actionVal",
+          "callee": "Number",
+          "lineNumber": 202
+        },
+        {
+          "caller": "mapRawCampaign",
+          "callee": "actionVal",
+          "lineNumber": 204
+        },
+        {
+          "caller": "mapRawCampaign",
+          "callee": "actionVal",
+          "lineNumber": 205
+        },
+        {
+          "caller": "mapRawCampaign",
+          "callee": "pubPlatforms.includes",
+          "lineNumber": 210
+        },
+        {
+          "caller": "mapRawCampaign",
+          "callee": "pubPlatforms.includes",
+          "lineNumber": 211
+        },
+        {
+          "caller": "mapRawCampaign",
+          "callee": "fbPos.map",
+          "lineNumber": 221
+        },
+        {
+          "caller": "mapRawCampaign",
+          "callee": "igPos.map",
+          "lineNumber": 222
+        },
+        {
+          "caller": "mapRawCampaign",
+          "callee": "stripHeadline",
+          "lineNumber": 227
+        },
+        {
+          "caller": "mapRawCampaign",
+          "callee": "mapCampaignStatus",
+          "lineNumber": 228
+        },
+        {
+          "caller": "mapRawCampaign",
+          "callee": "obj.replace",
+          "lineNumber": 230
+        },
+        {
+          "caller": "mapRawCampaign",
+          "callee": "toDateOnly",
+          "lineNumber": 231
+        },
+        {
+          "caller": "mapRawCampaign",
+          "callee": "toDateOnly",
+          "lineNumber": 232
+        },
+        {
+          "caller": "mapRawCampaign",
+          "callee": "Number.isFinite",
+          "lineNumber": 235
+        },
+        {
+          "caller": "mapRawCampaign",
+          "callee": "Number",
+          "lineNumber": 235
+        },
+        {
+          "caller": "mapRawCampaign",
+          "callee": "Math.round",
+          "lineNumber": 235
+        },
+        {
+          "caller": "mapRawCampaign",
+          "callee": "Number",
+          "lineNumber": 235
+        },
+        {
+          "caller": "mapRawCampaign",
+          "callee": "pickIssueReason",
+          "lineNumber": 238
+        },
+        {
+          "caller": "mapRawCampaign",
+          "callee": "Math.round",
+          "lineNumber": 247
+        },
+        {
+          "caller": "mapRawCampaign",
+          "callee": "Number",
+          "lineNumber": 247
+        },
+        {
+          "caller": "toMinorUnitOrNull",
+          "callee": "Number",
+          "lineNumber": 278
+        },
+        {
+          "caller": "toMinorUnitOrNull",
+          "callee": "Number.isFinite",
+          "lineNumber": 279
+        },
+        {
+          "caller": "toMinorUnitOrNull",
+          "callee": "Math.round",
+          "lineNumber": 279
+        },
+        {
+          "caller": "normalizeFundingSources",
+          "callee": "Array.isArray",
+          "lineNumber": 284
+        },
+        {
+          "caller": "normalizeFundingSources",
+          "callee": "rows\n    .filter((r) => r && (r.id || r.display_string))\n    .map",
+          "lineNumber": 285
+        },
+        {
+          "caller": "normalizeFundingSources",
+          "callee": "rows\n    .filter",
+          "lineNumber": 285
+        },
+        {
+          "caller": "normalizeFundingSources",
+          "callee": "String",
+          "lineNumber": 288
+        },
+        {
+          "caller": "normalizeFundingSources",
+          "callee": "String",
+          "lineNumber": 289
+        },
+        {
+          "caller": "normalizeFundingSources",
+          "callee": "String",
+          "lineNumber": 290
+        },
+        {
+          "caller": "mapRawBilling",
+          "callee": "toMinorUnitOrNull",
+          "lineNumber": 308
+        },
+        {
+          "caller": "mapRawBilling",
+          "callee": "toMinorUnitOrNull",
+          "lineNumber": 309
+        },
+        {
+          "caller": "mapRawBilling",
+          "callee": "toMinorUnitOrNull",
+          "lineNumber": 310
+        },
+        {
+          "caller": "mapRawBilling",
+          "callee": "normalizeFundingSources",
+          "lineNumber": 311
+        },
+        {
+          "caller": "toEntryArray",
+          "callee": "Array.isArray",
+          "lineNumber": 358
+        },
+        {
+          "caller": "normalizeCell",
+          "callee": "(name ?? '').toUpperCase",
+          "lineNumber": 363
+        },
+        {
+          "caller": "normalizeCell",
+          "callee": "/\\bA\\b|^A|CELL A|챔피언/.test",
+          "lineNumber": 364
+        },
+        {
+          "caller": "normalizeCell",
+          "callee": "/\\bB\\b|^B|CELL B|챌린저/.test",
+          "lineNumber": 365
+        },
+        {
+          "caller": "toConfidence",
+          "callee": "Number",
+          "lineNumber": 370
+        },
+        {
+          "caller": "toConfidence",
+          "callee": "Number.isFinite",
+          "lineNumber": 371
+        },
+        {
+          "caller": "toConfidence",
+          "callee": "Math.min",
+          "lineNumber": 371
+        },
+        {
+          "caller": "toConfidence",
+          "callee": "Math.max",
+          "lineNumber": 371
+        },
+        {
+          "caller": "toConfidence",
+          "callee": "Number",
+          "lineNumber": 372
+        },
+        {
+          "caller": "toConfidence",
+          "callee": "Number.isFinite",
+          "lineNumber": 373
+        },
+        {
+          "caller": "toConfidence",
+          "callee": "Math.min",
+          "lineNumber": 373
+        },
+        {
+          "caller": "toConfidence",
+          "callee": "Math.max",
+          "lineNumber": 373
+        },
+        {
+          "caller": "parseAdStudyResult",
+          "callee": "toEntryArray",
+          "lineNumber": 380
+        },
+        {
+          "caller": "parseAdStudyResult",
+          "callee": "entries.push",
+          "lineNumber": 381
+        },
+        {
+          "caller": "parseAdStudyResult",
+          "callee": "normalizeCell",
+          "lineNumber": 381
+        },
+        {
+          "caller": "parseAdStudyResult",
+          "callee": "normalizeCell",
+          "lineNumber": 384
+        },
+        {
+          "caller": "parseAdStudyResult",
+          "callee": "toEntryArray",
+          "lineNumber": 385
+        },
+        {
+          "caller": "parseAdStudyResult",
+          "callee": "entries.push",
+          "lineNumber": 386
+        },
+        {
+          "caller": "parseAdStudyResult",
+          "callee": "normalizeCell",
+          "lineNumber": 386
+        },
+        {
+          "caller": "parseAdStudyResult",
+          "callee": "entries.find",
+          "lineNumber": 392
+        },
+        {
+          "caller": "parseAdStudyResult",
+          "callee": "sig",
+          "lineNumber": 392
+        },
+        {
+          "caller": "parseAdStudyResult",
+          "callee": "toConfidence",
+          "lineNumber": 394
+        },
+        {
+          "caller": "parseAdStudyResult",
+          "callee": "entries.reduce",
+          "lineNumber": 397
+        },
+        {
+          "caller": "parseAdStudyResult",
+          "callee": "Math.max",
+          "lineNumber": 397
+        },
+        {
+          "caller": "parseAdStudyResult",
+          "callee": "toConfidence",
+          "lineNumber": 397
+        },
+        {
+          "caller": "getSplitTestResult",
+          "callee": "await graphFetch",
+          "lineNumber": 405
+        },
+        {
+          "caller": "getSplitTestResult",
+          "callee": "parseAdStudyResult",
+          "lineNumber": 408
+        },
+        {
+          "caller": "checkAccount",
+          "callee": "await graphFetch",
+          "lineNumber": 415
+        },
+        {
+          "caller": "getBilling",
+          "callee": "await graphFetch",
+          "lineNumber": 429
+        },
+        {
+          "caller": "getBilling",
+          "callee": "mapRawBilling",
+          "lineNumber": 432
+        },
+        {
+          "caller": "getCampaignBrief",
+          "callee": "await graphFetch",
+          "lineNumber": 442
+        },
+        {
+          "caller": "getCampaignBrief",
+          "callee": "stripHeadline",
+          "lineNumber": 447
+        },
+        {
+          "caller": "getCampaignBrief",
+          "callee": "mapCampaignStatus",
+          "lineNumber": 449
+        },
+        {
+          "caller": "listAdsForPolling",
+          "callee": "encodeURIComponent",
+          "lineNumber": 457
+        },
+        {
+          "caller": "listAdsForPolling",
+          "callee": "encodeURIComponent",
+          "lineNumber": 458
+        },
+        {
+          "caller": "listAdsForPolling",
+          "callee": "JSON.stringify",
+          "lineNumber": 458
+        },
+        {
+          "caller": "listAdsForPolling",
+          "callee": "await graphFetch",
+          "lineNumber": 463
+        },
+        {
+          "caller": "listAdsForPolling",
+          "callee": "(data.data ?? []).map(toAdSnapshot).filter",
+          "lineNumber": 466
+        },
+        {
+          "caller": "listAdsForPolling",
+          "callee": "(data.data ?? []).map",
+          "lineNumber": 466
+        },
+        {
+          "caller": "listCampaigns",
+          "callee": "encodeURIComponent",
+          "lineNumber": 470
+        },
+        {
+          "caller": "listCampaigns",
+          "callee": "CAMPAIGN_FIELDS",
+          "lineNumber": 470
+        },
+        {
+          "caller": "listCampaigns",
+          "callee": "await graphFetch",
+          "lineNumber": 471
+        },
+        {
+          "caller": "listCampaigns",
+          "callee": "(data.data ?? []).map",
+          "lineNumber": 474
+        },
+        {
+          "caller": "getCampaign",
+          "callee": "encodeURIComponent",
+          "lineNumber": 478
+        },
+        {
+          "caller": "getCampaign",
+          "callee": "CAMPAIGN_FIELDS",
+          "lineNumber": 478
+        },
+        {
+          "caller": "getCampaign",
+          "callee": "await graphFetch",
+          "lineNumber": 479
+        },
+        {
+          "caller": "getCampaign",
+          "callee": "mapRawCampaign",
+          "lineNumber": 480
+        },
+        {
+          "caller": "getInsights",
+          "callee": "((): string => {\n      if (goalId) {\n        switch (goalId) {\n          case 'awareness':              return 'impressions,reach,frequency,cpm,spend'\n          case 'traffic':                return 'impressions,clicks,ctr,spend'\n          case 'traffic_page_visit':     return 'impressions,clicks,ctr,spend,actions'\n          case 'engagement':             return 'impressions,spend,actions'\n          case 'engagement_page_likes':\n          case 'engagement_messages':\n          case 'leads_call':             return 'impressions,reach,frequency,cpm,spend,actions'\n        }\n      }\n      switch (objective) {\n        case 'OUTCOME_AWARENESS':  return 'impressions,reach,frequency,cpm,spend'\n        case 'OUTCOME_ENGAGEMENT': return 'impressions,spend,actions'\n        case 'OUTCOME_LEADS':      return 'impressions,reach,frequency,cpm,spend,actions'\n        case 'OUTCOME_TRAFFIC':\n        default:                   return 'impressions,clicks,ctr,spend'\n      }\n    })",
+          "lineNumber": 499
+        },
+        {
+          "caller": "getInsights",
+          "callee": "await graphFetch",
+          "lineNumber": 519
+        },
+        {
+          "caller": "extractAction",
+          "callee": "acts.find",
+          "lineNumber": 540
+        },
+        {
+          "caller": "extractAction",
+          "callee": "Number",
+          "lineNumber": 541
+        },
+        {
+          "caller": "getInsights",
+          "callee": "data.data.map",
+          "lineNumber": 551
+        },
+        {
+          "caller": "getInsights",
+          "callee": "Number",
+          "lineNumber": 553
+        },
+        {
+          "caller": "getInsights",
+          "callee": "Number",
+          "lineNumber": 554
+        },
+        {
+          "caller": "getInsights",
+          "callee": "parseFloat",
+          "lineNumber": 555
+        },
+        {
+          "caller": "getInsights",
+          "callee": "parseFloat",
+          "lineNumber": 556
+        },
+        {
+          "caller": "getInsights",
+          "callee": "Number",
+          "lineNumber": 557
+        },
+        {
+          "caller": "getInsights",
+          "callee": "parseFloat",
+          "lineNumber": 558
+        },
+        {
+          "caller": "getInsights",
+          "callee": "parseFloat",
+          "lineNumber": 559
+        },
+        {
+          "caller": "getInsights",
+          "callee": "extractAction",
+          "lineNumber": 560
+        },
+        {
+          "caller": "getInsights",
+          "callee": "extractAction",
+          "lineNumber": 561
+        },
+        {
+          "caller": "getInsights",
+          "callee": "extractAction",
+          "lineNumber": 562
+        },
+        {
+          "caller": "getInsights",
+          "callee": "extractAction",
+          "lineNumber": 563
+        },
+        {
+          "caller": "getInsights",
+          "callee": "extractAction",
+          "lineNumber": 564
+        },
+        {
+          "caller": "getInsights",
+          "callee": "extractAction",
+          "lineNumber": 565
+        },
+        {
+          "caller": "getInsights",
+          "callee": "extractAction",
+          "lineNumber": 566
+        },
+        {
+          "caller": "getInsights",
+          "callee": "extractAction",
+          "lineNumber": 567
+        },
+        {
+          "caller": "getInsights",
+          "callee": "daily.reduce",
+          "lineNumber": 570
+        },
+        {
+          "caller": "getInsights",
+          "callee": "data.data.reduce",
+          "lineNumber": 579
+        },
+        {
+          "caller": "getInsights",
+          "callee": "Number",
+          "lineNumber": 579
+        },
+        {
+          "caller": "getInsights",
+          "callee": "data.data.reduce",
+          "lineNumber": 582
+        },
+        {
+          "caller": "getInsights",
+          "callee": "Number",
+          "lineNumber": 582
+        },
+        {
+          "caller": "getInsights",
+          "callee": "data.data.reduce",
+          "lineNumber": 584
+        },
+        {
+          "caller": "getInsights",
+          "callee": "parseFloat",
+          "lineNumber": 584
+        },
+        {
+          "caller": "getInsights",
+          "callee": "data.data.reduce",
+          "lineNumber": 587
+        },
+        {
+          "caller": "getInsights",
+          "callee": "parseFloat",
+          "lineNumber": 587
+        },
+        {
+          "caller": "sumAction",
+          "callee": "data.data.reduce",
+          "lineNumber": 589
+        },
+        {
+          "caller": "sumAction",
+          "callee": "extractAction",
+          "lineNumber": 589
+        },
+        {
+          "caller": "getInsights",
+          "callee": "sumAction",
+          "lineNumber": 590
+        },
+        {
+          "caller": "getInsights",
+          "callee": "sumAction",
+          "lineNumber": 591
+        },
+        {
+          "caller": "getInsights",
+          "callee": "sumAction",
+          "lineNumber": 592
+        },
+        {
+          "caller": "getInsights",
+          "callee": "sumAction",
+          "lineNumber": 593
+        },
+        {
+          "caller": "getInsights",
+          "callee": "sumAction",
+          "lineNumber": 594
+        },
+        {
+          "caller": "getInsights",
+          "callee": "sumAction",
+          "lineNumber": 597
+        },
+        {
+          "caller": "getInsights",
+          "callee": "sumAction",
+          "lineNumber": 598
+        },
+        {
+          "caller": "getInsights",
+          "callee": "sumAction",
+          "lineNumber": 599
+        },
+        {
+          "caller": "getInsights",
+          "callee": "sumAction",
+          "lineNumber": 600
+        },
+        {
+          "caller": "getInsights",
+          "callee": "encodeURIComponent",
+          "lineNumber": 608
+        },
+        {
+          "caller": "getInsights",
+          "callee": "JSON.stringify",
+          "lineNumber": 608
+        },
+        {
+          "caller": "getInsights",
+          "callee": "await graphFetch",
+          "lineNumber": 609
+        },
+        {
+          "caller": "mapRow",
+          "callee": "rows.find",
+          "lineNumber": 621
+        },
+        {
+          "caller": "mapRow",
+          "callee": "Math.round",
+          "lineNumber": 624
+        },
+        {
+          "caller": "mapRow",
+          "callee": "Number",
+          "lineNumber": 624
+        },
+        {
+          "caller": "mapRow",
+          "callee": "Math.round",
+          "lineNumber": 625
+        },
+        {
+          "caller": "mapRow",
+          "callee": "Number",
+          "lineNumber": 625
+        },
+        {
+          "caller": "mapRow",
+          "callee": "Math.round",
+          "lineNumber": 626
+        },
+        {
+          "caller": "mapRow",
+          "callee": "parseFloat",
+          "lineNumber": 626
+        },
+        {
+          "caller": "mapRow",
+          "callee": "Math.round",
+          "lineNumber": 627
+        },
+        {
+          "caller": "mapRow",
+          "callee": "parseFloat",
+          "lineNumber": 627
+        },
+        {
+          "caller": "getInsights",
+          "callee": "mapRow",
+          "lineNumber": 630
+        },
+        {
+          "caller": "getInsights",
+          "callee": "mapRow",
+          "lineNumber": 630
+        },
+        {
+          "caller": "getInsights",
+          "callee": "Math.round",
+          "lineNumber": 636
+        },
+        {
+          "caller": "getInsights",
+          "callee": "Math.round",
+          "lineNumber": 637
+        },
+        {
+          "caller": "getInsights",
+          "callee": "Math.round",
+          "lineNumber": 640
+        },
+        {
+          "caller": "getInsights",
+          "callee": "Math.round",
+          "lineNumber": 641
+        }
+      ],
+      "metrics": {
+        "importCount": 6,
+        "exportCount": 1,
+        "functionCount": 15,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "lib/notifications/ad-status-diff.test.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 104,
+      "nonEmptyLines": 91,
+      "functions": [
+        {
+          "name": "ad",
+          "startLine": 9,
+          "endLine": 21,
+          "params": [
+            "adId",
+            "status",
+            "overrides"
+          ]
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 0,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "lib/notifications/ad-status-diff.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 79,
+      "nonEmptyLines": 71,
+      "functions": [
+        {
+          "name": "truncate",
+          "startLine": 23,
+          "endLine": 26,
+          "params": [
+            "s",
+            "max"
+          ]
+        },
+        {
+          "name": "adName",
+          "startLine": 28,
+          "endLine": 30,
+          "params": [
+            "s"
+          ]
+        },
+        {
+          "name": "reasonText",
+          "startLine": 32,
+          "endLine": 35,
+          "params": [
+            "r"
+          ]
+        },
+        {
+          "name": "transitionMessage",
+          "startLine": 37,
+          "endLine": 54,
+          "params": [
+            "from",
+            "to",
+            "name",
+            "reason"
+          ]
+        },
+        {
+          "name": "diffSnapshots",
+          "startLine": 56,
+          "endLine": 75,
+          "params": [
+            "prev",
+            "next"
+          ]
+        },
+        {
+          "name": "snapshotMap",
+          "startLine": 77,
+          "endLine": 79,
+          "params": [
+            "snapshot"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "diffSnapshots",
+          "line": 56,
+          "isDefault": false
+        },
+        {
+          "name": "snapshotMap",
+          "line": 77,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "truncate",
+          "callee": "s.slice",
+          "lineNumber": 25
+        },
+        {
+          "caller": "adName",
+          "callee": "truncate",
+          "lineNumber": 29
+        },
+        {
+          "caller": "adName",
+          "callee": "s.trim",
+          "lineNumber": 29
+        },
+        {
+          "caller": "reasonText",
+          "callee": "r.trim",
+          "lineNumber": 33
+        },
+        {
+          "caller": "reasonText",
+          "callee": "truncate",
+          "lineNumber": 34
+        },
+        {
+          "caller": "reasonText",
+          "callee": "r.trim",
+          "lineNumber": 34
+        },
+        {
+          "caller": "transitionMessage",
+          "callee": "adName",
+          "lineNumber": 43
+        },
+        {
+          "caller": "transitionMessage",
+          "callee": "reasonText",
+          "lineNumber": 44
+        },
+        {
+          "caller": "diffSnapshots",
+          "callee": "prev.get",
+          "lineNumber": 62
+        },
+        {
+          "caller": "diffSnapshots",
+          "callee": "transitionMessage",
+          "lineNumber": 65
+        },
+        {
+          "caller": "diffSnapshots",
+          "callee": "out.push",
+          "lineNumber": 67
+        },
+        {
+          "caller": "snapshotMap",
+          "callee": "snapshot.map",
+          "lineNumber": 78
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 2,
+        "functionCount": 6,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "lib/notifications/ad-status-interval.test.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 60,
+      "nonEmptyLines": 57,
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "lib/notifications/ad-status-interval.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 30,
+      "nonEmptyLines": 24,
+      "functions": [
+        {
+          "name": "isIdle",
+          "startLine": 13,
+          "endLine": 16,
+          "params": [
+            "statuses"
+          ]
+        },
+        {
+          "name": "nextInterval",
+          "startLine": 18,
+          "endLine": 21,
+          "params": [
+            "statuses",
+            "backoff"
+          ]
+        },
+        {
+          "name": "applyResult",
+          "startLine": 23,
+          "endLine": 30,
+          "params": [
+            "backoff",
+            "success"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "BASE_INTERVAL_MS",
+          "line": 3,
+          "isDefault": false
+        },
+        {
+          "name": "IDLE_INTERVAL_MS",
+          "line": 4,
+          "isDefault": false
+        },
+        {
+          "name": "INITIAL_BACKOFF",
+          "line": 11,
+          "isDefault": false
+        },
+        {
+          "name": "isIdle",
+          "line": 13,
+          "isDefault": false
+        },
+        {
+          "name": "nextInterval",
+          "line": 18,
+          "isDefault": false
+        },
+        {
+          "name": "applyResult",
+          "line": 23,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "isIdle",
+          "callee": "statuses.every",
+          "lineNumber": 15
+        },
+        {
+          "caller": "nextInterval",
+          "callee": "isIdle",
+          "lineNumber": 19
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 6,
+        "functionCount": 3,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "lib/notifications/registry.test.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 107,
+      "nonEmptyLines": 95,
+      "functions": [
+        {
+          "name": "makeController",
+          "startLine": 18,
+          "endLine": 20,
+          "params": []
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "makeController",
+          "callee": "vi.fn",
+          "lineNumber": 19
+        },
+        {
+          "caller": "makeController",
+          "callee": "vi.fn",
+          "lineNumber": 19
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 0,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "lib/notifications/registry.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 361,
+      "nonEmptyLines": 317,
+      "functions": [
+        {
+          "name": "encodePayload",
+          "startLine": 83,
+          "endLine": 85,
+          "params": [
+            "payload"
+          ]
+        },
+        {
+          "name": "encodePing",
+          "startLine": 87,
+          "endLine": 89,
+          "params": []
+        },
+        {
+          "name": "safeEnqueue",
+          "startLine": 91,
+          "endLine": 98,
+          "params": [
+            "controller",
+            "chunk"
+          ]
+        },
+        {
+          "name": "fanOut",
+          "startLine": 100,
+          "endLine": 103,
+          "params": [
+            "entry",
+            "payload"
+          ]
+        },
+        {
+          "name": "broadcastPing",
+          "startLine": 105,
+          "endLine": 108,
+          "params": [
+            "entry"
+          ]
+        },
+        {
+          "name": "hashToken",
+          "startLine": 111,
+          "endLine": 113,
+          "params": [
+            "token"
+          ]
+        },
+        {
+          "name": "pushTournamentConcluded",
+          "startLine": 117,
+          "endLine": 126,
+          "params": [
+            "ownerToken",
+            "payload"
+          ]
+        },
+        {
+          "name": "makeEmissionId",
+          "startLine": 128,
+          "endLine": 130,
+          "params": [
+            "userId",
+            "adId",
+            "transition",
+            "ts"
+          ]
+        },
+        {
+          "name": "stopWorker",
+          "startLine": 132,
+          "endLine": 137,
+          "params": [
+            "entry"
+          ]
+        },
+        {
+          "name": "scheduleNext",
+          "startLine": 139,
+          "endLine": 143,
+          "params": [
+            "userId",
+            "entry"
+          ]
+        },
+        {
+          "name": "processWinnerCheck",
+          "startLine": 151,
+          "endLine": 191,
+          "params": [
+            "userId",
+            "campaignId"
+          ]
+        },
+        {
+          "name": "runTick",
+          "startLine": 193,
+          "endLine": 250,
+          "params": [
+            "userId"
+          ]
+        },
+        {
+          "name": "startPing",
+          "startLine": 255,
+          "endLine": 267,
+          "params": [
+            "userId"
+          ]
+        },
+        {
+          "name": "stopPing",
+          "startLine": 269,
+          "endLine": 275,
+          "params": [
+            "userId"
+          ]
+        },
+        {
+          "name": "addController",
+          "startLine": 282,
+          "endLine": 321,
+          "params": [
+            "userId",
+            "token",
+            "adAccountId",
+            "controller"
+          ]
+        },
+        {
+          "name": "removeController",
+          "startLine": 323,
+          "endLine": 335,
+          "params": [
+            "userId",
+            "controller"
+          ]
+        },
+        {
+          "name": "_resetForTest",
+          "startLine": 337,
+          "endLine": 345,
+          "params": []
+        },
+        {
+          "name": "_registrySize",
+          "startLine": 347,
+          "endLine": 349,
+          "params": []
+        },
+        {
+          "name": "_userControllerCount",
+          "startLine": 351,
+          "endLine": 353,
+          "params": [
+            "userId"
+          ]
+        },
+        {
+          "name": "_fanOutForTest",
+          "startLine": 355,
+          "endLine": 361,
+          "params": [
+            "userId",
+            "payload"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "pushTournamentConcluded",
+          "line": 117,
+          "isDefault": false
+        },
+        {
+          "name": "addController",
+          "line": 282,
+          "isDefault": false
+        },
+        {
+          "name": "removeController",
+          "line": 323,
+          "isDefault": false
+        },
+        {
+          "name": "_resetForTest",
+          "line": 337,
+          "isDefault": false
+        },
+        {
+          "name": "_registrySize",
+          "line": 347,
+          "isDefault": false
+        },
+        {
+          "name": "_userControllerCount",
+          "line": 351,
+          "isDefault": false
+        },
+        {
+          "name": "_fanOutForTest",
+          "line": 355,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "encodePayload",
+          "callee": "encoder.encode",
+          "lineNumber": 84
+        },
+        {
+          "caller": "encodePayload",
+          "callee": "JSON.stringify",
+          "lineNumber": 84
+        },
+        {
+          "caller": "encodePing",
+          "callee": "encoder.encode",
+          "lineNumber": 88
+        },
+        {
+          "caller": "safeEnqueue",
+          "callee": "controller.enqueue",
+          "lineNumber": 93
+        },
+        {
+          "caller": "fanOut",
+          "callee": "encodePayload",
+          "lineNumber": 101
+        },
+        {
+          "caller": "fanOut",
+          "callee": "entry.controllers.filter",
+          "lineNumber": 102
+        },
+        {
+          "caller": "fanOut",
+          "callee": "safeEnqueue",
+          "lineNumber": 102
+        },
+        {
+          "caller": "broadcastPing",
+          "callee": "encodePing",
+          "lineNumber": 106
+        },
+        {
+          "caller": "broadcastPing",
+          "callee": "entry.controllers.filter",
+          "lineNumber": 107
+        },
+        {
+          "caller": "broadcastPing",
+          "callee": "safeEnqueue",
+          "lineNumber": 107
+        },
+        {
+          "caller": "hashToken",
+          "callee": "createHash(\"sha256\").update(token).digest(\"hex\").slice",
+          "lineNumber": 112
+        },
+        {
+          "caller": "hashToken",
+          "callee": "createHash(\"sha256\").update(token).digest",
+          "lineNumber": 112
+        },
+        {
+          "caller": "hashToken",
+          "callee": "createHash(\"sha256\").update",
+          "lineNumber": 112
+        },
+        {
+          "caller": "hashToken",
+          "callee": "createHash",
+          "lineNumber": 112
+        },
+        {
+          "caller": "pushTournamentConcluded",
+          "callee": "registry.get",
+          "lineNumber": 121
+        },
+        {
+          "caller": "pushTournamentConcluded",
+          "callee": "hashToken",
+          "lineNumber": 121
+        },
+        {
+          "caller": "pushTournamentConcluded",
+          "callee": "fanOut",
+          "lineNumber": 124
+        },
+        {
+          "caller": "stopWorker",
+          "callee": "clearTimeout",
+          "lineNumber": 134
+        },
+        {
+          "caller": "scheduleNext",
+          "callee": "Array.from",
+          "lineNumber": 140
+        },
+        {
+          "caller": "scheduleNext",
+          "callee": "entry.lastSnapshot.values",
+          "lineNumber": 140
+        },
+        {
+          "caller": "scheduleNext",
+          "callee": "nextInterval",
+          "lineNumber": 141
+        },
+        {
+          "caller": "scheduleNext",
+          "callee": "setTimeout",
+          "lineNumber": 142
+        },
+        {
+          "caller": "scheduleNext",
+          "callee": "runTick",
+          "lineNumber": 142
+        },
+        {
+          "caller": "processWinnerCheck",
+          "callee": "registry.get",
+          "lineNumber": 152
+        },
+        {
+          "caller": "processWinnerCheck",
+          "callee": "entry.emittedAutoRelaunchIds.has",
+          "lineNumber": 154
+        },
+        {
+          "caller": "processWinnerCheck",
+          "callee": "metaAds.getCampaignBrief",
+          "lineNumber": 156
+        },
+        {
+          "caller": "processWinnerCheck",
+          "callee": "WINNER_OBJECTIVE_PARAMS.has",
+          "lineNumber": 159
+        },
+        {
+          "caller": "processWinnerCheck",
+          "callee": "metaAds.getInsights",
+          "lineNumber": 166
+        },
+        {
+          "caller": "processWinnerCheck",
+          "callee": "isWinner",
+          "lineNumber": 172
+        },
+        {
+          "caller": "processWinnerCheck",
+          "callee": "registry.get",
+          "lineNumber": 176
+        },
+        {
+          "caller": "processWinnerCheck",
+          "callee": "entry2.emittedAutoRelaunchIds.has",
+          "lineNumber": 178
+        },
+        {
+          "caller": "processWinnerCheck",
+          "callee": "entry2.emittedAutoRelaunchIds.add",
+          "lineNumber": 179
+        },
+        {
+          "caller": "processWinnerCheck",
+          "callee": "Date.now",
+          "lineNumber": 181
+        },
+        {
+          "caller": "processWinnerCheck",
+          "callee": "fanOut",
+          "lineNumber": 182
+        },
+        {
+          "caller": "runTick",
+          "callee": "registry.get",
+          "lineNumber": 194
+        },
+        {
+          "caller": "runTick",
+          "callee": "metaAds.listAdsForPolling",
+          "lineNumber": 199
+        },
+        {
+          "caller": "runTick",
+          "callee": "fanOut",
+          "lineNumber": 202
+        },
+        {
+          "caller": "runTick",
+          "callee": "stopWorker",
+          "lineNumber": 203
+        },
+        {
+          "caller": "runTick",
+          "callee": "c.controller.close",
+          "lineNumber": 205
+        },
+        {
+          "caller": "runTick",
+          "callee": "registry.delete",
+          "lineNumber": 207
+        },
+        {
+          "caller": "runTick",
+          "callee": "applyResult",
+          "lineNumber": 210
+        },
+        {
+          "caller": "runTick",
+          "callee": "scheduleNext",
+          "lineNumber": 211
+        },
+        {
+          "caller": "runTick",
+          "callee": "diffSnapshots",
+          "lineNumber": 217
+        },
+        {
+          "caller": "runTick",
+          "callee": "Date.now",
+          "lineNumber": 218
+        },
+        {
+          "caller": "runTick",
+          "callee": "fanOut",
+          "lineNumber": 220
+        },
+        {
+          "caller": "runTick",
+          "callee": "makeEmissionId",
+          "lineNumber": 221
+        },
+        {
+          "caller": "runTick",
+          "callee": "entry.lastSnapshot.get",
+          "lineNumber": 234
+        },
+        {
+          "caller": "runTick",
+          "callee": "terminatedCampaigns.add",
+          "lineNumber": 236
+        },
+        {
+          "caller": "runTick",
+          "callee": "entry.emittedAutoRelaunchIds.has",
+          "lineNumber": 240
+        },
+        {
+          "caller": "runTick",
+          "callee": "processWinnerCheck(userId, campaignId).catch",
+          "lineNumber": 241
+        },
+        {
+          "caller": "runTick",
+          "callee": "processWinnerCheck",
+          "lineNumber": 241
+        },
+        {
+          "caller": "runTick",
+          "callee": "snapshotMap",
+          "lineNumber": 245
+        },
+        {
+          "caller": "runTick",
+          "callee": "applyResult",
+          "lineNumber": 246
+        },
+        {
+          "caller": "runTick",
+          "callee": "scheduleNext",
+          "lineNumber": 249
+        },
+        {
+          "caller": "startPing",
+          "callee": "pingHandles.has",
+          "lineNumber": 256
+        },
+        {
+          "caller": "startPing",
+          "callee": "setInterval",
+          "lineNumber": 257
+        },
+        {
+          "caller": "startPing",
+          "callee": "registry.get",
+          "lineNumber": 258
+        },
+        {
+          "caller": "startPing",
+          "callee": "clearInterval",
+          "lineNumber": 260
+        },
+        {
+          "caller": "startPing",
+          "callee": "pingHandles.delete",
+          "lineNumber": 261
+        },
+        {
+          "caller": "startPing",
+          "callee": "broadcastPing",
+          "lineNumber": 264
+        },
+        {
+          "caller": "startPing",
+          "callee": "pingHandles.set",
+          "lineNumber": 266
+        },
+        {
+          "caller": "stopPing",
+          "callee": "pingHandles.get",
+          "lineNumber": 270
+        },
+        {
+          "caller": "stopPing",
+          "callee": "clearInterval",
+          "lineNumber": 272
+        },
+        {
+          "caller": "stopPing",
+          "callee": "pingHandles.delete",
+          "lineNumber": 273
+        },
+        {
+          "caller": "addController",
+          "callee": "registry.get",
+          "lineNumber": 288
+        },
+        {
+          "caller": "addController",
+          "callee": "registry.set",
+          "lineNumber": 302
+        },
+        {
+          "caller": "addController",
+          "callee": "entry.controllers.shift",
+          "lineNumber": 309
+        },
+        {
+          "caller": "addController",
+          "callee": "oldest.controller.close",
+          "lineNumber": 311
+        },
+        {
+          "caller": "addController",
+          "callee": "entry.controllers.push",
+          "lineNumber": 314
+        },
+        {
+          "caller": "addController",
+          "callee": "Date.now",
+          "lineNumber": 314
+        },
+        {
+          "caller": "addController",
+          "callee": "startPing",
+          "lineNumber": 316
+        },
+        {
+          "caller": "addController",
+          "callee": "runTick",
+          "lineNumber": 318
+        },
+        {
+          "caller": "removeController",
+          "callee": "registry.get",
+          "lineNumber": 327
+        },
+        {
+          "caller": "removeController",
+          "callee": "entry.controllers.filter",
+          "lineNumber": 329
+        },
+        {
+          "caller": "removeController",
+          "callee": "stopWorker",
+          "lineNumber": 331
+        },
+        {
+          "caller": "removeController",
+          "callee": "stopPing",
+          "lineNumber": 332
+        },
+        {
+          "caller": "removeController",
+          "callee": "registry.delete",
+          "lineNumber": 333
+        },
+        {
+          "caller": "_resetForTest",
+          "callee": "stopWorker",
+          "lineNumber": 339
+        },
+        {
+          "caller": "_resetForTest",
+          "callee": "stopPing",
+          "lineNumber": 340
+        },
+        {
+          "caller": "_resetForTest",
+          "callee": "registry.clear",
+          "lineNumber": 342
+        },
+        {
+          "caller": "_resetForTest",
+          "callee": "pingHandles.values",
+          "lineNumber": 343
+        },
+        {
+          "caller": "_resetForTest",
+          "callee": "clearInterval",
+          "lineNumber": 343
+        },
+        {
+          "caller": "_resetForTest",
+          "callee": "pingHandles.clear",
+          "lineNumber": 344
+        },
+        {
+          "caller": "_userControllerCount",
+          "callee": "registry.get",
+          "lineNumber": 352
+        },
+        {
+          "caller": "_fanOutForTest",
+          "callee": "registry.get",
+          "lineNumber": 356
+        },
+        {
+          "caller": "_fanOutForTest",
+          "callee": "fanOut",
+          "lineNumber": 359
+        }
+      ],
+      "metrics": {
+        "importCount": 6,
+        "exportCount": 7,
+        "functionCount": 20,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/entities/ab-test/tournament/adapters.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 39,
+      "nonEmptyLines": 35,
+      "metrics": {
+        "importCount": 2,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/entities/ab-test/tournament/engine.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 385,
+      "nonEmptyLines": 345,
+      "functions": [
+        {
+          "name": "nextAxis",
+          "startLine": 102,
+          "endLine": 104,
+          "params": [
+            "cursor"
+          ]
+        },
+        {
+          "name": "deriveAxis",
+          "startLine": 107,
+          "endLine": 111,
+          "params": [
+            "champion",
+            "challenger"
+          ]
+        },
+        {
+          "name": "roundCampaignId",
+          "startLine": 113,
+          "endLine": 115,
+          "params": [
+            "tournamentId",
+            "index"
+          ]
+        },
+        {
+          "name": "newTournamentId",
+          "startLine": 118,
+          "endLine": 120,
+          "params": []
+        },
+        {
+          "name": "seededUnit",
+          "startLine": 126,
+          "endLine": 131,
+          "params": [
+            "seed",
+            "index"
+          ]
+        },
+        {
+          "name": "challengerFactor",
+          "startLine": 136,
+          "endLine": 139,
+          "params": [
+            "campaignId",
+            "index"
+          ]
+        },
+        {
+          "name": "roundAdKpis",
+          "startLine": 147,
+          "endLine": 193,
+          "params": [
+            "round",
+            "championCtr",
+            "dailyBudget",
+            "factorOverride",
+            "objective"
+          ]
+        },
+        {
+          "name": "stdNormalCdf",
+          "startLine": 196,
+          "endLine": 204,
+          "params": [
+            "z"
+          ]
+        },
+        {
+          "name": "confidenceFromZTest",
+          "startLine": 208,
+          "endLine": 216,
+          "params": [
+            "a",
+            "b"
+          ]
+        },
+        {
+          "name": "confidenceFromCountTest",
+          "startLine": 221,
+          "endLine": 226,
+          "params": [
+            "impA",
+            "impB"
+          ]
+        },
+        {
+          "name": "judgeRoundKpis",
+          "startLine": 247,
+          "endLine": 267,
+          "params": [
+            "kpis",
+            "elapsedDays",
+            "objective"
+          ]
+        },
+        {
+          "name": "settleRound",
+          "startLine": 271,
+          "endLine": 280,
+          "params": [
+            "round",
+            "championCtr",
+            "dailyBudget",
+            "factorOverride",
+            "objective"
+          ]
+        },
+        {
+          "name": "daysBetweenIso",
+          "startLine": 282,
+          "endLine": 287,
+          "params": [
+            "start",
+            "end"
+          ]
+        },
+        {
+          "name": "isEnvelopeExhausted",
+          "startLine": 290,
+          "endLine": 302,
+          "params": [
+            "t"
+          ]
+        },
+        {
+          "name": "detectAnomaly",
+          "startLine": 322,
+          "endLine": 340,
+          "params": [
+            "t"
+          ]
+        },
+        {
+          "name": "deriveBeat",
+          "startLine": 344,
+          "endLine": 355,
+          "params": [
+            "t"
+          ]
+        },
+        {
+          "name": "isDecisionBeat",
+          "startLine": 358,
+          "endLine": 366,
+          "params": [
+            "b"
+          ]
+        },
+        {
+          "name": "isRunningBeat",
+          "startLine": 368,
+          "endLine": 370,
+          "params": [
+            "b"
+          ]
+        },
+        {
+          "name": "buildChallenger",
+          "startLine": 374,
+          "endLine": 381,
+          "params": [
+            "champion",
+            "axis",
+            "gen"
+          ]
+        },
+        {
+          "name": "initialChampion",
+          "startLine": 383,
+          "endLine": 385,
+          "params": [
+            "gen"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "AXIS_CYCLE",
+          "line": 95,
+          "isDefault": false
+        },
+        {
+          "name": "AXIS_LABEL",
+          "line": 96,
+          "isDefault": false
+        },
+        {
+          "name": "nextAxis",
+          "line": 102,
+          "isDefault": false
+        },
+        {
+          "name": "deriveAxis",
+          "line": 107,
+          "isDefault": false
+        },
+        {
+          "name": "roundCampaignId",
+          "line": 113,
+          "isDefault": false
+        },
+        {
+          "name": "newTournamentId",
+          "line": 118,
+          "isDefault": false
+        },
+        {
+          "name": "seededUnit",
+          "line": 126,
+          "isDefault": false
+        },
+        {
+          "name": "roundAdKpis",
+          "line": 147,
+          "isDefault": false
+        },
+        {
+          "name": "confidenceFromZTest",
+          "line": 208,
+          "isDefault": false
+        },
+        {
+          "name": "confidenceFromCountTest",
+          "line": 221,
+          "isDefault": false
+        },
+        {
+          "name": "WINNER_CONFIDENCE",
+          "line": 229,
+          "isDefault": false
+        },
+        {
+          "name": "MIN_ROUND_DAYS",
+          "line": 233,
+          "isDefault": false
+        },
+        {
+          "name": "judgeRoundKpis",
+          "line": 247,
+          "isDefault": false
+        },
+        {
+          "name": "settleRound",
+          "line": 271,
+          "isDefault": false
+        },
+        {
+          "name": "isEnvelopeExhausted",
+          "line": 290,
+          "isDefault": false
+        },
+        {
+          "name": "detectAnomaly",
+          "line": 322,
+          "isDefault": false
+        },
+        {
+          "name": "deriveBeat",
+          "line": 344,
+          "isDefault": false
+        },
+        {
+          "name": "isDecisionBeat",
+          "line": 358,
+          "isDefault": false
+        },
+        {
+          "name": "isRunningBeat",
+          "line": 368,
+          "isDefault": false
+        },
+        {
+          "name": "buildChallenger",
+          "line": 374,
+          "isDefault": false
+        },
+        {
+          "name": "initialChampion",
+          "line": 383,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "newTournamentId",
+          "callee": "Math.random().toString(36).slice",
+          "lineNumber": 119
+        },
+        {
+          "caller": "newTournamentId",
+          "callee": "Math.random().toString",
+          "lineNumber": 119
+        },
+        {
+          "caller": "newTournamentId",
+          "callee": "Math.random",
+          "lineNumber": 119
+        },
+        {
+          "caller": "seededUnit",
+          "callee": "seed.charCodeAt",
+          "lineNumber": 128
+        },
+        {
+          "caller": "challengerFactor",
+          "callee": "Math.min",
+          "lineNumber": 137
+        },
+        {
+          "caller": "challengerFactor",
+          "callee": "Math.max",
+          "lineNumber": 137
+        },
+        {
+          "caller": "challengerFactor",
+          "callee": "seededUnit",
+          "lineNumber": 138
+        },
+        {
+          "caller": "roundAdKpis",
+          "callee": "Math.max",
+          "lineNumber": 154
+        },
+        {
+          "caller": "roundAdKpis",
+          "callee": "challengerFactor",
+          "lineNumber": 161
+        },
+        {
+          "caller": "roundAdKpis",
+          "callee": "seededUnit",
+          "lineNumber": 162
+        },
+        {
+          "caller": "roundAdKpis",
+          "callee": "Math.round",
+          "lineNumber": 163
+        },
+        {
+          "caller": "roundAdKpis",
+          "callee": "tourMetricSpec",
+          "lineNumber": 165
+        },
+        {
+          "caller": "roundAdKpis",
+          "callee": "seededUnit",
+          "lineNumber": 169
+        },
+        {
+          "caller": "impFrom",
+          "callee": "Math.max",
+          "lineNumber": 170
+        },
+        {
+          "caller": "impFrom",
+          "callee": "Math.round",
+          "lineNumber": 170
+        },
+        {
+          "caller": "mk",
+          "callee": "Math.max",
+          "lineNumber": 174
+        },
+        {
+          "caller": "mk",
+          "callee": "Math.round",
+          "lineNumber": 174
+        },
+        {
+          "caller": "roundAdKpis",
+          "callee": "mk",
+          "lineNumber": 178
+        },
+        {
+          "caller": "roundAdKpis",
+          "callee": "impFrom",
+          "lineNumber": 178
+        },
+        {
+          "caller": "roundAdKpis",
+          "callee": "mk",
+          "lineNumber": 178
+        },
+        {
+          "caller": "roundAdKpis",
+          "callee": "impFrom",
+          "lineNumber": 178
+        },
+        {
+          "caller": "roundAdKpis",
+          "callee": "Math.round",
+          "lineNumber": 181
+        },
+        {
+          "caller": "roundAdKpis",
+          "callee": "seededUnit",
+          "lineNumber": 181
+        },
+        {
+          "caller": "roundAdKpis",
+          "callee": "Math.max",
+          "lineNumber": 184
+        },
+        {
+          "caller": "roundAdKpis",
+          "callee": "Math.round",
+          "lineNumber": 184
+        },
+        {
+          "caller": "roundAdKpis",
+          "callee": "Math.max",
+          "lineNumber": 185
+        },
+        {
+          "caller": "roundAdKpis",
+          "callee": "Math.round",
+          "lineNumber": 185
+        },
+        {
+          "caller": "mk",
+          "callee": "Math.round",
+          "lineNumber": 189
+        },
+        {
+          "caller": "roundAdKpis",
+          "callee": "mk",
+          "lineNumber": 192
+        },
+        {
+          "caller": "roundAdKpis",
+          "callee": "mk",
+          "lineNumber": 192
+        },
+        {
+          "caller": "stdNormalCdf",
+          "callee": "Math.abs",
+          "lineNumber": 199
+        },
+        {
+          "caller": "stdNormalCdf",
+          "callee": "Math.exp",
+          "lineNumber": 202
+        },
+        {
+          "caller": "confidenceFromZTest",
+          "callee": "Math.sqrt",
+          "lineNumber": 213
+        },
+        {
+          "caller": "confidenceFromZTest",
+          "callee": "stdNormalCdf",
+          "lineNumber": 215
+        },
+        {
+          "caller": "confidenceFromZTest",
+          "callee": "Math.abs",
+          "lineNumber": 215
+        },
+        {
+          "caller": "confidenceFromCountTest",
+          "callee": "Math.sqrt",
+          "lineNumber": 223
+        },
+        {
+          "caller": "confidenceFromCountTest",
+          "callee": "stdNormalCdf",
+          "lineNumber": 225
+        },
+        {
+          "caller": "confidenceFromCountTest",
+          "callee": "Math.abs",
+          "lineNumber": 225
+        },
+        {
+          "caller": "judgeRoundKpis",
+          "callee": "tourMetricSpec",
+          "lineNumber": 249
+        },
+        {
+          "caller": "judgeRoundKpis",
+          "callee": "metricCpm",
+          "lineNumber": 250
+        },
+        {
+          "caller": "judgeRoundKpis",
+          "callee": "metricCpm",
+          "lineNumber": 251
+        },
+        {
+          "caller": "judgeRoundKpis",
+          "callee": "confidenceFromCountTest",
+          "lineNumber": 255
+        },
+        {
+          "caller": "judgeRoundKpis",
+          "callee": "confidenceFromZTest",
+          "lineNumber": 255
+        },
+        {
+          "caller": "settleRound",
+          "callee": "roundAdKpis",
+          "lineNumber": 278
+        },
+        {
+          "caller": "settleRound",
+          "callee": "judgeRoundKpis",
+          "lineNumber": 279
+        },
+        {
+          "caller": "daysBetweenIso",
+          "callee": "Date.parse",
+          "lineNumber": 283
+        },
+        {
+          "caller": "daysBetweenIso",
+          "callee": "Date.parse",
+          "lineNumber": 284
+        },
+        {
+          "caller": "daysBetweenIso",
+          "callee": "isNaN",
+          "lineNumber": 285
+        },
+        {
+          "caller": "daysBetweenIso",
+          "callee": "isNaN",
+          "lineNumber": 285
+        },
+        {
+          "caller": "daysBetweenIso",
+          "callee": "Math.round",
+          "lineNumber": 286
+        },
+        {
+          "caller": "isEnvelopeExhausted",
+          "callee": "t.rounds.filter",
+          "lineNumber": 292
+        },
+        {
+          "caller": "isEnvelopeExhausted",
+          "callee": "t.rounds.filter((r) => r.status === \"settled\").reduce",
+          "lineNumber": 297
+        },
+        {
+          "caller": "isEnvelopeExhausted",
+          "callee": "t.rounds.filter",
+          "lineNumber": 297
+        },
+        {
+          "caller": "isEnvelopeExhausted",
+          "callee": "daysBetweenIso",
+          "lineNumber": 298
+        },
+        {
+          "caller": "detectAnomaly",
+          "callee": "t.rounds.filter",
+          "lineNumber": 323
+        },
+        {
+          "caller": "detectAnomaly",
+          "callee": "settled.at",
+          "lineNumber": 324
+        },
+        {
+          "caller": "detectAnomaly",
+          "callee": "words.map((w) => w.trim()).filter",
+          "lineNumber": 330
+        },
+        {
+          "caller": "detectAnomaly",
+          "callee": "words.map",
+          "lineNumber": 330
+        },
+        {
+          "caller": "detectAnomaly",
+          "callee": "w.trim",
+          "lineNumber": 330
+        },
+        {
+          "caller": "detectAnomaly",
+          "callee": "text.includes",
+          "lineNumber": 330
+        },
+        {
+          "caller": "detectAnomaly",
+          "callee": "settled.at",
+          "lineNumber": 334
+        },
+        {
+          "caller": "detectAnomaly",
+          "callee": "settled.at",
+          "lineNumber": 335
+        },
+        {
+          "caller": "deriveBeat",
+          "callee": "isEnvelopeExhausted",
+          "lineNumber": 348
+        },
+        {
+          "caller": "deriveBeat",
+          "callee": "detectAnomaly",
+          "lineNumber": 349
+        },
+        {
+          "caller": "deriveBeat",
+          "callee": "t.rounds.some",
+          "lineNumber": 352
+        },
+        {
+          "caller": "buildChallenger",
+          "callee": "gen.headlines.find",
+          "lineNumber": 376
+        },
+        {
+          "caller": "buildChallenger",
+          "callee": "x.trim",
+          "lineNumber": 376
+        },
+        {
+          "caller": "buildChallenger",
+          "callee": "x.trim",
+          "lineNumber": 376
+        },
+        {
+          "caller": "buildChallenger",
+          "callee": "champion.headline.trim",
+          "lineNumber": 376
+        },
+        {
+          "caller": "buildChallenger",
+          "callee": "gen.primaryTexts.find",
+          "lineNumber": 379
+        },
+        {
+          "caller": "buildChallenger",
+          "callee": "x.trim",
+          "lineNumber": 379
+        },
+        {
+          "caller": "buildChallenger",
+          "callee": "x.trim",
+          "lineNumber": 379
+        },
+        {
+          "caller": "buildChallenger",
+          "callee": "champion.primaryText.trim",
+          "lineNumber": 379
+        }
+      ],
+      "metrics": {
+        "importCount": 2,
+        "exportCount": 21,
+        "functionCount": 20,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/entities/ab-test/tournament/meta-adapters.test.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 151,
+      "nonEmptyLines": 131,
+      "functions": [
+        {
+          "name": "tour",
+          "startLine": 22,
+          "endLine": 30,
+          "params": [
+            "over"
+          ]
+        },
+        {
+          "name": "round",
+          "startLine": 32,
+          "endLine": 39,
+          "params": [
+            "over"
+          ]
+        }
+      ],
+      "metrics": {
+        "importCount": 5,
+        "exportCount": 0,
+        "functionCount": 2,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/entities/ab-test/tournament/meta-kpi-source.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 57,
+      "nonEmptyLines": 51,
+      "functions": [
+        {
+          "name": "createMetaKpiSource",
+          "startLine": 12,
+          "endLine": 57,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "createMetaKpiSource",
+          "line": 12,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "roundKpis",
+          "callee": "metaAdsInsights.getInsights",
+          "lineNumber": 19
+        },
+        {
+          "caller": "roundKpis",
+          "callee": "toKpi",
+          "lineNumber": 36
+        },
+        {
+          "caller": "roundKpis",
+          "callee": "toKpi",
+          "lineNumber": 36
+        },
+        {
+          "caller": "roundVerdict",
+          "callee": "metaAdsInsights.getSplitTestResult",
+          "lineNumber": 43
+        }
+      ],
+      "metrics": {
+        "importCount": 4,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/entities/ab-test/tournament/meta-launcher.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 68,
+      "nonEmptyLines": 62,
+      "functions": [
+        {
+          "name": "isoDateKST",
+          "startLine": 13,
+          "endLine": 17,
+          "params": [
+            "daysFromNow"
+          ]
+        },
+        {
+          "name": "variantB",
+          "startLine": 21,
+          "endLine": 24,
+          "params": [
+            "challenger",
+            "axis"
+          ]
+        },
+        {
+          "name": "createMetaRoundLauncher",
+          "startLine": 26,
+          "endLine": 68,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "createMetaRoundLauncher",
+          "line": 26,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "isoDateKST",
+          "callee": "now.getTime",
+          "lineNumber": 15
+        },
+        {
+          "caller": "isoDateKST",
+          "callee": "kst.toISOString().slice",
+          "lineNumber": 16
+        },
+        {
+          "caller": "isoDateKST",
+          "callee": "kst.toISOString",
+          "lineNumber": 16
+        },
+        {
+          "caller": "launch",
+          "callee": "deriveAxis",
+          "lineNumber": 31
+        },
+        {
+          "caller": "launch",
+          "callee": "metaAdsCampaign.createSplitTestStudy",
+          "lineNumber": 34
+        },
+        {
+          "caller": "launch",
+          "callee": "isoDateKST",
+          "lineNumber": 39
+        },
+        {
+          "caller": "launch",
+          "callee": "isoDateKST",
+          "lineNumber": 40
+        },
+        {
+          "caller": "launch",
+          "callee": "variantB",
+          "lineNumber": 53
+        }
+      ],
+      "metrics": {
+        "importCount": 4,
+        "exportCount": 1,
+        "functionCount": 3,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/entities/ab-test/tournament/real.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 25,
+      "nonEmptyLines": 21,
+      "functions": [
+        {
+          "name": "getRealTournamentRunner",
+          "startLine": 10,
+          "endLine": 16,
+          "params": []
+        },
+        {
+          "name": "ownerKeyFrom",
+          "startLine": 20,
+          "endLine": 23,
+          "params": [
+            "email",
+            "accessToken"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "getRealTournamentRunner",
+          "line": 10,
+          "isDefault": false
+        },
+        {
+          "name": "ownerKeyFrom",
+          "line": 20,
+          "isDefault": false
+        },
+        {
+          "name": "supabaseTournamentStore",
+          "line": 25,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "getRealTournamentRunner",
+          "callee": "createServerRunner",
+          "lineNumber": 11
+        },
+        {
+          "caller": "getRealTournamentRunner",
+          "callee": "createMetaRoundLauncher",
+          "lineNumber": 13
+        },
+        {
+          "caller": "getRealTournamentRunner",
+          "callee": "createMetaKpiSource",
+          "lineNumber": 14
+        },
+        {
+          "caller": "ownerKeyFrom",
+          "callee": "createHash(\"sha256\").update(accessToken).digest(\"hex\").slice",
+          "lineNumber": 22
+        },
+        {
+          "caller": "ownerKeyFrom",
+          "callee": "createHash(\"sha256\").update(accessToken).digest",
+          "lineNumber": 22
+        },
+        {
+          "caller": "ownerKeyFrom",
+          "callee": "createHash(\"sha256\").update",
+          "lineNumber": 22
+        },
+        {
+          "caller": "ownerKeyFrom",
+          "callee": "createHash",
+          "lineNumber": 22
+        }
+      ],
+      "metrics": {
+        "importCount": 4,
+        "exportCount": 3,
+        "functionCount": 2,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/entities/ab-test/tournament/server-runner.test.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 193,
+      "nonEmptyLines": 174,
+      "functions": [
+        {
+          "name": "memStore",
+          "startLine": 25,
+          "endLine": 35,
+          "params": []
+        },
+        {
+          "name": "baseSetup",
+          "startLine": 39,
+          "endLine": 47,
+          "params": [
+            "over"
+          ]
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "list",
+          "callee": "all.values",
+          "lineNumber": 29
+        },
+        {
+          "caller": "listByOwner",
+          "callee": "[...all.values()].filter",
+          "lineNumber": 30
+        },
+        {
+          "caller": "listByOwner",
+          "callee": "all.values",
+          "lineNumber": 30
+        },
+        {
+          "caller": "get",
+          "callee": "all.get",
+          "lineNumber": 31
+        },
+        {
+          "caller": "upsert",
+          "callee": "all.set",
+          "lineNumber": 32
+        },
+        {
+          "caller": "upsert",
+          "callee": "structuredClone",
+          "lineNumber": 32
+        },
+        {
+          "caller": "remove",
+          "callee": "all.delete",
+          "lineNumber": 33
+        },
+        {
+          "caller": "runner",
+          "callee": "createServerRunner",
+          "lineNumber": 64
+        }
+      ],
+      "metrics": {
+        "importCount": 3,
+        "exportCount": 0,
+        "functionCount": 2,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/entities/ab-test/tournament/server-runner.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 299,
+      "nonEmptyLines": 273,
+      "functions": [
+        {
+          "name": "genCreative",
+          "startLine": 30,
+          "endLine": 40,
+          "params": [
+            "t"
+          ]
+        },
+        {
+          "name": "elapsedDays",
+          "startLine": 43,
+          "endLine": 48,
+          "params": [
+            "round",
+            "nowMs"
+          ]
+        },
+        {
+          "name": "createServerRunner",
+          "startLine": 81,
+          "endLine": 297,
+          "params": [
+            "deps"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "createServerRunner",
+          "line": 81,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "genCreative",
+          "callee": "geminiCreative.generate",
+          "lineNumber": 31
+        },
+        {
+          "caller": "elapsedDays",
+          "callee": "Date.parse",
+          "lineNumber": 45
+        },
+        {
+          "caller": "elapsedDays",
+          "callee": "Number.isNaN",
+          "lineNumber": 46
+        },
+        {
+          "caller": "elapsedDays",
+          "callee": "Math.max",
+          "lineNumber": 47
+        },
+        {
+          "caller": "elapsedDays",
+          "callee": "Math.floor",
+          "lineNumber": 47
+        },
+        {
+          "caller": "createServerRunner",
+          "callee": "Date.now",
+          "lineNumber": 88
+        },
+        {
+          "caller": "createTournament",
+          "callee": "newTournamentId",
+          "lineNumber": 92
+        },
+        {
+          "caller": "createTournament",
+          "callee": "new Date(now()).toISOString",
+          "lineNumber": 116
+        },
+        {
+          "caller": "createTournament",
+          "callee": "now",
+          "lineNumber": 116
+        },
+        {
+          "caller": "createTournament",
+          "callee": "genCreative",
+          "lineNumber": 122
+        },
+        {
+          "caller": "createTournament",
+          "callee": "initialChampion",
+          "lineNumber": 123
+        },
+        {
+          "caller": "createTournament",
+          "callee": "store.upsert",
+          "lineNumber": 125
+        },
+        {
+          "caller": "regenerateChampion",
+          "callee": "store.get",
+          "lineNumber": 130
+        },
+        {
+          "caller": "regenerateChampion",
+          "callee": "genCreative",
+          "lineNumber": 132
+        },
+        {
+          "caller": "regenerateChampion",
+          "callee": "initialChampion",
+          "lineNumber": 133
+        },
+        {
+          "caller": "regenerateChampion",
+          "callee": "store.upsert",
+          "lineNumber": 134
+        },
+        {
+          "caller": "confirmChampion",
+          "callee": "store.get",
+          "lineNumber": 139
+        },
+        {
+          "caller": "confirmChampion",
+          "callee": "store.upsert",
+          "lineNumber": 143
+        },
+        {
+          "caller": "proposeChallenger",
+          "callee": "store.get",
+          "lineNumber": 147
+        },
+        {
+          "caller": "proposeChallenger",
+          "callee": "t.rounds.some",
+          "lineNumber": 148
+        },
+        {
+          "caller": "proposeChallenger",
+          "callee": "nextAxis",
+          "lineNumber": 149
+        },
+        {
+          "caller": "proposeChallenger",
+          "callee": "genCreative",
+          "lineNumber": 150
+        },
+        {
+          "caller": "proposeChallenger",
+          "callee": "buildChallenger",
+          "lineNumber": 151
+        },
+        {
+          "caller": "proposeChallenger",
+          "callee": "store.upsert",
+          "lineNumber": 152
+        },
+        {
+          "caller": "setManualChallenger",
+          "callee": "store.get",
+          "lineNumber": 157
+        },
+        {
+          "caller": "setManualChallenger",
+          "callee": "store.upsert",
+          "lineNumber": 160
+        },
+        {
+          "caller": "launchRound",
+          "callee": "store.get",
+          "lineNumber": 165
+        },
+        {
+          "caller": "launchRound",
+          "callee": "t.rounds.some",
+          "lineNumber": 166
+        },
+        {
+          "caller": "launchRound",
+          "callee": "deriveAxis",
+          "lineNumber": 172
+        },
+        {
+          "caller": "launchRound",
+          "callee": "roundCampaignId",
+          "lineNumber": 173
+        },
+        {
+          "caller": "launchRound",
+          "callee": "launcher.launch",
+          "lineNumber": 179
+        },
+        {
+          "caller": "launchRound",
+          "callee": "new Date(now()).toISOString",
+          "lineNumber": 184
+        },
+        {
+          "caller": "launchRound",
+          "callee": "now",
+          "lineNumber": 184
+        },
+        {
+          "caller": "launchRound",
+          "callee": "store.upsert",
+          "lineNumber": 187
+        },
+        {
+          "caller": "endTournament",
+          "callee": "store.get",
+          "lineNumber": 192
+        },
+        {
+          "caller": "endTournament",
+          "callee": "store.upsert",
+          "lineNumber": 196
+        },
+        {
+          "caller": "pollAndSettle",
+          "callee": "store.get",
+          "lineNumber": 202
+        },
+        {
+          "caller": "pollAndSettle",
+          "callee": "t.rounds.find",
+          "lineNumber": 204
+        },
+        {
+          "caller": "pollAndSettle",
+          "callee": "kpiSource.roundKpis",
+          "lineNumber": 207
+        },
+        {
+          "caller": "pollAndSettle",
+          "callee": "kpiSource.roundVerdict",
+          "lineNumber": 212
+        },
+        {
+          "caller": "pollAndSettle",
+          "callee": "judgeRoundKpis",
+          "lineNumber": 216
+        },
+        {
+          "caller": "pollAndSettle",
+          "callee": "elapsedDays",
+          "lineNumber": 216
+        },
+        {
+          "caller": "pollAndSettle",
+          "callee": "now",
+          "lineNumber": 216
+        },
+        {
+          "caller": "pollAndSettle",
+          "callee": "isEnvelopeExhausted",
+          "lineNumber": 231
+        },
+        {
+          "caller": "pollAndSettle",
+          "callee": "store.upsert",
+          "lineNumber": 233
+        },
+        {
+          "caller": "autoAdvance",
+          "callee": "store.get",
+          "lineNumber": 247
+        },
+        {
+          "caller": "autoAdvance",
+          "callee": "t.rounds.some",
+          "lineNumber": 250
+        },
+        {
+          "caller": "autoAdvance",
+          "callee": "isEnvelopeExhausted",
+          "lineNumber": 251
+        },
+        {
+          "caller": "autoAdvance",
+          "callee": "detectAnomaly",
+          "lineNumber": 251
+        },
+        {
+          "caller": "autoAdvance",
+          "callee": "proposeChallenger",
+          "lineNumber": 253
+        },
+        {
+          "caller": "autoAdvance",
+          "callee": "launchRound",
+          "lineNumber": 254
+        },
+        {
+          "caller": "discardPendingChallenger",
+          "callee": "store.get",
+          "lineNumber": 261
+        },
+        {
+          "caller": "discardPendingChallenger",
+          "callee": "store.upsert",
+          "lineNumber": 264
+        },
+        {
+          "caller": "resolveAnomaly",
+          "callee": "store.get",
+          "lineNumber": 268
+        },
+        {
+          "caller": "resolveAnomaly",
+          "callee": "t.rounds.filter((r) => r.status === \"settled\").at",
+          "lineNumber": 270
+        },
+        {
+          "caller": "resolveAnomaly",
+          "callee": "t.rounds.filter",
+          "lineNumber": 270
+        },
+        {
+          "caller": "resolveAnomaly",
+          "callee": "store.upsert",
+          "lineNumber": 272
+        },
+        {
+          "caller": "refillEnvelope",
+          "callee": "store.get",
+          "lineNumber": 276
+        },
+        {
+          "caller": "refillEnvelope",
+          "callee": "store.upsert",
+          "lineNumber": 280
+        }
+      ],
+      "metrics": {
+        "importCount": 4,
+        "exportCount": 1,
+        "functionCount": 3,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/entities/ab-test/tournament/supabase-store.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 63,
+      "nonEmptyLines": 54,
+      "functions": [
+        {
+          "name": "client",
+          "startLine": 14,
+          "endLine": 18,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "supabaseTournamentStore",
+          "line": 20,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "client",
+          "callee": "getSupabaseServer",
+          "lineNumber": 15
+        },
+        {
+          "caller": "list",
+          "callee": "client().from(TABLE).select(\"data\").order",
+          "lineNumber": 22
+        },
+        {
+          "caller": "list",
+          "callee": "client().from(TABLE).select",
+          "lineNumber": 22
+        },
+        {
+          "caller": "list",
+          "callee": "client().from",
+          "lineNumber": 22
+        },
+        {
+          "caller": "list",
+          "callee": "client",
+          "lineNumber": 22
+        },
+        {
+          "caller": "list",
+          "callee": "((data as Row[]) ?? []).map",
+          "lineNumber": 24
+        },
+        {
+          "caller": "listByOwner",
+          "callee": "client()\n      .from(TABLE)\n      .select(\"data\")\n      .eq(\"user_email\", ownerKey)\n      .order",
+          "lineNumber": 28
+        },
+        {
+          "caller": "listByOwner",
+          "callee": "client()\n      .from(TABLE)\n      .select(\"data\")\n      .eq",
+          "lineNumber": 28
+        },
+        {
+          "caller": "listByOwner",
+          "callee": "client()\n      .from(TABLE)\n      .select",
+          "lineNumber": 28
+        },
+        {
+          "caller": "listByOwner",
+          "callee": "client()\n      .from",
+          "lineNumber": 28
+        },
+        {
+          "caller": "listByOwner",
+          "callee": "client",
+          "lineNumber": 28
+        },
+        {
+          "caller": "listByOwner",
+          "callee": "((data as Row[]) ?? []).map",
+          "lineNumber": 34
+        },
+        {
+          "caller": "get",
+          "callee": "client().from(TABLE).select(\"data\").eq(\"id\", id).maybeSingle",
+          "lineNumber": 38
+        },
+        {
+          "caller": "get",
+          "callee": "client().from(TABLE).select(\"data\").eq",
+          "lineNumber": 38
+        },
+        {
+          "caller": "get",
+          "callee": "client().from(TABLE).select",
+          "lineNumber": 38
+        },
+        {
+          "caller": "get",
+          "callee": "client().from",
+          "lineNumber": 38
+        },
+        {
+          "caller": "get",
+          "callee": "client",
+          "lineNumber": 38
+        },
+        {
+          "caller": "upsert",
+          "callee": "client()\n      .from(TABLE)\n      .upsert",
+          "lineNumber": 44
+        },
+        {
+          "caller": "upsert",
+          "callee": "client()\n      .from",
+          "lineNumber": 44
+        },
+        {
+          "caller": "upsert",
+          "callee": "client",
+          "lineNumber": 44
+        },
+        {
+          "caller": "upsert",
+          "callee": "new Date().toISOString",
+          "lineNumber": 54
+        },
+        {
+          "caller": "remove",
+          "callee": "client().from(TABLE).delete().eq",
+          "lineNumber": 60
+        },
+        {
+          "caller": "remove",
+          "callee": "client().from(TABLE).delete",
+          "lineNumber": 60
+        },
+        {
+          "caller": "remove",
+          "callee": "client().from",
+          "lineNumber": 60
+        },
+        {
+          "caller": "remove",
+          "callee": "client",
+          "lineNumber": 60
+        }
+      ],
+      "metrics": {
+        "importCount": 3,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/shared/lib/cron-runs.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 65,
+      "nonEmptyLines": 59,
+      "functions": [
+        {
+          "name": "recordCronRun",
+          "startLine": 31,
+          "endLine": 50,
+          "params": [
+            "run"
+          ]
+        },
+        {
+          "name": "getLastSuccessfulRun",
+          "startLine": 52,
+          "endLine": 65,
+          "params": [
+            "job"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "recordCronRun",
+          "line": 31,
+          "isDefault": false
+        },
+        {
+          "name": "getLastSuccessfulRun",
+          "line": 52,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "recordCronRun",
+          "callee": "getSupabaseServer",
+          "lineNumber": 33
+        },
+        {
+          "caller": "recordCronRun",
+          "callee": "c.from(TABLE).insert",
+          "lineNumber": 36
+        },
+        {
+          "caller": "recordCronRun",
+          "callee": "c.from",
+          "lineNumber": 36
+        },
+        {
+          "caller": "recordCronRun",
+          "callee": "new Date().toISOString",
+          "lineNumber": 45
+        },
+        {
+          "caller": "getLastSuccessfulRun",
+          "callee": "getSupabaseServer",
+          "lineNumber": 53
+        },
+        {
+          "caller": "getLastSuccessfulRun",
+          "callee": "c\n    .from(TABLE)\n    .select(\"*\")\n    .eq(\"job\", job)\n    .eq(\"ok\", true)\n    .order(\"finished_at\", { ascending: false })\n    .limit(1)\n    .maybeSingle",
+          "lineNumber": 55
+        },
+        {
+          "caller": "getLastSuccessfulRun",
+          "callee": "c\n    .from(TABLE)\n    .select(\"*\")\n    .eq(\"job\", job)\n    .eq(\"ok\", true)\n    .order(\"finished_at\", { ascending: false })\n    .limit",
+          "lineNumber": 55
+        },
+        {
+          "caller": "getLastSuccessfulRun",
+          "callee": "c\n    .from(TABLE)\n    .select(\"*\")\n    .eq(\"job\", job)\n    .eq(\"ok\", true)\n    .order",
+          "lineNumber": 55
+        },
+        {
+          "caller": "getLastSuccessfulRun",
+          "callee": "c\n    .from(TABLE)\n    .select(\"*\")\n    .eq(\"job\", job)\n    .eq",
+          "lineNumber": 55
+        },
+        {
+          "caller": "getLastSuccessfulRun",
+          "callee": "c\n    .from(TABLE)\n    .select(\"*\")\n    .eq",
+          "lineNumber": 55
+        },
+        {
+          "caller": "getLastSuccessfulRun",
+          "callee": "c\n    .from(TABLE)\n    .select",
+          "lineNumber": 55
+        },
+        {
+          "caller": "getLastSuccessfulRun",
+          "callee": "c\n    .from",
+          "lineNumber": 55
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 2,
+        "functionCount": 2,
+        "classCount": 0
+      }
+    }
+  ]
+}

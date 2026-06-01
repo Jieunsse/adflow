@@ -358,10 +358,11 @@ export default function BrandProfileEditPage() {
           </p>
           {personas.length > 0 ? (
             <div className="grid grid-cols-2 gap-3">
-              {personas.map((p) => (
+              {personas.map((p, i) => (
                 <PersonaCard
                   key={p.id}
                   persona={p}
+                  index={i}
                   canEdit={isOwner}
                   onEdit={() => isOwner && setEditingPersona(p)}
                   onDelete={() => deletePersona(p.id)}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Badge } from "@shared/ui/primitives";
@@ -46,7 +46,7 @@ const SUBS = [
   "광고를 정상적으로 생성했어요. 결과를 받기 전에 최종적으로 점검해봐요.",
 ];
 
-export default function CreatePage() {
+function CreateFlow() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: session, status } = useSession();
@@ -500,5 +500,13 @@ export default function CreatePage() {
         </>
       )}
     </div>
+  );
+}
+
+export default function CreatePage() {
+  return (
+    <Suspense fallback={null}>
+      <CreateFlow />
+    </Suspense>
   );
 }

@@ -1,0 +1,251 @@
+{
+  "nodes": [
+    {
+      "id": "file:src/entities/billing/help-links.ts",
+      "type": "file",
+      "name": "help-links.ts",
+      "filePath": "src/entities/billing/help-links.ts",
+      "summary": "청구 페이지에서 노출할 Meta 도움말 링크 목록(BILLING_HELP_LINKS)을 정의하는 상수 모듈.",
+      "tags": ["data-model", "billing", "constants"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/entities/billing/labels.ts",
+      "type": "file",
+      "name": "labels.ts",
+      "filePath": "src/entities/billing/labels.ts",
+      "summary": "계정 상태 코드와 결제 수단 타입을 한국어 라벨로 변환하는 헬퍼(accountStatusLabel·fundingSourceTypeLabel)를 제공하는 모듈.",
+      "tags": ["utility", "billing", "label"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/entities/billing/types.ts",
+      "type": "file",
+      "name": "types.ts",
+      "filePath": "src/entities/billing/types.ts",
+      "summary": "청구 도메인의 타입 정의(잔액·지출 한도·결제 수단·사업자 정보·계정 상태)를 모은 type-definition 모듈.",
+      "tags": ["type-definition", "billing"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/entities/campaign/browse/auto-pilot.test.ts",
+      "type": "file",
+      "name": "auto-pilot.test.ts",
+      "filePath": "src/entities/campaign/browse/auto-pilot.test.ts",
+      "summary": "browse 캠페인 자동 조종 평가(evaluateAutoPilot)와 액션 적용 로직을 검증하는 회귀 테스트.",
+      "tags": ["test", "auto-pilot", "campaign"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/entities/campaign/browse/auto-pilot.ts",
+      "type": "file",
+      "name": "auto-pilot.ts",
+      "filePath": "src/entities/campaign/browse/auto-pilot.ts",
+      "summary": "browse 데모 캠페인의 성과 임계값을 보고 예산 증액/축소 등 자동 조종 액션을 제안·적용하는 evaluateAutoPilot·applyAutoPilotAction 로직.",
+      "tags": ["service", "auto-pilot", "automation", "campaign"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/entities/campaign/browse/auto-pilot.ts:evaluateAutoPilot",
+      "type": "function",
+      "name": "evaluateAutoPilot",
+      "filePath": "src/entities/campaign/browse/auto-pilot.ts",
+      "lineRange": [23, 57],
+      "summary": "특정 날짜의 browse 인사이트를 임계값과 비교해 예산 증액·축소 등 자동 조종 액션과 사유 문구를 결정하는 함수.",
+      "tags": ["service", "auto-pilot", "decision"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/entities/campaign/browse/auto-pilot.ts:applyAutoPilotAction",
+      "type": "function",
+      "name": "applyAutoPilotAction",
+      "filePath": "src/entities/campaign/browse/auto-pilot.ts",
+      "lineRange": [60, 67],
+      "summary": "결정된 자동 조종 액션을 browse 캠페인 상태(예산 변경 이력 등)에 반영하는 함수.",
+      "tags": ["service", "auto-pilot", "mutation"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/entities/campaign/browse/insights.test.ts",
+      "type": "file",
+      "name": "insights.test.ts",
+      "filePath": "src/entities/campaign/browse/insights.test.ts",
+      "summary": "browse 캠페인의 결정적 인사이트 생성(buildBrowseInsights)이 경과일·예산 변화에 따라 일관된 지표를 내는지 검증하는 회귀 테스트.",
+      "tags": ["test", "insight", "campaign"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/entities/campaign/browse/insights.ts",
+      "type": "file",
+      "name": "insights.ts",
+      "filePath": "src/entities/campaign/browse/insights.ts",
+      "summary": "browse 데모 캠페인의 일별·누적 성과 인사이트를 시드 기반 결정적 난수와 예산 배수로 합성하는 buildBrowseInsights 모듈.",
+      "tags": ["service", "insight", "deterministic", "campaign"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/entities/campaign/browse/insights.ts:buildBrowseInsights",
+      "type": "function",
+      "name": "buildBrowseInsights",
+      "filePath": "src/entities/campaign/browse/insights.ts",
+      "lineRange": [40, 67],
+      "summary": "캠페인과 품질 등급을 받아 시드 분산·예산 배수를 적용한 일별 행과 집계 인사이트(노출·클릭·CTR·지출)를 생성하는 함수.",
+      "tags": ["service", "insight", "deterministic"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/entities/campaign/browse/seed.ts",
+      "type": "file",
+      "name": "seed.ts",
+      "filePath": "src/entities/campaign/browse/seed.ts",
+      "summary": "browse 데모 캠페인의 시드 데이터·신규 캠페인 생성(createBrowseCampaign)·자동 조종 데모 시딩·재게재 자식 생성(createBrowseRelaunchChild)을 제공하는 모듈.",
+      "tags": ["factory", "seed", "campaign", "demo"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/entities/campaign/browse/seed.ts:createBrowseCampaign",
+      "type": "function",
+      "name": "createBrowseCampaign",
+      "filePath": "src/entities/campaign/browse/seed.ts",
+      "lineRange": [64, 93],
+      "summary": "입력값으로 새 browse 캠페인 객체를 만들고 초기 지표를 산정한 뒤 store 에 upsert 하는 팩토리 함수.",
+      "tags": ["factory", "campaign", "demo"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/entities/campaign/browse/seed.ts:seedAutoPilotDemo",
+      "type": "function",
+      "name": "seedAutoPilotDemo",
+      "filePath": "src/entities/campaign/browse/seed.ts",
+      "lineRange": [132, 153],
+      "summary": "자동 조종 시연을 위한 사전 정의 캠페인들을 store 에 시딩하는 함수.",
+      "tags": ["seed", "auto-pilot", "demo"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/entities/campaign/browse/seed.ts:createBrowseRelaunchChild",
+      "type": "function",
+      "name": "createBrowseRelaunchChild",
+      "filePath": "src/entities/campaign/browse/seed.ts",
+      "lineRange": [157, 176],
+      "summary": "부모 캠페인을 복제해 Auto Relaunch 자식 캠페인을 생성·시딩하는 함수.",
+      "tags": ["factory", "auto-relaunch", "campaign"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/entities/campaign/browse/store.ts",
+      "type": "file",
+      "name": "store.ts",
+      "filePath": "src/entities/campaign/browse/store.ts",
+      "summary": "browse 데모 캠페인을 localStorage 에 영속화하고 목록/조회/upsert/삭제/리셋과 변경 이벤트 브로드캐스트를 제공하는 스토어 모듈.",
+      "tags": ["store", "persistence", "campaign", "local-storage"],
+      "complexity": "moderate",
+      "languageNotes": "버전 가드 + window CustomEvent 로 페이지 간 변경 동기화."
+    },
+    {
+      "id": "function:src/entities/campaign/browse/store.ts:upsertBrowse",
+      "type": "function",
+      "name": "upsertBrowse",
+      "filePath": "src/entities/campaign/browse/store.ts",
+      "lineRange": [50, 56],
+      "summary": "browse 캠페인을 id 기준으로 갱신하거나 추가한 뒤 localStorage 에 기록하고 변경 이벤트를 발생시키는 함수.",
+      "tags": ["store", "mutation", "persistence"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/entities/campaign/browse/store.ts:listBrowse",
+      "type": "function",
+      "name": "listBrowse",
+      "filePath": "src/entities/campaign/browse/store.ts",
+      "lineRange": [42, 44],
+      "summary": "저장된 browse 캠페인을 생성일 역순으로 정렬해 반환하는 조회 함수.",
+      "tags": ["store", "query"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/entities/campaign/browse/summary.ts",
+      "type": "file",
+      "name": "summary.ts",
+      "filePath": "src/entities/campaign/browse/summary.ts",
+      "summary": "browse 캠페인을 실 캠페인과 동일한 CampaignSummary 형태로 변환해 목록·상세에서 동일 UI 를 재사용하게 해주는 어댑터 모듈.",
+      "tags": ["adapter", "campaign", "serialization"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/entities/campaign/browse/summary.ts:browseCampaignToSummary",
+      "type": "function",
+      "name": "browseCampaignToSummary",
+      "filePath": "src/entities/campaign/browse/summary.ts",
+      "lineRange": [16, 43],
+      "summary": "browse 캠페인과 그 인사이트·현재 예산을 모아 CampaignSummary 구조로 매핑하는 변환 함수.",
+      "tags": ["adapter", "serialization", "campaign"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/entities/campaign/browse/types.ts",
+      "type": "file",
+      "name": "types.ts",
+      "filePath": "src/entities/campaign/browse/types.ts",
+      "summary": "browse 데모 캠페인 도메인의 타입(BrowseCampaign·예산 변경·자동 조종 액션 등)을 정의하는 type-definition 모듈.",
+      "tags": ["type-definition", "campaign", "browse"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {"source": "file:src/entities/campaign/browse/auto-pilot.test.ts", "target": "src/entities/campaign/browse/auto-pilot.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/entities/campaign/browse/auto-pilot.test.ts", "target": "src/entities/campaign/browse/types.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/entities/campaign/browse/auto-pilot.ts", "target": "file:src/entities/campaign/browse/auto-pilot.test.ts", "type": "tested_by", "direction": "forward", "weight": 0.5},
+
+    {"source": "file:src/entities/campaign/browse/auto-pilot.ts", "target": "src/entities/campaign/browse/insights.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/entities/campaign/browse/auto-pilot.ts", "target": "src/entities/campaign/browse/types.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/entities/campaign/browse/auto-pilot.ts", "target": "src/entities/insights/thresholds.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/entities/campaign/browse/auto-pilot.ts", "target": "function:src/entities/campaign/browse/auto-pilot.ts:evaluateAutoPilot", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/entities/campaign/browse/auto-pilot.ts", "target": "function:src/entities/campaign/browse/auto-pilot.ts:evaluateAutoPilot", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "file:src/entities/campaign/browse/auto-pilot.ts", "target": "function:src/entities/campaign/browse/auto-pilot.ts:applyAutoPilotAction", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/entities/campaign/browse/auto-pilot.ts", "target": "function:src/entities/campaign/browse/auto-pilot.ts:applyAutoPilotAction", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "function:src/entities/campaign/browse/auto-pilot.ts:evaluateAutoPilot", "target": "function:src/entities/campaign/browse/insights.ts:buildBrowseInsights", "type": "calls", "direction": "forward", "weight": 0.8},
+
+    {"source": "file:src/entities/campaign/browse/insights.test.ts", "target": "lib/optimization.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/entities/campaign/browse/insights.test.ts", "target": "src/entities/campaign/browse/insights.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/entities/campaign/browse/insights.test.ts", "target": "src/entities/campaign/browse/seed.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/entities/campaign/browse/insights.test.ts", "target": "src/entities/campaign/browse/types.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/entities/campaign/browse/insights.ts", "target": "file:src/entities/campaign/browse/insights.test.ts", "type": "tested_by", "direction": "forward", "weight": 0.5},
+
+    {"source": "file:src/entities/campaign/browse/insights.ts", "target": "src/entities/campaign/browse/types.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/entities/campaign/browse/insights.ts", "target": "src/entities/insights/types.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/entities/campaign/browse/insights.ts", "target": "function:src/entities/campaign/browse/insights.ts:buildBrowseInsights", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/entities/campaign/browse/insights.ts", "target": "function:src/entities/campaign/browse/insights.ts:buildBrowseInsights", "type": "exports", "direction": "forward", "weight": 0.8},
+
+    {"source": "file:src/entities/campaign/browse/seed.ts", "target": "lib/demo/content.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/entities/campaign/browse/seed.ts", "target": "lib/meta-ads.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/entities/campaign/browse/seed.ts", "target": "src/entities/campaign/browse/store.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/entities/campaign/browse/seed.ts", "target": "src/entities/campaign/browse/types.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/entities/campaign/browse/seed.ts", "target": "src/entities/insights/winner-types.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/entities/campaign/browse/seed.ts", "target": "function:src/entities/campaign/browse/seed.ts:createBrowseCampaign", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/entities/campaign/browse/seed.ts", "target": "function:src/entities/campaign/browse/seed.ts:createBrowseCampaign", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "file:src/entities/campaign/browse/seed.ts", "target": "function:src/entities/campaign/browse/seed.ts:seedAutoPilotDemo", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/entities/campaign/browse/seed.ts", "target": "function:src/entities/campaign/browse/seed.ts:seedAutoPilotDemo", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "file:src/entities/campaign/browse/seed.ts", "target": "function:src/entities/campaign/browse/seed.ts:createBrowseRelaunchChild", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/entities/campaign/browse/seed.ts", "target": "function:src/entities/campaign/browse/seed.ts:createBrowseRelaunchChild", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "function:src/entities/campaign/browse/seed.ts:createBrowseCampaign", "target": "function:src/entities/campaign/browse/store.ts:upsertBrowse", "type": "calls", "direction": "forward", "weight": 0.8},
+    {"source": "function:src/entities/campaign/browse/seed.ts:seedAutoPilotDemo", "target": "function:src/entities/campaign/browse/store.ts:upsertBrowse", "type": "calls", "direction": "forward", "weight": 0.8},
+    {"source": "function:src/entities/campaign/browse/seed.ts:createBrowseRelaunchChild", "target": "function:src/entities/campaign/browse/store.ts:upsertBrowse", "type": "calls", "direction": "forward", "weight": 0.8},
+
+    {"source": "file:src/entities/campaign/browse/store.ts", "target": "src/entities/campaign/browse/types.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/entities/campaign/browse/store.ts", "target": "function:src/entities/campaign/browse/store.ts:upsertBrowse", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/entities/campaign/browse/store.ts", "target": "function:src/entities/campaign/browse/store.ts:upsertBrowse", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "file:src/entities/campaign/browse/store.ts", "target": "function:src/entities/campaign/browse/store.ts:listBrowse", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/entities/campaign/browse/store.ts", "target": "function:src/entities/campaign/browse/store.ts:listBrowse", "type": "exports", "direction": "forward", "weight": 0.8},
+
+    {"source": "file:src/entities/campaign/browse/summary.ts", "target": "lib/meta-ads.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/entities/campaign/browse/summary.ts", "target": "src/entities/campaign/browse/auto-pilot.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/entities/campaign/browse/summary.ts", "target": "src/entities/campaign/browse/insights.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/entities/campaign/browse/summary.ts", "target": "src/entities/campaign/browse/types.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/entities/campaign/browse/summary.ts", "target": "function:src/entities/campaign/browse/summary.ts:browseCampaignToSummary", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/entities/campaign/browse/summary.ts", "target": "function:src/entities/campaign/browse/summary.ts:browseCampaignToSummary", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "function:src/entities/campaign/browse/summary.ts:browseCampaignToSummary", "target": "function:src/entities/campaign/browse/insights.ts:buildBrowseInsights", "type": "calls", "direction": "forward", "weight": 0.8},
+
+    {"source": "file:src/entities/campaign/browse/types.ts", "target": "lib/meta-ads.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/entities/campaign/browse/types.ts", "target": "src/entities/insights/winner-types.ts", "type": "imports", "direction": "forward", "weight": 0.7}
+  ]
+}

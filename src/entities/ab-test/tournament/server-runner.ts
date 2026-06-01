@@ -213,7 +213,7 @@ export function createServerRunner(deps: {
       if (!mv) return { status: "insufficient" };
       result = { kpis, verdict: mv.verdict, rawWinner: mv.verdict.state === "winner" ? mv.winner : "A" };
     } else {
-      result = judgeRoundKpis(kpis, elapsedDays(r, now()));
+      result = judgeRoundKpis(kpis, elapsedDays(r, now()), t.objective);
       if (result.verdict.state === "insufficient") return { status: "insufficient" };
     }
 

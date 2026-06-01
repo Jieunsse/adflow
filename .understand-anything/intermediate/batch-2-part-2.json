@@ -1,0 +1,474 @@
+{
+  "nodes": [
+    {
+      "id": "file:app/(workspace)/settings/page.tsx",
+      "type": "file",
+      "name": "settings/page.tsx",
+      "filePath": "app/(workspace)/settings/page.tsx",
+      "summary": "설정 페이지. 계정·Meta 앱 설정, 알림 토글, 온보딩 재시작·로컬데이터 삭제·로그아웃 등 위험 작업 탭을 제공한다.",
+      "tags": ["page", "settings", "configuration", "tabs"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:app/(workspace)/settings/page.tsx:AccountTab",
+      "type": "function",
+      "name": "AccountTab",
+      "filePath": "app/(workspace)/settings/page.tsx",
+      "lineRange": [57, 190],
+      "summary": "계정 탭. 세션 정보와 Meta 앱 카드를 보여주고 연결·설치 화면으로 이동한다.",
+      "tags": ["component", "settings", "account"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:app/(workspace)/settings/page.tsx:MetaAppCard",
+      "type": "function",
+      "name": "MetaAppCard",
+      "filePath": "app/(workspace)/settings/page.tsx",
+      "lineRange": [199, 268],
+      "summary": "Meta 앱 자격증명 설정 카드. /api/install/meta-app 상태를 조회하고 감사 이력을 표시한다.",
+      "tags": ["component", "settings", "meta-integration", "data-fetching"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:app/(workspace)/settings/page.tsx:DangerTab",
+      "type": "function",
+      "name": "DangerTab",
+      "filePath": "app/(workspace)/settings/page.tsx",
+      "lineRange": [313, 412],
+      "summary": "위험 작업 탭. 온보딩 재시작, 로컬·세션 스토리지 삭제, 로그아웃을 처리한다.",
+      "tags": ["component", "settings", "danger-zone"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:app/api/facebook/pages/route.ts",
+      "type": "file",
+      "name": "pages/route.ts",
+      "filePath": "app/api/facebook/pages/route.ts",
+      "summary": "Facebook 관리 페이지 목록 Route Handler. 세션 토큰으로 getFacebookManagedPages를 호출해 JSON으로 반환한다.",
+      "tags": ["api-handler", "route-handler", "facebook"],
+      "complexity": "simple",
+      "languageNotes": "Next.js App Router Route Handler(GET export)."
+    },
+    {
+      "id": "file:app/api/instagram/branded-content/route.ts",
+      "type": "file",
+      "name": "branded-content/route.ts",
+      "filePath": "app/api/instagram/branded-content/route.ts",
+      "summary": "Instagram 브랜디드 콘텐츠(파트너십) mock 데이터를 반환하는 Route Handler. 세션 확인 후 자격 정보가 담긴 mock을 JSON으로 응답한다.",
+      "tags": ["api-handler", "route-handler", "instagram", "mock"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:app/install/page.tsx",
+      "type": "file",
+      "name": "install/page.tsx",
+      "filePath": "app/install/page.tsx",
+      "summary": "Meta 앱 설치 마법사. Phase A(앱 생성·자격증명·권한·검수·라이브)와 Phase B(로그인 연동)를 단계별로 안내하고 진행 상태를 localStorage에 저장한다.",
+      "tags": ["page", "install", "wizard", "onboarding"],
+      "complexity": "complex",
+      "languageNotes": "단계 컴포넌트(Step1~Step6)를 phase/step 상태로 전환하는 멀티스텝 마법사."
+    },
+    {
+      "id": "function:app/install/page.tsx:InstallPageInner",
+      "type": "function",
+      "name": "InstallPageInner",
+      "filePath": "app/install/page.tsx",
+      "lineRange": [477, 596],
+      "summary": "설치 마법사 컨트롤러. 앱 상태 부트스트랩, phase/step 전환, 진행 저장과 단계 라우팅을 담당한다.",
+      "tags": ["component", "install", "wizard", "state-management"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:app/install/page.tsx:Step3Credentials",
+      "type": "function",
+      "name": "Step3Credentials",
+      "filePath": "app/install/page.tsx",
+      "lineRange": [222, 312],
+      "summary": "자격증명 입력 단계. clientId/secret을 받아 /api/install/meta-app에 저장한다.",
+      "tags": ["component", "install", "credentials", "form"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:app/login/page.tsx",
+      "type": "file",
+      "name": "login/page.tsx",
+      "filePath": "app/login/page.tsx",
+      "summary": "로그인 페이지. Meta·AXHub·둘러보기(게스트) 로그인 진입을 next-auth signIn으로 제공한다.",
+      "tags": ["page", "login", "auth", "entry-point"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:app/login/page.tsx:LoginContent",
+      "type": "function",
+      "name": "LoginContent",
+      "filePath": "app/login/page.tsx",
+      "lineRange": [29, 170],
+      "summary": "로그인 본체. 테마 동기화와 Meta·AXHub·브라우즈 모드 로그인 핸들러를 렌더링한다.",
+      "tags": ["component", "login", "auth"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:app/onboarding/page.tsx",
+      "type": "file",
+      "name": "onboarding/page.tsx",
+      "filePath": "app/onboarding/page.tsx",
+      "summary": "서비스 온보딩 4스텝 흐름. 계정 설정·브랜드 프로필 경량 폼·캠페인 생성 안내를 단계별로 진행하고 완료 상태를 저장한다.",
+      "tags": ["page", "onboarding", "wizard", "entry-point"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:app/onboarding/page.tsx:OnboardingFlow",
+      "type": "function",
+      "name": "OnboardingFlow",
+      "filePath": "app/onboarding/page.tsx",
+      "lineRange": [249, 322],
+      "summary": "온보딩 컨트롤러. step을 URL·localStorage와 동기화하며 단계를 전환하고 완료 시 onboarded 플래그를 기록한다.",
+      "tags": ["component", "onboarding", "wizard", "state-management"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:app/onboarding/page.tsx:Step2",
+      "type": "function",
+      "name": "Step2",
+      "filePath": "app/onboarding/page.tsx",
+      "lineRange": [126, 211],
+      "summary": "브랜드 프로필 경량 입력 단계. 이름·설명을 받아 readProfiles로 프로필 스토리지에 저장한다.",
+      "tags": ["component", "onboarding", "brand-profile", "form"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:app/setup/page.tsx",
+      "type": "file",
+      "name": "setup/page.tsx",
+      "filePath": "app/setup/page.tsx",
+      "summary": "광고계정·페이지 선택 셋업 화면. ad-accounts를 조회해 계정·페이지를 순차 선택하고 세션을 갱신하는 진입 설정 흐름.",
+      "tags": ["page", "setup", "account-selection", "data-fetching"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:app/setup/page.tsx:SetupFlow",
+      "type": "function",
+      "name": "SetupFlow",
+      "filePath": "app/setup/page.tsx",
+      "lineRange": [105, 301],
+      "summary": "셋업 컨트롤러. 광고계정·페이지를 단계별로 조회·선택하고 세션 업데이트와 둘러보기 진입을 처리한다.",
+      "tags": ["component", "setup", "account-selection", "state-management"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:lib/facebook-insights.ts",
+      "type": "file",
+      "name": "facebook-insights.ts",
+      "filePath": "lib/facebook-insights.ts",
+      "summary": "Facebook 페이지 인사이트 조회 lib. 페이지 토큰을 얻어 팔로워·참여율·최근 게시물을 집계하며 good/poor mock 폴백을 제공한다.",
+      "tags": ["service", "facebook", "insights", "mock"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:lib/facebook-insights.ts:getFacebookInsights",
+      "type": "function",
+      "name": "getFacebookInsights",
+      "filePath": "lib/facebook-insights.ts",
+      "lineRange": [70, 150],
+      "summary": "FB 페이지·게시물 데이터를 Graph API에서 가져와 28일 참여율과 상위 게시물을 계산해 ChannelInsights 형태로 반환한다.",
+      "tags": ["service", "facebook", "insights", "aggregation"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:lib/facebook-pages.ts",
+      "type": "file",
+      "name": "facebook-pages.ts",
+      "filePath": "lib/facebook-pages.ts",
+      "summary": "사용자가 관리하는 Facebook 페이지 목록을 Graph API에서 가져오는 lib. mock 폴백 포함.",
+      "tags": ["service", "facebook", "data-fetching", "mock"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:lib/facebook-pages.ts:getFacebookManagedPages",
+      "type": "function",
+      "name": "getFacebookManagedPages",
+      "filePath": "lib/facebook-pages.ts",
+      "lineRange": [20, 44],
+      "summary": "사용자 토큰으로 Graph API의 me/accounts를 조회해 관리 페이지 목록을 정규화해 반환한다.",
+      "tags": ["service", "facebook", "data-fetching"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:lib/instagram-insights.ts",
+      "type": "file",
+      "name": "instagram-insights.ts",
+      "filePath": "lib/instagram-insights.ts",
+      "summary": "Instagram 인사이트 조회 lib. IG 사용자 ID·토큰으로 도달·프로필뷰·미디어 인사이트를 병렬 수집해 참여율을 계산하며 good/poor mock과 디버그 헬퍼를 제공한다.",
+      "tags": ["service", "instagram", "insights", "mock"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:lib/instagram-insights.ts:fetchInsightsWithToken",
+      "type": "function",
+      "name": "fetchInsightsWithToken",
+      "filePath": "lib/instagram-insights.ts",
+      "lineRange": [122, 169],
+      "summary": "IG 사용자 ID·토큰으로 계정·도달·프로필뷰·미디어를 병렬 조회하고 미디어별 인사이트를 합쳐 참여율을 산출한다.",
+      "tags": ["service", "instagram", "insights", "aggregation"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:lib/instagram-insights.ts:getInstagramInsights",
+      "type": "function",
+      "name": "getInstagramInsights",
+      "filePath": "lib/instagram-insights.ts",
+      "lineRange": [171, 186],
+      "summary": "IG 인사이트 진입점. 힌트 토큰 우선, 없으면 페이지 토큰·IG 사용자 ID를 해석해 fetchInsightsWithToken을 호출한다.",
+      "tags": ["service", "instagram", "insights"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:lib/instagram-insights.ts:debugInstagramInsights",
+      "type": "function",
+      "name": "debugInstagramInsights",
+      "filePath": "lib/instagram-insights.ts",
+      "lineRange": [76, 108],
+      "summary": "IG 인사이트 디버그 헬퍼. 토큰·사용자 ID·각 응답을 수집해 문자열로 진단 정보를 반환한다.",
+      "tags": ["utility", "instagram", "debug"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/entities/insights/optimization.ts",
+      "type": "file",
+      "name": "optimization.ts",
+      "filePath": "src/entities/insights/optimization.ts",
+      "summary": "인사이트 최적화 제안 엔진. 채널(IG/FB) 오가닉 제안과 광고 성과 최적화·자동화 준비도 평가를 thresholds 기준으로 생성한다.",
+      "tags": ["service", "insights", "optimization", "business-logic"],
+      "complexity": "complex",
+      "languageNotes": "순수 함수 묶음. thresholds 상수에 의존해 결정적 제안 리스트를 만든다."
+    },
+    {
+      "id": "function:src/entities/insights/optimization.ts:suggestChannelOptimizations",
+      "type": "function",
+      "name": "suggestChannelOptimizations",
+      "filePath": "src/entities/insights/optimization.ts",
+      "lineRange": [32, 171],
+      "summary": "IG/FB 채널 오가닉 인사이트로 참여율·도달·게시물 패턴 기반 최적화 제안 목록을 생성한다.",
+      "tags": ["service", "insights", "optimization", "channel"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/entities/insights/optimization.ts:suggestOptimizations",
+      "type": "function",
+      "name": "suggestOptimizations",
+      "filePath": "src/entities/insights/optimization.ts",
+      "lineRange": [280, 486],
+      "summary": "광고 캠페인 성과 지표·목표별로 예산·빈도·참여율·도착률 기반 최적화 제안을 생성하는 핵심 함수.",
+      "tags": ["service", "insights", "optimization", "ad-performance"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/entities/insights/optimization.ts:assessAutomationReadiness",
+      "type": "function",
+      "name": "assessAutomationReadiness",
+      "filePath": "src/entities/insights/optimization.ts",
+      "lineRange": [493, 533],
+      "summary": "자동 재게재 등 자동화를 위한 데이터 충분성·이상신호를 평가해 준비 상태를 판정한다.",
+      "tags": ["service", "insights", "automation", "readiness"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/features/brand-profile/ui/CopyReferenceSection.tsx",
+      "type": "file",
+      "name": "CopyReferenceSection.tsx",
+      "filePath": "src/features/brand-profile/ui/CopyReferenceSection.tsx",
+      "summary": "브랜드 프로필 스타일 탭의 카피 레퍼런스 관리 섹션. IG import·수동 입력으로 카피 창고를 추가·삭제한다.",
+      "tags": ["component", "brand-profile", "copy-reference", "feature"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/features/brand-profile/ui/CopyReferenceSection.tsx:CopyReferenceSection",
+      "type": "function",
+      "name": "CopyReferenceSection",
+      "filePath": "src/features/brand-profile/ui/CopyReferenceSection.tsx",
+      "lineRange": [19, 140],
+      "summary": "카피 레퍼런스 섹션 컴포넌트. IG 모달·수동 입력으로 레퍼런스를 추가하고 onSave로 영속화한다.",
+      "tags": ["component", "brand-profile", "copy-reference"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:src/features/brand-profile/ui/IgImportModal.tsx",
+      "type": "file",
+      "name": "IgImportModal.tsx",
+      "filePath": "src/features/brand-profile/ui/IgImportModal.tsx",
+      "summary": "IG 최근 미디어 캡션을 가져와 체크박스로 선택·임포트하는 모달. 카피 레퍼런스 창고 채우기에 사용된다.",
+      "tags": ["component", "modal", "instagram", "import", "feature"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/features/brand-profile/ui/IgImportModal.tsx:IgImportModal",
+      "type": "function",
+      "name": "IgImportModal",
+      "filePath": "src/features/brand-profile/ui/IgImportModal.tsx",
+      "lineRange": [24, 177],
+      "summary": "IG 미디어 임포트 모달 컴포넌트. recent-media를 조회해 캡션 보유 항목을 선택·미리보기·임포트한다.",
+      "tags": ["component", "modal", "instagram", "import"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:src/features/brand-profile/ui/StatTile.tsx",
+      "type": "file",
+      "name": "StatTile.tsx",
+      "filePath": "src/features/brand-profile/ui/StatTile.tsx",
+      "summary": "브랜드 프로필 통계 타일 표시 컴포넌트. 아이콘·라벨·값·강조색을 받아 작은 카드로 렌더링한다.",
+      "tags": ["component", "brand-profile", "presentational", "tile"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/features/channel-suggestion-action/AiDraftModal.tsx",
+      "type": "file",
+      "name": "AiDraftModal.tsx",
+      "filePath": "src/features/channel-suggestion-action/AiDraftModal.tsx",
+      "summary": "채널 제안 기반 AI 콘텐츠 초안 모달. Gemini로 캡션·해시태그·이미지 프롬프트를 생성하고 복사·재생성·캠페인 만들기로 연결한다.",
+      "tags": ["component", "modal", "ai", "content-draft", "feature"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/features/channel-suggestion-action/AiDraftModal.tsx:AiDraftModal",
+      "type": "function",
+      "name": "AiDraftModal",
+      "filePath": "src/features/channel-suggestion-action/AiDraftModal.tsx",
+      "lineRange": [38, 177],
+      "summary": "AI 초안 모달 컴포넌트. fetchDraft로 초안을 생성하고 상태(loading/ready/error) 전환과 복사·재생성·이동을 처리한다.",
+      "tags": ["component", "modal", "ai", "content-draft"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/features/channel-suggestion-action/AiDraftModal.tsx:fetchDraft",
+      "type": "function",
+      "name": "fetchDraft",
+      "filePath": "src/features/channel-suggestion-action/AiDraftModal.tsx",
+      "lineRange": [25, 36],
+      "summary": "채널·제안 제목·상세를 POST로 보내 AI 초안(캡션·해시태그·이미지 프롬프트)을 받아오는 fetch 헬퍼.",
+      "tags": ["utility", "ai", "api-call"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/shared/ui/Button.tsx",
+      "type": "file",
+      "name": "Button.tsx",
+      "filePath": "src/shared/ui/Button.tsx",
+      "summary": "공용 Button 컴포넌트와 variant 클래스 헬퍼(buttonVariants). variant·size·block 옵션으로 일관된 버튼 스타일을 제공한다.",
+      "tags": ["component", "ui", "shared", "button"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/shared/ui/Button.tsx:buttonVariants",
+      "type": "function",
+      "name": "buttonVariants",
+      "filePath": "src/shared/ui/Button.tsx",
+      "lineRange": [69, 84],
+      "summary": "variant·size·block·className을 받아 cn으로 버튼 클래스 문자열을 조합하는 헬퍼.",
+      "tags": ["utility", "ui", "styling"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/shared/ui/Card.tsx",
+      "type": "file",
+      "name": "Card.tsx",
+      "filePath": "src/shared/ui/Card.tsx",
+      "summary": "공용 Card 컨테이너 컴포넌트. cn으로 클래스를 합쳐 카드 레이아웃을 제공하는 프리미티브.",
+      "tags": ["component", "ui", "shared", "card"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    { "source": "file:app/(workspace)/settings/page.tsx", "target": "file:src/shared/lib/cn.ts", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:app/(workspace)/settings/page.tsx", "target": "file:src/shared/lib/notifications.ts", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:app/(workspace)/settings/page.tsx", "target": "file:src/shared/lib/storage/useScopedStorage.ts", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:app/(workspace)/settings/page.tsx", "target": "file:src/shared/ui/Button.tsx", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:app/(workspace)/settings/page.tsx", "target": "file:src/shared/ui/Card.tsx", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:app/(workspace)/settings/page.tsx", "target": "file:src/shared/ui/Icon.tsx", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:app/(workspace)/settings/page.tsx", "target": "file:src/shared/ui/IdField.tsx", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:app/(workspace)/settings/page.tsx", "target": "file:src/shared/ui/primitives.tsx", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:app/(workspace)/settings/page.tsx", "target": "file:src/shared/ui/Toast.tsx", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:app/(workspace)/settings/page.tsx", "target": "file:src/widgets/onboarding-guard/index.tsx", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:app/(workspace)/settings/page.tsx", "target": "function:app/(workspace)/settings/page.tsx:AccountTab", "type": "contains", "direction": "forward", "weight": 1.0 },
+    { "source": "file:app/(workspace)/settings/page.tsx", "target": "function:app/(workspace)/settings/page.tsx:MetaAppCard", "type": "contains", "direction": "forward", "weight": 1.0 },
+    { "source": "file:app/(workspace)/settings/page.tsx", "target": "function:app/(workspace)/settings/page.tsx:DangerTab", "type": "contains", "direction": "forward", "weight": 1.0 },
+    { "source": "function:app/(workspace)/settings/page.tsx:DangerTab", "target": "function:src/shared/lib/storage/useScopedStorage.ts:notifyScopedStorageChange", "type": "calls", "direction": "forward", "weight": 0.8 },
+
+    { "source": "file:app/api/facebook/pages/route.ts", "target": "file:lib/auth.ts", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:app/api/facebook/pages/route.ts", "target": "file:lib/facebook-pages.ts", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:app/api/facebook/pages/route.ts", "target": "function:lib/facebook-pages.ts:getFacebookManagedPages", "type": "calls", "direction": "forward", "weight": 0.8 },
+
+    { "source": "file:app/api/instagram/branded-content/route.ts", "target": "file:lib/auth.ts", "type": "imports", "direction": "forward", "weight": 0.7 },
+
+    { "source": "file:app/install/page.tsx", "target": "file:src/shared/ui/Button.tsx", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:app/install/page.tsx", "target": "file:src/shared/ui/Icon.tsx", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:app/install/page.tsx", "target": "function:app/install/page.tsx:InstallPageInner", "type": "contains", "direction": "forward", "weight": 1.0 },
+    { "source": "file:app/install/page.tsx", "target": "function:app/install/page.tsx:Step3Credentials", "type": "contains", "direction": "forward", "weight": 1.0 },
+
+    { "source": "file:app/login/page.tsx", "target": "file:src/shared/ui/Button.tsx", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:app/login/page.tsx", "target": "file:src/shared/ui/Icon.tsx", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:app/login/page.tsx", "target": "function:app/login/page.tsx:LoginContent", "type": "contains", "direction": "forward", "weight": 1.0 },
+
+    { "source": "file:app/onboarding/page.tsx", "target": "file:src/features/brand-profile/model/useBrandProfileStorage.ts", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:app/onboarding/page.tsx", "target": "file:src/shared/ui/Button.tsx", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:app/onboarding/page.tsx", "target": "file:src/shared/ui/Icon.tsx", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:app/onboarding/page.tsx", "target": "file:src/widgets/onboarding-guard/index.tsx", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:app/onboarding/page.tsx", "target": "function:app/onboarding/page.tsx:OnboardingFlow", "type": "contains", "direction": "forward", "weight": 1.0 },
+    { "source": "file:app/onboarding/page.tsx", "target": "function:app/onboarding/page.tsx:Step2", "type": "contains", "direction": "forward", "weight": 1.0 },
+    { "source": "function:app/onboarding/page.tsx:Step2", "target": "function:src/features/brand-profile/model/useBrandProfileStorage.ts:readProfiles", "type": "calls", "direction": "forward", "weight": 0.8 },
+
+    { "source": "file:app/setup/page.tsx", "target": "file:src/shared/ui/Button.tsx", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:app/setup/page.tsx", "target": "file:src/shared/ui/Icon.tsx", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:app/setup/page.tsx", "target": "function:app/setup/page.tsx:SetupFlow", "type": "contains", "direction": "forward", "weight": 1.0 },
+
+    { "source": "file:lib/facebook-insights.ts", "target": "function:lib/facebook-insights.ts:getFacebookInsights", "type": "contains", "direction": "forward", "weight": 1.0 },
+    { "source": "file:lib/facebook-insights.ts", "target": "function:lib/facebook-insights.ts:getFacebookInsights", "type": "exports", "direction": "forward", "weight": 0.8 },
+
+    { "source": "file:lib/facebook-pages.ts", "target": "function:lib/facebook-pages.ts:getFacebookManagedPages", "type": "contains", "direction": "forward", "weight": 1.0 },
+    { "source": "file:lib/facebook-pages.ts", "target": "function:lib/facebook-pages.ts:getFacebookManagedPages", "type": "exports", "direction": "forward", "weight": 0.8 },
+
+    { "source": "file:lib/instagram-insights.ts", "target": "file:lib/instagram-graph.ts", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:lib/instagram-insights.ts", "target": "function:lib/instagram-insights.ts:fetchInsightsWithToken", "type": "contains", "direction": "forward", "weight": 1.0 },
+    { "source": "file:lib/instagram-insights.ts", "target": "function:lib/instagram-insights.ts:getInstagramInsights", "type": "contains", "direction": "forward", "weight": 1.0 },
+    { "source": "file:lib/instagram-insights.ts", "target": "function:lib/instagram-insights.ts:getInstagramInsights", "type": "exports", "direction": "forward", "weight": 0.8 },
+    { "source": "file:lib/instagram-insights.ts", "target": "function:lib/instagram-insights.ts:debugInstagramInsights", "type": "contains", "direction": "forward", "weight": 1.0 },
+    { "source": "function:lib/instagram-insights.ts:getInstagramInsights", "target": "function:lib/instagram-graph.ts:getPageToken", "type": "calls", "direction": "forward", "weight": 0.8 },
+    { "source": "function:lib/instagram-insights.ts:getInstagramInsights", "target": "function:lib/instagram-graph.ts:getIgUserId", "type": "calls", "direction": "forward", "weight": 0.8 },
+
+    { "source": "file:src/entities/insights/optimization.ts", "target": "file:src/entities/insights/thresholds.ts", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:src/entities/insights/optimization.ts", "target": "function:src/entities/insights/optimization.ts:suggestChannelOptimizations", "type": "contains", "direction": "forward", "weight": 1.0 },
+    { "source": "file:src/entities/insights/optimization.ts", "target": "function:src/entities/insights/optimization.ts:suggestChannelOptimizations", "type": "exports", "direction": "forward", "weight": 0.8 },
+    { "source": "file:src/entities/insights/optimization.ts", "target": "function:src/entities/insights/optimization.ts:suggestOptimizations", "type": "contains", "direction": "forward", "weight": 1.0 },
+    { "source": "file:src/entities/insights/optimization.ts", "target": "function:src/entities/insights/optimization.ts:suggestOptimizations", "type": "exports", "direction": "forward", "weight": 0.8 },
+    { "source": "file:src/entities/insights/optimization.ts", "target": "function:src/entities/insights/optimization.ts:assessAutomationReadiness", "type": "contains", "direction": "forward", "weight": 1.0 },
+    { "source": "file:src/entities/insights/optimization.ts", "target": "function:src/entities/insights/optimization.ts:assessAutomationReadiness", "type": "exports", "direction": "forward", "weight": 0.8 },
+
+    { "source": "file:src/features/brand-profile/ui/CopyReferenceSection.tsx", "target": "file:src/features/brand-profile/model/useBrandProfileStorage.ts", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:src/features/brand-profile/ui/CopyReferenceSection.tsx", "target": "file:src/features/brand-profile/ui/IgImportModal.tsx", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:src/features/brand-profile/ui/CopyReferenceSection.tsx", "target": "file:src/shared/lib/cn.ts", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:src/features/brand-profile/ui/CopyReferenceSection.tsx", "target": "file:src/shared/ui/Button.tsx", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:src/features/brand-profile/ui/CopyReferenceSection.tsx", "target": "file:src/shared/ui/Icon.tsx", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:src/features/brand-profile/ui/CopyReferenceSection.tsx", "target": "function:src/features/brand-profile/ui/CopyReferenceSection.tsx:CopyReferenceSection", "type": "contains", "direction": "forward", "weight": 1.0 },
+    { "source": "file:src/features/brand-profile/ui/CopyReferenceSection.tsx", "target": "function:src/features/brand-profile/ui/CopyReferenceSection.tsx:CopyReferenceSection", "type": "exports", "direction": "forward", "weight": 0.8 },
+
+    { "source": "file:src/features/brand-profile/ui/IgImportModal.tsx", "target": "file:src/shared/lib/cn.ts", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:src/features/brand-profile/ui/IgImportModal.tsx", "target": "file:src/shared/ui/Button.tsx", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:src/features/brand-profile/ui/IgImportModal.tsx", "target": "file:src/shared/ui/Icon.tsx", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:src/features/brand-profile/ui/IgImportModal.tsx", "target": "file:src/shared/ui/IgPostPreview.tsx", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:src/features/brand-profile/ui/IgImportModal.tsx", "target": "function:src/features/brand-profile/ui/IgImportModal.tsx:IgImportModal", "type": "contains", "direction": "forward", "weight": 1.0 },
+    { "source": "file:src/features/brand-profile/ui/IgImportModal.tsx", "target": "function:src/features/brand-profile/ui/IgImportModal.tsx:IgImportModal", "type": "exports", "direction": "forward", "weight": 0.8 },
+
+    { "source": "file:src/features/brand-profile/ui/StatTile.tsx", "target": "file:src/shared/ui/Icon.tsx", "type": "imports", "direction": "forward", "weight": 0.7 },
+
+    { "source": "file:src/features/channel-suggestion-action/AiDraftModal.tsx", "target": "file:src/shared/ui/Button.tsx", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:src/features/channel-suggestion-action/AiDraftModal.tsx", "target": "file:src/shared/ui/Icon.tsx", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:src/features/channel-suggestion-action/AiDraftModal.tsx", "target": "function:src/features/channel-suggestion-action/AiDraftModal.tsx:AiDraftModal", "type": "contains", "direction": "forward", "weight": 1.0 },
+    { "source": "file:src/features/channel-suggestion-action/AiDraftModal.tsx", "target": "function:src/features/channel-suggestion-action/AiDraftModal.tsx:AiDraftModal", "type": "exports", "direction": "forward", "weight": 0.8 },
+    { "source": "file:src/features/channel-suggestion-action/AiDraftModal.tsx", "target": "function:src/features/channel-suggestion-action/AiDraftModal.tsx:fetchDraft", "type": "contains", "direction": "forward", "weight": 1.0 },
+
+    { "source": "file:src/shared/ui/Button.tsx", "target": "file:src/shared/lib/cn.ts", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:src/shared/ui/Button.tsx", "target": "function:src/shared/ui/Button.tsx:buttonVariants", "type": "contains", "direction": "forward", "weight": 1.0 },
+    { "source": "file:src/shared/ui/Button.tsx", "target": "function:src/shared/ui/Button.tsx:buttonVariants", "type": "exports", "direction": "forward", "weight": 0.8 },
+
+    { "source": "file:src/shared/ui/Card.tsx", "target": "file:src/shared/lib/cn.ts", "type": "imports", "direction": "forward", "weight": 0.7 }
+  ]
+}

@@ -1,0 +1,210 @@
+{
+  "nodes": [
+    {
+      "id": "file:src/entities/ab-test/tournament/meta-adapters.test.ts",
+      "type": "file",
+      "name": "meta-adapters.test.ts",
+      "filePath": "src/entities/ab-test/tournament/meta-adapters.test.ts",
+      "summary": "Meta 토너먼트 어댑터(launcher·kpi-source)가 meta-ads-campaign·insights 와 올바르게 연동되는지 검증하는 단위 테스트. tour·round 팩토리로 토너먼트 상태를 구성한다.",
+      "tags": ["test", "tournament", "meta-ads", "unit-test"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/entities/ab-test/tournament/meta-kpi-source.ts",
+      "type": "file",
+      "name": "meta-kpi-source.ts",
+      "filePath": "src/entities/ab-test/tournament/meta-kpi-source.ts",
+      "summary": "실 KpiSource 어댑터. Meta insights getInsights 로 라운드 KPI 를, getSplitTestResult 로 Meta 판정을 가져와 토너먼트 엔진에 공급한다.",
+      "tags": ["service", "tournament", "meta-ads", "adapter"],
+      "complexity": "moderate",
+      "languageNotes": "ADR-038. Meta verdict 채택(z검정 폴백 폐기), null=결산 보류."
+    },
+    {
+      "id": "function:src/entities/ab-test/tournament/meta-kpi-source.ts:createMetaKpiSource",
+      "type": "function",
+      "name": "createMetaKpiSource",
+      "filePath": "src/entities/ab-test/tournament/meta-kpi-source.ts",
+      "lineRange": [12, 57],
+      "summary": "Meta insights 기반 KpiSource 를 생성한다. roundKpis 는 셀 인사이트를, roundVerdict 는 ad_studies split-test 결과를 토너먼트 판정으로 매핑한다.",
+      "tags": ["tournament", "meta-ads", "factory"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/entities/ab-test/tournament/meta-launcher.ts",
+      "type": "file",
+      "name": "meta-launcher.ts",
+      "filePath": "src/entities/ab-test/tournament/meta-launcher.ts",
+      "summary": "실 RoundLauncher 어댑터. 챔피언·챌린저를 createSplitTestStudy 로 Meta SPLIT_TEST AdSet 2셀로 게재하고 KST 일정·variant B 를 구성한다.",
+      "tags": ["service", "tournament", "meta-ads", "adapter"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/entities/ab-test/tournament/meta-launcher.ts:createMetaRoundLauncher",
+      "type": "function",
+      "name": "createMetaRoundLauncher",
+      "filePath": "src/entities/ab-test/tournament/meta-launcher.ts",
+      "lineRange": [26, 68],
+      "summary": "라운드 게재 launcher 를 생성한다. 챔피언·챌린저 축을 도출해 metaAdsCampaign.createSplitTestStudy 로 split test 를 게재한다.",
+      "tags": ["tournament", "meta-ads", "factory"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/entities/ab-test/tournament/real.ts",
+      "type": "file",
+      "name": "real.ts",
+      "filePath": "src/entities/ab-test/tournament/real.ts",
+      "summary": "실 토너먼트 러너 조립 진입점. server runner 에 Meta launcher·kpi-source·Supabase store 를 주입하고 소유자 키 도출 헬퍼를 제공한다.",
+      "tags": ["tournament", "factory", "composition-root"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/entities/ab-test/tournament/real.ts:getRealTournamentRunner",
+      "type": "function",
+      "name": "getRealTournamentRunner",
+      "filePath": "src/entities/ab-test/tournament/real.ts",
+      "lineRange": [10, 16],
+      "summary": "Meta launcher·kpi-source·Supabase store 어댑터를 주입해 실 토너먼트 server runner 를 조립·반환한다.",
+      "tags": ["tournament", "factory", "dependency-injection"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/entities/ab-test/tournament/server-runner.test.ts",
+      "type": "file",
+      "name": "server-runner.test.ts",
+      "filePath": "src/entities/ab-test/tournament/server-runner.test.ts",
+      "summary": "server runner 의 토너먼트 생성·라운드 게재·폴링 결산·자동 진행 흐름을 인메모리 store 와 mock 어댑터로 검증하는 단위 테스트.",
+      "tags": ["test", "tournament", "unit-test"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/entities/ab-test/tournament/server-runner.ts",
+      "type": "file",
+      "name": "server-runner.ts",
+      "filePath": "src/entities/ab-test/tournament/server-runner.ts",
+      "summary": "토너먼트 통합 server runner. 주입된 store·launcher·kpiSource 로 토너먼트 생성·챔피언 확정/재생성·챌린저 제안·라운드 게재·폴링 결산·자동 진행·이상 신호 해소를 오케스트레이션한다.",
+      "tags": ["service", "tournament", "orchestration", "factory"],
+      "complexity": "complex",
+      "languageNotes": "ADR-038 통합 엔진. createServerRunner 가 모든 결정·운영 메서드를 클로저로 노출하는 의존성 주입 패턴."
+    },
+    {
+      "id": "function:src/entities/ab-test/tournament/server-runner.ts:createServerRunner",
+      "type": "function",
+      "name": "createServerRunner",
+      "filePath": "src/entities/ab-test/tournament/server-runner.ts",
+      "lineRange": [81, 297],
+      "summary": "store·launcher·kpiSource 의존성으로 토너먼트 러너를 생성한다. createTournament·launchRound·pollAndSettle·autoAdvance 등 전체 라이프사이클 메서드를 클로저로 노출한다.",
+      "tags": ["tournament", "orchestration", "factory"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/entities/ab-test/tournament/server-runner.ts:genCreative",
+      "type": "function",
+      "name": "genCreative",
+      "filePath": "src/entities/ab-test/tournament/server-runner.ts",
+      "lineRange": [30, 40],
+      "summary": "토너먼트 컨텍스트로 Gemini 소재(헤드라인·본문)를 생성하는 헬퍼.",
+      "tags": ["tournament", "creative", "ai"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/entities/ab-test/tournament/supabase-store.ts",
+      "type": "file",
+      "name": "supabase-store.ts",
+      "filePath": "src/entities/ab-test/tournament/supabase-store.ts",
+      "summary": "토너먼트 영속 Store 어댑터. Supabase 테이블에 토너먼트 JSON 을 list/listByOwner/get/upsert/remove 로 CRUD 한다.",
+      "tags": ["service", "tournament", "database", "adapter"],
+      "complexity": "moderate",
+      "languageNotes": "ADR-038 Supabase 주저장. data 컬럼에 토너먼트 전체를 JSON 으로 저장."
+    },
+    {
+      "id": "file:src/shared/lib/cron-runs.ts",
+      "type": "file",
+      "name": "cron-runs.ts",
+      "filePath": "src/shared/lib/cron-runs.ts",
+      "summary": "cron 실행 자기기록 헬퍼(ADR-042 관측성). cron_runs 테이블에 실행 결과를 insert 하고 마지막 성공 실행을 조회해 health 라우트가 stale 판정에 사용한다.",
+      "tags": ["utility", "cron", "monitoring", "database"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/shared/lib/cron-runs.ts:recordCronRun",
+      "type": "function",
+      "name": "recordCronRun",
+      "filePath": "src/shared/lib/cron-runs.ts",
+      "lineRange": [31, 50],
+      "summary": "cron 실행 결과(job·ok·에러·finished_at)를 Supabase cron_runs 테이블에 best-effort 로 기록한다.",
+      "tags": ["cron", "monitoring", "database"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/shared/lib/cron-runs.ts:getLastSuccessfulRun",
+      "type": "function",
+      "name": "getLastSuccessfulRun",
+      "filePath": "src/shared/lib/cron-runs.ts",
+      "lineRange": [52, 65],
+      "summary": "지정 job 의 가장 최근 성공 cron 실행 레코드를 finished_at 내림차순으로 조회한다.",
+      "tags": ["cron", "monitoring", "database"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {"source": "file:src/entities/ab-test/tournament/meta-adapters.test.ts", "target": "file:lib/meta-ads-campaign.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/entities/ab-test/tournament/meta-adapters.test.ts", "target": "file:lib/meta-ads-insights.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/entities/ab-test/tournament/meta-adapters.test.ts", "target": "file:src/entities/ab-test/tournament/engine.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/entities/ab-test/tournament/meta-adapters.test.ts", "target": "file:src/entities/ab-test/tournament/meta-kpi-source.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/entities/ab-test/tournament/meta-adapters.test.ts", "target": "file:src/entities/ab-test/tournament/meta-launcher.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/entities/ab-test/tournament/meta-adapters.test.ts", "target": "file:src/entities/ab-test/tournament/meta-kpi-source.ts", "type": "tested_by", "direction": "forward", "weight": 0.5},
+    {"source": "file:src/entities/ab-test/tournament/meta-adapters.test.ts", "target": "file:src/entities/ab-test/tournament/meta-launcher.ts", "type": "tested_by", "direction": "forward", "weight": 0.5},
+
+    {"source": "file:src/entities/ab-test/tournament/meta-kpi-source.ts", "target": "file:lib/meta-ads-insights.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/entities/ab-test/tournament/meta-kpi-source.ts", "target": "file:src/entities/ab-test/tournament/adapters.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/entities/ab-test/tournament/meta-kpi-source.ts", "target": "file:src/entities/creative/options.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/entities/ab-test/tournament/meta-kpi-source.ts", "target": "file:src/entities/insights/ab-verdict.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/entities/ab-test/tournament/meta-kpi-source.ts", "target": "function:src/entities/ab-test/tournament/meta-kpi-source.ts:createMetaKpiSource", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/entities/ab-test/tournament/meta-kpi-source.ts", "target": "function:src/entities/ab-test/tournament/meta-kpi-source.ts:createMetaKpiSource", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "function:src/entities/ab-test/tournament/meta-kpi-source.ts:createMetaKpiSource", "target": "function:lib/meta-ads-insights.ts:parseAdStudyResult", "type": "calls", "direction": "forward", "weight": 0.8},
+
+    {"source": "file:src/entities/ab-test/tournament/meta-launcher.ts", "target": "file:lib/meta-ads-campaign.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/entities/ab-test/tournament/meta-launcher.ts", "target": "file:src/entities/ab-test/tournament/adapters.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/entities/ab-test/tournament/meta-launcher.ts", "target": "file:src/entities/ab-test/tournament/engine.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/entities/ab-test/tournament/meta-launcher.ts", "target": "file:src/entities/creative/options.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/entities/ab-test/tournament/meta-launcher.ts", "target": "function:src/entities/ab-test/tournament/meta-launcher.ts:createMetaRoundLauncher", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/entities/ab-test/tournament/meta-launcher.ts", "target": "function:src/entities/ab-test/tournament/meta-launcher.ts:createMetaRoundLauncher", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "function:src/entities/ab-test/tournament/meta-launcher.ts:createMetaRoundLauncher", "target": "function:src/entities/ab-test/tournament/engine.ts:deriveBeat", "type": "calls", "direction": "forward", "weight": 0.6},
+
+    {"source": "file:src/entities/ab-test/tournament/real.ts", "target": "file:src/entities/ab-test/tournament/meta-kpi-source.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/entities/ab-test/tournament/real.ts", "target": "file:src/entities/ab-test/tournament/meta-launcher.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/entities/ab-test/tournament/real.ts", "target": "file:src/entities/ab-test/tournament/server-runner.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/entities/ab-test/tournament/real.ts", "target": "file:src/entities/ab-test/tournament/supabase-store.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/entities/ab-test/tournament/real.ts", "target": "function:src/entities/ab-test/tournament/real.ts:getRealTournamentRunner", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/entities/ab-test/tournament/real.ts", "target": "function:src/entities/ab-test/tournament/real.ts:getRealTournamentRunner", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "function:src/entities/ab-test/tournament/real.ts:getRealTournamentRunner", "target": "function:src/entities/ab-test/tournament/server-runner.ts:createServerRunner", "type": "calls", "direction": "forward", "weight": 0.8},
+    {"source": "function:src/entities/ab-test/tournament/real.ts:getRealTournamentRunner", "target": "function:src/entities/ab-test/tournament/meta-launcher.ts:createMetaRoundLauncher", "type": "calls", "direction": "forward", "weight": 0.8},
+    {"source": "function:src/entities/ab-test/tournament/real.ts:getRealTournamentRunner", "target": "function:src/entities/ab-test/tournament/meta-kpi-source.ts:createMetaKpiSource", "type": "calls", "direction": "forward", "weight": 0.8},
+
+    {"source": "file:src/entities/ab-test/tournament/server-runner.test.ts", "target": "file:src/entities/ab-test/tournament/adapters.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/entities/ab-test/tournament/server-runner.test.ts", "target": "file:src/entities/ab-test/tournament/engine.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/entities/ab-test/tournament/server-runner.test.ts", "target": "file:src/entities/ab-test/tournament/server-runner.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/entities/ab-test/tournament/server-runner.test.ts", "target": "file:src/entities/ab-test/tournament/server-runner.ts", "type": "tested_by", "direction": "forward", "weight": 0.5},
+
+    {"source": "file:src/entities/ab-test/tournament/server-runner.ts", "target": "file:lib/gemini-creative.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/entities/ab-test/tournament/server-runner.ts", "target": "file:src/entities/ab-test/tournament/adapters.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/entities/ab-test/tournament/server-runner.ts", "target": "file:src/entities/ab-test/tournament/engine.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/entities/ab-test/tournament/server-runner.ts", "target": "file:src/entities/creative/options.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/entities/ab-test/tournament/server-runner.ts", "target": "function:src/entities/ab-test/tournament/server-runner.ts:createServerRunner", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/entities/ab-test/tournament/server-runner.ts", "target": "function:src/entities/ab-test/tournament/server-runner.ts:genCreative", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/entities/ab-test/tournament/server-runner.ts", "target": "function:src/entities/ab-test/tournament/server-runner.ts:createServerRunner", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "function:src/entities/ab-test/tournament/server-runner.ts:createServerRunner", "target": "function:src/entities/ab-test/tournament/engine.ts:judgeRoundKpis", "type": "calls", "direction": "forward", "weight": 0.8},
+    {"source": "function:src/entities/ab-test/tournament/server-runner.ts:createServerRunner", "target": "function:src/entities/ab-test/tournament/engine.ts:isEnvelopeExhausted", "type": "calls", "direction": "forward", "weight": 0.8},
+    {"source": "function:src/entities/ab-test/tournament/server-runner.ts:createServerRunner", "target": "function:src/entities/ab-test/tournament/engine.ts:detectAnomaly", "type": "calls", "direction": "forward", "weight": 0.8},
+
+    {"source": "file:src/entities/ab-test/tournament/supabase-store.ts", "target": "file:src/entities/ab-test/tournament/adapters.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/entities/ab-test/tournament/supabase-store.ts", "target": "file:src/entities/ab-test/tournament/engine.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/entities/ab-test/tournament/supabase-store.ts", "target": "file:src/shared/lib/supabase-server.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+
+    {"source": "file:src/shared/lib/cron-runs.ts", "target": "file:src/shared/lib/supabase-server.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/shared/lib/cron-runs.ts", "target": "function:src/shared/lib/cron-runs.ts:recordCronRun", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/shared/lib/cron-runs.ts", "target": "function:src/shared/lib/cron-runs.ts:getLastSuccessfulRun", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/shared/lib/cron-runs.ts", "target": "function:src/shared/lib/cron-runs.ts:recordCronRun", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "file:src/shared/lib/cron-runs.ts", "target": "function:src/shared/lib/cron-runs.ts:getLastSuccessfulRun", "type": "exports", "direction": "forward", "weight": 0.8}
+  ]
+}

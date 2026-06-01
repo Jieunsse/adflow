@@ -57,7 +57,7 @@ export function applySettle(t: Tournament, days = 0): { t: Tournament; result: R
   if (!r) return { t, result: { status: "no-active" } };
 
   r.fastForwardDays = Math.max(r.fastForwardDays, days);
-  const result = settleRound(r, t.championCtr, t.dailyBudget);
+  const result = settleRound(r, t.championCtr, t.dailyBudget, undefined, t.objective);
   if (result.verdict.state === "insufficient") {
     return { t, result: { status: "insufficient" } }; // 누적 ff 는 저장하도록 t 반환
   }

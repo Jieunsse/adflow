@@ -1,0 +1,510 @@
+{
+  "nodes": [
+    {
+      "id": "file:src/shared/ui/ConfirmModal.tsx",
+      "type": "file",
+      "name": "ConfirmModal.tsx",
+      "filePath": "src/shared/ui/ConfirmModal.tsx",
+      "summary": "확인/취소 액션을 받는 모달 다이얼로그 공통 컴포넌트로, danger 등 tone에 따라 확인 버튼 스타일을 분기한다.",
+      "tags": ["component", "shared-ui", "modal", "confirmation"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/shared/ui/ConfirmModal.tsx:ConfirmModal",
+      "type": "function",
+      "name": "ConfirmModal",
+      "filePath": "src/shared/ui/ConfirmModal.tsx",
+      "lineRange": [6, 89],
+      "summary": "제목·설명·확인/취소 라벨과 콜백을 받아 오버레이 클릭 차단(stopPropagation)을 포함한 확인 모달을 렌더한다.",
+      "tags": ["component", "modal", "confirmation"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/shared/ui/Icon.tsx",
+      "type": "file",
+      "name": "Icon.tsx",
+      "filePath": "src/shared/ui/Icon.tsx",
+      "summary": "프로젝트 전역에서 사용하는 SVG 아이콘 집합을 name prop으로 선택해 그려주는 단일 Icon 컴포넌트. 대다수 widget·page가 의존하는 핵심 공통 UI.",
+      "tags": ["component", "shared-ui", "icon", "svg"],
+      "complexity": "complex",
+      "languageNotes": "name 기반 거대 switch/맵으로 다수 인라인 SVG path를 분기하는 아이콘 레지스트리 패턴."
+    },
+    {
+      "id": "function:src/shared/ui/Icon.tsx:Icon",
+      "type": "function",
+      "name": "Icon",
+      "filePath": "src/shared/ui/Icon.tsx",
+      "lineRange": [67, 449],
+      "summary": "name·size·strokeWidth·spin 등을 받아 해당 SVG 아이콘을 렌더하는 아이콘 디스패처 컴포넌트.",
+      "tags": ["component", "icon", "svg"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:src/shared/ui/IdField.tsx",
+      "type": "file",
+      "name": "IdField.tsx",
+      "filePath": "src/shared/ui/IdField.tsx",
+      "summary": "Meta 광고 계정 등 식별자를 마스킹 표시하고 클릭으로 노출·클립보드 복사(Toast 피드백)를 제공하는 필드 컴포넌트.",
+      "tags": ["component", "shared-ui", "clipboard", "masking"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/shared/ui/IdField.tsx:IdField",
+      "type": "function",
+      "name": "IdField",
+      "filePath": "src/shared/ui/IdField.tsx",
+      "lineRange": [15, 74],
+      "summary": "maskId로 식별자를 가린 상태로 보여주고 reveal 토글·clipboard 복사 시 Toast를 띄우는 라벨드 필드.",
+      "tags": ["component", "clipboard", "masking"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/shared/ui/IgPostPreview.tsx",
+      "type": "file",
+      "name": "IgPostPreview.tsx",
+      "filePath": "src/shared/ui/IgPostPreview.tsx",
+      "summary": "이미지·캡션·핸들을 받아 인스타그램 피드 게시물 형태로 미리보기를 렌더하는 공통 컴포넌트로, 캡션 토큰화(해시태그/멘션)와 하단 글리프 아이콘을 포함한다.",
+      "tags": ["component", "shared-ui", "instagram", "preview"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/shared/ui/IgPostPreview.tsx:tokenizeCaption",
+      "type": "function",
+      "name": "tokenizeCaption",
+      "filePath": "src/shared/ui/IgPostPreview.tsx",
+      "lineRange": [6, 19],
+      "summary": "캡션 문자열을 정규식으로 스캔해 일반 텍스트와 해시태그/멘션 토큰으로 분리한다.",
+      "tags": ["utility", "parsing", "tokenizer"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/shared/ui/IgPostPreview.tsx:IgPostPreview",
+      "type": "function",
+      "name": "IgPostPreview",
+      "filePath": "src/shared/ui/IgPostPreview.tsx",
+      "lineRange": [21, 204],
+      "summary": "프로필·이미지·캡션·스폰서드 라벨·CTA를 인스타그램 게시물 카드 레이아웃으로 렌더한다.",
+      "tags": ["component", "instagram", "preview"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:src/shared/ui/PlaceholderScreen.tsx",
+      "type": "file",
+      "name": "PlaceholderScreen.tsx",
+      "filePath": "src/shared/ui/PlaceholderScreen.tsx",
+      "summary": "아직 구현되지 않은 라우트를 위한 안내 placeholder 화면으로, route별 메타정보를 칩과 함께 보여준다.",
+      "tags": ["component", "shared-ui", "placeholder"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/shared/ui/PlaceholderScreen.tsx:PlaceholderScreen",
+      "type": "function",
+      "name": "PlaceholderScreen",
+      "filePath": "src/shared/ui/PlaceholderScreen.tsx",
+      "lineRange": [37, 92],
+      "summary": "route 키에 매핑된 제목·설명을 placeholder 레이아웃으로 표시하는 미구현 화면 컴포넌트.",
+      "tags": ["component", "placeholder"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/shared/ui/primitives.tsx",
+      "type": "file",
+      "name": "primitives.tsx",
+      "filePath": "src/shared/ui/primitives.tsx",
+      "summary": "Badge·Sparkline·KpiCard·EmptyState 등 대시보드 전반에서 재사용되는 소형 표현 primitive 컴포넌트 모음.",
+      "tags": ["component", "shared-ui", "barrel", "primitives"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/shared/ui/primitives.tsx:Badge",
+      "type": "function",
+      "name": "Badge",
+      "filePath": "src/shared/ui/primitives.tsx",
+      "lineRange": [30, 67],
+      "summary": "kind·live·dot·size에 따라 색과 점 표시를 분기하는 상태 뱃지 컴포넌트.",
+      "tags": ["component", "badge", "primitives"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/shared/ui/primitives.tsx:Sparkline",
+      "type": "function",
+      "name": "Sparkline",
+      "filePath": "src/shared/ui/primitives.tsx",
+      "lineRange": [71, 116],
+      "summary": "데이터 배열을 정규화해 SVG path로 그리는 인라인 미니 추세 차트.",
+      "tags": ["component", "chart", "svg", "sparkline"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/shared/ui/primitives.tsx:KpiCard",
+      "type": "function",
+      "name": "KpiCard",
+      "filePath": "src/shared/ui/primitives.tsx",
+      "lineRange": [120, 171],
+      "summary": "라벨·값·증감 델타·trend를 한 카드로 묶어 핵심 지표를 표시하는 KPI 카드.",
+      "tags": ["component", "kpi", "metrics"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/shared/ui/primitives.tsx:EmptyState",
+      "type": "function",
+      "name": "EmptyState",
+      "filePath": "src/shared/ui/primitives.tsx",
+      "lineRange": [175, 204],
+      "summary": "아이콘·제목·설명·액션을 받아 빈 상태 안내 영역을 렌더하는 컴포넌트.",
+      "tags": ["component", "empty-state", "primitives"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/widgets/business-portfolio/ChannelInsights.tsx",
+      "type": "file",
+      "name": "ChannelInsights.tsx",
+      "filePath": "src/widgets/business-portfolio/ChannelInsights.tsx",
+      "summary": "IG/FB 채널의 KPI·게시물·AI 최적화 제안을 한 화면에 종합하고, 제안 액션(AI 초안·부스트·캠페인 생성)으로 라우팅하는 비즈니스 포트폴리오 핵심 위젯.",
+      "tags": ["widget", "business-portfolio", "insights", "channel"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/widgets/business-portfolio/ChannelInsights.tsx:SuggestionCard",
+      "type": "function",
+      "name": "SuggestionCard",
+      "filePath": "src/widgets/business-portfolio/ChannelInsights.tsx",
+      "lineRange": [38, 128],
+      "summary": "최적화 제안 1건을 카드로 표시하고 기본/보조 액션 버튼을 콜백으로 연결한다.",
+      "tags": ["component", "insights", "suggestion"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/widgets/business-portfolio/ChannelInsights.tsx:PostRow",
+      "type": "function",
+      "name": "PostRow",
+      "filePath": "src/widgets/business-portfolio/ChannelInsights.tsx",
+      "lineRange": [130, 228],
+      "summary": "게시물 한 건의 썸네일·날짜·지표를 행으로 표시하고 클릭 시 상세를 여는 행 컴포넌트.",
+      "tags": ["component", "post", "list-item"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/widgets/business-portfolio/ChannelInsights.tsx:ChannelInsights",
+      "type": "function",
+      "name": "ChannelInsights",
+      "filePath": "src/widgets/business-portfolio/ChannelInsights.tsx",
+      "lineRange": [230, 431],
+      "summary": "채널 KPI 그리드·게시물 목록·제안 카드·상세 모달을 조합하고 액션을 create/boost 라우트로 push하는 메인 인사이트 위젯.",
+      "tags": ["widget", "insights", "channel", "routing"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:src/widgets/business-portfolio/CompareBar.tsx",
+      "type": "file",
+      "name": "CompareBar.tsx",
+      "filePath": "src/widgets/business-portfolio/CompareBar.tsx",
+      "summary": "Instagram과 Facebook 채널 지표를 한눈에 비교하는 상단 요약 바로, 각 채널로 점프하는 액션을 제공한다.",
+      "tags": ["widget", "business-portfolio", "comparison", "summary"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/widgets/business-portfolio/CompareBar.tsx:CompareBar",
+      "type": "function",
+      "name": "CompareBar",
+      "filePath": "src/widgets/business-portfolio/CompareBar.tsx",
+      "lineRange": [29, 117],
+      "summary": "IG/FB 지표를 나란히 비교 표시하고 각 채널로 이동하는 점프 콜백을 노출하는 비교 바.",
+      "tags": ["widget", "comparison", "summary"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/widgets/business-portfolio/Messages.tsx",
+      "type": "file",
+      "name": "Messages.tsx",
+      "filePath": "src/widgets/business-portfolio/Messages.tsx",
+      "summary": "Instagram DM 인박스·스레드·작성기를 TanStack Query와 SSE로 묶은 실시간 메시지 위젯. 낙관적 전송과 권한 배너 처리를 포함한다.",
+      "tags": ["widget", "business-portfolio", "instagram", "messaging", "realtime"],
+      "complexity": "complex",
+      "languageNotes": "SSE addEventListener + qc.setQueryData 낙관적 업데이트 조합으로 실시간 DM 수신/전송을 구현."
+    },
+    {
+      "id": "function:src/widgets/business-portfolio/Messages.tsx:Composer",
+      "type": "function",
+      "name": "Composer",
+      "filePath": "src/widgets/business-portfolio/Messages.tsx",
+      "lineRange": [190, 310],
+      "summary": "메시지 입력·자동 높이 조절·Enter 전송과 낙관적 캐시 업데이트 후 fetch POST로 DM을 보내는 작성기.",
+      "tags": ["component", "messaging", "composer", "optimistic-update"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/widgets/business-portfolio/Messages.tsx:ThreadPanel",
+      "type": "function",
+      "name": "ThreadPanel",
+      "filePath": "src/widgets/business-portfolio/Messages.tsx",
+      "lineRange": [312, 375],
+      "summary": "선택된 대화의 스레드를 useQuery로 가져와 ThreadView로 넘기는 패널.",
+      "tags": ["component", "messaging", "data-fetching"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/widgets/business-portfolio/Messages.tsx:ThreadView",
+      "type": "function",
+      "name": "ThreadView",
+      "filePath": "src/widgets/business-portfolio/Messages.tsx",
+      "lineRange": [377, 438],
+      "summary": "스레드 메시지를 버블 목록으로 렌더하고 자동 스크롤·작성기를 배치하는 뷰.",
+      "tags": ["component", "messaging", "thread"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/widgets/business-portfolio/Messages.tsx:Messages",
+      "type": "function",
+      "name": "Messages",
+      "filePath": "src/widgets/business-portfolio/Messages.tsx",
+      "lineRange": [440, 579],
+      "summary": "인박스 목록·SSE 수신 구독·대화 선택 상태를 관리하고 ThreadPanel과 권한 배너를 조합하는 메시지 위젯 루트.",
+      "tags": ["widget", "messaging", "realtime", "instagram"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:src/widgets/business-portfolio/MessagesPermissionBanner.tsx",
+      "type": "file",
+      "name": "MessagesPermissionBanner.tsx",
+      "filePath": "src/widgets/business-portfolio/MessagesPermissionBanner.tsx",
+      "summary": "DM 기능에 필요한 Meta 권한(pages_messaging)이 없을 때 안내하는 권한 배너 컴포넌트.",
+      "tags": ["component", "business-portfolio", "permission", "banner"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/widgets/business-portfolio/Partnerships.tsx",
+      "type": "file",
+      "name": "Partnerships.tsx",
+      "filePath": "src/widgets/business-portfolio/Partnerships.tsx",
+      "summary": "branded-content API로 크리에이터 파트너십 콘텐츠를 조회해 카드로 보여주고 광고화 흐름으로 연결하는 위젯.",
+      "tags": ["widget", "business-portfolio", "instagram", "partnerships"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/widgets/business-portfolio/Partnerships.tsx:Partnerships",
+      "type": "function",
+      "name": "Partnerships",
+      "filePath": "src/widgets/business-portfolio/Partnerships.tsx",
+      "lineRange": [17, 139],
+      "summary": "branded-content 엔드포인트를 useQuery로 받아 파트너십 콘텐츠 목록을 카드 그리드로 렌더한다.",
+      "tags": ["widget", "partnerships", "data-fetching"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/widgets/business-portfolio/Partnerships.tsx:PartnershipCard",
+      "type": "function",
+      "name": "PartnershipCard",
+      "filePath": "src/widgets/business-portfolio/Partnerships.tsx",
+      "lineRange": [141, 279],
+      "summary": "파트너십 콘텐츠 1건의 미디어·크리에이터·자격 뱃지·부스트 CTA를 표시하는 카드.",
+      "tags": ["component", "partnerships", "card"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:src/widgets/business-portfolio/PromotedContent.tsx",
+      "type": "file",
+      "name": "PromotedContent.tsx",
+      "filePath": "src/widgets/business-portfolio/PromotedContent.tsx",
+      "summary": "localStorage에 기록된 부스트 게시물을 읽어 Meta insights를 병렬 조회하고 성과를 카드로 보여주는 위젯.",
+      "tags": ["widget", "business-portfolio", "boost", "insights"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/widgets/business-portfolio/PromotedContent.tsx:loadBoostPosts",
+      "type": "function",
+      "name": "loadBoostPosts",
+      "filePath": "src/widgets/business-portfolio/PromotedContent.tsx",
+      "lineRange": [28, 51],
+      "summary": "localStorage 키를 순회해 부스트된 게시물 항목을 파싱·수집하는 헬퍼.",
+      "tags": ["utility", "localstorage", "data-loading"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/widgets/business-portfolio/PromotedContent.tsx:PromotedContent",
+      "type": "function",
+      "name": "PromotedContent",
+      "filePath": "src/widgets/business-portfolio/PromotedContent.tsx",
+      "lineRange": [53, 276],
+      "summary": "부스트 게시물별 insights를 useQueries로 병렬 조회해 도달·지출·종료일 등 성과 카드를 렌더한다.",
+      "tags": ["widget", "boost", "insights", "data-fetching"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:src/widgets/business-portfolio/Stories.tsx",
+      "type": "file",
+      "name": "Stories.tsx",
+      "filePath": "src/widgets/business-portfolio/Stories.tsx",
+      "summary": "활성 Instagram 스토리를 조회해 썸네일·지표 카드로 표시하는 위젯으로, mock 폴백과 빈 상태를 함께 처리한다.",
+      "tags": ["widget", "business-portfolio", "instagram", "stories"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/widgets/business-portfolio/Stories.tsx:Stories",
+      "type": "function",
+      "name": "Stories",
+      "filePath": "src/widgets/business-portfolio/Stories.tsx",
+      "lineRange": [149, 206],
+      "summary": "활성 스토리를 useQuery로 가져와 StoryCard 그리드로 렌더하고 빈 상태를 처리하는 위젯 루트.",
+      "tags": ["widget", "stories", "data-fetching"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/widgets/business-portfolio/Stories.tsx:StoryCard",
+      "type": "function",
+      "name": "StoryCard",
+      "filePath": "src/widgets/business-portfolio/Stories.tsx",
+      "lineRange": [79, 107],
+      "summary": "스토리 썸네일과 도달·노출 등 지표 행을 묶어 한 카드로 표시한다.",
+      "tags": ["component", "stories", "card"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/widgets/business-portfolio/index.tsx",
+      "type": "file",
+      "name": "index.tsx",
+      "filePath": "src/widgets/business-portfolio/index.tsx",
+      "summary": "IG/FB 인사이트 데이터를 KPI·게시물로 변환하고 채널 탭·IG 하위 뷰(스토리·메시지·파트너십·부스트)를 전환하는 비즈니스 포트폴리오 컨테이너 위젯.",
+      "tags": ["widget", "business-portfolio", "container", "tabs"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/widgets/business-portfolio/index.tsx:PortfolioTabs",
+      "type": "function",
+      "name": "PortfolioTabs",
+      "filePath": "src/widgets/business-portfolio/index.tsx",
+      "lineRange": [102, 275],
+      "summary": "채널 탭과 IG 하위 뷰 상태를 관리하고 변환된 KPI·게시물을 ChannelInsights 및 하위 위젯에 분배하는 탭 컨테이너.",
+      "tags": ["widget", "container", "tabs", "channel"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/widgets/business-portfolio/index.tsx:igPosts",
+      "type": "function",
+      "name": "igPosts",
+      "filePath": "src/widgets/business-portfolio/index.tsx",
+      "lineRange": [60, 70],
+      "summary": "Instagram 인사이트 응답을 ChannelInsights가 쓰는 게시물 형태로 매핑하는 변환 헬퍼.",
+      "tags": ["utility", "transform", "instagram"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/widgets/business-portfolio/index.tsx:fbPosts",
+      "type": "function",
+      "name": "fbPosts",
+      "filePath": "src/widgets/business-portfolio/index.tsx",
+      "lineRange": [72, 82],
+      "summary": "Facebook 인사이트 응답을 공통 게시물 형태로 매핑하는 변환 헬퍼.",
+      "tags": ["utility", "transform", "facebook"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {"source": "file:src/shared/ui/ConfirmModal.tsx", "target": "function:src/shared/ui/ConfirmModal.tsx:ConfirmModal", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/shared/ui/ConfirmModal.tsx", "target": "function:src/shared/ui/ConfirmModal.tsx:ConfirmModal", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "file:src/shared/ui/ConfirmModal.tsx", "target": "file:src/shared/ui/Button.tsx", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/shared/ui/ConfirmModal.tsx", "target": "file:src/shared/ui/Icon.tsx", "type": "imports", "direction": "forward", "weight": 0.7},
+
+    {"source": "file:src/shared/ui/Icon.tsx", "target": "function:src/shared/ui/Icon.tsx:Icon", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/shared/ui/Icon.tsx", "target": "function:src/shared/ui/Icon.tsx:Icon", "type": "exports", "direction": "forward", "weight": 0.8},
+
+    {"source": "file:src/shared/ui/IdField.tsx", "target": "function:src/shared/ui/IdField.tsx:IdField", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/shared/ui/IdField.tsx", "target": "function:src/shared/ui/IdField.tsx:IdField", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "file:src/shared/ui/IdField.tsx", "target": "file:src/shared/lib/cn.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/shared/ui/IdField.tsx", "target": "file:src/shared/lib/format.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/shared/ui/IdField.tsx", "target": "file:src/shared/ui/Icon.tsx", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/shared/ui/IdField.tsx", "target": "file:src/shared/ui/Toast.tsx", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/shared/ui/IdField.tsx", "target": "function:src/shared/lib/format.ts:maskId", "type": "calls", "direction": "forward", "weight": 0.8},
+
+    {"source": "file:src/shared/ui/IgPostPreview.tsx", "target": "function:src/shared/ui/IgPostPreview.tsx:tokenizeCaption", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/shared/ui/IgPostPreview.tsx", "target": "function:src/shared/ui/IgPostPreview.tsx:IgPostPreview", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/shared/ui/IgPostPreview.tsx", "target": "function:src/shared/ui/IgPostPreview.tsx:IgPostPreview", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "file:src/shared/ui/IgPostPreview.tsx", "target": "file:src/shared/ui/Icon.tsx", "type": "imports", "direction": "forward", "weight": 0.7},
+
+    {"source": "file:src/shared/ui/PlaceholderScreen.tsx", "target": "function:src/shared/ui/PlaceholderScreen.tsx:PlaceholderScreen", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/shared/ui/PlaceholderScreen.tsx", "target": "function:src/shared/ui/PlaceholderScreen.tsx:PlaceholderScreen", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "file:src/shared/ui/PlaceholderScreen.tsx", "target": "file:src/shared/ui/Chip.tsx", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/shared/ui/PlaceholderScreen.tsx", "target": "file:src/shared/ui/Icon.tsx", "type": "imports", "direction": "forward", "weight": 0.7},
+
+    {"source": "file:src/shared/ui/primitives.tsx", "target": "function:src/shared/ui/primitives.tsx:Badge", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/shared/ui/primitives.tsx", "target": "function:src/shared/ui/primitives.tsx:Sparkline", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/shared/ui/primitives.tsx", "target": "function:src/shared/ui/primitives.tsx:KpiCard", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/shared/ui/primitives.tsx", "target": "function:src/shared/ui/primitives.tsx:EmptyState", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/shared/ui/primitives.tsx", "target": "function:src/shared/ui/primitives.tsx:Badge", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "file:src/shared/ui/primitives.tsx", "target": "function:src/shared/ui/primitives.tsx:Sparkline", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "file:src/shared/ui/primitives.tsx", "target": "function:src/shared/ui/primitives.tsx:KpiCard", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "file:src/shared/ui/primitives.tsx", "target": "function:src/shared/ui/primitives.tsx:EmptyState", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "file:src/shared/ui/primitives.tsx", "target": "file:src/shared/lib/cn.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/shared/ui/primitives.tsx", "target": "file:src/shared/ui/Card.tsx", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/shared/ui/primitives.tsx", "target": "file:src/shared/ui/Icon.tsx", "type": "imports", "direction": "forward", "weight": 0.7},
+
+    {"source": "file:src/widgets/business-portfolio/ChannelInsights.tsx", "target": "function:src/widgets/business-portfolio/ChannelInsights.tsx:SuggestionCard", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/widgets/business-portfolio/ChannelInsights.tsx", "target": "function:src/widgets/business-portfolio/ChannelInsights.tsx:PostRow", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/widgets/business-portfolio/ChannelInsights.tsx", "target": "function:src/widgets/business-portfolio/ChannelInsights.tsx:ChannelInsights", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/widgets/business-portfolio/ChannelInsights.tsx", "target": "function:src/widgets/business-portfolio/ChannelInsights.tsx:ChannelInsights", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "file:src/widgets/business-portfolio/ChannelInsights.tsx", "target": "file:src/entities/insights/optimization.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/widgets/business-portfolio/ChannelInsights.tsx", "target": "file:src/features/channel-suggestion-action/AiDraftModal.tsx", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/widgets/business-portfolio/ChannelInsights.tsx", "target": "file:src/shared/lib/cn.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/widgets/business-portfolio/ChannelInsights.tsx", "target": "file:src/shared/ui/Button.tsx", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/widgets/business-portfolio/ChannelInsights.tsx", "target": "file:src/shared/ui/Card.tsx", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/widgets/business-portfolio/ChannelInsights.tsx", "target": "file:src/shared/ui/Icon.tsx", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/widgets/business-portfolio/ChannelInsights.tsx", "target": "file:src/shared/ui/IgPostPreview.tsx", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/widgets/business-portfolio/ChannelInsights.tsx", "target": "file:src/shared/ui/primitives.tsx", "type": "imports", "direction": "forward", "weight": 0.7},
+
+    {"source": "file:src/widgets/business-portfolio/CompareBar.tsx", "target": "function:src/widgets/business-portfolio/CompareBar.tsx:CompareBar", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/widgets/business-portfolio/CompareBar.tsx", "target": "function:src/widgets/business-portfolio/CompareBar.tsx:CompareBar", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "file:src/widgets/business-portfolio/CompareBar.tsx", "target": "file:src/shared/ui/Card.tsx", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/widgets/business-portfolio/CompareBar.tsx", "target": "file:src/shared/ui/Icon.tsx", "type": "imports", "direction": "forward", "weight": 0.7},
+
+    {"source": "file:src/widgets/business-portfolio/Messages.tsx", "target": "function:src/widgets/business-portfolio/Messages.tsx:Composer", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/widgets/business-portfolio/Messages.tsx", "target": "function:src/widgets/business-portfolio/Messages.tsx:ThreadPanel", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/widgets/business-portfolio/Messages.tsx", "target": "function:src/widgets/business-portfolio/Messages.tsx:ThreadView", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/widgets/business-portfolio/Messages.tsx", "target": "function:src/widgets/business-portfolio/Messages.tsx:Messages", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/widgets/business-portfolio/Messages.tsx", "target": "function:src/widgets/business-portfolio/Messages.tsx:Messages", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "file:src/widgets/business-portfolio/Messages.tsx", "target": "file:lib/instagram-messages.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/widgets/business-portfolio/Messages.tsx", "target": "file:src/shared/lib/cn.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/widgets/business-portfolio/Messages.tsx", "target": "file:src/shared/ui/Card.tsx", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/widgets/business-portfolio/Messages.tsx", "target": "file:src/shared/ui/Icon.tsx", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/widgets/business-portfolio/Messages.tsx", "target": "file:src/widgets/business-portfolio/MessagesPermissionBanner.tsx", "type": "imports", "direction": "forward", "weight": 0.7},
+
+    {"source": "file:src/widgets/business-portfolio/MessagesPermissionBanner.tsx", "target": "file:src/shared/ui/Icon.tsx", "type": "imports", "direction": "forward", "weight": 0.7},
+
+    {"source": "file:src/widgets/business-portfolio/Partnerships.tsx", "target": "function:src/widgets/business-portfolio/Partnerships.tsx:Partnerships", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/widgets/business-portfolio/Partnerships.tsx", "target": "function:src/widgets/business-portfolio/Partnerships.tsx:PartnershipCard", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/widgets/business-portfolio/Partnerships.tsx", "target": "function:src/widgets/business-portfolio/Partnerships.tsx:Partnerships", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "file:src/widgets/business-portfolio/Partnerships.tsx", "target": "file:app/api/instagram/branded-content/route.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/widgets/business-portfolio/Partnerships.tsx", "target": "file:src/shared/ui/Card.tsx", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/widgets/business-portfolio/Partnerships.tsx", "target": "file:src/shared/ui/Icon.tsx", "type": "imports", "direction": "forward", "weight": 0.7},
+
+    {"source": "file:src/widgets/business-portfolio/PromotedContent.tsx", "target": "function:src/widgets/business-portfolio/PromotedContent.tsx:loadBoostPosts", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/widgets/business-portfolio/PromotedContent.tsx", "target": "function:src/widgets/business-portfolio/PromotedContent.tsx:PromotedContent", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/widgets/business-portfolio/PromotedContent.tsx", "target": "function:src/widgets/business-portfolio/PromotedContent.tsx:PromotedContent", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "file:src/widgets/business-portfolio/PromotedContent.tsx", "target": "file:src/shared/ui/Card.tsx", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/widgets/business-portfolio/PromotedContent.tsx", "target": "file:src/shared/ui/Icon.tsx", "type": "imports", "direction": "forward", "weight": 0.7},
+
+    {"source": "file:src/widgets/business-portfolio/Stories.tsx", "target": "function:src/widgets/business-portfolio/Stories.tsx:Stories", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/widgets/business-portfolio/Stories.tsx", "target": "function:src/widgets/business-portfolio/Stories.tsx:StoryCard", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/widgets/business-portfolio/Stories.tsx", "target": "function:src/widgets/business-portfolio/Stories.tsx:Stories", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "file:src/widgets/business-portfolio/Stories.tsx", "target": "file:lib/instagram-stories.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/widgets/business-portfolio/Stories.tsx", "target": "file:src/shared/lib/cn.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/widgets/business-portfolio/Stories.tsx", "target": "file:src/shared/ui/Card.tsx", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/widgets/business-portfolio/Stories.tsx", "target": "file:src/shared/ui/Icon.tsx", "type": "imports", "direction": "forward", "weight": 0.7},
+
+    {"source": "file:src/widgets/business-portfolio/index.tsx", "target": "function:src/widgets/business-portfolio/index.tsx:PortfolioTabs", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/widgets/business-portfolio/index.tsx", "target": "function:src/widgets/business-portfolio/index.tsx:igPosts", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/widgets/business-portfolio/index.tsx", "target": "function:src/widgets/business-portfolio/index.tsx:fbPosts", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:src/widgets/business-portfolio/index.tsx", "target": "function:src/widgets/business-portfolio/index.tsx:PortfolioTabs", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "file:src/widgets/business-portfolio/index.tsx", "target": "file:lib/facebook-insights.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/widgets/business-portfolio/index.tsx", "target": "file:lib/instagram-insights.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/widgets/business-portfolio/index.tsx", "target": "file:src/entities/insights/optimization.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/widgets/business-portfolio/index.tsx", "target": "file:src/shared/lib/cn.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/widgets/business-portfolio/index.tsx", "target": "file:src/widgets/business-portfolio/ChannelInsights.tsx", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/widgets/business-portfolio/index.tsx", "target": "file:src/widgets/business-portfolio/CompareBar.tsx", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/widgets/business-portfolio/index.tsx", "target": "file:src/widgets/business-portfolio/Messages.tsx", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/widgets/business-portfolio/index.tsx", "target": "file:src/widgets/business-portfolio/Partnerships.tsx", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/widgets/business-portfolio/index.tsx", "target": "file:src/widgets/business-portfolio/PromotedContent.tsx", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/widgets/business-portfolio/index.tsx", "target": "file:src/widgets/business-portfolio/Stories.tsx", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:src/widgets/business-portfolio/index.tsx", "target": "function:src/widgets/business-portfolio/index.tsx:igPosts", "type": "calls", "direction": "forward", "weight": 0.8},
+    {"source": "file:src/widgets/business-portfolio/index.tsx", "target": "function:src/entities/insights/optimization.ts:suggestChannelOptimizations", "type": "calls", "direction": "forward", "weight": 0.8}
+  ]
+}

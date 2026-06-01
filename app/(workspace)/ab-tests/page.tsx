@@ -10,6 +10,7 @@ import { Card } from "@shared/ui/Card";
 import { Chip } from "@shared/ui/Chip";
 import { Select } from "@shared/ui/Select";
 import { listTournaments, roundAdKpis, deriveBeat, isDecisionBeat, isRunningBeat, AXIS_LABEL as TOUR_AXIS_LABEL, TOURNAMENT_CHANGE_EVENT, type Tournament, type TourBeat } from "@entities/ab-test/tournament/tournament";
+import { tourMetricSpec, formatPrimary, primaryDelta } from "@entities/ab-test/tournament/objective-metric";
 import { tournamentClient } from "@entities/ab-test/tournament/client";
 import { seedTournamentDemo } from "@entities/ab-test/tournament/seed";
 import PresenterTournamentListBar from "@widgets/presenter-fast-forward/tournament-list";
@@ -118,14 +119,15 @@ const settledCount = (t: Tournament) => t.rounds.filter((r) => r.status === "set
 const startCtrOf = (t: Tournament) => t.rounds[0]?.verdict?.ctrA ?? t.championCtr;
 const liftOf = (t: Tournament) => {
   const s = startCtrOf(t);
-  return s > 0 ? ((t.championCtr - s) / s) * 100 : 0;
+  // 개선폭 — 목표 방향 보정 (rate=높을수록·cpm=낮을수록 우세).
+  return s > 0 ? (primaryDelta(tourMetricSpec(t.objective), t.championCtr, s) / s) * 100 : 0;
 };
 
 // 누적 지출 — 상세 tournamentTotals 와 동일 집계 (결산 라운드는 저장 KPI, 진행 중은 즉석 산출).
 function tournamentSpend(t: Tournament): number {
   let spend = 0;
   for (const r of t.rounds) {
-    const k = r.status === "settled" ? r.adKpis : r.fastForwardDays > 0 ? roundAdKpis(r, t.championCtr, t.dailyBudget) : undefined;
+    const k = r.status === "settled" ? r.adKpis : r.fastForwardDays > 0 ? roundAdKpis(r, t.championCtr, t.dailyBudget, undefined, t.objective) : undefined;
     if (k) spend += k[0].spend + k[1].spend;
   }
   return spend;
@@ -148,10 +150,10 @@ function decisionStage(b: TourBeat): string {
 
 // 헤더 부제 — 정적 설명 대신 현황 한 줄. 우선순위: 결정 대기 > 진행 중 > 완료 평균 Lift.
 function headerLine(decisions: number, running: number, completed: number, avgLift: number): string {
-  const done = completed ? `완료 ${completed}건 평균 CTR +${avgLift}% 개선` : "";
+  const done = completed ? `완료 ${completed}건 평균 성과 +${avgLift}% 개선` : "";
   if (decisions) return done ? `지금 검토가 필요한 토너먼트가 ${decisions}개 있어요 · ${done}` : `지금 검토가 필요한 토너먼트가 ${decisions}개 있어요`;
   if (running) return done ? `진행 중인 토너먼트 ${running}개를 관전하고 있어요 · ${done}` : `진행 중인 토너먼트 ${running}개를 관전하고 있어요`;
-  if (completed) return `토너먼트 ${completed}건을 끝냈어요 — 평균 CTR +${avgLift}% 개선`;
+  if (completed) return `토너먼트 ${completed}건을 끝냈어요 — 평균 성과 +${avgLift}% 개선`;
   return "챔피언-챌린저 체인으로 광고를 진화시켜요.";
 }
 
@@ -241,14 +243,14 @@ function TournamentDashboard({ tournaments, onOpen, onNew }: { tournaments: Tour
           }}
         >
           <span className="inline-flex items-center gap-[7px] font-semibold text-[12.5px] leading-none text-[var(--w-status-positive)]">
-            <Icon name="trend-up" size={15} /> 누적 CTR 개선
+            <Icon name="trend-up" size={15} /> 누적 성과 개선
           </span>
           <div className="mt-auto flex items-baseline gap-1.5 font-extrabold text-[54px] leading-[0.95] tracking-[-0.03em] text-[var(--w-status-positive)]">
             {completedList.length ? <>+{avgLift}<span className="font-extrabold text-[28px] leading-none">%</span></> : "—"}
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             <span className={`${FONT_MONO} font-bold text-[11px] leading-none px-[9px] py-1 rounded-full bg-[rgba(0,191,64,0.12)] text-[var(--w-status-positive)] whitespace-nowrap`}>완료 {completedList.length}건 평균</span>
-            <span className="font-medium text-[12px] leading-[1.4] text-[var(--w-fg-neutral)]">출발 CTR 대비 최종 Lift</span>
+            <span className="font-medium text-[12px] leading-[1.4] text-[var(--w-fg-neutral)]">출발 성과 대비 최종 Lift</span>
           </div>
         </div>
 
@@ -414,6 +416,7 @@ function RoundDots({ round, total }: { round: number; total: number }) {
 function RunningCard({ t, onClick }: { t: Tournament; onClick: () => void }) {
   const last = t.rounds.at(-1);
   const total = t.maxRounds ?? roundPos(t);
+  const spec = tourMetricSpec(t.objective);
   return (
     <div
       onClick={onClick}
@@ -435,8 +438,8 @@ function RunningCard({ t, onClick }: { t: Tournament; onClick: () => void }) {
         <div className="font-bold text-[15.5px] leading-[1.35] tracking-[-0.01em] text-[var(--w-fg-strong)] truncate">{t.productName}</div>
         <div className="flex items-center gap-4 flex-wrap">
           <span className="flex items-baseline gap-1.5">
-            <span className="font-medium text-[11.5px] leading-none text-[var(--w-fg-alternative)]">현 챔피언 CTR</span>
-            <span className={`${FONT_MONO} font-bold text-[13px] leading-none text-[var(--w-primary-press)]`}>{t.championCtr.toFixed(2)}%</span>
+            <span className="font-medium text-[11.5px] leading-none text-[var(--w-fg-alternative)]">현 챔피언 {spec.rateLabel}</span>
+            <span className={`${FONT_MONO} font-bold text-[13px] leading-none text-[var(--w-primary-press)]`}>{formatPrimary(spec, t.championCtr)}</span>
           </span>
           {last && (
             <span className="font-semibold text-[11px] leading-none text-[var(--w-accent-violet)] bg-[var(--w-accent-violet-soft)] px-[9px] py-1 rounded-full">최근 비교 · {TOUR_AXIS_LABEL[last.axis]}</span>
@@ -452,6 +455,7 @@ function RunningCard({ t, onClick }: { t: Tournament; onClick: () => void }) {
 
 function DecisionCard({ t, onClick }: { t: Tournament; onClick: () => void }) {
   const total = t.maxRounds ?? roundPos(t);
+  const spec = tourMetricSpec(t.objective);
   return (
     <div
       onClick={onClick}
@@ -470,8 +474,8 @@ function DecisionCard({ t, onClick }: { t: Tournament; onClick: () => void }) {
         <div className="font-bold text-[15.5px] leading-[1.35] tracking-[-0.01em] text-[var(--w-fg-strong)] truncate">{t.productName}</div>
         <div className="flex items-center gap-4 flex-wrap">
           <span className="flex items-baseline gap-1.5">
-            <span className="font-medium text-[11.5px] leading-none text-[var(--w-fg-alternative)]">현 챔피언 CTR</span>
-            <span className={`${FONT_MONO} font-bold text-[13px] leading-none text-[var(--w-primary-press)]`}>{t.championCtr.toFixed(2)}%</span>
+            <span className="font-medium text-[11.5px] leading-none text-[var(--w-fg-alternative)]">현 챔피언 {spec.rateLabel}</span>
+            <span className={`${FONT_MONO} font-bold text-[13px] leading-none text-[var(--w-primary-press)]`}>{formatPrimary(spec, t.championCtr)}</span>
           </span>
           <span className="flex items-baseline gap-1.5">
             <span className="font-medium text-[11.5px] leading-none text-[var(--w-fg-alternative)]">대기</span>
@@ -492,6 +496,7 @@ function DecisionCard({ t, onClick }: { t: Tournament; onClick: () => void }) {
 
 function DoneCard({ t, isBest, onClick }: { t: Tournament; isBest: boolean; onClick: () => void }) {
   const lift = Math.round(liftOf(t));
+  const spec = tourMetricSpec(t.objective);
   return (
     <div
       onClick={onClick}
@@ -513,7 +518,7 @@ function DoneCard({ t, isBest, onClick }: { t: Tournament; isBest: boolean; onCl
       <div className="font-bold text-[15px] leading-[1.35] tracking-[-0.01em] text-[var(--w-fg-strong)]">{t.productName}</div>
       <div className="flex items-center gap-2.5 py-2.5 border-y border-[var(--w-line-alternative)]">
         <span className={`${FONT_MONO} inline-flex items-center gap-[7px] font-bold text-[13.5px] leading-none text-[var(--w-fg-strong)]`}>
-          {startCtrOf(t).toFixed(2)}% <span className="text-[var(--w-fg-alternative)]">→</span> {t.championCtr.toFixed(2)}%
+          {formatPrimary(spec, startCtrOf(t))} <span className="text-[var(--w-fg-alternative)]">→</span> {formatPrimary(spec, t.championCtr)}
         </span>
         <span className={`${FONT_MONO} ml-auto inline-flex items-center gap-1 font-bold text-[11.5px] leading-none px-[9px] py-[5px] rounded-full bg-[rgba(0,191,64,0.10)] text-[var(--w-status-positive)]`}>
           <Icon name="trend-up" size={12} /> +{lift}%
@@ -526,6 +531,7 @@ function DoneCard({ t, isBest, onClick }: { t: Tournament; isBest: boolean; onCl
 
 function TrophyHighlight({ t, onClick }: { t: Tournament; onClick: () => void }) {
   const lift = Math.round(liftOf(t));
+  const spec = tourMetricSpec(t.objective);
   return (
     <div
       onClick={onClick}
@@ -549,14 +555,14 @@ function TrophyHighlight({ t, onClick }: { t: Tournament; onClick: () => void })
         <p className="m-0 pl-3 border-l-2 border-[rgba(212,150,30,0.5)] font-semibold text-[14.5px] leading-[1.5] text-[var(--w-fg-neutral)] text-pretty">“{t.champion.headline}”</p>
         <div className="flex items-center gap-3.5 flex-wrap mt-0.5">
           <span className={`${FONT_MONO} inline-flex items-center gap-2 font-bold text-[14px] leading-none text-[var(--w-fg-strong)]`}>
-            {startCtrOf(t).toFixed(2)}% <span className="text-[var(--w-fg-alternative)]">→</span> {t.championCtr.toFixed(2)}%
+            {formatPrimary(spec, startCtrOf(t))} <span className="text-[var(--w-fg-alternative)]">→</span> {formatPrimary(spec, t.championCtr)}
           </span>
           <span className="font-semibold text-[12.5px] leading-none text-[var(--w-fg-neutral)]">{settledCount(t)}라운드 진화</span>
         </div>
       </div>
       <div className="self-center shrink-0 flex flex-col items-center justify-center gap-1 min-w-[132px] py-5 px-[22px] rounded-[18px] bg-[rgba(0,191,64,0.08)] border border-[rgba(0,191,64,0.22)]">
         <span className="font-extrabold text-[38px] leading-none tracking-[-0.03em] text-[var(--w-status-positive)]">+{lift}%</span>
-        <span className="font-semibold text-[11px] leading-none tracking-[0.04em] uppercase text-[var(--w-fg-neutral)]">CTR LIFT</span>
+        <span className="font-semibold text-[11px] leading-none tracking-[0.04em] uppercase text-[var(--w-fg-neutral)]">{spec.rateLabel} LIFT</span>
       </div>
     </div>
   );

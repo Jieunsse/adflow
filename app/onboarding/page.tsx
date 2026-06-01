@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Icon from "@shared/ui/Icon";
@@ -246,7 +246,7 @@ function Step3({ onComplete }: { onComplete: (next?: string) => void | Promise<v
   );
 }
 
-export default function OnboardingPage() {
+function OnboardingFlow() {
   const searchParams = useSearchParams();
   const { data: session } = useSession();
 
@@ -318,5 +318,13 @@ export default function OnboardingPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function OnboardingPage() {
+  return (
+    <Suspense fallback={null}>
+      <OnboardingFlow />
+    </Suspense>
   );
 }

@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@shared/ui/Button";
 import { useToast } from "@shared/ui/Toast";
 import { roundAdKpis, deriveBeat, AXIS_LABEL, type Tournament } from "@entities/ab-test/tournament/tournament";
+import { tourMetricSpec, formatPrimary, primaryMetricValue } from "@entities/ab-test/tournament/objective-metric";
 import { resetTournamentDemo } from "@entities/ab-test/tournament/seed";
 import { demoSettleRound, demoAutoAdvance } from "@entities/ab-test/tournament/client";
 import { usePresenterConsole } from "@shared/lib/usePresenterConsole";
@@ -18,8 +19,9 @@ export default function PresenterTournamentBar({ t }: { t: Tournament }) {
   const showToast = useToast();
   const [consoleOn] = usePresenterConsole();
 
+  const spec = tourMetricSpec(t.objective);
   const active = t.rounds.find((r) => r.status === "running") ?? null;
-  const live = active ? roundAdKpis(active, t.championCtr, t.dailyBudget) : null;
+  const live = active ? roundAdKpis(active, t.championCtr, t.dailyBudget, undefined, t.objective) : null;
   // auto 무인: 라이브 라운드가 없어도 다음 챌린저를 자동 게재(auto-advance)할 수 있다.
   const canAdvance = !!active || (t.mode === "auto" && deriveBeat(t) === "auto-running");
 
@@ -30,7 +32,7 @@ export default function PresenterTournamentBar({ t }: { t: Tournament }) {
       if (res.status === "settled") {
         const who = res.winnerIsB ? "챌린저(B)" : "챔피언(A)";
         const verb = res.winnerIsB ? "우세 — 다음 챔피언으로 승격" : "방어";
-        showToast(`라운드 ${res.round.index} 결산: ${who} ${verb} (CTR ${res.winnerCtr.toFixed(2)}%)`);
+        showToast(`라운드 ${res.round.index} 결산: ${who} ${verb} (${spec.rateLabel} ${formatPrimary(spec, res.winnerCtr)})`);
       } else if (res.status === "insufficient") {
         showToast("아직 데이터가 부족해요 — 한 번 더 빨리감기 해보세요");
       }
@@ -60,8 +62,8 @@ export default function PresenterTournamentBar({ t }: { t: Tournament }) {
         />
         {active.fastForwardDays > 0 && (
           <div className="flex flex-col gap-2">
-            <ConsoleInfoRow label="A안 CTR" value={`${live[0].ctr.toFixed(2)}%`} />
-            <ConsoleInfoRow label="B안 CTR" value={`${live[1].ctr.toFixed(2)}%`} />
+            <ConsoleInfoRow label={`A안 ${spec.rateLabel}`} value={formatPrimary(spec, primaryMetricValue(spec, live[0]))} />
+            <ConsoleInfoRow label={`B안 ${spec.rateLabel}`} value={formatPrimary(spec, primaryMetricValue(spec, live[1]))} />
           </div>
         )}
       </>

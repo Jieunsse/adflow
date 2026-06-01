@@ -123,7 +123,7 @@ const DEMO_PERSONAS: PersonaEntry[] = [
   {
     id: "demo-persona-001",
     brandProfileId: DEMO_PROFILE_ID,
-    name: "뷰티 입문자 지은",
+    name: "20대 여성 대학생",
     ageMin: 20,
     ageMax: 27,
     genders: [2],
@@ -135,7 +135,7 @@ const DEMO_PERSONAS: PersonaEntry[] = [
   {
     id: "demo-persona-002",
     brandProfileId: DEMO_PROFILE_ID,
-    name: "스킨케어 고관여 미영",
+    name: "30대 여성 직장인",
     ageMin: 28,
     ageMax: 38,
     genders: [2],

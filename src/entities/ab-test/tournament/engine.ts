@@ -4,6 +4,7 @@
 // 우세 판정은 Meta 유의성(데모: z-검정), 승격=confidence ≥ WINNER_CONFIDENCE, inconclusive=챔피언 방어.
 
 import { type AdKpi } from "@entities/insights/ab-verdict";
+import { tourMetricSpec, metricCpm } from "./objective-metric";
 
 export type TourAxis = "headline" | "primary_text" | "image";
 export type TourVariant = { headline: string; primaryText: string; imageUrl?: string };
@@ -137,15 +138,18 @@ function challengerFactor(campaignId: string, index: number): number {
   return 0.9 + idxBoost + seededUnit(campaignId + "f") * 0.45;
 }
 
-// 라운드 광고별 KPI 생성 (split test = 셀당 동일 예산·동일 노출). ffDays=0 이면 데이터 없음(insufficient).
-// 노출·예산은 두 셀 동일, 클릭만 CTR(챔피언 vs 챌린저)로 갈린다 → CPC(=spend/clicks)가 셀마다 emergent.
-// Meta traffic 결정 지표(cost per link click)가 실제로 셀 간 차이를 갖도록 하는 핵심 (ADR-037).
+// 라운드 광고별 KPI 생성 (split test = 셀당 동일 예산). ffDays=0 이면 데이터 없음(insufficient).
+// 목표별 결정 지표가 셀 간 차이를 갖도록 분기 (ADR-037 V2 / objective-metric.ts):
+//   rate(traffic·engagement·leads_call) — 노출·예산 동일, action 비율(championCtr vs ×factor)만 갈림 → CPC/단가 emergent.
+//   cpm(awareness)                      — 예산 동일, 노출 볼륨이 갈림(challenger factor>1 = 더 낮은 CPM=더 많은 노출).
 // factorOverride 는 시드 시연용 — 라운드별 승부를 authoring 하려고 challengerFactor 대신 쓴다(실 runner 는 미사용).
+// championCtr = 챔피언 기준선 (rate=비율% / cpm=CPM원). objective 는 trailing — 기존 호출부는 traffic 폴백.
 export function roundAdKpis(
   round: TourRound,
   championCtr: number,
   dailyBudget: number,
   factorOverride?: number,
+  objective = "traffic",
 ): [AdKpi, AdKpi] {
   const ff = Math.max(0, round.fastForwardDays);
   if (ff === 0) {
@@ -154,13 +158,31 @@ export function roundAdKpis(
       { ctr: 0, impressions: 0, clicks: 0, spend: 0 },
     ];
   }
-  const imp = Math.round(BASE_DAILY_IMP_PER_AD * ff * (0.9 + seededUnit(round.campaignId + "i") * 0.2));
-  const ctrA = championCtr;
-  const ctrB = championCtr * (factorOverride ?? challengerFactor(round.campaignId, round.index));
-  const clicksA = Math.max(0, Math.round((imp * ctrA) / 100));
-  const clicksB = Math.max(0, Math.round((imp * ctrB) / 100));
+  const factor = factorOverride ?? challengerFactor(round.campaignId, round.index);
   const pace = 0.86 + seededUnit(round.campaignId + "pace") * 0.1; // 86~96% 예산 소진 (현실 페이싱)
   const spendPerCell = Math.round(((dailyBudget * ff) / 2) * pace);
+
+  if (tourMetricSpec(objective).kind === "cpm") {
+    // 인지도 — 동일 예산에 노출(도달) 볼륨이 갈린다. cpmB = cpmA / factor (factor>1 → 낮은 CPM=우세).
+    const cpmA = championCtr;
+    const cpmB = championCtr / factor;
+    const noise = 0.95 + seededUnit(round.campaignId + "i") * 0.1;
+    const impFrom = (cpm: number) => (cpm > 0 ? Math.max(0, Math.round((spendPerCell / cpm) * 1000 * noise)) : 0);
+    const NOMINAL_CTR = 0.6; // 결정 지표 아님 — 표시 일관성(클릭·CPC)용 명목값.
+    const mk = (imp: number): AdKpi => ({
+      impressions: imp,
+      clicks: Math.max(0, Math.round((imp * NOMINAL_CTR) / 100)),
+      ctr: NOMINAL_CTR,
+      spend: spendPerCell,
+    });
+    return [mk(impFrom(cpmA)), mk(impFrom(cpmB))];
+  }
+
+  const imp = Math.round(BASE_DAILY_IMP_PER_AD * ff * (0.9 + seededUnit(round.campaignId + "i") * 0.2));
+  const ctrA = championCtr;
+  const ctrB = championCtr * factor;
+  const clicksA = Math.max(0, Math.round((imp * ctrA) / 100));
+  const clicksB = Math.max(0, Math.round((imp * ctrB) / 100));
   const mk = (clk: number): AdKpi => ({
     impressions: imp,
     clicks: clk,
@@ -193,6 +215,16 @@ export function confidenceFromZTest(a: AdKpi, b: AdKpi): number {
   return stdNormalCdf(Math.abs(pa - pb) / se);
 }
 
+// 노출 볼륨 차의 유의도 (awareness CPM 판정용). 2-표본 카운트 z 를 데모 캘리브레이션 상수로 감쇠 —
+// 노출 수천 회면 raw z 가 포화(항상 유의)하므로, 실 Meta CPM 일변동 분산을 반영해 스프레드를 만든다.
+const COUNT_TEST_DAMP = 10;
+export function confidenceFromCountTest(impA: number, impB: number): number {
+  if (impA <= 0 || impB <= 0) return 0.5;
+  const se = Math.sqrt(impA + impB);
+  if (se === 0) return 0.5;
+  return stdNormalCdf(Math.abs(impB - impA) / (se * COUNT_TEST_DAMP));
+}
+
 // winner 확정 신뢰도 임계 — 실 Meta A/B test winner 확정 통상 기준(ADR-037). 미만이면 inconclusive.
 export const WINNER_CONFIDENCE = 0.9;
 
@@ -207,22 +239,29 @@ export type SettleResult = {
 };
 
 // 판정 코어 (ADR-037) — KPI 두 셀 → verdict + 승격. 데모(시드 KPI)·실제(Meta insights) 공유.
-// confidence ≥ 임계 and 챌린저 CPLC 우위 → "B" 승격, 그 외(챔피언 유의 승리·inconclusive) → "A" 방어.
-// 노출 0(미게재) 또는 최소 게재 기간(elapsedDays) 미달이면 insufficient — 결산 보류.
-export function judgeRoundKpis(kpis: [AdKpi, AdKpi], elapsedDays: number): SettleResult {
+// 목표별 결정 지표 (objective-metric.ts):
+//   rate — 챌린저 CPLC/단가(=spend/action) 우위 + z-검정 유의 → "B" 승격. verdict ctrA/ctrB = action 비율%.
+//   cpm  — 챌린저 CPM 우위 + 노출 카운트 유의 → "B" 승격. verdict ctrA/ctrB = CPM원.
+// 그 외(챔피언 유의 승리·inconclusive) → "A" 방어. 노출 0/최소 게재 기간 미달이면 insufficient(결산 보류).
+// objective 는 trailing — 기존 호출부는 traffic 폴백.
+export function judgeRoundKpis(kpis: [AdKpi, AdKpi], elapsedDays: number, objective = "traffic"): SettleResult {
   const [a, b] = kpis;
+  const cpm = tourMetricSpec(objective).kind === "cpm";
+  const primaryA = cpm ? metricCpm(a) : a.ctr;
+  const primaryB = cpm ? metricCpm(b) : b.ctr;
   if (a.impressions === 0 || b.impressions === 0 || elapsedDays < MIN_ROUND_DAYS) {
-    return { kpis, verdict: { state: "insufficient", ctrA: a.ctr, ctrB: b.ctr, confidence: 0 }, rawWinner: "A" };
+    return { kpis, verdict: { state: "insufficient", ctrA: primaryA, ctrB: primaryB, confidence: 0 }, rawWinner: "A" };
   }
-  const confidence = confidenceFromZTest(a, b);
+  const confidence = cpm ? confidenceFromCountTest(a.impressions, b.impressions) : confidenceFromZTest(a, b);
   const significant = confidence >= WINNER_CONFIDENCE;
-  // winner = Meta traffic 결정 지표(cost per link click = spend/clicks)가 낮은 셀. 유의할 때만 승격.
-  const cplcA = a.clicks > 0 ? a.spend / a.clicks : Infinity;
-  const cplcB = b.clicks > 0 ? b.spend / b.clicks : Infinity;
-  const rawWinner: "A" | "B" = significant && cplcB < cplcA ? "B" : "A";
+  // winner = 결정 지표가 우위인 셀 (rate=cost per action 낮음 / cpm=CPM 낮음). 유의할 때만 승격.
+  const challengerWins = cpm
+    ? primaryB < primaryA
+    : (b.clicks > 0 ? b.spend / b.clicks : Infinity) < (a.clicks > 0 ? a.spend / a.clicks : Infinity);
+  const rawWinner: "A" | "B" = significant && challengerWins ? "B" : "A";
   return {
     kpis,
-    verdict: { state: significant ? "winner" : "inconclusive", ctrA: a.ctr, ctrB: b.ctr, confidence },
+    verdict: { state: significant ? "winner" : "inconclusive", ctrA: primaryA, ctrB: primaryB, confidence },
     rawWinner,
   };
 }
@@ -234,9 +273,10 @@ export function settleRound(
   championCtr: number,
   dailyBudget: number,
   factorOverride?: number,
+  objective = "traffic",
 ): SettleResult {
-  const kpis = roundAdKpis(round, championCtr, dailyBudget, factorOverride);
-  return judgeRoundKpis(kpis, round.fastForwardDays);
+  const kpis = roundAdKpis(round, championCtr, dailyBudget, factorOverride, objective);
+  return judgeRoundKpis(kpis, round.fastForwardDays, objective);
 }
 
 function daysBetweenIso(start: string, end: string): number {

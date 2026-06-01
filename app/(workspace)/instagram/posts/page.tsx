@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
@@ -49,7 +49,7 @@ function isHttpUrl(s: string): boolean {
 }
 
 
-export default function PostsPage() {
+function PostsFlow() {
   const router = useRouter();
   const showToast = useToast();
   const { data: session } = useSession();
@@ -963,6 +963,14 @@ export default function PostsPage() {
         />
       )}
     </div>
+  );
+}
+
+export default function PostsPage() {
+  return (
+    <Suspense fallback={null}>
+      <PostsFlow />
+    </Suspense>
   );
 }
 

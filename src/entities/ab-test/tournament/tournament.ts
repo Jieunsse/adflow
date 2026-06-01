@@ -24,12 +24,18 @@ function read(): Tournament[] {
 }
 
 function write(list: Tournament[]): void {
+  if (typeof window === "undefined") return;
+  // 저장 실패(용량 초과 등)를 삼키면 id 는 반환되고 화면은 넘어가는데 데이터는 없는 "유령 토너먼트"가 된다.
+  // 표면화해서 호출부(셋업 handleStart)가 사용자에게 알리도록 한다.
   try {
     localStorage.setItem(KEY, JSON.stringify(list));
-  } catch {}
-  if (typeof window !== "undefined") {
-    window.dispatchEvent(new CustomEvent(TOURNAMENT_CHANGE_EVENT));
+  } catch (e) {
+    if (e instanceof DOMException && (e.name === "QuotaExceededError" || e.name === "NS_ERROR_DOM_QUOTA_REACHED")) {
+      throw new Error("브라우저 저장 공간이 가득 찼어요. 둘러보기 데이터를 초기화한 뒤 다시 시도해주세요.");
+    }
+    throw e;
   }
+  window.dispatchEvent(new CustomEvent(TOURNAMENT_CHANGE_EVENT));
 }
 
 export function listTournaments(): Tournament[] {

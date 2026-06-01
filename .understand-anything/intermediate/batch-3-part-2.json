@@ -1,0 +1,1120 @@
+{
+  "nodes": [
+    {
+      "id": "file:src/features/brand-profile/ui/ProductCard.tsx",
+      "type": "file",
+      "name": "ProductCard.tsx",
+      "filePath": "src/features/brand-profile/ui/ProductCard.tsx",
+      "summary": "제품 요약 카드. 제품 이미지·이름·가격·타깃 URL을 표시하고 편집·삭제 액션을 제공한다.",
+      "tags": [
+        "component",
+        "product",
+        "card",
+        "ui"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/features/brand-profile/ui/ProductEditModal.tsx",
+      "type": "file",
+      "name": "ProductEditModal.tsx",
+      "filePath": "src/features/brand-profile/ui/ProductEditModal.tsx",
+      "summary": "제품 생성·편집 모달. 이름·설명·이미지 업로드·가격·타깃 URL 폼을 다루며 비동기 저장을 처리한다.",
+      "tags": [
+        "component",
+        "modal",
+        "product",
+        "form"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:src/features/brand-profile/ui/ReferenceMaterialsTab.tsx",
+      "type": "file",
+      "name": "ReferenceMaterialsTab.tsx",
+      "filePath": "src/features/brand-profile/ui/ReferenceMaterialsTab.tsx",
+      "summary": "참고 자료(PDF·이미지·TXT) 관리 탭. 파일 업로드·목록·삭제를 처리하고 유형 배지를 표시한다.",
+      "tags": [
+        "component",
+        "reference-material",
+        "file-upload",
+        "tab"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/features/brand-profile/ui/StyleSection.tsx",
+      "type": "file",
+      "name": "StyleSection.tsx",
+      "filePath": "src/features/brand-profile/ui/StyleSection.tsx",
+      "summary": "브랜드 스타일 탭의 읽기 전용 표시 섹션. 톤·브랜드 보이스·고객 보이스·이미지 가이드·Proof Point를 정리해 보여준다.",
+      "tags": [
+        "component",
+        "brand-profile",
+        "style",
+        "detail-view"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/features/sop/model/section-labels.ts",
+      "type": "file",
+      "name": "section-labels.ts",
+      "filePath": "src/features/sop/model/section-labels.ts",
+      "summary": "SOP(정책) 8개 섹션 타입의 라벨·설명·플레이스홀더 상수와 섹션↔자유텍스트 양방향 변환 함수.",
+      "tags": [
+        "sop",
+        "labels",
+        "constants",
+        "serialization"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/features/sop/model/useSopStorage.ts",
+      "type": "file",
+      "name": "useSopStorage.ts",
+      "filePath": "src/features/sop/model/useSopStorage.ts",
+      "summary": "SOP(정책) 섹션의 localStorage 영속화 훅과 채움 여부·미리보기 텍스트 유틸. 버전 리셋과 인덱스 관리를 포함한다.",
+      "tags": [
+        "hook",
+        "sop",
+        "localStorage",
+        "storage"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:src/features/sop/ui/SopCard.tsx",
+      "type": "file",
+      "name": "SopCard.tsx",
+      "filePath": "src/features/sop/ui/SopCard.tsx",
+      "summary": "단일 SOP 섹션을 카드로 렌더링. 섹션 타입별 본문(칩·길이 제한·불릿 리스트)을 분기 표시한다.",
+      "tags": [
+        "component",
+        "sop",
+        "card",
+        "ui"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/features/sop/ui/SopEditModal.tsx",
+      "type": "file",
+      "name": "SopEditModal.tsx",
+      "filePath": "src/features/sop/ui/SopEditModal.tsx",
+      "summary": "SOP 섹션 타입별 편집 모달. 금칙어·이미지 제한·길이 제한·CTA 제한·필수 문구/해시태그·자유텍스트 등 8종 폼을 한 모달에서 분기 렌더링한다.",
+      "tags": [
+        "component",
+        "modal",
+        "sop",
+        "form",
+        "polymorphic"
+      ],
+      "complexity": "complex",
+      "languageNotes": "섹션 type 별로 서로 다른 폼 컴포넌트(ProhibitedWordsForm, ImageRestrictionsForm 등 8종)를 한 파일에 모아 분기하는 다형 모달 패턴."
+    },
+    {
+      "id": "file:src/features/sop/ui/section-style.ts",
+      "type": "file",
+      "name": "section-style.ts",
+      "filePath": "src/features/sop/ui/section-style.ts",
+      "summary": "SOP 섹션 타입별 아이콘·강조색 매핑 상수.",
+      "tags": [
+        "sop",
+        "styling",
+        "constants"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/shared/lib/products.ts",
+      "type": "file",
+      "name": "products.ts",
+      "filePath": "src/shared/lib/products.ts",
+      "summary": "제품 엔티티의 localStorage 영속화 훅. 브랜드 프로필별 제품 CRUD와 Supabase 동기화를 제공한다.",
+      "tags": [
+        "hook",
+        "product",
+        "localStorage",
+        "storage"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/shared/lib/referenceMaterials.ts",
+      "type": "file",
+      "name": "referenceMaterials.ts",
+      "filePath": "src/shared/lib/referenceMaterials.ts",
+      "summary": "참고 자료(Reference Material) 영속화 훅과 파일 유틸. dataURL 변환·유형 추론·바이트 포맷팅을 포함한다.",
+      "tags": [
+        "hook",
+        "reference-material",
+        "localStorage",
+        "file-handling"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/shared/lib/supabase-sync.ts",
+      "type": "file",
+      "name": "supabase-sync.ts",
+      "filePath": "src/shared/lib/supabase-sync.ts",
+      "summary": "Supabase 테이블 upsert·delete를 best-effort로 수행하는 동기화 헬퍼. localStorage 영속화 훅에서 백그라운드로 호출된다.",
+      "tags": [
+        "utility",
+        "supabase",
+        "sync",
+        "persistence"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/shared/lib/supabase.ts",
+      "type": "file",
+      "name": "supabase.ts",
+      "filePath": "src/shared/lib/supabase.ts",
+      "summary": "브라우저용 Supabase 클라이언트를 지연 초기화해 반환하는 싱글톤 팩토리.",
+      "tags": [
+        "utility",
+        "supabase",
+        "singleton",
+        "client"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/widgets/creative-step/InputForm.tsx",
+      "type": "file",
+      "name": "InputForm.tsx",
+      "filePath": "src/widgets/creative-step/InputForm.tsx",
+      "summary": "광고 만들기 STEP 01 입력 폼 위젯. 브랜드 컨텍스트·페르소나 선택·제품·목표·이번 광고 내용을 받아 크리에이티브 드래프트를 구성한다.",
+      "tags": [
+        "widget",
+        "create-flow",
+        "form",
+        "creative",
+        "client-component"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/features/brand-profile/ui/ProductCard.tsx:ProductCard",
+      "type": "function",
+      "name": "ProductCard",
+      "filePath": "src/features/brand-profile/ui/ProductCard.tsx",
+      "lineRange": [
+        14,
+        93
+      ],
+      "summary": "제품 이미지·이름·가격·타깃 URL을 표시하고 편집·삭제 액션을 노출하는 카드 컴포넌트.",
+      "tags": [
+        "component",
+        "product",
+        "card"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/features/brand-profile/ui/ProductEditModal.tsx:ProductEditModal",
+      "type": "function",
+      "name": "ProductEditModal",
+      "filePath": "src/features/brand-profile/ui/ProductEditModal.tsx",
+      "lineRange": [
+        21,
+        206
+      ],
+      "summary": "제품 생성·편집 모달. 이미지 업로드와 이름·설명·가격·URL 폼을 비동기 저장으로 처리한다.",
+      "tags": [
+        "component",
+        "modal",
+        "product",
+        "form"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/features/brand-profile/ui/ReferenceMaterialsTab.tsx:ReferenceMaterialsTab",
+      "type": "function",
+      "name": "ReferenceMaterialsTab",
+      "filePath": "src/features/brand-profile/ui/ReferenceMaterialsTab.tsx",
+      "lineRange": [
+        25,
+        157
+      ],
+      "summary": "참고 자료 업로드·목록·삭제를 처리하는 탭 컴포넌트. 유형 배지와 파일 크기를 표시한다.",
+      "tags": [
+        "component",
+        "reference-material",
+        "file-upload"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/features/brand-profile/ui/StyleSection.tsx:StyleSection",
+      "type": "function",
+      "name": "StyleSection",
+      "filePath": "src/features/brand-profile/ui/StyleSection.tsx",
+      "lineRange": [
+        31,
+        148
+      ],
+      "summary": "브랜드 스타일 속성(톤·보이스·이미지 가이드·Proof Point)을 읽기 전용으로 정리해 보여주는 섹션 컴포넌트.",
+      "tags": [
+        "component",
+        "brand-profile",
+        "style"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/features/sop/model/section-labels.ts:sectionToText",
+      "type": "function",
+      "name": "sectionToText",
+      "filePath": "src/features/sop/model/section-labels.ts",
+      "lineRange": [
+        92,
+        113
+      ],
+      "summary": "SOP 섹션 객체를 사람이 읽을 자유텍스트로 직렬화한다.",
+      "tags": [
+        "helper",
+        "sop",
+        "serialization"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/features/sop/model/section-labels.ts:textToSection",
+      "type": "function",
+      "name": "textToSection",
+      "filePath": "src/features/sop/model/section-labels.ts",
+      "lineRange": [
+        115,
+        143
+      ],
+      "summary": "자유텍스트를 파싱해 SOP 섹션 구조로 역직렬화한다.",
+      "tags": [
+        "helper",
+        "sop",
+        "deserialization"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/features/sop/model/useSopStorage.ts:useSopStorage",
+      "type": "function",
+      "name": "useSopStorage",
+      "filePath": "src/features/sop/model/useSopStorage.ts",
+      "lineRange": [
+        189,
+        268
+      ],
+      "summary": "SOP 섹션 컬렉션을 구독·CRUD하는 훅. 인덱스 관리와 버전 리셋, Supabase 동기화를 포함한다.",
+      "tags": [
+        "hook",
+        "sop",
+        "storage"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/features/sop/model/useSopStorage.ts:isSectionFilled",
+      "type": "function",
+      "name": "isSectionFilled",
+      "filePath": "src/features/sop/model/useSopStorage.ts",
+      "lineRange": [
+        79,
+        99
+      ],
+      "summary": "SOP 섹션이 실제 내용으로 채워졌는지 타입별로 판정하는 순수 함수.",
+      "tags": [
+        "helper",
+        "sop",
+        "validation"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/features/sop/model/useSopStorage.ts:sectionPreviewText",
+      "type": "function",
+      "name": "sectionPreviewText",
+      "filePath": "src/features/sop/model/useSopStorage.ts",
+      "lineRange": [
+        101,
+        122
+      ],
+      "summary": "SOP 섹션의 핵심 내용을 짧은 미리보기 문자열로 요약한다.",
+      "tags": [
+        "helper",
+        "sop",
+        "formatting"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/features/sop/ui/SopCard.tsx:SopCard",
+      "type": "function",
+      "name": "SopCard",
+      "filePath": "src/features/sop/ui/SopCard.tsx",
+      "lineRange": [
+        21,
+        101
+      ],
+      "summary": "단일 SOP 섹션을 카드로 렌더링하고 섹션 타입별 본문을 분기 표시하는 컴포넌트.",
+      "tags": [
+        "component",
+        "sop",
+        "card"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/features/sop/ui/SopEditModal.tsx:SopEditModal",
+      "type": "function",
+      "name": "SopEditModal",
+      "filePath": "src/features/sop/ui/SopEditModal.tsx",
+      "lineRange": [
+        30,
+        78
+      ],
+      "summary": "SOP 섹션 타입에 따라 8종 폼 중 하나를 분기 렌더링하는 편집 모달의 진입 컴포넌트.",
+      "tags": [
+        "component",
+        "modal",
+        "sop",
+        "polymorphic"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/features/sop/ui/SopEditModal.tsx:ProhibitedWordsForm",
+      "type": "function",
+      "name": "ProhibitedWordsForm",
+      "filePath": "src/features/sop/ui/SopEditModal.tsx",
+      "lineRange": [
+        222,
+        314
+      ],
+      "summary": "금칙어 SOP 섹션 편집 폼. 단어 목록과 위반 처리 정책을 입력받는다.",
+      "tags": [
+        "component",
+        "sop",
+        "form"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/features/sop/ui/SopEditModal.tsx:ImageRestrictionsForm",
+      "type": "function",
+      "name": "ImageRestrictionsForm",
+      "filePath": "src/features/sop/ui/SopEditModal.tsx",
+      "lineRange": [
+        323,
+        439
+      ],
+      "summary": "이미지 제한 SOP 섹션 편집 폼. 금지·필수 이미지 요소를 입력받는다.",
+      "tags": [
+        "component",
+        "sop",
+        "form"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/features/sop/ui/SopEditModal.tsx:CtaRestrictionsForm",
+      "type": "function",
+      "name": "CtaRestrictionsForm",
+      "filePath": "src/features/sop/ui/SopEditModal.tsx",
+      "lineRange": [
+        549,
+        657
+      ],
+      "summary": "CTA 제한 SOP 섹션 편집 폼. 허용·금지 행동유도 문구를 관리한다.",
+      "tags": [
+        "component",
+        "sop",
+        "form"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/features/sop/ui/SopEditModal.tsx:RequiredChipListForm",
+      "type": "function",
+      "name": "RequiredChipListForm",
+      "filePath": "src/features/sop/ui/SopEditModal.tsx",
+      "lineRange": [
+        659,
+        756
+      ],
+      "summary": "필수 문구·해시태그 SOP 섹션 편집 폼. 칩 리스트 입력 UI를 제공한다.",
+      "tags": [
+        "component",
+        "sop",
+        "form",
+        "chip-list"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/features/sop/ui/SopEditModal.tsx:FreeTextForm",
+      "type": "function",
+      "name": "FreeTextForm",
+      "filePath": "src/features/sop/ui/SopEditModal.tsx",
+      "lineRange": [
+        758,
+        867
+      ],
+      "summary": "자유텍스트 SOP 섹션 편집 폼. 구조화되지 않은 정책을 자유 서술로 입력받는다.",
+      "tags": [
+        "component",
+        "sop",
+        "form",
+        "free-text"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/shared/lib/products.ts:useProducts",
+      "type": "function",
+      "name": "useProducts",
+      "filePath": "src/shared/lib/products.ts",
+      "lineRange": [
+        36,
+        104
+      ],
+      "summary": "브랜드 프로필별 제품 컬렉션을 구독·CRUD하는 훅. localStorage와 Supabase Storage/테이블을 동기화한다.",
+      "tags": [
+        "hook",
+        "product",
+        "storage"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/shared/lib/referenceMaterials.ts:useReferenceMaterials",
+      "type": "function",
+      "name": "useReferenceMaterials",
+      "filePath": "src/shared/lib/referenceMaterials.ts",
+      "lineRange": [
+        60,
+        154
+      ],
+      "summary": "참고 자료 컬렉션을 구독·CRUD하는 훅. 파일을 dataURL로 변환·저장하고 유형을 추론한다.",
+      "tags": [
+        "hook",
+        "reference-material",
+        "storage",
+        "file-handling"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/shared/lib/supabase-sync.ts:syncUpsert",
+      "type": "function",
+      "name": "syncUpsert",
+      "filePath": "src/shared/lib/supabase-sync.ts",
+      "lineRange": [
+        4,
+        12
+      ],
+      "summary": "Supabase 테이블에 best-effort upsert를 수행하고 실패를 무시하는 동기화 헬퍼.",
+      "tags": [
+        "helper",
+        "supabase",
+        "sync"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/shared/lib/supabase.ts:getSupabase",
+      "type": "function",
+      "name": "getSupabase",
+      "filePath": "src/shared/lib/supabase.ts",
+      "lineRange": [
+        7,
+        13
+      ],
+      "summary": "브라우저 Supabase 클라이언트를 지연 생성해 캐싱·반환하는 싱글톤 팩토리.",
+      "tags": [
+        "helper",
+        "supabase",
+        "singleton"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/widgets/creative-step/InputForm.tsx:InputForm",
+      "type": "function",
+      "name": "InputForm",
+      "filePath": "src/widgets/creative-step/InputForm.tsx",
+      "lineRange": [
+        41,
+        652
+      ],
+      "summary": "광고 만들기 STEP 01 입력 폼. 브랜드 컨텍스트·페르소나·제품·목표·이번 광고 내용을 받아 크리에이티브 드래프트를 갱신하는 위젯 컴포넌트.",
+      "tags": [
+        "widget",
+        "create-flow",
+        "form",
+        "creative"
+      ],
+      "complexity": "complex"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:src/features/brand-profile/ui/ProductCard.tsx",
+      "target": "function:src/features/brand-profile/ui/ProductCard.tsx:ProductCard",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/features/brand-profile/ui/ProductCard.tsx",
+      "target": "function:src/features/brand-profile/ui/ProductCard.tsx:ProductCard",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/features/brand-profile/ui/ProductEditModal.tsx",
+      "target": "function:src/features/brand-profile/ui/ProductEditModal.tsx:ProductEditModal",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/features/brand-profile/ui/ProductEditModal.tsx",
+      "target": "function:src/features/brand-profile/ui/ProductEditModal.tsx:ProductEditModal",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/features/brand-profile/ui/ReferenceMaterialsTab.tsx",
+      "target": "function:src/features/brand-profile/ui/ReferenceMaterialsTab.tsx:ReferenceMaterialsTab",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/features/brand-profile/ui/ReferenceMaterialsTab.tsx",
+      "target": "function:src/features/brand-profile/ui/ReferenceMaterialsTab.tsx:ReferenceMaterialsTab",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/features/brand-profile/ui/StyleSection.tsx",
+      "target": "function:src/features/brand-profile/ui/StyleSection.tsx:StyleSection",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/features/brand-profile/ui/StyleSection.tsx",
+      "target": "function:src/features/brand-profile/ui/StyleSection.tsx:StyleSection",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/features/sop/model/section-labels.ts",
+      "target": "function:src/features/sop/model/section-labels.ts:sectionToText",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/features/sop/model/section-labels.ts",
+      "target": "function:src/features/sop/model/section-labels.ts:sectionToText",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/features/sop/model/section-labels.ts",
+      "target": "function:src/features/sop/model/section-labels.ts:textToSection",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/features/sop/model/section-labels.ts",
+      "target": "function:src/features/sop/model/section-labels.ts:textToSection",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/features/sop/model/useSopStorage.ts",
+      "target": "function:src/features/sop/model/useSopStorage.ts:useSopStorage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/features/sop/model/useSopStorage.ts",
+      "target": "function:src/features/sop/model/useSopStorage.ts:useSopStorage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/features/sop/model/useSopStorage.ts",
+      "target": "function:src/features/sop/model/useSopStorage.ts:isSectionFilled",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/features/sop/model/useSopStorage.ts",
+      "target": "function:src/features/sop/model/useSopStorage.ts:isSectionFilled",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/features/sop/model/useSopStorage.ts",
+      "target": "function:src/features/sop/model/useSopStorage.ts:sectionPreviewText",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/features/sop/model/useSopStorage.ts",
+      "target": "function:src/features/sop/model/useSopStorage.ts:sectionPreviewText",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/features/sop/ui/SopCard.tsx",
+      "target": "function:src/features/sop/ui/SopCard.tsx:SopCard",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/features/sop/ui/SopCard.tsx",
+      "target": "function:src/features/sop/ui/SopCard.tsx:SopCard",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/features/sop/ui/SopEditModal.tsx",
+      "target": "function:src/features/sop/ui/SopEditModal.tsx:SopEditModal",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/features/sop/ui/SopEditModal.tsx",
+      "target": "function:src/features/sop/ui/SopEditModal.tsx:SopEditModal",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/features/sop/ui/SopEditModal.tsx",
+      "target": "function:src/features/sop/ui/SopEditModal.tsx:ProhibitedWordsForm",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/features/sop/ui/SopEditModal.tsx",
+      "target": "function:src/features/sop/ui/SopEditModal.tsx:ImageRestrictionsForm",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/features/sop/ui/SopEditModal.tsx",
+      "target": "function:src/features/sop/ui/SopEditModal.tsx:CtaRestrictionsForm",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/features/sop/ui/SopEditModal.tsx",
+      "target": "function:src/features/sop/ui/SopEditModal.tsx:RequiredChipListForm",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/features/sop/ui/SopEditModal.tsx",
+      "target": "function:src/features/sop/ui/SopEditModal.tsx:FreeTextForm",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/shared/lib/products.ts",
+      "target": "function:src/shared/lib/products.ts:useProducts",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/shared/lib/products.ts",
+      "target": "function:src/shared/lib/products.ts:useProducts",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/shared/lib/referenceMaterials.ts",
+      "target": "function:src/shared/lib/referenceMaterials.ts:useReferenceMaterials",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/shared/lib/referenceMaterials.ts",
+      "target": "function:src/shared/lib/referenceMaterials.ts:useReferenceMaterials",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/shared/lib/supabase-sync.ts",
+      "target": "function:src/shared/lib/supabase-sync.ts:syncUpsert",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/shared/lib/supabase-sync.ts",
+      "target": "function:src/shared/lib/supabase-sync.ts:syncUpsert",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/shared/lib/supabase.ts",
+      "target": "function:src/shared/lib/supabase.ts:getSupabase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/shared/lib/supabase.ts",
+      "target": "function:src/shared/lib/supabase.ts:getSupabase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/widgets/creative-step/InputForm.tsx",
+      "target": "function:src/widgets/creative-step/InputForm.tsx:InputForm",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/widgets/creative-step/InputForm.tsx",
+      "target": "function:src/widgets/creative-step/InputForm.tsx:InputForm",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/features/brand-profile/ui/ProductCard.tsx",
+      "target": "file:src/shared/lib/products.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/features/brand-profile/ui/ProductCard.tsx",
+      "target": "file:src/shared/ui/Button.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/features/brand-profile/ui/ProductCard.tsx",
+      "target": "file:src/shared/ui/Icon.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/features/brand-profile/ui/ProductEditModal.tsx",
+      "target": "file:src/shared/lib/cn.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/features/brand-profile/ui/ProductEditModal.tsx",
+      "target": "file:src/shared/lib/products.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/features/brand-profile/ui/ProductEditModal.tsx",
+      "target": "file:src/shared/ui/Button.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/features/brand-profile/ui/ProductEditModal.tsx",
+      "target": "file:src/shared/ui/Icon.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/features/brand-profile/ui/ReferenceMaterialsTab.tsx",
+      "target": "file:src/shared/lib/cn.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/features/brand-profile/ui/ReferenceMaterialsTab.tsx",
+      "target": "file:src/shared/lib/referenceMaterials.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/features/brand-profile/ui/ReferenceMaterialsTab.tsx",
+      "target": "file:src/shared/ui/Icon.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/features/brand-profile/ui/ReferenceMaterialsTab.tsx",
+      "target": "file:src/shared/ui/Toast.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/features/brand-profile/ui/StyleSection.tsx",
+      "target": "file:src/features/brand-profile/model/useBrandProfileStorage.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/features/brand-profile/ui/StyleSection.tsx",
+      "target": "file:src/features/brand-profile/ui/Panel.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/features/brand-profile/ui/StyleSection.tsx",
+      "target": "file:src/shared/ui/Card.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/features/sop/model/section-labels.ts",
+      "target": "file:src/features/sop/model/useSopStorage.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/features/sop/model/useSopStorage.ts",
+      "target": "file:src/shared/lib/supabase-sync.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/features/sop/ui/SopCard.tsx",
+      "target": "file:src/features/sop/model/section-labels.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/features/sop/ui/SopCard.tsx",
+      "target": "file:src/features/sop/model/useSopStorage.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/features/sop/ui/SopCard.tsx",
+      "target": "file:src/features/sop/ui/section-style.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/features/sop/ui/SopCard.tsx",
+      "target": "file:src/shared/ui/Icon.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/features/sop/ui/SopEditModal.tsx",
+      "target": "file:src/features/sop/model/section-labels.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/features/sop/ui/SopEditModal.tsx",
+      "target": "file:src/features/sop/model/useSopStorage.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/features/sop/ui/SopEditModal.tsx",
+      "target": "file:src/features/sop/ui/section-style.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/features/sop/ui/SopEditModal.tsx",
+      "target": "file:src/shared/lib/cn.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/features/sop/ui/SopEditModal.tsx",
+      "target": "file:src/shared/ui/Button.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/features/sop/ui/SopEditModal.tsx",
+      "target": "file:src/shared/ui/Icon.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/features/sop/ui/section-style.ts",
+      "target": "file:src/features/sop/model/useSopStorage.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/shared/lib/supabase-sync.ts",
+      "target": "file:src/shared/lib/supabase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/widgets/creative-step/InputForm.tsx",
+      "target": "file:src/entities/creative/model.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/widgets/creative-step/InputForm.tsx",
+      "target": "file:src/entities/creative/options.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/widgets/creative-step/InputForm.tsx",
+      "target": "file:src/entities/creative/ui/SelectedGoalCard.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/widgets/creative-step/InputForm.tsx",
+      "target": "file:src/features/brand-profile/model/useBrandProfileStorage.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/widgets/creative-step/InputForm.tsx",
+      "target": "file:src/features/brand-profile/model/usePersonasStorage.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/widgets/creative-step/InputForm.tsx",
+      "target": "file:src/features/brand-profile/ui/BrandProfilePickerModal.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/widgets/creative-step/InputForm.tsx",
+      "target": "file:src/features/brand-profile/ui/PersonaQuickCreateModal.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/widgets/creative-step/InputForm.tsx",
+      "target": "file:src/shared/lib/cn.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/widgets/creative-step/InputForm.tsx",
+      "target": "file:src/shared/lib/products.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/widgets/creative-step/InputForm.tsx",
+      "target": "file:src/shared/ui/Button.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/widgets/creative-step/InputForm.tsx",
+      "target": "file:src/shared/ui/Card.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/widgets/creative-step/InputForm.tsx",
+      "target": "file:src/shared/ui/Icon.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/widgets/creative-step/InputForm.tsx",
+      "target": "file:src/shared/ui/primitives.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/widgets/creative-step/InputForm.tsx",
+      "target": "file:src/shared/ui/Select.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    }
+  ]
+}

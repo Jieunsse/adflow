@@ -3,7 +3,8 @@
 // CONTEXT.md "통계적 표기 ≠ 승격 기준" 원칙의 시각적 확장. confidence/status 는 표시값일 뿐 승격에 관여 X.
 
 import type { AdKpi } from "@entities/insights/ab-verdict";
-import { confidenceFromZTest, WINNER_CONFIDENCE } from "./tournament";
+import { confidenceFromZTest, confidenceFromCountTest, WINNER_CONFIDENCE } from "./tournament";
+import { tourMetricSpec } from "./objective-metric";
 
 // 광고 1개의 확장 지표 — 4필드 AdKpi 에서 결정적 파생 (3 카테고리).
 export type AdReport = {
@@ -56,9 +57,10 @@ function buildAd(kpi: AdKpi, seed: string, perAdBudget: number): AdReport {
 }
 
 // kpis(엔진 산출 4필드) → Meta 스타일 확장 리포트. days/dailyBudget 은 예산·시드 파생용.
+// objective 별 표시 신뢰도 — rate=z-검정(클릭 비율) / cpm(awareness)=노출 카운트 검정. 미지정 시 traffic.
 export function buildRoundReport(
   kpis: [AdKpi, AdKpi],
-  ctx: { seed: string; dailyBudget: number; days: number },
+  ctx: { seed: string; dailyBudget: number; days: number; objective?: string },
 ): RoundReport {
   const [a, b] = kpis;
   const perAdBudget = Math.round((ctx.dailyBudget * Math.max(0, ctx.days)) / 2); // A/B 50:50 분배
@@ -66,7 +68,9 @@ export function buildRoundReport(
     buildAd(a, ctx.seed + "a", perAdBudget),
     buildAd(b, ctx.seed + "b", perAdBudget),
   ];
-  const confidenceLevel = confidenceFromZTest(a, b);
+  const confidenceLevel = tourMetricSpec(ctx.objective ?? "traffic").kind === "cpm"
+    ? confidenceFromCountTest(a.impressions, b.impressions)
+    : confidenceFromZTest(a, b);
   const status: RoundStatus = confidenceLevel >= COMPLETED_CONFIDENCE ? "COMPLETED" : "INCONCLUSIVE";
   return { ads, confidenceLevel, status };
 }

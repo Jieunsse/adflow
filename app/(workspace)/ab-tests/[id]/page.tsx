@@ -30,6 +30,13 @@ import {
 } from "@entities/ab-test/tournament/tournament";
 import { tournamentClient } from "@entities/ab-test/tournament/client";
 import { buildRoundReport, type AdReport, type RoundReport } from "@entities/ab-test/tournament/report";
+import {
+  tourMetricSpec,
+  formatPrimary,
+  primaryDelta,
+  primaryMetricValue,
+  type TourMetricSpec,
+} from "@entities/ab-test/tournament/objective-metric";
 import PresenterTournamentBar from "@widgets/presenter-fast-forward/tournament";
 
 // ADR-035 — 비트는 엔진 deriveBeat 단일 소스 (auto 무인 / manual-n 제어 분기).
@@ -52,7 +59,7 @@ function tournamentTotals(t: Tournament, isReal: boolean): { spend: number; days
       days += r.status === "settled" ? MIN_ROUND_DAYS : elapsedDays(r);
     } else {
       days += Math.max(0, r.fastForwardDays);
-      const k = r.status === "settled" ? r.adKpis : r.fastForwardDays > 0 ? roundAdKpis(r, t.championCtr, t.dailyBudget) : undefined;
+      const k = r.status === "settled" ? r.adKpis : r.fastForwardDays > 0 ? roundAdKpis(r, t.championCtr, t.dailyBudget, undefined, t.objective) : undefined;
       if (k) spend += k[0].spend + k[1].spend;
     }
   }
@@ -137,11 +144,13 @@ export default function AbTournamentDetailPage() {
   }
 
   const beat = deriveBeat(t);
+  const spec = tourMetricSpec(t.objective);
   const settledRounds = t.rounds.filter((r) => r.status === "settled");
   const lastSettled = settledRounds.at(-1) ?? null;
   const totals = tournamentTotals(t, isReal);
   const startCtr = t.rounds[0]?.verdict?.ctrA ?? t.championCtr;
-  const liftPct = startCtr > 0 ? ((t.championCtr - startCtr) / startCtr) * 100 : 0;
+  // 개선폭 — rate 는 높을수록·cpm 은 낮을수록 우세라 방향을 spec 으로 보정.
+  const liftPct = startCtr > 0 ? (primaryDelta(spec, t.championCtr, startCtr) / startCtr) * 100 : 0;
   const promotionNote =
     beat === "between" && lastSettled?.rawWinner === "B"
       ? `R${lastSettled.index}에서 승격 · ${AXIS_LABEL[lastSettled.axis]} 교체`
@@ -199,7 +208,7 @@ export default function AbTournamentDetailPage() {
       )}
 
       {/* 챔피언 카드 */}
-      <ChampionCard champion={t.champion} ctr={t.championCtr} confirmed={!!t.championConfirmed} note={promotionNote} />
+      <ChampionCard champion={t.champion} ctr={t.championCtr} spec={spec} confirmed={!!t.championConfirmed} note={promotionNote} />
 
       {/* 비트별 패널 */}
       {beat === "champion-review" && (
@@ -226,7 +235,7 @@ export default function AbTournamentDetailPage() {
         (isReal ? <RealLivePanel t={t} /> : <LivePanel t={t} />)}
 
       {beat === "auto-running" && !t.rounds.some((r) => r.status === "running") && (
-        <AutoBetweenPanel lastSettled={lastSettled} dailyBudget={t.dailyBudget} isReal={isReal} />
+        <AutoBetweenPanel lastSettled={lastSettled} dailyBudget={t.dailyBudget} spec={spec} isReal={isReal} />
       )}
 
       {beat === "anomaly" && (
@@ -256,6 +265,7 @@ export default function AbTournamentDetailPage() {
         <BetweenPanel
           lastSettled={lastSettled}
           dailyBudget={t.dailyBudget}
+          spec={spec}
           nextAxisLabel={nextAxisLabel}
           busy={busy}
           isReal={isReal}
@@ -271,8 +281,9 @@ export default function AbTournamentDetailPage() {
         <RoundHistory
           rounds={settledRounds}
           dailyBudget={t.dailyBudget}
+          spec={spec}
           isReal={isReal}
-          summary={`${settledRounds.length}라운드 동안 CTR ${startCtr.toFixed(2)}% → ${t.championCtr.toFixed(2)}%${
+          summary={`${settledRounds.length}라운드 동안 ${spec.rateLabel} ${formatPrimary(spec, startCtr)} → ${formatPrimary(spec, t.championCtr)}${
             liftPct > 0.5 ? ` · +${liftPct.toFixed(0)}%` : ""
           }`}
         />
@@ -373,7 +384,9 @@ function Metric({ label, value }: { label: string; value: string }) {
 // Browse Mode 시연 광고 계정 — IG 프리뷰 핸들. 실연동 시 연결 IG 계정에서 도출.
 const BRAND_HANDLE = "greenroutine_official";
 
-function ChampionCard({ champion, ctr, confirmed, note }: { champion: TourVariant; ctr: number; confirmed: boolean; note?: string }) {
+function ChampionCard({ champion, ctr, spec, confirmed, note }: { champion: TourVariant; ctr: number; spec: TourMetricSpec; confirmed: boolean; note?: string }) {
+  // 좋아요 수는 표시용 — cpm(원 단위)을 곱하면 비현실적이라 비율 지표일 때만 ctr 기반, 아니면 명목값.
+  const likeBase = spec.kind === "cpm" ? 1.8 : ctr;
   return (
     <Card className="p-5">
       <div className="flex items-center gap-2 mb-3">
@@ -381,7 +394,7 @@ function ChampionCard({ champion, ctr, confirmed, note }: { champion: TourVarian
           <Icon name="check-circle" size={15} />
         </span>
         <span className="font-bold text-[13px] text-[var(--w-fg-strong)]">현재 챔피언</span>
-        <Chip variant="neutral" className="ml-auto">CTR {ctr.toFixed(2)}%</Chip>
+        <Chip variant="neutral" className="ml-auto">{spec.rateLabel} {formatPrimary(spec, ctr)}</Chip>
         {!confirmed && <Chip variant="review">검토 대기</Chip>}
       </div>
       {note && (
@@ -394,7 +407,7 @@ function ChampionCard({ champion, ctr, confirmed, note }: { champion: TourVarian
           headline={champion.headline}
           handle={BRAND_HANDLE}
           sponsored
-          likeCount={Math.round(ctr * 200)}
+          likeCount={Math.round(likeBase * 200)}
           className="w-full max-w-[360px]"
         />
       </div>
@@ -540,10 +553,13 @@ function ChallengerReview({ t, challenger, busy, onPropose, onManual, onLaunch }
 /* ─── live 🤖 ───────────────────────────────────────────── */
 
 function LivePanel({ t }: { t: Tournament }) {
+  const spec = tourMetricSpec(t.objective);
   const round = t.rounds.find((r) => r.status === "running")!;
-  const kpis = roundAdKpis(round, t.championCtr, t.dailyBudget);
+  const kpis = roundAdKpis(round, t.championCtr, t.dailyBudget, undefined, t.objective);
   const hasData = round.fastForwardDays > 0;
-  const report = buildRoundReport(kpis, { seed: round.campaignId, dailyBudget: t.dailyBudget, days: round.fastForwardDays });
+  const report = buildRoundReport(kpis, { seed: round.campaignId, dailyBudget: t.dailyBudget, days: round.fastForwardDays, objective: t.objective });
+  const pa = primaryMetricValue(spec, report.ads[0]);
+  const pb = primaryMetricValue(spec, report.ads[1]);
 
   return (
     <div className="flex flex-col gap-4">
@@ -555,8 +571,8 @@ function LivePanel({ t }: { t: Tournament }) {
       />
       <VerdictStrip live />
       <div className="grid grid-cols-2 gap-4">
-        <AdMetricCard label="A" tag="챔피언" variant={round.champion} ad={report.ads[0]} hasData={hasData} accent={false} axis={round.axis} delta={report.ads[0].ctr - report.ads[1].ctr} />
-        <AdMetricCard label="B" tag="챌린저" variant={round.challenger} ad={report.ads[1]} hasData={hasData} accent axis={round.axis} delta={report.ads[1].ctr - report.ads[0].ctr} />
+        <AdMetricCard label="A" tag="챔피언" variant={round.champion} ad={report.ads[0]} spec={spec} hasData={hasData} accent={false} axis={round.axis} delta={primaryDelta(spec, pa, pb)} />
+        <AdMetricCard label="B" tag="챌린저" variant={round.challenger} ad={report.ads[1]} spec={spec} hasData={hasData} accent axis={round.axis} delta={primaryDelta(spec, pb, pa)} />
       </div>
     </div>
   );
@@ -570,12 +586,13 @@ function MetricCat({ children }: { children: ReactNode }) {
   );
 }
 
-function AdMetricCard({ label, tag, variant, ad, hasData, accent, mark, axis, prohibited, real, delta }: {
-  label: string; tag: string; variant: TourVariant; ad: AdReport;
+function AdMetricCard({ label, tag, variant, ad, spec, hasData, accent, mark, axis, prohibited, real, delta }: {
+  label: string; tag: string; variant: TourVariant; ad: AdReport; spec: TourMetricSpec;
   hasData: boolean; accent: boolean; mark?: string; axis: TourAxis; prohibited?: string[]; real?: boolean; delta?: number;
 }) {
   const v = (s: string) => (hasData ? s : "—");
-  const lead = hasData && delta != null && delta > 0.005;
+  const lead = hasData && delta != null && delta > spec.leadEpsilon;
+  const leadStr = spec.kind === "cpm" ? krw(Math.round(delta ?? 0)) : (delta ?? 0).toFixed(2);
   return (
     <Card className="p-4" style={accent ? { borderColor: "var(--w-primary-normal)" } : undefined}>
       <div className="flex items-center gap-1.5 mb-3">
@@ -584,9 +601,9 @@ function AdMetricCard({ label, tag, variant, ad, hasData, accent, mark, axis, pr
         {mark && <Chip variant={mark === "승격" ? "live" : "neutral"}>{mark}</Chip>}
       </div>
       <div className="flex items-baseline gap-2 mb-3">
-        <span className="font-semibold text-[10px] uppercase tracking-[0.05em] text-[var(--w-fg-alternative)]">CTR</span>
-        <span className="font-bold text-[26px] leading-none tabular-nums" style={{ color: accent ? "var(--w-primary-press)" : "var(--w-fg-strong)" }}>{hasData ? `${ad.ctr.toFixed(2)}%` : "—"}</span>
-        {lead && <span className="font-bold text-[12.5px] text-[var(--w-status-positive)]">▲ {delta!.toFixed(2)}</span>}
+        <span className="font-semibold text-[10px] uppercase tracking-[0.05em] text-[var(--w-fg-alternative)]">{spec.rateLabel}</span>
+        <span className="font-bold text-[26px] leading-none tabular-nums" style={{ color: accent ? "var(--w-primary-press)" : "var(--w-fg-strong)" }}>{hasData ? formatPrimary(spec, primaryMetricValue(spec, ad)) : "—"}</span>
+        {lead && <span className="font-bold text-[12.5px] text-[var(--w-status-positive)]">▲ {leadStr}</span>}
       </div>
       <VariantBody variant={variant} only={axis} prohibited={prohibited} />
       {/* 실 유저 — Meta 실측 4지표 + 실측 파생 단가(CPM·CPC)만. reach·빈도·링크클릭은 시드 추정이라 숨김(ADR-038 fake-performance). */}
@@ -655,12 +672,12 @@ function VerdictStrip({ report, winnerIsB, live }: { report?: RoundReport; winne
 
 /* ─── between (result 🤖 + continue/end 🧑) ─────────────── */
 
-function BetweenPanel({ lastSettled, dailyBudget, nextAxisLabel, busy, isReal, onPropose, onEnd }: {
-  lastSettled: TourRound | null; dailyBudget: number; nextAxisLabel: string; busy: boolean; isReal: boolean; onPropose: () => void; onEnd: () => void;
+function BetweenPanel({ lastSettled, dailyBudget, spec, nextAxisLabel, busy, isReal, onPropose, onEnd }: {
+  lastSettled: TourRound | null; dailyBudget: number; spec: TourMetricSpec; nextAxisLabel: string; busy: boolean; isReal: boolean; onPropose: () => void; onEnd: () => void;
 }) {
   return (
     <div className="flex flex-col gap-4">
-      {lastSettled && <SettledResult round={lastSettled} dailyBudget={dailyBudget} isReal={isReal} />}
+      {lastSettled && <SettledResult round={lastSettled} dailyBudget={dailyBudget} spec={spec} isReal={isReal} />}
       <DecisionBanner
         title={lastSettled ? "다음 라운드를 진행할까요?" : "첫 챌린저를 붙여볼까요?"}
         desc={lastSettled
@@ -677,7 +694,7 @@ function BetweenPanel({ lastSettled, dailyBudget, nextAxisLabel, busy, isReal, o
   );
 }
 
-function SettledResult({ round, dailyBudget, prohibited, isReal }: { round: TourRound; dailyBudget: number; prohibited?: string[]; isReal?: boolean }) {
+function SettledResult({ round, dailyBudget, spec, prohibited, isReal }: { round: TourRound; dailyBudget: number; spec: TourMetricSpec; prohibited?: string[]; isReal?: boolean }) {
   const winnerIsB = round.rawWinner === "B";
   const kpis = round.adKpis ?? [
     { ctr: round.verdict?.ctrA ?? 0, impressions: 0, clicks: 0, spend: 0 },
@@ -685,15 +702,17 @@ function SettledResult({ round, dailyBudget, prohibited, isReal }: { round: Tour
   ];
   // 실 라운드는 fastForwardDays 가 없으므로 게재 기간(MIN_ROUND_DAYS)으로 예산 파생(표시 단가용).
   const reportDays = isReal ? MIN_ROUND_DAYS : round.fastForwardDays;
-  const report = buildRoundReport(kpis, { seed: round.campaignId, dailyBudget, days: reportDays });
+  const report = buildRoundReport(kpis, { seed: round.campaignId, dailyBudget, days: reportDays, objective: spec.id });
   const completed = report.status === "COMPLETED";
   const pct = Math.round(report.confidenceLevel * 100);
   const sig = completed ? `통계적으로 유의 (신뢰도 ${pct}%)` : `통계적으론 불충분 (신뢰도 ${pct}%)`;
   const promo = winnerIsB
     ? completed
       ? "챌린저가 새 챔피언으로 승격됐어요."
-      : "그래도 CTR 우위라 챌린저를 잠정 승격 — 다음 라운드에서 재검증해요."
+      : `그래도 ${spec.rateLabel} 우위라 챌린저를 잠정 승격 — 다음 라운드에서 재검증해요.`
     : "챔피언이 자리를 지켰어요.";
+  const pa = primaryMetricValue(spec, report.ads[0]);
+  const pb = primaryMetricValue(spec, report.ads[1]);
   return (
     <div className="flex flex-col gap-3">
       <AutoBanner
@@ -702,8 +721,8 @@ function SettledResult({ round, dailyBudget, prohibited, isReal }: { round: Tour
       />
       <VerdictStrip report={report} winnerIsB={winnerIsB} />
       <div className="grid grid-cols-2 gap-4">
-        <AdMetricCard label="A" tag="챔피언" variant={round.champion} ad={report.ads[0]} hasData accent={!winnerIsB} mark={winnerIsB ? undefined : "방어"} axis={round.axis} real={isReal} delta={report.ads[0].ctr - report.ads[1].ctr} />
-        <AdMetricCard label="B" tag="챌린저" variant={round.challenger} ad={report.ads[1]} hasData accent={winnerIsB} mark={winnerIsB ? "승격" : undefined} axis={round.axis} prohibited={prohibited} real={isReal} delta={report.ads[1].ctr - report.ads[0].ctr} />
+        <AdMetricCard label="A" tag="챔피언" variant={round.champion} ad={report.ads[0]} spec={spec} hasData accent={!winnerIsB} mark={winnerIsB ? undefined : "방어"} axis={round.axis} real={isReal} delta={primaryDelta(spec, pa, pb)} />
+        <AdMetricCard label="B" tag="챌린저" variant={round.challenger} ad={report.ads[1]} spec={spec} hasData accent={winnerIsB} mark={winnerIsB ? "승격" : undefined} axis={round.axis} prohibited={prohibited} real={isReal} delta={primaryDelta(spec, pb, pa)} />
       </div>
     </div>
   );
@@ -711,10 +730,10 @@ function SettledResult({ round, dailyBudget, prohibited, isReal }: { round: Tour
 
 /* ─── auto-running (무인 라운드 전환) 🤖 ─────────────────── */
 
-function AutoBetweenPanel({ lastSettled, dailyBudget, isReal }: { lastSettled: TourRound | null; dailyBudget: number; isReal: boolean }) {
+function AutoBetweenPanel({ lastSettled, dailyBudget, spec, isReal }: { lastSettled: TourRound | null; dailyBudget: number; spec: TourMetricSpec; isReal: boolean }) {
   return (
     <div className="flex flex-col gap-4">
-      {lastSettled && <SettledResult round={lastSettled} dailyBudget={dailyBudget} isReal={isReal} />}
+      {lastSettled && <SettledResult round={lastSettled} dailyBudget={dailyBudget} spec={spec} isReal={isReal} />}
       <AutoBanner
         title="자동 진행 중 — 다음 챌린저를 준비하고 있어요"
         desc={isReal
@@ -823,7 +842,7 @@ function AnomalyPanel({ t, lastSettled, busy, isReal, onPropose, onManual, onDis
 
   return (
     <div className="flex flex-col gap-4">
-      {lastSettled && <SettledResult round={lastSettled} dailyBudget={t.dailyBudget} prohibited={a?.kind === "prohibited" ? a.words : undefined} isReal={isReal} />}
+      {lastSettled && <SettledResult round={lastSettled} dailyBudget={t.dailyBudget} spec={tourMetricSpec(t.objective)} prohibited={a?.kind === "prohibited" ? a.words : undefined} isReal={isReal} />}
       {Warning}
       <div className="flex gap-2.5">
         <Button variant="primary" type="button" disabled={busy} onClick={async () => { await onPropose(); setRevising(true); }}>
@@ -840,8 +859,9 @@ function AnomalyPanel({ t, lastSettled, busy, isReal, onPropose, onManual, onDis
 function WinnerHandlingPanel({ t, onPromote, onRefill, onArchive }: {
   t: Tournament; onPromote: () => void; onRefill: () => void; onArchive: () => void;
 }) {
+  const spec = tourMetricSpec(t.objective);
   const startCtr = t.rounds[0]?.verdict?.ctrA ?? t.championCtr;
-  const lift = startCtr > 0 ? ((t.championCtr - startCtr) / startCtr) * 100 : 0;
+  const lift = startCtr > 0 ? (primaryDelta(spec, t.championCtr, startCtr) / startCtr) * 100 : 0;
   const settled = t.rounds.filter((r) => r.status === "settled").length;
   return (
     <div className="flex flex-col gap-4">
@@ -850,7 +870,7 @@ function WinnerHandlingPanel({ t, onPromote, onRefill, onArchive }: {
         <div>
           <div className="font-bold text-[15px] leading-[1.3] text-[var(--w-primary-press)]">예산을 다 썼어요 — 위너 처리를 결정해주세요</div>
           <div className="font-medium text-[12.5px] leading-[1.5] text-[var(--w-fg-neutral)] mt-1">
-            {settled}개 라운드 무인 진행 · 최종 CTR {t.championCtr.toFixed(2)}%
+            {settled}개 라운드 무인 진행 · 최종 {spec.rateLabel} {formatPrimary(spec, t.championCtr)}
             {lift > 0.5 && <span className="text-[var(--w-status-positive)] font-semibold"> · 출발 대비 +{lift.toFixed(0)}%</span>}
             . 돈이 드는 결정이라 자동으로 넘기지 않아요.
           </div>
@@ -870,8 +890,9 @@ function WinnerHandlingPanel({ t, onPromote, onRefill, onArchive }: {
 /* ─── done ──────────────────────────────────────────────── */
 
 function DonePanel({ t, onCreate }: { t: Tournament; onCreate: () => void }) {
+  const spec = tourMetricSpec(t.objective);
   const startCtr = t.rounds[0]?.verdict?.ctrA ?? t.championCtr;
-  const lift = startCtr > 0 ? ((t.championCtr - startCtr) / startCtr) * 100 : 0;
+  const lift = startCtr > 0 ? (primaryDelta(spec, t.championCtr, startCtr) / startCtr) * 100 : 0;
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-start gap-3 py-4 px-5 rounded-xl" style={{ background: "var(--w-primary-soft)", border: "1px solid var(--w-primary-weak)" }}>
@@ -879,7 +900,7 @@ function DonePanel({ t, onCreate }: { t: Tournament; onCreate: () => void }) {
         <div>
           <div className="font-bold text-[15px] leading-[1.3] text-[var(--w-primary-press)]">토너먼트 완료 — 최종 챔피언이 정해졌어요</div>
           <div className="font-medium text-[12.5px] leading-[1.5] text-[var(--w-fg-neutral)] mt-1">
-            {t.rounds.filter((r) => r.status === "settled").length}개 라운드 진행 · 최종 CTR {t.championCtr.toFixed(2)}%
+            {t.rounds.filter((r) => r.status === "settled").length}개 라운드 진행 · 최종 {spec.rateLabel} {formatPrimary(spec, t.championCtr)}
             {lift > 0.5 && <span className="text-[var(--w-status-positive)] font-semibold"> · 출발 대비 +{lift.toFixed(0)}%</span>}
           </div>
         </div>
@@ -893,7 +914,7 @@ function DonePanel({ t, onCreate }: { t: Tournament; onCreate: () => void }) {
 
 /* ─── 라운드 기록 ───────────────────────────────────────── */
 
-function RoundHistory({ rounds, summary, dailyBudget, isReal }: { rounds: TourRound[]; summary: string; dailyBudget: number; isReal: boolean }) {
+function RoundHistory({ rounds, summary, dailyBudget, spec, isReal }: { rounds: TourRound[]; summary: string; dailyBudget: number; spec: TourMetricSpec; isReal: boolean }) {
   const [open, setOpen] = useState<number | null>(null);
   return (
     <div>
@@ -919,7 +940,7 @@ function RoundHistory({ rounds, summary, dailyBudget, isReal }: { rounds: TourRo
                 <Chip variant="neutral">{AXIS_LABEL[r.axis]}</Chip>
                 <div className="flex flex-col gap-0.5">
                   <span className="font-medium text-[12.5px] text-[var(--w-fg-neutral)]">
-                    A {r.verdict?.ctrA.toFixed(2)}% → B {r.verdict?.ctrB.toFixed(2)}%
+                    A {formatPrimary(spec, r.verdict?.ctrA ?? 0)} → B {formatPrimary(spec, r.verdict?.ctrB ?? 0)}
                     {winnerIsB && <span className="text-[var(--w-status-positive)] font-semibold"> ▲</span>}
                   </span>
                   <span className="font-medium text-[11px] text-[var(--w-fg-alternative)]">
@@ -933,7 +954,7 @@ function RoundHistory({ rounds, summary, dailyBudget, isReal }: { rounds: TourRo
               </button>
               {expanded && (
                 <div className="mt-2">
-                  <SettledResult round={r} dailyBudget={dailyBudget} isReal={isReal} />
+                  <SettledResult round={r} dailyBudget={dailyBudget} spec={spec} isReal={isReal} />
                 </div>
               )}
             </div>

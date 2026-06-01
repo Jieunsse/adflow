@@ -1,0 +1,1198 @@
+{
+  "nodes": [
+    {
+      "id": "file:src/entities/ab-test/tournament/transitions.ts",
+      "type": "file",
+      "name": "transitions.ts",
+      "filePath": "src/entities/ab-test/tournament/transitions.ts",
+      "summary": "토너먼트 stateless 전이 함수. launch/settle/auto-advance를 엔진에 위임해 적용하는 순수 transition 어댑터.",
+      "tags": [
+        "tournament",
+        "transitions",
+        "pure-functions",
+        "adapter"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/entities/ab-test/tournament/transitions.ts:applyLaunch",
+      "type": "function",
+      "name": "applyLaunch",
+      "filePath": "src/entities/ab-test/tournament/transitions.ts",
+      "lineRange": [
+        35,
+        52
+      ],
+      "summary": "라운드 게재 전이를 적용한다.",
+      "tags": [
+        "tournament",
+        "transitions",
+        "pure-functions"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/entities/ab-test/tournament/transitions.ts:applySettle",
+      "type": "function",
+      "name": "applySettle",
+      "filePath": "src/entities/ab-test/tournament/transitions.ts",
+      "lineRange": [
+        55,
+        92
+      ],
+      "summary": "라운드 결산 전이를 엔진에 위임해 적용한다.",
+      "tags": [
+        "tournament",
+        "transitions",
+        "pure-functions"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/entities/ab-test/tournament/transitions.ts:applyAutoAdvance",
+      "type": "function",
+      "name": "applyAutoAdvance",
+      "filePath": "src/entities/ab-test/tournament/transitions.ts",
+      "lineRange": [
+        96,
+        106
+      ],
+      "summary": "자동 전진 전이를 적용한다.",
+      "tags": [
+        "tournament",
+        "transitions",
+        "pure-functions"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/entities/campaign/api.ts",
+      "type": "file",
+      "name": "api.ts",
+      "filePath": "src/entities/campaign/api.ts",
+      "summary": "캠페인 목록 fetch 헬퍼. meta-ads를 통해 캠페인 요약을 조회하는 단일 함수.",
+      "tags": [
+        "data-access",
+        "campaign",
+        "api",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/entities/campaign/api.ts:fetchCampaigns",
+      "type": "function",
+      "name": "fetchCampaigns",
+      "filePath": "src/entities/campaign/api.ts",
+      "lineRange": [
+        7,
+        19
+      ],
+      "summary": "fetchCampaigns — api.ts 의 주요 함수.",
+      "tags": [
+        "data-access",
+        "campaign",
+        "api"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/shared/lib/shrink-image.ts",
+      "type": "file",
+      "name": "shrink-image.ts",
+      "filePath": "src/shared/lib/shrink-image.ts",
+      "summary": "이미지 축소 유틸. data URL 이미지를 canvas로 리사이즈해 용량을 줄이는 클라이언트 헬퍼.",
+      "tags": [
+        "utility",
+        "image",
+        "canvas",
+        "client"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/shared/lib/shrink-image.ts:shrinkImageDataUrl",
+      "type": "function",
+      "name": "shrinkImageDataUrl",
+      "filePath": "src/shared/lib/shrink-image.ts",
+      "lineRange": [
+        6,
+        24
+      ],
+      "summary": "data URL 이미지를 canvas로 리사이즈해 용량을 줄인다.",
+      "tags": [
+        "utility",
+        "image",
+        "canvas"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/shared/lib/storage/useScopedStorage.ts",
+      "type": "file",
+      "name": "useScopedStorage.ts",
+      "filePath": "src/shared/lib/storage/useScopedStorage.ts",
+      "summary": "스코프된 storage 훅. local/session 스토리지를 키 스코프·크로스탭 변경 이벤트와 함께 동기화하는 범용 React 훅.",
+      "tags": [
+        "hook",
+        "storage",
+        "state",
+        "utility"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/shared/lib/storage/useScopedStorage.ts:useScopedStorage",
+      "type": "function",
+      "name": "useScopedStorage",
+      "filePath": "src/shared/lib/storage/useScopedStorage.ts",
+      "lineRange": [
+        49,
+        134
+      ],
+      "summary": "키 스코프·크로스탭 동기화를 갖춘 범용 storage 훅.",
+      "tags": [
+        "hook",
+        "storage",
+        "state"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/shared/lib/storage/useSessionStorage.ts",
+      "type": "file",
+      "name": "useSessionStorage.ts",
+      "filePath": "src/shared/lib/storage/useSessionStorage.ts",
+      "summary": "sessionStorage 훅. useScopedStorage를 session 스코프로 고정한 얇은 래퍼.",
+      "tags": [
+        "hook",
+        "storage",
+        "session",
+        "thin-wrapper"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/shared/lib/usePresenterConsole.ts",
+      "type": "file",
+      "name": "usePresenterConsole.ts",
+      "filePath": "src/shared/lib/usePresenterConsole.ts",
+      "summary": "프리젠터 콘솔 토글 훅. usePresenterConsole로 둘러보기 fast-forward 콘솔 노출 상태를 스토리지에 보존한다.",
+      "tags": [
+        "hook",
+        "presenter",
+        "storage",
+        "demo"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/shared/lib/useTheme.ts",
+      "type": "file",
+      "name": "useTheme.ts",
+      "filePath": "src/shared/lib/useTheme.ts",
+      "summary": "테마 훅. light/dark/system 테마를 html에 적용하고 스토리지에 보존하는 클라이언트 훅.",
+      "tags": [
+        "hook",
+        "theme",
+        "storage",
+        "client"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/shared/lib/useTheme.ts:useTheme",
+      "type": "function",
+      "name": "useTheme",
+      "filePath": "src/shared/lib/useTheme.ts",
+      "lineRange": [
+        30,
+        43
+      ],
+      "summary": "테마를 html에 적용하고 스토리지에 보존하는 훅.",
+      "tags": [
+        "hook",
+        "theme",
+        "storage"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/shared/ui/LogoutButton.tsx",
+      "type": "file",
+      "name": "LogoutButton.tsx",
+      "filePath": "src/shared/ui/LogoutButton.tsx",
+      "summary": "로그아웃 버튼 컴포넌트. 확인 흐름과 함께 NextAuth signOut을 트리거하는 공용 UI.",
+      "tags": [
+        "component",
+        "ui",
+        "auth",
+        "button"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/shared/ui/LogoutButton.tsx:LogoutButton",
+      "type": "function",
+      "name": "LogoutButton",
+      "filePath": "src/shared/ui/LogoutButton.tsx",
+      "lineRange": [
+        7,
+        144
+      ],
+      "summary": "확인 흐름과 함께 signOut을 트리거하는 로그아웃 버튼.",
+      "tags": [
+        "component",
+        "ui",
+        "auth"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:src/shared/ui/NotificationBell.tsx",
+      "type": "file",
+      "name": "NotificationBell.tsx",
+      "filePath": "src/shared/ui/NotificationBell.tsx",
+      "summary": "알림 벨 위젯. 미읽음 카운트 배지·알림 드롭다운·상대시간 표시를 제공하는 공용 알림 UI.",
+      "tags": [
+        "component",
+        "ui",
+        "notification",
+        "dropdown"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/shared/ui/NotificationBell.tsx:NotificationBell",
+      "type": "function",
+      "name": "NotificationBell",
+      "filePath": "src/shared/ui/NotificationBell.tsx",
+      "lineRange": [
+        25,
+        169
+      ],
+      "summary": "미읽음 배지와 드롭다운을 가진 알림 벨 컴포넌트.",
+      "tags": [
+        "component",
+        "ui",
+        "notification"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:src/shared/ui/NotificationStreamMount.tsx",
+      "type": "file",
+      "name": "NotificationStreamMount.tsx",
+      "filePath": "src/shared/ui/NotificationStreamMount.tsx",
+      "summary": "알림 SSE 스트림 마운트. useNotificationStream을 구동만 하는 렌더리스 컴포넌트.",
+      "tags": [
+        "component",
+        "notification",
+        "sse",
+        "renderless"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/shared/ui/Select.tsx",
+      "type": "file",
+      "name": "Select.tsx",
+      "filePath": "src/shared/ui/Select.tsx",
+      "summary": "공용 Select 드롭다운 컴포넌트. 네이티브 select 대체로 옵션 리스트·키보드 탐색을 제공한다.",
+      "tags": [
+        "component",
+        "ui",
+        "select",
+        "form"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/shared/ui/Select.tsx:Select",
+      "type": "function",
+      "name": "Select",
+      "filePath": "src/shared/ui/Select.tsx",
+      "lineRange": [
+        20,
+        184
+      ],
+      "summary": "네이티브 select를 대체하는 공용 드롭다운 컴포넌트.",
+      "tags": [
+        "component",
+        "ui",
+        "select"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:src/shared/ui/Toast.tsx",
+      "type": "file",
+      "name": "Toast.tsx",
+      "filePath": "src/shared/ui/Toast.tsx",
+      "summary": "Toast Provider 및 useToast 훅. 전역 토스트 큐 컨텍스트와 표시 헬퍼를 제공한다.",
+      "tags": [
+        "component",
+        "ui",
+        "toast",
+        "context"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/shared/ui/Toast.tsx:ToastProvider",
+      "type": "function",
+      "name": "ToastProvider",
+      "filePath": "src/shared/ui/Toast.tsx",
+      "lineRange": [
+        19,
+        83
+      ],
+      "summary": "전역 토스트 큐 컨텍스트를 제공하는 Provider.",
+      "tags": [
+        "component",
+        "ui",
+        "toast"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/widgets/presenter-fast-forward/console-shell.tsx",
+      "type": "file",
+      "name": "console-shell.tsx",
+      "filePath": "src/widgets/presenter-fast-forward/console-shell.tsx",
+      "summary": "프리젠터 콘솔 셸 프리미티브. 큰 숫자·통계 그리드·상태 배지 등 발표용 콘솔 레이아웃 빌딩블록.",
+      "tags": [
+        "component",
+        "presenter",
+        "ui",
+        "demo"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/widgets/presenter-fast-forward/console-shell.tsx:PresenterConsoleShell",
+      "type": "function",
+      "name": "PresenterConsoleShell",
+      "filePath": "src/widgets/presenter-fast-forward/console-shell.tsx",
+      "lineRange": [
+        12,
+        33
+      ],
+      "summary": "PresenterConsoleShell — console-shell.tsx 의 주요 함수.",
+      "tags": [
+        "component",
+        "presenter",
+        "ui"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/widgets/presenter-fast-forward/console-shell.tsx:ConsoleBigNumber",
+      "type": "function",
+      "name": "ConsoleBigNumber",
+      "filePath": "src/widgets/presenter-fast-forward/console-shell.tsx",
+      "lineRange": [
+        35,
+        45
+      ],
+      "summary": "ConsoleBigNumber — console-shell.tsx 의 주요 함수.",
+      "tags": [
+        "component",
+        "presenter",
+        "ui"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/widgets/presenter-fast-forward/console-shell.tsx:ConsoleStatGrid",
+      "type": "function",
+      "name": "ConsoleStatGrid",
+      "filePath": "src/widgets/presenter-fast-forward/console-shell.tsx",
+      "lineRange": [
+        47,
+        58
+      ],
+      "summary": "ConsoleStatGrid — console-shell.tsx 의 주요 함수.",
+      "tags": [
+        "component",
+        "presenter",
+        "ui"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/widgets/presenter-fast-forward/console-shell.tsx:ConsoleStatusBadge",
+      "type": "function",
+      "name": "ConsoleStatusBadge",
+      "filePath": "src/widgets/presenter-fast-forward/console-shell.tsx",
+      "lineRange": [
+        69,
+        79
+      ],
+      "summary": "ConsoleStatusBadge — console-shell.tsx 의 주요 함수.",
+      "tags": [
+        "component",
+        "presenter",
+        "ui"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/widgets/presenter-fast-forward/tournament-list.tsx",
+      "type": "file",
+      "name": "tournament-list.tsx",
+      "filePath": "src/widgets/presenter-fast-forward/tournament-list.tsx",
+      "summary": "토너먼트 목록용 프리젠터 fast-forward 바. 데모 시드·시간 점프 컨트롤을 콘솔 셸로 노출한다.",
+      "tags": [
+        "component",
+        "presenter",
+        "tournament",
+        "demo"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/widgets/presenter-fast-forward/tournament-list.tsx:PresenterTournamentListBar",
+      "type": "function",
+      "name": "PresenterTournamentListBar",
+      "filePath": "src/widgets/presenter-fast-forward/tournament-list.tsx",
+      "lineRange": [
+        16,
+        80
+      ],
+      "summary": "PresenterTournamentListBar — tournament-list.tsx 의 주요 함수.",
+      "tags": [
+        "component",
+        "presenter",
+        "tournament"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/widgets/presenter-fast-forward/tournament.tsx",
+      "type": "file",
+      "name": "tournament.tsx",
+      "filePath": "src/widgets/presenter-fast-forward/tournament.tsx",
+      "summary": "토너먼트 상세용 프리젠터 fast-forward 바. +7일 점프 등 데모 시간 진행 컨트롤을 제공한다.",
+      "tags": [
+        "component",
+        "presenter",
+        "tournament",
+        "demo"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/widgets/presenter-fast-forward/tournament.tsx:PresenterTournamentBar",
+      "type": "function",
+      "name": "PresenterTournamentBar",
+      "filePath": "src/widgets/presenter-fast-forward/tournament.tsx",
+      "lineRange": [
+        17,
+        98
+      ],
+      "summary": "PresenterTournamentBar — tournament.tsx 의 주요 함수.",
+      "tags": [
+        "component",
+        "presenter",
+        "tournament"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/widgets/sidebar/index.tsx",
+      "type": "file",
+      "name": "index.tsx",
+      "filePath": "src/widgets/sidebar/index.tsx",
+      "summary": "워크스페이스 사이드바 위젯. 네비게이션 링크·캠페인 카운트·테마/로그아웃/알림 액션을 묶은 셸 네비게이션.",
+      "tags": [
+        "component",
+        "sidebar",
+        "navigation",
+        "shell"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/widgets/sidebar/index.tsx:Sidebar",
+      "type": "function",
+      "name": "Sidebar",
+      "filePath": "src/widgets/sidebar/index.tsx",
+      "lineRange": [
+        124,
+        405
+      ],
+      "summary": "네비게이션·카운트·액션을 묶은 워크스페이스 사이드바.",
+      "tags": [
+        "component",
+        "sidebar",
+        "navigation"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:src/widgets/tournament-setup/index.tsx",
+      "type": "file",
+      "name": "index.tsx",
+      "filePath": "src/widgets/tournament-setup/index.tsx",
+      "summary": "토너먼트 셋업 위젯. 4목표 선택·매치업 구성·챌린저 이미지 생성·게재 설정을 멀티스텝으로 안내하는 거대 셋업 폼(ADR-033/037).",
+      "tags": [
+        "component",
+        "tournament",
+        "setup",
+        "wizard",
+        "form"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/widgets/tournament-setup/index.tsx:TournamentSetup",
+      "type": "function",
+      "name": "TournamentSetup",
+      "filePath": "src/widgets/tournament-setup/index.tsx",
+      "lineRange": [
+        88,
+        632
+      ],
+      "summary": "4목표·매치업·게재설정 멀티스텝 토너먼트 셋업 폼.",
+      "tags": [
+        "component",
+        "tournament",
+        "setup"
+      ],
+      "complexity": "complex"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:src/entities/ab-test/tournament/transitions.ts",
+      "target": "function:src/entities/ab-test/tournament/transitions.ts:applyLaunch",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/entities/ab-test/tournament/transitions.ts",
+      "target": "function:src/entities/ab-test/tournament/transitions.ts:applyLaunch",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/entities/ab-test/tournament/transitions.ts",
+      "target": "function:src/entities/ab-test/tournament/transitions.ts:applySettle",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/entities/ab-test/tournament/transitions.ts",
+      "target": "function:src/entities/ab-test/tournament/transitions.ts:applySettle",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/entities/ab-test/tournament/transitions.ts",
+      "target": "function:src/entities/ab-test/tournament/transitions.ts:applyAutoAdvance",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/entities/ab-test/tournament/transitions.ts",
+      "target": "function:src/entities/ab-test/tournament/transitions.ts:applyAutoAdvance",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/entities/campaign/api.ts",
+      "target": "function:src/entities/campaign/api.ts:fetchCampaigns",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/entities/campaign/api.ts",
+      "target": "function:src/entities/campaign/api.ts:fetchCampaigns",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/shared/lib/shrink-image.ts",
+      "target": "function:src/shared/lib/shrink-image.ts:shrinkImageDataUrl",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/shared/lib/shrink-image.ts",
+      "target": "function:src/shared/lib/shrink-image.ts:shrinkImageDataUrl",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/shared/lib/storage/useScopedStorage.ts",
+      "target": "function:src/shared/lib/storage/useScopedStorage.ts:useScopedStorage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/shared/lib/storage/useScopedStorage.ts",
+      "target": "function:src/shared/lib/storage/useScopedStorage.ts:useScopedStorage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/shared/lib/useTheme.ts",
+      "target": "function:src/shared/lib/useTheme.ts:useTheme",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/shared/lib/useTheme.ts",
+      "target": "function:src/shared/lib/useTheme.ts:useTheme",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/shared/ui/LogoutButton.tsx",
+      "target": "function:src/shared/ui/LogoutButton.tsx:LogoutButton",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/shared/ui/LogoutButton.tsx",
+      "target": "function:src/shared/ui/LogoutButton.tsx:LogoutButton",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/shared/ui/NotificationBell.tsx",
+      "target": "function:src/shared/ui/NotificationBell.tsx:NotificationBell",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/shared/ui/NotificationBell.tsx",
+      "target": "function:src/shared/ui/NotificationBell.tsx:NotificationBell",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/shared/ui/Select.tsx",
+      "target": "function:src/shared/ui/Select.tsx:Select",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/shared/ui/Select.tsx",
+      "target": "function:src/shared/ui/Select.tsx:Select",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/shared/ui/Toast.tsx",
+      "target": "function:src/shared/ui/Toast.tsx:ToastProvider",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/shared/ui/Toast.tsx",
+      "target": "function:src/shared/ui/Toast.tsx:ToastProvider",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/widgets/presenter-fast-forward/console-shell.tsx",
+      "target": "function:src/widgets/presenter-fast-forward/console-shell.tsx:PresenterConsoleShell",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/widgets/presenter-fast-forward/console-shell.tsx",
+      "target": "function:src/widgets/presenter-fast-forward/console-shell.tsx:PresenterConsoleShell",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/widgets/presenter-fast-forward/console-shell.tsx",
+      "target": "function:src/widgets/presenter-fast-forward/console-shell.tsx:ConsoleBigNumber",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/widgets/presenter-fast-forward/console-shell.tsx",
+      "target": "function:src/widgets/presenter-fast-forward/console-shell.tsx:ConsoleBigNumber",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/widgets/presenter-fast-forward/console-shell.tsx",
+      "target": "function:src/widgets/presenter-fast-forward/console-shell.tsx:ConsoleStatGrid",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/widgets/presenter-fast-forward/console-shell.tsx",
+      "target": "function:src/widgets/presenter-fast-forward/console-shell.tsx:ConsoleStatGrid",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/widgets/presenter-fast-forward/console-shell.tsx",
+      "target": "function:src/widgets/presenter-fast-forward/console-shell.tsx:ConsoleStatusBadge",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/widgets/presenter-fast-forward/console-shell.tsx",
+      "target": "function:src/widgets/presenter-fast-forward/console-shell.tsx:ConsoleStatusBadge",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/widgets/presenter-fast-forward/tournament-list.tsx",
+      "target": "function:src/widgets/presenter-fast-forward/tournament-list.tsx:PresenterTournamentListBar",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/widgets/presenter-fast-forward/tournament-list.tsx",
+      "target": "function:src/widgets/presenter-fast-forward/tournament-list.tsx:PresenterTournamentListBar",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/widgets/presenter-fast-forward/tournament.tsx",
+      "target": "function:src/widgets/presenter-fast-forward/tournament.tsx:PresenterTournamentBar",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/widgets/presenter-fast-forward/tournament.tsx",
+      "target": "function:src/widgets/presenter-fast-forward/tournament.tsx:PresenterTournamentBar",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/widgets/sidebar/index.tsx",
+      "target": "function:src/widgets/sidebar/index.tsx:Sidebar",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/widgets/sidebar/index.tsx",
+      "target": "function:src/widgets/sidebar/index.tsx:Sidebar",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/widgets/tournament-setup/index.tsx",
+      "target": "function:src/widgets/tournament-setup/index.tsx:TournamentSetup",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/widgets/tournament-setup/index.tsx",
+      "target": "function:src/widgets/tournament-setup/index.tsx:TournamentSetup",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/entities/ab-test/tournament/transitions.ts",
+      "target": "file:src/entities/ab-test/tournament/engine.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/entities/campaign/api.ts",
+      "target": "file:lib/meta-ads.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/shared/lib/storage/useSessionStorage.ts",
+      "target": "file:src/shared/lib/storage/useScopedStorage.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/shared/lib/usePresenterConsole.ts",
+      "target": "file:src/shared/lib/storage/useScopedStorage.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/shared/lib/useTheme.ts",
+      "target": "file:src/shared/lib/storage/useScopedStorage.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/shared/ui/LogoutButton.tsx",
+      "target": "file:src/shared/ui/Icon.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/shared/ui/NotificationBell.tsx",
+      "target": "file:src/shared/lib/notifications.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/shared/ui/NotificationBell.tsx",
+      "target": "file:src/shared/ui/Icon.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/shared/ui/NotificationStreamMount.tsx",
+      "target": "file:src/shared/lib/useNotificationStream.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/shared/ui/Select.tsx",
+      "target": "file:src/shared/ui/Icon.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/widgets/presenter-fast-forward/console-shell.tsx",
+      "target": "file:src/shared/ui/Icon.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/widgets/presenter-fast-forward/tournament-list.tsx",
+      "target": "file:src/entities/ab-test/tournament/client.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/widgets/presenter-fast-forward/tournament-list.tsx",
+      "target": "file:src/entities/ab-test/tournament/seed.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/widgets/presenter-fast-forward/tournament-list.tsx",
+      "target": "file:src/entities/ab-test/tournament/tournament.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/widgets/presenter-fast-forward/tournament-list.tsx",
+      "target": "file:src/shared/lib/usePresenterConsole.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/widgets/presenter-fast-forward/tournament-list.tsx",
+      "target": "file:src/shared/ui/Button.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/widgets/presenter-fast-forward/tournament-list.tsx",
+      "target": "file:src/shared/ui/Toast.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/widgets/presenter-fast-forward/tournament-list.tsx",
+      "target": "file:src/widgets/presenter-fast-forward/console-shell.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/widgets/presenter-fast-forward/tournament.tsx",
+      "target": "file:src/entities/ab-test/tournament/client.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/widgets/presenter-fast-forward/tournament.tsx",
+      "target": "file:src/entities/ab-test/tournament/objective-metric.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/widgets/presenter-fast-forward/tournament.tsx",
+      "target": "file:src/entities/ab-test/tournament/seed.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/widgets/presenter-fast-forward/tournament.tsx",
+      "target": "file:src/entities/ab-test/tournament/tournament.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/widgets/presenter-fast-forward/tournament.tsx",
+      "target": "file:src/shared/lib/usePresenterConsole.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/widgets/presenter-fast-forward/tournament.tsx",
+      "target": "file:src/shared/ui/Button.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/widgets/presenter-fast-forward/tournament.tsx",
+      "target": "file:src/shared/ui/Toast.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/widgets/presenter-fast-forward/tournament.tsx",
+      "target": "file:src/widgets/presenter-fast-forward/console-shell.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/widgets/sidebar/index.tsx",
+      "target": "file:src/entities/campaign/api.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/widgets/sidebar/index.tsx",
+      "target": "file:src/shared/lib/cn.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/widgets/sidebar/index.tsx",
+      "target": "file:src/shared/lib/usePresenterConsole.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/widgets/sidebar/index.tsx",
+      "target": "file:src/shared/lib/useTheme.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/widgets/sidebar/index.tsx",
+      "target": "file:src/shared/ui/Icon.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/widgets/sidebar/index.tsx",
+      "target": "file:src/shared/ui/LogoutButton.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/widgets/sidebar/index.tsx",
+      "target": "file:src/shared/ui/NotificationBell.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/widgets/tournament-setup/index.tsx",
+      "target": "file:lib/demo/content.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/widgets/tournament-setup/index.tsx",
+      "target": "file:lib/demo/mock-images.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/widgets/tournament-setup/index.tsx",
+      "target": "file:lib/meta-ads.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/widgets/tournament-setup/index.tsx",
+      "target": "file:lib/mock-campaigns.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/widgets/tournament-setup/index.tsx",
+      "target": "file:src/entities/ab-test/tournament/client.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/widgets/tournament-setup/index.tsx",
+      "target": "file:src/entities/ab-test/tournament/objective-metric.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/widgets/tournament-setup/index.tsx",
+      "target": "file:src/entities/ab-test/tournament/runner.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/widgets/tournament-setup/index.tsx",
+      "target": "file:src/entities/ab-test/tournament/tournament.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/widgets/tournament-setup/index.tsx",
+      "target": "file:src/entities/campaign/api.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/widgets/tournament-setup/index.tsx",
+      "target": "file:src/entities/campaign/browse/store.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/widgets/tournament-setup/index.tsx",
+      "target": "file:src/entities/campaign/browse/summary.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/widgets/tournament-setup/index.tsx",
+      "target": "file:src/features/brand-profile/model/useBrandProfileStorage.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/widgets/tournament-setup/index.tsx",
+      "target": "file:src/shared/lib/products.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/widgets/tournament-setup/index.tsx",
+      "target": "file:src/shared/lib/shrink-image.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/widgets/tournament-setup/index.tsx",
+      "target": "file:src/shared/ui/Button.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/widgets/tournament-setup/index.tsx",
+      "target": "file:src/shared/ui/Icon.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/widgets/tournament-setup/index.tsx",
+      "target": "file:src/shared/ui/SegControl.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/widgets/tournament-setup/index.tsx",
+      "target": "file:src/shared/ui/Select.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/widgets/tournament-setup/index.tsx",
+      "target": "file:src/widgets/tournament-setup/ChallengerImageGen.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    }
+  ]
+}

@@ -1,0 +1,1438 @@
+{
+  "nodes": [
+    {
+      "id": "file:app/(workspace)/brand-profile/[id]/edit/page.tsx",
+      "type": "file",
+      "name": "page.tsx",
+      "filePath": "app/(workspace)/brand-profile/[id]/edit/page.tsx",
+      "summary": "브랜드 프로필 편집 페이지. 스타일·정책(SOP)·페르소나·제품·참고자료 5개 탭으로 프로필 전체를 인라인 수정하는 클라이언트 라우트.",
+      "tags": [
+        "page",
+        "brand-profile",
+        "form",
+        "tabs",
+        "client-component"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:app/(workspace)/brand-profile/[id]/page.tsx",
+      "type": "file",
+      "name": "page.tsx",
+      "filePath": "app/(workspace)/brand-profile/[id]/page.tsx",
+      "summary": "단일 브랜드 프로필 상세 조회 페이지. 스타일·정책·페르소나·제품을 읽기 전용으로 보여주고 편집 화면으로 연결한다.",
+      "tags": [
+        "page",
+        "brand-profile",
+        "detail-view",
+        "client-component"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:app/(workspace)/brand-profile/page.tsx",
+      "type": "file",
+      "name": "page.tsx",
+      "filePath": "app/(workspace)/brand-profile/page.tsx",
+      "summary": "브랜드 프로필 목록 페이지. 프로필 카드 그리드와 신규 생성·삭제·기본 지정 액션을 제공하는 진입 라우트.",
+      "tags": [
+        "page",
+        "brand-profile",
+        "list-view",
+        "entry-point",
+        "client-component"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:app/(workspace)/instagram/posts/page.tsx",
+      "type": "file",
+      "name": "page.tsx",
+      "filePath": "app/(workspace)/instagram/posts/page.tsx",
+      "summary": "Instagram 게시물 작성·발행 플로우 페이지. 이미지 업로드·AI 생성, 캡션 AI 추천, 최근 게시물 목록과 댓글 관리까지 한 화면에서 처리한다.",
+      "tags": [
+        "page",
+        "instagram",
+        "publishing",
+        "ai-generation",
+        "client-component"
+      ],
+      "complexity": "complex",
+      "languageNotes": "단일 PostsFlow 컴포넌트에 30개 이상의 useState/useCallback 훅이 집중된 대형 화면. Suspense 경계용 PostsPage 래퍼로 useSearchParams 사용을 격리한다."
+    },
+    {
+      "id": "file:src/features/brand-profile/model/seed-demo.ts",
+      "type": "file",
+      "name": "seed-demo.ts",
+      "filePath": "src/features/brand-profile/model/seed-demo.ts",
+      "summary": "둘러보기(데모) 모드용 브랜드 프로필·페르소나·제품·참고자료 시드 데이터와 localStorage 초기 주입 로직.",
+      "tags": [
+        "demo",
+        "seed-data",
+        "brand-profile",
+        "localStorage"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:src/features/brand-profile/model/useBrandProfileStorage.ts",
+      "type": "file",
+      "name": "useBrandProfileStorage.ts",
+      "filePath": "src/features/brand-profile/model/useBrandProfileStorage.ts",
+      "summary": "브랜드 프로필 localStorage 영속화 훅과 순수 read 헬퍼. 활성 프로필 추적·마이그레이션·Supabase 동기화를 담당한다.",
+      "tags": [
+        "hook",
+        "brand-profile",
+        "localStorage",
+        "storage",
+        "supabase-sync"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/features/brand-profile/model/usePersonasStorage.test.ts",
+      "type": "file",
+      "name": "usePersonasStorage.test.ts",
+      "filePath": "src/features/brand-profile/model/usePersonasStorage.test.ts",
+      "summary": "페르소나 storage 훅의 회귀 테스트. localStorage 스텁으로 읽기·저장·프로필별 필터링 동작을 검증한다.",
+      "tags": [
+        "test",
+        "persona",
+        "storage",
+        "vitest"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/features/brand-profile/model/usePersonasStorage.ts",
+      "type": "file",
+      "name": "usePersonasStorage.ts",
+      "filePath": "src/features/brand-profile/model/usePersonasStorage.ts",
+      "summary": "페르소나 localStorage 영속화 훅과 read 헬퍼. 브랜드 프로필별 페르소나 CRUD 및 Supabase 동기화를 제공한다.",
+      "tags": [
+        "hook",
+        "persona",
+        "localStorage",
+        "storage",
+        "supabase-sync"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/features/brand-profile/ui/BrandProfilePickerModal.tsx",
+      "type": "file",
+      "name": "BrandProfilePickerModal.tsx",
+      "filePath": "src/features/brand-profile/ui/BrandProfilePickerModal.tsx",
+      "summary": "활성 브랜드 프로필을 선택하는 모달. 프로필 목록을 라디오 형태로 표시하고 선택을 콜백으로 넘긴다.",
+      "tags": [
+        "component",
+        "modal",
+        "brand-profile",
+        "picker"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/features/brand-profile/ui/EmptyCard.tsx",
+      "type": "file",
+      "name": "EmptyCard.tsx",
+      "filePath": "src/features/brand-profile/ui/EmptyCard.tsx",
+      "summary": "비어 있는 섹션을 안내하는 점선 테두리 플레이스홀더 카드 컴포넌트.",
+      "tags": [
+        "component",
+        "empty-state",
+        "ui"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/features/brand-profile/ui/Panel.tsx",
+      "type": "file",
+      "name": "Panel.tsx",
+      "filePath": "src/features/brand-profile/ui/Panel.tsx",
+      "summary": "아이콘·제목·액션 헤더를 가진 섹션 패널 래퍼 컴포넌트. 브랜드 프로필 화면의 공통 레이아웃 블록.",
+      "tags": [
+        "component",
+        "layout",
+        "panel",
+        "ui"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/features/brand-profile/ui/PersonaCard.tsx",
+      "type": "file",
+      "name": "PersonaCard.tsx",
+      "filePath": "src/features/brand-profile/ui/PersonaCard.tsx",
+      "summary": "페르소나 요약 카드. 연령·성별·관심사 등 타깃 속성을 칩으로 보여주고 편집·삭제 액션을 노출한다.",
+      "tags": [
+        "component",
+        "persona",
+        "card",
+        "ui"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/features/brand-profile/ui/PersonaEditModal.tsx",
+      "type": "file",
+      "name": "PersonaEditModal.tsx",
+      "filePath": "src/features/brand-profile/ui/PersonaEditModal.tsx",
+      "summary": "페르소나 생성·편집 모달. 연령/성별 AI 자동 vs 수동 override, 관심사 태그 입력, 고객 설명 자유텍스트를 폼으로 다룬다.",
+      "tags": [
+        "component",
+        "modal",
+        "persona",
+        "form",
+        "tag-input"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:src/features/brand-profile/ui/PersonaQuickCreateModal.tsx",
+      "type": "file",
+      "name": "PersonaQuickCreateModal.tsx",
+      "filePath": "src/features/brand-profile/ui/PersonaQuickCreateModal.tsx",
+      "summary": "STEP 01 등에서 페르소나를 빠르게 신규 생성하는 경량 모달. 프로필 선택과 최소 필드 입력만 받는다.",
+      "tags": [
+        "component",
+        "modal",
+        "persona",
+        "quick-create"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:app/(workspace)/brand-profile/[id]/edit/page.tsx:BrandProfileEditPage",
+      "type": "function",
+      "name": "BrandProfileEditPage",
+      "filePath": "app/(workspace)/brand-profile/[id]/edit/page.tsx",
+      "lineRange": [
+        75,
+        456
+      ],
+      "summary": "브랜드 프로필 편집 페이지 컴포넌트. 5개 탭 상태·폼 필드·스타일/정책/페르소나/제품 저장 핸들러를 관리한다.",
+      "tags": [
+        "page-component",
+        "brand-profile",
+        "form-state"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:app/(workspace)/brand-profile/[id]/page.tsx:BrandProfileViewPage",
+      "type": "function",
+      "name": "BrandProfileViewPage",
+      "filePath": "app/(workspace)/brand-profile/[id]/page.tsx",
+      "lineRange": [
+        25,
+        182
+      ],
+      "summary": "단일 브랜드 프로필 상세 조회 컴포넌트. 채워진 정책 섹션·페르소나·제품을 읽기 전용으로 렌더링한다.",
+      "tags": [
+        "page-component",
+        "brand-profile",
+        "detail-view"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:app/(workspace)/brand-profile/page.tsx:ProfileCard",
+      "type": "function",
+      "name": "ProfileCard",
+      "filePath": "app/(workspace)/brand-profile/page.tsx",
+      "lineRange": [
+        67,
+        184
+      ],
+      "summary": "프로필 목록의 단일 카드. 톤·채워진 정책 섹션·페르소나 칩을 요약하고 클릭/삭제/기본지정을 처리한다.",
+      "tags": [
+        "component",
+        "brand-profile",
+        "card"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:app/(workspace)/brand-profile/page.tsx:BrandProfilePage",
+      "type": "function",
+      "name": "BrandProfilePage",
+      "filePath": "app/(workspace)/brand-profile/page.tsx",
+      "lineRange": [
+        199,
+        279
+      ],
+      "summary": "브랜드 프로필 목록 페이지 컴포넌트. 시드 주입 후 프로필 카드 그리드와 생성·삭제·기본지정 액션을 배선한다.",
+      "tags": [
+        "page-component",
+        "brand-profile",
+        "list-view"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:app/(workspace)/brand-profile/page.tsx:personaChipLabel",
+      "type": "function",
+      "name": "personaChipLabel",
+      "filePath": "app/(workspace)/brand-profile/page.tsx",
+      "lineRange": [
+        44,
+        58
+      ],
+      "summary": "페르소나의 이름·연령·성별을 사람이 읽을 칩 라벨 문자열로 합성한다.",
+      "tags": [
+        "helper",
+        "persona",
+        "formatting"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:app/(workspace)/instagram/posts/page.tsx:PostsFlow",
+      "type": "function",
+      "name": "PostsFlow",
+      "filePath": "app/(workspace)/instagram/posts/page.tsx",
+      "lineRange": [
+        52,
+        967
+      ],
+      "summary": "Instagram 게시물 작성·발행 메인 컴포넌트. 이미지 업로드/AI 생성, 캡션 AI 추천, 발행, 최근 게시물·댓글 관리 상태를 모두 보유한다.",
+      "tags": [
+        "component",
+        "instagram",
+        "publishing",
+        "ai-generation"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:app/(workspace)/instagram/posts/page.tsx:PostsPage",
+      "type": "function",
+      "name": "PostsPage",
+      "filePath": "app/(workspace)/instagram/posts/page.tsx",
+      "lineRange": [
+        969,
+        975
+      ],
+      "summary": "PostsFlow를 Suspense 경계로 감싸는 라우트 기본 export 래퍼.",
+      "tags": [
+        "page-component",
+        "suspense",
+        "wrapper"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:app/(workspace)/instagram/posts/page.tsx:formatDate",
+      "type": "function",
+      "name": "formatDate",
+      "filePath": "app/(workspace)/instagram/posts/page.tsx",
+      "lineRange": [
+        978,
+        983
+      ],
+      "summary": "ISO 문자열을 로컬 날짜 표기로 변환하는 헬퍼.",
+      "tags": [
+        "helper",
+        "date",
+        "formatting"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/features/brand-profile/model/seed-demo.ts:seedDemoIfEmpty",
+      "type": "function",
+      "name": "seedDemoIfEmpty",
+      "filePath": "src/features/brand-profile/model/seed-demo.ts",
+      "lineRange": [
+        278,
+        312
+      ],
+      "summary": "localStorage가 비어 있거나 데모 프로필 누락 시 데모 브랜드 프로필·페르소나·제품·참고자료를 주입하는 멱등 시드 함수.",
+      "tags": [
+        "demo",
+        "seed",
+        "localStorage",
+        "idempotent"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/features/brand-profile/model/useBrandProfileStorage.ts:useBrandProfilesStorage",
+      "type": "function",
+      "name": "useBrandProfilesStorage",
+      "filePath": "src/features/brand-profile/model/useBrandProfileStorage.ts",
+      "lineRange": [
+        150,
+        184
+      ],
+      "summary": "브랜드 프로필 목록을 구독·변경하는 React 훅. 저장·삭제·기본 지정 시 localStorage와 Supabase를 동기화한다.",
+      "tags": [
+        "hook",
+        "brand-profile",
+        "storage"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/features/brand-profile/model/useBrandProfileStorage.ts:useBrandProfileStorage",
+      "type": "function",
+      "name": "useBrandProfileStorage",
+      "filePath": "src/features/brand-profile/model/useBrandProfileStorage.ts",
+      "lineRange": [
+        121,
+        147
+      ],
+      "summary": "활성 브랜드 프로필 단일 엔트리를 구독·갱신하는 훅.",
+      "tags": [
+        "hook",
+        "brand-profile",
+        "storage"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/features/brand-profile/model/useBrandProfileStorage.ts:appendToBrandProfile",
+      "type": "function",
+      "name": "appendToBrandProfile",
+      "filePath": "src/features/brand-profile/model/useBrandProfileStorage.ts",
+      "lineRange": [
+        102,
+        117
+      ],
+      "summary": "기존 브랜드 프로필 엔트리에 부분 필드를 병합 저장하는 순수 헬퍼.",
+      "tags": [
+        "helper",
+        "brand-profile",
+        "storage"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/features/brand-profile/model/useBrandProfileStorage.ts:readActiveBrandProfileEntry",
+      "type": "function",
+      "name": "readActiveBrandProfileEntry",
+      "filePath": "src/features/brand-profile/model/useBrandProfileStorage.ts",
+      "lineRange": [
+        91,
+        100
+      ],
+      "summary": "현재 활성 브랜드 프로필 엔트리를 localStorage에서 읽어 반환하는 순수 함수.",
+      "tags": [
+        "helper",
+        "brand-profile",
+        "read"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/features/brand-profile/model/usePersonasStorage.ts:usePersonasStorage",
+      "type": "function",
+      "name": "usePersonasStorage",
+      "filePath": "src/features/brand-profile/model/usePersonasStorage.ts",
+      "lineRange": [
+        35,
+        62
+      ],
+      "summary": "전체 페르소나 컬렉션을 구독·CRUD하는 훅. 저장 시 localStorage와 Supabase를 동기화한다.",
+      "tags": [
+        "hook",
+        "persona",
+        "storage"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/features/brand-profile/model/usePersonasStorage.ts:usePersonasForProfile",
+      "type": "function",
+      "name": "usePersonasForProfile",
+      "filePath": "src/features/brand-profile/model/usePersonasStorage.ts",
+      "lineRange": [
+        64,
+        98
+      ],
+      "summary": "특정 브랜드 프로필에 속한 페르소나만 필터링해 CRUD를 제공하는 파생 훅.",
+      "tags": [
+        "hook",
+        "persona",
+        "storage",
+        "derived"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/features/brand-profile/ui/BrandProfilePickerModal.tsx:BrandProfilePickerModal",
+      "type": "function",
+      "name": "BrandProfilePickerModal",
+      "filePath": "src/features/brand-profile/ui/BrandProfilePickerModal.tsx",
+      "lineRange": [
+        15,
+        81
+      ],
+      "summary": "브랜드 프로필 선택 모달 컴포넌트. 목록을 렌더링하고 선택을 콜백으로 전달한다.",
+      "tags": [
+        "component",
+        "modal",
+        "picker"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/features/brand-profile/ui/Panel.tsx:Panel",
+      "type": "function",
+      "name": "Panel",
+      "filePath": "src/features/brand-profile/ui/Panel.tsx",
+      "lineRange": [
+        19,
+        58
+      ],
+      "summary": "아이콘·제목·우측 액션 헤더를 가진 섹션 패널 래퍼 컴포넌트.",
+      "tags": [
+        "component",
+        "layout",
+        "panel"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/features/brand-profile/ui/PersonaCard.tsx:PersonaCard",
+      "type": "function",
+      "name": "PersonaCard",
+      "filePath": "src/features/brand-profile/ui/PersonaCard.tsx",
+      "lineRange": [
+        28,
+        81
+      ],
+      "summary": "페르소나 타깃 속성을 칩으로 요약하고 편집·삭제 액션을 노출하는 카드 컴포넌트.",
+      "tags": [
+        "component",
+        "persona",
+        "card"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/features/brand-profile/ui/PersonaEditModal.tsx:PersonaEditModal",
+      "type": "function",
+      "name": "PersonaEditModal",
+      "filePath": "src/features/brand-profile/ui/PersonaEditModal.tsx",
+      "lineRange": [
+        85,
+        272
+      ],
+      "summary": "페르소나 생성·편집 모달. AI 자동/수동 override 토글, 관심사 태그 입력, 자유텍스트 고객 설명을 처리한다.",
+      "tags": [
+        "component",
+        "modal",
+        "persona",
+        "form"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/features/brand-profile/ui/PersonaEditModal.tsx:TagInput",
+      "type": "function",
+      "name": "TagInput",
+      "filePath": "src/features/brand-profile/ui/PersonaEditModal.tsx",
+      "lineRange": [
+        12,
+        68
+      ],
+      "summary": "엔터·쉼표로 항목을 추가하고 칩으로 표시·삭제하는 재사용 태그 입력 컴포넌트.",
+      "tags": [
+        "component",
+        "input",
+        "tag-input"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/features/brand-profile/ui/PersonaQuickCreateModal.tsx:PersonaQuickCreateModal",
+      "type": "function",
+      "name": "PersonaQuickCreateModal",
+      "filePath": "src/features/brand-profile/ui/PersonaQuickCreateModal.tsx",
+      "lineRange": [
+        20,
+        131
+      ],
+      "summary": "최소 필드로 페르소나를 빠르게 생성하는 경량 모달 컴포넌트.",
+      "tags": [
+        "component",
+        "modal",
+        "persona",
+        "quick-create"
+      ],
+      "complexity": "moderate"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:app/(workspace)/brand-profile/[id]/edit/page.tsx",
+      "target": "function:app/(workspace)/brand-profile/[id]/edit/page.tsx:BrandProfileEditPage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:app/(workspace)/brand-profile/[id]/edit/page.tsx",
+      "target": "function:app/(workspace)/brand-profile/[id]/edit/page.tsx:BrandProfileEditPage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:app/(workspace)/brand-profile/[id]/page.tsx",
+      "target": "function:app/(workspace)/brand-profile/[id]/page.tsx:BrandProfileViewPage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:app/(workspace)/brand-profile/[id]/page.tsx",
+      "target": "function:app/(workspace)/brand-profile/[id]/page.tsx:BrandProfileViewPage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:app/(workspace)/brand-profile/page.tsx",
+      "target": "function:app/(workspace)/brand-profile/page.tsx:ProfileCard",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:app/(workspace)/brand-profile/page.tsx",
+      "target": "function:app/(workspace)/brand-profile/page.tsx:BrandProfilePage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:app/(workspace)/brand-profile/page.tsx",
+      "target": "function:app/(workspace)/brand-profile/page.tsx:BrandProfilePage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:app/(workspace)/brand-profile/page.tsx",
+      "target": "function:app/(workspace)/brand-profile/page.tsx:personaChipLabel",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:app/(workspace)/instagram/posts/page.tsx",
+      "target": "function:app/(workspace)/instagram/posts/page.tsx:PostsFlow",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:app/(workspace)/instagram/posts/page.tsx",
+      "target": "function:app/(workspace)/instagram/posts/page.tsx:PostsPage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:app/(workspace)/instagram/posts/page.tsx",
+      "target": "function:app/(workspace)/instagram/posts/page.tsx:PostsPage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:app/(workspace)/instagram/posts/page.tsx",
+      "target": "function:app/(workspace)/instagram/posts/page.tsx:formatDate",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/features/brand-profile/model/seed-demo.ts",
+      "target": "function:src/features/brand-profile/model/seed-demo.ts:seedDemoIfEmpty",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/features/brand-profile/model/seed-demo.ts",
+      "target": "function:src/features/brand-profile/model/seed-demo.ts:seedDemoIfEmpty",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/features/brand-profile/model/useBrandProfileStorage.ts",
+      "target": "function:src/features/brand-profile/model/useBrandProfileStorage.ts:useBrandProfilesStorage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/features/brand-profile/model/useBrandProfileStorage.ts",
+      "target": "function:src/features/brand-profile/model/useBrandProfileStorage.ts:useBrandProfilesStorage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/features/brand-profile/model/useBrandProfileStorage.ts",
+      "target": "function:src/features/brand-profile/model/useBrandProfileStorage.ts:useBrandProfileStorage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/features/brand-profile/model/useBrandProfileStorage.ts",
+      "target": "function:src/features/brand-profile/model/useBrandProfileStorage.ts:useBrandProfileStorage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/features/brand-profile/model/useBrandProfileStorage.ts",
+      "target": "function:src/features/brand-profile/model/useBrandProfileStorage.ts:appendToBrandProfile",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/features/brand-profile/model/useBrandProfileStorage.ts",
+      "target": "function:src/features/brand-profile/model/useBrandProfileStorage.ts:appendToBrandProfile",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/features/brand-profile/model/useBrandProfileStorage.ts",
+      "target": "function:src/features/brand-profile/model/useBrandProfileStorage.ts:readActiveBrandProfileEntry",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/features/brand-profile/model/useBrandProfileStorage.ts",
+      "target": "function:src/features/brand-profile/model/useBrandProfileStorage.ts:readActiveBrandProfileEntry",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/features/brand-profile/model/usePersonasStorage.ts",
+      "target": "function:src/features/brand-profile/model/usePersonasStorage.ts:usePersonasStorage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/features/brand-profile/model/usePersonasStorage.ts",
+      "target": "function:src/features/brand-profile/model/usePersonasStorage.ts:usePersonasStorage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/features/brand-profile/model/usePersonasStorage.ts",
+      "target": "function:src/features/brand-profile/model/usePersonasStorage.ts:usePersonasForProfile",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/features/brand-profile/model/usePersonasStorage.ts",
+      "target": "function:src/features/brand-profile/model/usePersonasStorage.ts:usePersonasForProfile",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/features/brand-profile/ui/BrandProfilePickerModal.tsx",
+      "target": "function:src/features/brand-profile/ui/BrandProfilePickerModal.tsx:BrandProfilePickerModal",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/features/brand-profile/ui/BrandProfilePickerModal.tsx",
+      "target": "function:src/features/brand-profile/ui/BrandProfilePickerModal.tsx:BrandProfilePickerModal",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/features/brand-profile/ui/Panel.tsx",
+      "target": "function:src/features/brand-profile/ui/Panel.tsx:Panel",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/features/brand-profile/ui/Panel.tsx",
+      "target": "function:src/features/brand-profile/ui/Panel.tsx:Panel",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/features/brand-profile/ui/PersonaCard.tsx",
+      "target": "function:src/features/brand-profile/ui/PersonaCard.tsx:PersonaCard",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/features/brand-profile/ui/PersonaCard.tsx",
+      "target": "function:src/features/brand-profile/ui/PersonaCard.tsx:PersonaCard",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/features/brand-profile/ui/PersonaEditModal.tsx",
+      "target": "function:src/features/brand-profile/ui/PersonaEditModal.tsx:PersonaEditModal",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/features/brand-profile/ui/PersonaEditModal.tsx",
+      "target": "function:src/features/brand-profile/ui/PersonaEditModal.tsx:PersonaEditModal",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/features/brand-profile/ui/PersonaEditModal.tsx",
+      "target": "function:src/features/brand-profile/ui/PersonaEditModal.tsx:TagInput",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/features/brand-profile/ui/PersonaQuickCreateModal.tsx",
+      "target": "function:src/features/brand-profile/ui/PersonaQuickCreateModal.tsx:PersonaQuickCreateModal",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/features/brand-profile/ui/PersonaQuickCreateModal.tsx",
+      "target": "function:src/features/brand-profile/ui/PersonaQuickCreateModal.tsx:PersonaQuickCreateModal",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:app/(workspace)/brand-profile/[id]/edit/page.tsx",
+      "target": "file:src/features/brand-profile/model/seed-demo.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:app/(workspace)/brand-profile/[id]/edit/page.tsx",
+      "target": "file:src/features/brand-profile/model/useBrandProfileStorage.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:app/(workspace)/brand-profile/[id]/edit/page.tsx",
+      "target": "file:src/features/brand-profile/model/usePersonasStorage.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:app/(workspace)/brand-profile/[id]/edit/page.tsx",
+      "target": "file:src/features/brand-profile/ui/CopyReferenceSection.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:app/(workspace)/brand-profile/[id]/edit/page.tsx",
+      "target": "file:src/features/brand-profile/ui/PersonaCard.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:app/(workspace)/brand-profile/[id]/edit/page.tsx",
+      "target": "file:src/features/brand-profile/ui/PersonaEditModal.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:app/(workspace)/brand-profile/[id]/edit/page.tsx",
+      "target": "file:src/features/brand-profile/ui/ProductCard.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:app/(workspace)/brand-profile/[id]/edit/page.tsx",
+      "target": "file:src/features/brand-profile/ui/ProductEditModal.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:app/(workspace)/brand-profile/[id]/edit/page.tsx",
+      "target": "file:src/features/brand-profile/ui/ReferenceMaterialsTab.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:app/(workspace)/brand-profile/[id]/edit/page.tsx",
+      "target": "file:src/features/sop/model/section-labels.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:app/(workspace)/brand-profile/[id]/edit/page.tsx",
+      "target": "file:src/features/sop/model/useSopStorage.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:app/(workspace)/brand-profile/[id]/edit/page.tsx",
+      "target": "file:src/features/sop/ui/SopCard.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:app/(workspace)/brand-profile/[id]/edit/page.tsx",
+      "target": "file:src/features/sop/ui/SopEditModal.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:app/(workspace)/brand-profile/[id]/edit/page.tsx",
+      "target": "file:src/shared/lib/cn.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:app/(workspace)/brand-profile/[id]/edit/page.tsx",
+      "target": "file:src/shared/lib/products.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:app/(workspace)/brand-profile/[id]/edit/page.tsx",
+      "target": "file:src/shared/ui/Button.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:app/(workspace)/brand-profile/[id]/edit/page.tsx",
+      "target": "file:src/shared/ui/Icon.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:app/(workspace)/brand-profile/[id]/edit/page.tsx",
+      "target": "file:src/shared/ui/Toast.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:app/(workspace)/brand-profile/[id]/page.tsx",
+      "target": "file:src/features/brand-profile/model/seed-demo.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:app/(workspace)/brand-profile/[id]/page.tsx",
+      "target": "file:src/features/brand-profile/model/useBrandProfileStorage.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:app/(workspace)/brand-profile/[id]/page.tsx",
+      "target": "file:src/features/brand-profile/model/usePersonasStorage.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:app/(workspace)/brand-profile/[id]/page.tsx",
+      "target": "file:src/features/brand-profile/ui/EmptyCard.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:app/(workspace)/brand-profile/[id]/page.tsx",
+      "target": "file:src/features/brand-profile/ui/Panel.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:app/(workspace)/brand-profile/[id]/page.tsx",
+      "target": "file:src/features/brand-profile/ui/PersonaCard.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:app/(workspace)/brand-profile/[id]/page.tsx",
+      "target": "file:src/features/brand-profile/ui/ProductCard.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:app/(workspace)/brand-profile/[id]/page.tsx",
+      "target": "file:src/features/brand-profile/ui/StatTile.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:app/(workspace)/brand-profile/[id]/page.tsx",
+      "target": "file:src/features/brand-profile/ui/StyleSection.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:app/(workspace)/brand-profile/[id]/page.tsx",
+      "target": "file:src/features/sop/model/section-labels.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:app/(workspace)/brand-profile/[id]/page.tsx",
+      "target": "file:src/features/sop/model/useSopStorage.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:app/(workspace)/brand-profile/[id]/page.tsx",
+      "target": "file:src/features/sop/ui/SopCard.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:app/(workspace)/brand-profile/[id]/page.tsx",
+      "target": "file:src/shared/lib/products.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:app/(workspace)/brand-profile/[id]/page.tsx",
+      "target": "file:src/shared/ui/Button.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:app/(workspace)/brand-profile/[id]/page.tsx",
+      "target": "file:src/shared/ui/Icon.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:app/(workspace)/brand-profile/[id]/page.tsx",
+      "target": "file:src/shared/ui/SegControl.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:app/(workspace)/brand-profile/page.tsx",
+      "target": "file:src/entities/creative/options.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:app/(workspace)/brand-profile/page.tsx",
+      "target": "file:src/features/brand-profile/model/seed-demo.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:app/(workspace)/brand-profile/page.tsx",
+      "target": "file:src/features/brand-profile/model/useBrandProfileStorage.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:app/(workspace)/brand-profile/page.tsx",
+      "target": "file:src/features/brand-profile/model/usePersonasStorage.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:app/(workspace)/brand-profile/page.tsx",
+      "target": "file:src/features/sop/model/section-labels.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:app/(workspace)/brand-profile/page.tsx",
+      "target": "file:src/features/sop/model/useSopStorage.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:app/(workspace)/brand-profile/page.tsx",
+      "target": "file:src/shared/lib/cn.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:app/(workspace)/brand-profile/page.tsx",
+      "target": "file:src/shared/ui/Button.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:app/(workspace)/brand-profile/page.tsx",
+      "target": "file:src/shared/ui/Card.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:app/(workspace)/brand-profile/page.tsx",
+      "target": "file:src/shared/ui/Icon.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:app/(workspace)/brand-profile/page.tsx",
+      "target": "file:src/shared/ui/Toast.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:app/(workspace)/instagram/posts/page.tsx",
+      "target": "file:lib/instagram-comments.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:app/(workspace)/instagram/posts/page.tsx",
+      "target": "file:src/features/brand-profile/model/useBrandProfileStorage.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:app/(workspace)/instagram/posts/page.tsx",
+      "target": "file:src/features/brand-profile/model/usePersonasStorage.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:app/(workspace)/instagram/posts/page.tsx",
+      "target": "file:src/features/sop/model/section-labels.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:app/(workspace)/instagram/posts/page.tsx",
+      "target": "file:src/features/sop/model/useSopStorage.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:app/(workspace)/instagram/posts/page.tsx",
+      "target": "file:src/shared/ui/Button.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:app/(workspace)/instagram/posts/page.tsx",
+      "target": "file:src/shared/ui/Card.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:app/(workspace)/instagram/posts/page.tsx",
+      "target": "file:src/shared/ui/ConfirmModal.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:app/(workspace)/instagram/posts/page.tsx",
+      "target": "file:src/shared/ui/Icon.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:app/(workspace)/instagram/posts/page.tsx",
+      "target": "file:src/shared/ui/IgPostPreview.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:app/(workspace)/instagram/posts/page.tsx",
+      "target": "file:src/shared/ui/Toast.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/features/brand-profile/model/seed-demo.ts",
+      "target": "file:src/features/brand-profile/model/useBrandProfileStorage.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/features/brand-profile/model/seed-demo.ts",
+      "target": "file:src/features/brand-profile/model/usePersonasStorage.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/features/brand-profile/model/seed-demo.ts",
+      "target": "file:src/shared/lib/products.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/features/brand-profile/model/seed-demo.ts",
+      "target": "file:src/shared/lib/referenceMaterials.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/features/brand-profile/model/useBrandProfileStorage.ts",
+      "target": "file:src/features/brand-profile/model/seed-demo.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/features/brand-profile/model/useBrandProfileStorage.ts",
+      "target": "file:src/features/sop/model/useSopStorage.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/features/brand-profile/model/useBrandProfileStorage.ts",
+      "target": "file:src/shared/lib/supabase-sync.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/features/brand-profile/model/usePersonasStorage.test.ts",
+      "target": "file:src/features/brand-profile/model/usePersonasStorage.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/features/brand-profile/model/usePersonasStorage.ts",
+      "target": "file:src/shared/lib/supabase-sync.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/features/brand-profile/ui/BrandProfilePickerModal.tsx",
+      "target": "file:src/features/brand-profile/model/useBrandProfileStorage.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/features/brand-profile/ui/BrandProfilePickerModal.tsx",
+      "target": "file:src/shared/lib/cn.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/features/brand-profile/ui/BrandProfilePickerModal.tsx",
+      "target": "file:src/shared/ui/Icon.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/features/brand-profile/ui/EmptyCard.tsx",
+      "target": "file:src/shared/lib/cn.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/features/brand-profile/ui/EmptyCard.tsx",
+      "target": "file:src/shared/ui/Icon.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/features/brand-profile/ui/Panel.tsx",
+      "target": "file:src/shared/lib/cn.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/features/brand-profile/ui/Panel.tsx",
+      "target": "file:src/shared/ui/Icon.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/features/brand-profile/ui/PersonaCard.tsx",
+      "target": "file:src/features/brand-profile/model/usePersonasStorage.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/features/brand-profile/ui/PersonaCard.tsx",
+      "target": "file:src/shared/ui/Button.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/features/brand-profile/ui/PersonaCard.tsx",
+      "target": "file:src/shared/ui/Card.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/features/brand-profile/ui/PersonaCard.tsx",
+      "target": "file:src/shared/ui/Chip.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/features/brand-profile/ui/PersonaCard.tsx",
+      "target": "file:src/shared/ui/Icon.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/features/brand-profile/ui/PersonaEditModal.tsx",
+      "target": "file:src/features/brand-profile/model/usePersonasStorage.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/features/brand-profile/ui/PersonaEditModal.tsx",
+      "target": "file:src/shared/lib/cn.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/features/brand-profile/ui/PersonaEditModal.tsx",
+      "target": "file:src/shared/ui/Button.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/features/brand-profile/ui/PersonaEditModal.tsx",
+      "target": "file:src/shared/ui/Icon.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/features/brand-profile/ui/PersonaQuickCreateModal.tsx",
+      "target": "file:src/features/brand-profile/model/useBrandProfileStorage.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/features/brand-profile/ui/PersonaQuickCreateModal.tsx",
+      "target": "file:src/features/brand-profile/model/usePersonasStorage.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/features/brand-profile/ui/PersonaQuickCreateModal.tsx",
+      "target": "file:src/shared/lib/cn.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/features/brand-profile/ui/PersonaQuickCreateModal.tsx",
+      "target": "file:src/shared/ui/Button.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/features/brand-profile/ui/PersonaQuickCreateModal.tsx",
+      "target": "file:src/shared/ui/Icon.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/features/brand-profile/model/usePersonasStorage.ts",
+      "target": "file:src/features/brand-profile/model/usePersonasStorage.test.ts",
+      "type": "tested_by",
+      "direction": "forward",
+      "weight": 0.5
+    }
+  ]
+}

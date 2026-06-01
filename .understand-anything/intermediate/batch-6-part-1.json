@@ -1,0 +1,391 @@
+{
+  "nodes": [
+    {
+      "id": "file:app/(workspace)/create/_components/Stepper.tsx",
+      "type": "file",
+      "name": "Stepper.tsx",
+      "filePath": "app/(workspace)/create/_components/Stepper.tsx",
+      "summary": "/create 광고 생성 플로우 상단의 3스텝 진행 표시 컴포넌트로, 완료·유효 상태에 따라 스텝 클릭 이동을 제어한다.",
+      "tags": ["component", "stepper", "create-flow", "navigation"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:app/(workspace)/create/_components/Stepper.tsx:Stepper",
+      "type": "function",
+      "name": "Stepper",
+      "filePath": "app/(workspace)/create/_components/Stepper.tsx",
+      "lineRange": [11, 73],
+      "summary": "STEPS 배열을 순회해 각 스텝 버튼을 렌더링하고, completed/stepValid 조건으로 활성화·이동 가능 여부를 결정하는 스텝 인디케이터.",
+      "tags": ["component", "stepper", "ui"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:app/(workspace)/create/layout.tsx",
+      "type": "file",
+      "name": "layout.tsx",
+      "filePath": "app/(workspace)/create/layout.tsx",
+      "summary": "/create 라우트의 레이아웃으로, CreativeStateProvider와 LaunchStateProvider로 하위 스텝들을 감싸 광고 생성 상태를 공유한다.",
+      "tags": ["layout", "create-flow", "context-provider", "entry-point"],
+      "complexity": "simple",
+      "languageNotes": "Next.js App Router의 중첩 layout — 라우트 진입점에서 두 reducer Provider를 합성한다."
+    },
+    {
+      "id": "file:app/(workspace)/create/page.tsx",
+      "type": "file",
+      "name": "page.tsx",
+      "filePath": "app/(workspace)/create/page.tsx",
+      "summary": "광고 생성 3스텝 전체를 오케스트레이션하는 핵심 페이지로, 카피·이미지 생성(Gemini), prefill·채널 인사이트 진입, 라이브러리 저장, 게재 라우팅까지 묶는다.",
+      "tags": ["entry-point", "create-flow", "page", "orchestrator", "state-machine"],
+      "complexity": "complex",
+      "languageNotes": "useReducer 기반 creative/launch draft + sessionStorage·searchParams 다중 진입 경로를 하나의 CreateFlow에서 처리하는 대형 클라이언트 컴포넌트."
+    },
+    {
+      "id": "function:app/(workspace)/create/page.tsx:CreateFlow",
+      "type": "function",
+      "name": "CreateFlow",
+      "filePath": "app/(workspace)/create/page.tsx",
+      "lineRange": [49, 504],
+      "summary": "스텝 상태·세션 스토리지·prefill·카피 생성 mutation·게재 라우팅을 모두 관장하는 광고 생성 플로우 본체 컴포넌트.",
+      "tags": ["create-flow", "orchestrator", "state-machine", "component"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:lib/gemini-suggest-campaign.ts",
+      "type": "file",
+      "name": "gemini-suggest-campaign.ts",
+      "filePath": "lib/gemini-suggest-campaign.ts",
+      "summary": "브랜드 컨텍스트와 최근 집행 이력을 바탕으로 Gemini가 다음 광고 캠페인 3개를 추천하도록 프롬프트를 구성·파싱하는 서버 헬퍼.",
+      "tags": ["service", "gemini", "ai-suggestion", "campaign"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:lib/gemini-suggest-campaign.ts:suggest",
+      "type": "function",
+      "name": "suggest",
+      "filePath": "lib/gemini-suggest-campaign.ts",
+      "lineRange": [28, 96],
+      "summary": "브랜드·목표 프롬프트를 만들어 Gemini를 호출하고 응답 JSON에서 서로 다른 Phase1 objectiveId 3개의 추천을 추출·검증한다.",
+      "tags": ["gemini", "ai-suggestion", "parsing"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/entities/campaign/launched-storage.ts",
+      "type": "file",
+      "name": "launched-storage.ts",
+      "filePath": "src/entities/campaign/launched-storage.ts",
+      "summary": "게재 완료된 캠페인을 localStorage에 저장하고 Supabase로 동기화·복원하는 캠페인 영속화 헬퍼.",
+      "tags": ["storage", "campaign", "persistence", "supabase-sync"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/entities/campaign/launched-storage.ts:saveLaunchedCampaign",
+      "type": "function",
+      "name": "saveLaunchedCampaign",
+      "filePath": "src/entities/campaign/launched-storage.ts",
+      "lineRange": [11, 19],
+      "summary": "게재 캠페인 값을 localStorage에 직렬화 저장하고 syncUpsert로 Supabase에 동기화한다.",
+      "tags": ["storage", "persistence", "supabase-sync"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/entities/campaign/launched-storage.ts:loadLaunchedCampaign",
+      "type": "function",
+      "name": "loadLaunchedCampaign",
+      "filePath": "src/entities/campaign/launched-storage.ts",
+      "lineRange": [21, 30],
+      "summary": "캠페인 ID 키로 localStorage에서 게재 캠페인을 역직렬화해 복원한다.",
+      "tags": ["storage", "persistence", "campaign"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/entities/campaign/model.tsx",
+      "type": "file",
+      "name": "model.tsx",
+      "filePath": "src/entities/campaign/model.tsx",
+      "summary": "게재(Launch) 단계 상태 타입·초기값·reducer와 LaunchStateProvider/useLaunchDraft 컨텍스트를 정의하는 캠페인 엔티티 모델.",
+      "tags": ["data-model", "state-machine", "context-provider", "campaign"],
+      "complexity": "complex",
+      "languageNotes": "useReducer + Context로 게재 폼 상태(예산·타깃·일정·A/B)를 관리하는 엔티티 레이어 모델."
+    },
+    {
+      "id": "function:src/entities/campaign/model.tsx:reducer",
+      "type": "function",
+      "name": "reducer",
+      "filePath": "src/entities/campaign/model.tsx",
+      "lineRange": [195, 248],
+      "summary": "게재 폼 상태에 대한 액션을 처리하는 reducer로, 타깃 성별 UI 변환 등 다양한 필드 갱신을 분기한다.",
+      "tags": ["reducer", "state-machine", "campaign"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/entities/campaign/model.tsx:LaunchStateProvider",
+      "type": "function",
+      "name": "LaunchStateProvider",
+      "filePath": "src/entities/campaign/model.tsx",
+      "lineRange": [253, 260],
+      "summary": "게재 draft 상태와 dispatch를 하위 트리에 제공하는 Context Provider.",
+      "tags": ["context-provider", "state-machine"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/entities/campaign/model.tsx:useLaunchDraft",
+      "type": "function",
+      "name": "useLaunchDraft",
+      "filePath": "src/entities/campaign/model.tsx",
+      "lineRange": [262, 266],
+      "summary": "LaunchStateContext에서 게재 draft 상태·dispatch를 꺼내는 hook.",
+      "tags": ["hook", "state-machine"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/entities/creative/model.tsx",
+      "type": "file",
+      "name": "model.tsx",
+      "filePath": "src/entities/creative/model.tsx",
+      "summary": "광고 소재(Creative) 단계 상태·초기값·reducer와 CreativeStateProvider/useCreativeDraft 컨텍스트를 정의하는 엔티티 모델.",
+      "tags": ["data-model", "state-machine", "context-provider", "creative"],
+      "complexity": "moderate",
+      "languageNotes": "outcome 선택 시 selectOutcome 라우팅을 reducer에서 호출해 목표 전환을 일원화한다."
+    },
+    {
+      "id": "function:src/entities/creative/model.tsx:reducer",
+      "type": "function",
+      "name": "reducer",
+      "filePath": "src/entities/creative/model.tsx",
+      "lineRange": [71, 97],
+      "summary": "소재 draft 상태 액션을 처리하며 outcome 변경 시 selectOutcome로 목표·CTA 라우팅을 적용하는 reducer.",
+      "tags": ["reducer", "state-machine", "creative"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/entities/creative/model.tsx:CreativeStateProvider",
+      "type": "function",
+      "name": "CreativeStateProvider",
+      "filePath": "src/entities/creative/model.tsx",
+      "lineRange": [102, 109],
+      "summary": "소재 draft 상태와 dispatch를 하위 트리에 제공하는 Context Provider.",
+      "tags": ["context-provider", "state-machine"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/entities/creative/model.tsx:useCreativeDraft",
+      "type": "function",
+      "name": "useCreativeDraft",
+      "filePath": "src/entities/creative/model.tsx",
+      "lineRange": [111, 115],
+      "summary": "CreativeStateContext에서 소재 draft 상태·dispatch를 꺼내는 hook.",
+      "tags": ["hook", "state-machine"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/entities/creative/options.test.ts",
+      "type": "file",
+      "name": "options.test.ts",
+      "filePath": "src/entities/creative/options.test.ts",
+      "summary": "options.ts의 목표·훅 조회 헬퍼(findObjective·recommendedHooks 등)에 대한 회귀 테스트.",
+      "tags": ["test", "creative", "options"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/entities/creative/options.ts",
+      "type": "file",
+      "name": "options.ts",
+      "filePath": "src/entities/creative/options.ts",
+      "summary": "톤·CTA·이미지 스타일·광고 목표(Phase1/2)·카피 훅 등 소재 생성 전반의 선택지 카탈로그와 조회 헬퍼를 정의하는 중심 상수 모듈.",
+      "tags": ["data-model", "options-catalog", "creative", "constants"],
+      "complexity": "complex",
+      "languageNotes": "프로젝트 전역에서 가장 많이 import되는 도메인 어휘 소스(목표·CTA·톤·훅 매핑)."
+    },
+    {
+      "id": "function:src/entities/creative/options.ts:findObjective",
+      "type": "function",
+      "name": "findObjective",
+      "filePath": "src/entities/creative/options.ts",
+      "lineRange": [243, 245],
+      "summary": "id로 OBJECTIVES_ALL에서 광고 목표 정의를 조회하는 헬퍼.",
+      "tags": ["utility", "lookup", "objective"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/entities/creative/options.ts:recommendedHooks",
+      "type": "function",
+      "name": "recommendedHooks",
+      "filePath": "src/entities/creative/options.ts",
+      "lineRange": [290, 292],
+      "summary": "주어진 outcome에 매핑된 추천 카피 훅 목록을 반환하는 헬퍼.",
+      "tags": ["utility", "lookup", "copy-hook"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/entities/creative/outcome-routing.test.ts",
+      "type": "file",
+      "name": "outcome-routing.test.ts",
+      "filePath": "src/entities/creative/outcome-routing.test.ts",
+      "summary": "outcome-routing의 목표→objective/CTA 매핑 및 selectOutcome 전환 로직에 대한 회귀 테스트.",
+      "tags": ["test", "outcome-routing", "creative"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/entities/creative/outcome-routing.ts",
+      "type": "file",
+      "name": "outcome-routing.ts",
+      "filePath": "src/entities/creative/outcome-routing.ts",
+      "summary": "광고 목표(outcome)를 Meta objective·기본 CTA·Boost 여부로 라우팅하고, 목표 전환 시 CTA를 재조정하는 단일 소스 모듈.",
+      "tags": ["outcome-routing", "creative", "domain-logic", "utility"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/entities/creative/outcome-routing.ts:selectOutcome",
+      "type": "function",
+      "name": "selectOutcome",
+      "filePath": "src/entities/creative/outcome-routing.ts",
+      "lineRange": [40, 55],
+      "summary": "이전·다음 목표와 현재 CTA를 받아 목표 전환 시 objective·CTA를 일관되게 재계산하는 핵심 라우팅 함수.",
+      "tags": ["outcome-routing", "domain-logic", "creative"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/entities/creative/ui/SelectedGoalCard.tsx",
+      "type": "file",
+      "name": "SelectedGoalCard.tsx",
+      "filePath": "src/entities/creative/ui/SelectedGoalCard.tsx",
+      "summary": "현재 선택된 광고 목표를 요약 카드로 보여주고 목표 변경 액션과 연결 계정(IG) 정보를 표시하는 컴포넌트.",
+      "tags": ["component", "creative", "goal-card", "ui"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/entities/creative/ui/SelectedGoalCard.tsx:SelectedGoalCard",
+      "type": "function",
+      "name": "SelectedGoalCard",
+      "filePath": "src/entities/creative/ui/SelectedGoalCard.tsx",
+      "lineRange": [27, 115],
+      "summary": "선택된 목표 정의를 찾아 카드로 렌더링하고 연결 IG 계정을 조회·표시하며 목표 변경 버튼을 노출한다.",
+      "tags": ["component", "goal-card", "ui"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/entities/insights/budget-estimates.ts",
+      "type": "file",
+      "name": "budget-estimates.ts",
+      "filePath": "src/entities/insights/budget-estimates.ts",
+      "summary": "기간 계산과 일 예산 기반 노출 추정 범위를 산출하는 인사이트 헬퍼.",
+      "tags": ["utility", "insights", "budget", "estimation"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/entities/insights/budget-estimates.ts:estimateImpressionRange",
+      "type": "function",
+      "name": "estimateImpressionRange",
+      "filePath": "src/entities/insights/budget-estimates.ts",
+      "lineRange": [12, 21],
+      "summary": "일 예산(KRW)과 일수로 예상 노출 수의 하한·상한 범위를 추정한다.",
+      "tags": ["utility", "budget", "estimation"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    { "source": "file:app/(workspace)/create/_components/Stepper.tsx", "target": "file:src/shared/lib/cn.ts", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:app/(workspace)/create/_components/Stepper.tsx", "target": "file:src/shared/ui/Icon.tsx", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:app/(workspace)/create/_components/Stepper.tsx", "target": "function:app/(workspace)/create/_components/Stepper.tsx:Stepper", "type": "contains", "direction": "forward", "weight": 1.0 },
+    { "source": "file:app/(workspace)/create/_components/Stepper.tsx", "target": "function:app/(workspace)/create/_components/Stepper.tsx:Stepper", "type": "exports", "direction": "forward", "weight": 0.8 },
+    { "source": "function:app/(workspace)/create/_components/Stepper.tsx:Stepper", "target": "function:src/shared/lib/cn.ts:cn", "type": "calls", "direction": "forward", "weight": 0.8 },
+
+    { "source": "file:app/(workspace)/create/layout.tsx", "target": "file:src/entities/campaign/model.tsx", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:app/(workspace)/create/layout.tsx", "target": "file:src/entities/creative/model.tsx", "type": "imports", "direction": "forward", "weight": 0.7 },
+
+    { "source": "file:app/(workspace)/create/page.tsx", "target": "file:app/(workspace)/create/_components/Stepper.tsx", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:app/(workspace)/create/page.tsx", "target": "file:lib/gemini-creative.ts", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:app/(workspace)/create/page.tsx", "target": "file:lib/mock-campaigns.ts", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:app/(workspace)/create/page.tsx", "target": "file:src/entities/campaign/launched-storage.ts", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:app/(workspace)/create/page.tsx", "target": "file:src/entities/campaign/model.tsx", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:app/(workspace)/create/page.tsx", "target": "file:src/entities/creative/model.tsx", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:app/(workspace)/create/page.tsx", "target": "file:src/entities/creative/options.ts", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:app/(workspace)/create/page.tsx", "target": "file:src/entities/creative/outcome-routing.ts", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:app/(workspace)/create/page.tsx", "target": "file:src/entities/insights/ab-verdict.ts", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:app/(workspace)/create/page.tsx", "target": "file:src/features/brand-profile/model/mergePersonaTargeting.ts", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:app/(workspace)/create/page.tsx", "target": "file:src/features/brand-profile/model/useBrandProfileStorage.ts", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:app/(workspace)/create/page.tsx", "target": "file:src/features/brand-profile/model/usePersonasStorage.ts", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:app/(workspace)/create/page.tsx", "target": "file:src/features/switch-mode/objective-routing.ts", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:app/(workspace)/create/page.tsx", "target": "file:src/shared/lib/api/useApiMutation.ts", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:app/(workspace)/create/page.tsx", "target": "file:src/shared/lib/library.ts", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:app/(workspace)/create/page.tsx", "target": "file:src/shared/lib/storage/useSessionStorage.ts", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:app/(workspace)/create/page.tsx", "target": "file:src/shared/ui/Button.tsx", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:app/(workspace)/create/page.tsx", "target": "file:src/shared/ui/Icon.tsx", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:app/(workspace)/create/page.tsx", "target": "file:src/shared/ui/primitives.tsx", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:app/(workspace)/create/page.tsx", "target": "file:src/shared/ui/Toast.tsx", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:app/(workspace)/create/page.tsx", "target": "file:src/widgets/creative-step/index.tsx", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:app/(workspace)/create/page.tsx", "target": "file:src/widgets/goal-intro/index.tsx", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:app/(workspace)/create/page.tsx", "target": "file:src/widgets/launch-step/index.tsx", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:app/(workspace)/create/page.tsx", "target": "file:src/widgets/post-launch-checklist/index.tsx", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:app/(workspace)/create/page.tsx", "target": "function:app/(workspace)/create/page.tsx:CreateFlow", "type": "contains", "direction": "forward", "weight": 1.0 },
+    { "source": "function:app/(workspace)/create/page.tsx:CreateFlow", "target": "function:src/entities/campaign/launched-storage.ts:loadLaunchedCampaign", "type": "calls", "direction": "forward", "weight": 0.8 },
+    { "source": "function:app/(workspace)/create/page.tsx:CreateFlow", "target": "function:src/features/brand-profile/model/mergePersonaTargeting.ts:mergePersonaTargeting", "type": "calls", "direction": "forward", "weight": 0.8 },
+    { "source": "function:app/(workspace)/create/page.tsx:CreateFlow", "target": "function:src/features/switch-mode/objective-routing.ts:autoModeFromObjective", "type": "calls", "direction": "forward", "weight": 0.8 },
+
+    { "source": "file:lib/gemini-suggest-campaign.ts", "target": "file:lib/gemini-client.ts", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:lib/gemini-suggest-campaign.ts", "target": "file:src/entities/creative/options.ts", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:lib/gemini-suggest-campaign.ts", "target": "function:lib/gemini-suggest-campaign.ts:suggest", "type": "contains", "direction": "forward", "weight": 1.0 },
+    { "source": "function:lib/gemini-suggest-campaign.ts:suggest", "target": "function:lib/gemini-client.ts:requireGeminiKey", "type": "calls", "direction": "forward", "weight": 0.8 },
+
+    { "source": "file:src/entities/campaign/launched-storage.ts", "target": "file:src/entities/campaign/model.tsx", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:src/entities/campaign/launched-storage.ts", "target": "file:src/shared/lib/supabase-sync.ts", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:src/entities/campaign/launched-storage.ts", "target": "function:src/entities/campaign/launched-storage.ts:saveLaunchedCampaign", "type": "contains", "direction": "forward", "weight": 1.0 },
+    { "source": "file:src/entities/campaign/launched-storage.ts", "target": "function:src/entities/campaign/launched-storage.ts:loadLaunchedCampaign", "type": "contains", "direction": "forward", "weight": 1.0 },
+    { "source": "file:src/entities/campaign/launched-storage.ts", "target": "function:src/entities/campaign/launched-storage.ts:saveLaunchedCampaign", "type": "exports", "direction": "forward", "weight": 0.8 },
+    { "source": "file:src/entities/campaign/launched-storage.ts", "target": "function:src/entities/campaign/launched-storage.ts:loadLaunchedCampaign", "type": "exports", "direction": "forward", "weight": 0.8 },
+    { "source": "function:src/entities/campaign/launched-storage.ts:saveLaunchedCampaign", "target": "function:src/shared/lib/supabase-sync.ts:syncUpsert", "type": "calls", "direction": "forward", "weight": 0.8 },
+
+    { "source": "file:src/entities/campaign/model.tsx", "target": "file:lib/gemini-creative.ts", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:src/entities/campaign/model.tsx", "target": "file:src/entities/creative/options.ts", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:src/entities/campaign/model.tsx", "target": "file:src/shared/lib/meta/targeting.ts", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:src/entities/campaign/model.tsx", "target": "function:src/entities/campaign/model.tsx:reducer", "type": "contains", "direction": "forward", "weight": 1.0 },
+    { "source": "file:src/entities/campaign/model.tsx", "target": "function:src/entities/campaign/model.tsx:LaunchStateProvider", "type": "contains", "direction": "forward", "weight": 1.0 },
+    { "source": "file:src/entities/campaign/model.tsx", "target": "function:src/entities/campaign/model.tsx:useLaunchDraft", "type": "contains", "direction": "forward", "weight": 1.0 },
+    { "source": "file:src/entities/campaign/model.tsx", "target": "function:src/entities/campaign/model.tsx:LaunchStateProvider", "type": "exports", "direction": "forward", "weight": 0.8 },
+    { "source": "file:src/entities/campaign/model.tsx", "target": "function:src/entities/campaign/model.tsx:useLaunchDraft", "type": "exports", "direction": "forward", "weight": 0.8 },
+    { "source": "function:src/entities/campaign/model.tsx:reducer", "target": "function:src/shared/lib/meta/targeting.ts:gendersToUi", "type": "calls", "direction": "forward", "weight": 0.8 },
+
+    { "source": "file:src/entities/creative/model.tsx", "target": "file:lib/gemini-creative.ts", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:src/entities/creative/model.tsx", "target": "file:src/entities/creative/options.ts", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:src/entities/creative/model.tsx", "target": "file:src/entities/creative/outcome-routing.ts", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:src/entities/creative/model.tsx", "target": "file:src/features/brand-profile/model/mergePersonaTargeting.ts", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:src/entities/creative/model.tsx", "target": "function:src/entities/creative/model.tsx:reducer", "type": "contains", "direction": "forward", "weight": 1.0 },
+    { "source": "file:src/entities/creative/model.tsx", "target": "function:src/entities/creative/model.tsx:CreativeStateProvider", "type": "contains", "direction": "forward", "weight": 1.0 },
+    { "source": "file:src/entities/creative/model.tsx", "target": "function:src/entities/creative/model.tsx:useCreativeDraft", "type": "contains", "direction": "forward", "weight": 1.0 },
+    { "source": "file:src/entities/creative/model.tsx", "target": "function:src/entities/creative/model.tsx:CreativeStateProvider", "type": "exports", "direction": "forward", "weight": 0.8 },
+    { "source": "file:src/entities/creative/model.tsx", "target": "function:src/entities/creative/model.tsx:useCreativeDraft", "type": "exports", "direction": "forward", "weight": 0.8 },
+    { "source": "function:src/entities/creative/model.tsx:reducer", "target": "function:src/entities/creative/outcome-routing.ts:selectOutcome", "type": "calls", "direction": "forward", "weight": 0.8 },
+
+    { "source": "file:src/entities/creative/options.test.ts", "target": "file:src/entities/creative/options.ts", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:src/entities/creative/options.ts", "target": "file:src/entities/creative/options.test.ts", "type": "tested_by", "direction": "forward", "weight": 0.5 },
+
+    { "source": "file:src/entities/creative/options.ts", "target": "file:src/shared/ui/Icon.tsx", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:src/entities/creative/options.ts", "target": "function:src/entities/creative/options.ts:findObjective", "type": "contains", "direction": "forward", "weight": 1.0 },
+    { "source": "file:src/entities/creative/options.ts", "target": "function:src/entities/creative/options.ts:recommendedHooks", "type": "contains", "direction": "forward", "weight": 1.0 },
+    { "source": "file:src/entities/creative/options.ts", "target": "function:src/entities/creative/options.ts:findObjective", "type": "exports", "direction": "forward", "weight": 0.8 },
+    { "source": "file:src/entities/creative/options.ts", "target": "function:src/entities/creative/options.ts:recommendedHooks", "type": "exports", "direction": "forward", "weight": 0.8 },
+
+    { "source": "file:src/entities/creative/outcome-routing.test.ts", "target": "file:src/entities/creative/options.ts", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:src/entities/creative/outcome-routing.test.ts", "target": "file:src/entities/creative/outcome-routing.ts", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:src/entities/creative/outcome-routing.ts", "target": "file:src/entities/creative/outcome-routing.test.ts", "type": "tested_by", "direction": "forward", "weight": 0.5 },
+
+    { "source": "file:src/entities/creative/outcome-routing.ts", "target": "file:src/entities/creative/options.ts", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:src/entities/creative/outcome-routing.ts", "target": "function:src/entities/creative/outcome-routing.ts:selectOutcome", "type": "contains", "direction": "forward", "weight": 1.0 },
+    { "source": "file:src/entities/creative/outcome-routing.ts", "target": "function:src/entities/creative/outcome-routing.ts:selectOutcome", "type": "exports", "direction": "forward", "weight": 0.8 },
+    { "source": "function:src/entities/creative/outcome-routing.ts:selectOutcome", "target": "function:src/entities/creative/options.ts:findObjective", "type": "calls", "direction": "forward", "weight": 0.8 },
+
+    { "source": "file:src/entities/creative/ui/SelectedGoalCard.tsx", "target": "file:src/entities/creative/model.tsx", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:src/entities/creative/ui/SelectedGoalCard.tsx", "target": "file:src/entities/creative/options.ts", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:src/entities/creative/ui/SelectedGoalCard.tsx", "target": "file:src/shared/lib/browse-connection.ts", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:src/entities/creative/ui/SelectedGoalCard.tsx", "target": "file:src/shared/lib/cn.ts", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:src/entities/creative/ui/SelectedGoalCard.tsx", "target": "file:src/shared/ui/Button.tsx", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:src/entities/creative/ui/SelectedGoalCard.tsx", "target": "file:src/shared/ui/Card.tsx", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:src/entities/creative/ui/SelectedGoalCard.tsx", "target": "file:src/shared/ui/Icon.tsx", "type": "imports", "direction": "forward", "weight": 0.7 },
+    { "source": "file:src/entities/creative/ui/SelectedGoalCard.tsx", "target": "function:src/entities/creative/ui/SelectedGoalCard.tsx:SelectedGoalCard", "type": "contains", "direction": "forward", "weight": 1.0 },
+    { "source": "file:src/entities/creative/ui/SelectedGoalCard.tsx", "target": "function:src/entities/creative/ui/SelectedGoalCard.tsx:SelectedGoalCard", "type": "exports", "direction": "forward", "weight": 0.8 },
+    { "source": "function:src/entities/creative/ui/SelectedGoalCard.tsx:SelectedGoalCard", "target": "function:src/entities/creative/model.tsx:useCreativeDraft", "type": "calls", "direction": "forward", "weight": 0.8 },
+
+    { "source": "file:src/entities/insights/budget-estimates.ts", "target": "function:src/entities/insights/budget-estimates.ts:estimateImpressionRange", "type": "contains", "direction": "forward", "weight": 1.0 },
+    { "source": "file:src/entities/insights/budget-estimates.ts", "target": "function:src/entities/insights/budget-estimates.ts:estimateImpressionRange", "type": "exports", "direction": "forward", "weight": 0.8 }
+  ]
+}

@@ -1,0 +1,220 @@
+{
+  "nodes": [
+    {
+      "id": "file:app/api/account/route.ts",
+      "type": "file",
+      "name": "route.ts",
+      "filePath": "app/api/account/route.ts",
+      "summary": "Meta 광고 계정 상태를 반환하는 Route Handler. withMetaSession 으로 세션을 검증한 뒤 metaAds.getAccountStatus 를 노출해요.",
+      "tags": ["api-handler", "route-handler", "meta-ads", "entry-point"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:app/api/billing/route.ts",
+      "type": "file",
+      "name": "route.ts",
+      "filePath": "app/api/billing/route.ts",
+      "summary": "결제/청구 정보를 조회하는 GET Route Handler. 인증 세션을 확인하고 mock billing 폴백과 metaAds.getBilling 을 함께 다뤄요.",
+      "tags": ["api-handler", "route-handler", "billing", "auth"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:app/api/billing/route.ts:GET",
+      "type": "function",
+      "name": "GET",
+      "filePath": "app/api/billing/route.ts",
+      "lineRange": [8, 20],
+      "summary": "세션 인증 후 청구 정보를 반환하는 GET 핸들러. 비로그인 시 401, 실패 시 mock billing 폴백을 사용해요.",
+      "tags": ["api-handler", "billing", "auth"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:app/api/boost-post/route.ts",
+      "type": "file",
+      "name": "route.ts",
+      "filePath": "app/api/boost-post/route.ts",
+      "summary": "기존 IG/FB 게시물을 부스트(광고화)하는 POST Route Handler. 타깃 지오 옵션과 Meta 세션을 받아 boostPost 를 호출해요.",
+      "tags": ["api-handler", "route-handler", "boost-post", "meta-ads"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:app/api/campaign/[id]/replace-creative/route.ts",
+      "type": "file",
+      "name": "route.ts",
+      "filePath": "app/api/campaign/[id]/replace-creative/route.ts",
+      "summary": "기존 캠페인의 크리에이티브(소재)를 교체하는 POST Route Handler. Edit Campaign V1 의 Replace Creative 엔드포인트예요.",
+      "tags": ["api-handler", "route-handler", "edit-campaign", "creative"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:app/api/campaign/[id]/route.ts",
+      "type": "file",
+      "name": "route.ts",
+      "filePath": "app/api/campaign/[id]/route.ts",
+      "summary": "단일 캠페인 상세를 반환하는 GET Route Handler. 인증 후 mock 캠페인 폴백 또는 metaAds.getCampaign 으로 실데이터를 제공해요.",
+      "tags": ["api-handler", "route-handler", "campaign", "meta-ads"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:app/api/campaign/[id]/route.ts:GET",
+      "type": "function",
+      "name": "GET",
+      "filePath": "app/api/campaign/[id]/route.ts",
+      "lineRange": [9, 24],
+      "summary": "캠페인 id 로 상세를 조회하는 GET 핸들러. mock 폴백과 requireMetaSession 기반 실데이터 분기를 처리해요.",
+      "tags": ["api-handler", "campaign", "meta-ads"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:app/api/campaign/[id]/update/route.ts",
+      "type": "file",
+      "name": "route.ts",
+      "filePath": "app/api/campaign/[id]/update/route.ts",
+      "summary": "캠페인 설정(예산·상태 등)을 갱신하는 POST Route Handler. Edit Campaign V1 의 Update Campaign 엔드포인트예요.",
+      "tags": ["api-handler", "route-handler", "edit-campaign", "campaign"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:app/api/campaign/control/route.ts",
+      "type": "file",
+      "name": "route.ts",
+      "filePath": "app/api/campaign/control/route.ts",
+      "summary": "캠페인 게재 상태를 제어(일시정지·재개·종료)하는 POST Route Handler. Meta 세션 기반으로 상태 전환을 적용해요.",
+      "tags": ["api-handler", "route-handler", "campaign", "lifecycle"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:app/api/campaign/relaunch/route.ts",
+      "type": "file",
+      "name": "route.ts",
+      "filePath": "app/api/campaign/relaunch/route.ts",
+      "summary": "종료된 캠페인을 동일 내용으로 자동 재게재하는 POST Route Handler. Auto Relaunch(ADR-012)의 서버 진입점이에요.",
+      "tags": ["api-handler", "route-handler", "auto-relaunch", "campaign"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:app/api/campaign/route.ts",
+      "type": "file",
+      "name": "route.ts",
+      "filePath": "app/api/campaign/route.ts",
+      "summary": "캠페인을 생성·게재하는 핵심 POST Route Handler. 크리에이티브 옵션·지오 타깃을 받아 Meta 광고를 만들고, OG 이미지 추출 헬퍼를 포함해요.",
+      "tags": ["api-handler", "route-handler", "campaign", "launch-campaign", "meta-ads"],
+      "complexity": "complex",
+      "languageNotes": "OG 이미지를 HTML meta 태그에서 파싱해 data URL 로 변환하는 fetchOgImageAsDataUrl 헬퍼를 자체 포함."
+    },
+    {
+      "id": "function:app/api/campaign/route.ts:fetchOgImageAsDataUrl",
+      "type": "function",
+      "name": "fetchOgImageAsDataUrl",
+      "filePath": "app/api/campaign/route.ts",
+      "lineRange": [14, 36],
+      "summary": "페이지 URL 에서 og:image 메타 태그를 파싱해 이미지를 fetch 하고 base64 data URL 로 변환해요. AbortSignal.timeout 으로 타임아웃을 둬요.",
+      "tags": ["utility", "image", "og-tag", "fetch"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:app/api/campaigns/route.ts",
+      "type": "file",
+      "name": "route.ts",
+      "filePath": "app/api/campaigns/route.ts",
+      "summary": "캠페인 목록을 기간(period)별로 반환하는 GET Route Handler. mock 폴백과 metaAds.listCampaigns 를 함께 다뤄요.",
+      "tags": ["api-handler", "route-handler", "campaign", "list"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:app/api/insights/[id]/route.ts",
+      "type": "file",
+      "name": "route.ts",
+      "filePath": "app/api/insights/[id]/route.ts",
+      "summary": "캠페인 성과 인사이트를 조회하는 GET Route Handler. 기간·목표·adIds 파라미터를 검증하고 mock 폴백 또는 metaAds.getInsights 를 호출해요.",
+      "tags": ["api-handler", "route-handler", "insights", "meta-ads"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:app/api/insights/[id]/route.ts:GET",
+      "type": "function",
+      "name": "GET",
+      "filePath": "app/api/insights/[id]/route.ts",
+      "lineRange": [19, 46],
+      "summary": "period·objective·goal·adIds 쿼리 파라미터를 검증하고 mock 또는 실 Meta 인사이트를 반환하는 GET 핸들러.",
+      "tags": ["api-handler", "insights", "validation"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:app/api/insights/[id]/route.ts:parseAdIdsParam",
+      "type": "function",
+      "name": "parseAdIdsParam",
+      "filePath": "app/api/insights/[id]/route.ts",
+      "lineRange": [13, 17],
+      "summary": "콤마 구분 adIds 쿼리 문자열을 trim·필터링해 배열로 파싱하는 헬퍼.",
+      "tags": ["utility", "parsing", "validation"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {"source": "file:app/api/account/route.ts", "target": "file:lib/meta-ads.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:app/api/account/route.ts", "target": "file:lib/meta-session.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+
+    {"source": "file:app/api/billing/route.ts", "target": "file:lib/auth.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:app/api/billing/route.ts", "target": "file:lib/meta-ads.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:app/api/billing/route.ts", "target": "file:lib/mock-billing.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:app/api/billing/route.ts", "target": "file:lib/route-handler.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:app/api/billing/route.ts", "target": "function:app/api/billing/route.ts:GET", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:app/api/billing/route.ts", "target": "function:app/api/billing/route.ts:GET", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "function:app/api/billing/route.ts:GET", "target": "function:lib/route-handler.ts:withRouteHandler", "type": "calls", "direction": "forward", "weight": 0.8},
+
+    {"source": "file:app/api/boost-post/route.ts", "target": "file:lib/meta-ads.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:app/api/boost-post/route.ts", "target": "file:lib/meta-session.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:app/api/boost-post/route.ts", "target": "file:lib/route-handler.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:app/api/boost-post/route.ts", "target": "file:src/shared/lib/geo-options.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+
+    {"source": "file:app/api/campaign/[id]/replace-creative/route.ts", "target": "file:lib/meta-ads.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:app/api/campaign/[id]/replace-creative/route.ts", "target": "file:lib/meta-session.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:app/api/campaign/[id]/replace-creative/route.ts", "target": "file:lib/route-handler.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+
+    {"source": "file:app/api/campaign/[id]/route.ts", "target": "file:lib/auth.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:app/api/campaign/[id]/route.ts", "target": "file:lib/meta-ads.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:app/api/campaign/[id]/route.ts", "target": "file:lib/meta-session.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:app/api/campaign/[id]/route.ts", "target": "file:lib/mock-campaigns.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:app/api/campaign/[id]/route.ts", "target": "file:lib/route-handler.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:app/api/campaign/[id]/route.ts", "target": "function:app/api/campaign/[id]/route.ts:GET", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:app/api/campaign/[id]/route.ts", "target": "function:app/api/campaign/[id]/route.ts:GET", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "function:app/api/campaign/[id]/route.ts:GET", "target": "function:lib/mock-campaigns.ts:getMockCampaign", "type": "calls", "direction": "forward", "weight": 0.8},
+    {"source": "function:app/api/campaign/[id]/route.ts:GET", "target": "function:lib/meta-session.ts:requireMetaSession", "type": "calls", "direction": "forward", "weight": 0.8},
+
+    {"source": "file:app/api/campaign/[id]/update/route.ts", "target": "file:lib/meta-ads.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:app/api/campaign/[id]/update/route.ts", "target": "file:lib/meta-session.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:app/api/campaign/[id]/update/route.ts", "target": "file:lib/route-handler.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+
+    {"source": "file:app/api/campaign/control/route.ts", "target": "file:lib/meta-ads.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:app/api/campaign/control/route.ts", "target": "file:lib/meta-session.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:app/api/campaign/control/route.ts", "target": "file:lib/route-handler.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+
+    {"source": "file:app/api/campaign/relaunch/route.ts", "target": "file:lib/meta-ads.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:app/api/campaign/relaunch/route.ts", "target": "file:lib/meta-session.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+
+    {"source": "file:app/api/campaign/route.ts", "target": "file:lib/meta-ads.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:app/api/campaign/route.ts", "target": "file:lib/meta-session.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:app/api/campaign/route.ts", "target": "file:lib/route-handler.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:app/api/campaign/route.ts", "target": "file:src/entities/creative/options.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:app/api/campaign/route.ts", "target": "file:src/shared/lib/geo-options.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:app/api/campaign/route.ts", "target": "function:app/api/campaign/route.ts:fetchOgImageAsDataUrl", "type": "contains", "direction": "forward", "weight": 1.0},
+
+    {"source": "file:app/api/campaigns/route.ts", "target": "file:lib/meta-ads.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:app/api/campaigns/route.ts", "target": "file:lib/meta-session.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:app/api/campaigns/route.ts", "target": "file:lib/mock-campaigns.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+
+    {"source": "file:app/api/insights/[id]/route.ts", "target": "file:lib/auth.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:app/api/insights/[id]/route.ts", "target": "file:lib/meta-ads.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:app/api/insights/[id]/route.ts", "target": "file:lib/meta-session.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:app/api/insights/[id]/route.ts", "target": "file:lib/mock-campaigns.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:app/api/insights/[id]/route.ts", "target": "file:lib/route-handler.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:app/api/insights/[id]/route.ts", "target": "file:src/entities/creative/options.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:app/api/insights/[id]/route.ts", "target": "function:app/api/insights/[id]/route.ts:GET", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:app/api/insights/[id]/route.ts", "target": "function:app/api/insights/[id]/route.ts:GET", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "file:app/api/insights/[id]/route.ts", "target": "function:app/api/insights/[id]/route.ts:parseAdIdsParam", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "function:app/api/insights/[id]/route.ts:GET", "target": "function:app/api/insights/[id]/route.ts:parseAdIdsParam", "type": "calls", "direction": "forward", "weight": 0.8},
+    {"source": "function:app/api/insights/[id]/route.ts:GET", "target": "function:lib/mock-campaigns.ts:getMockInsights", "type": "calls", "direction": "forward", "weight": 0.8},
+    {"source": "function:app/api/insights/[id]/route.ts:GET", "target": "function:lib/meta-session.ts:requireMetaSession", "type": "calls", "direction": "forward", "weight": 0.8}
+  ]
+}

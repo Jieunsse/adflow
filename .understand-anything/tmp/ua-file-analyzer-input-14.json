@@ -1,0 +1,9 @@
+{
+  "projectRoot": "/Users/jieunsse/jieunsse/dev/meta",
+  "batchFiles": [
+    {"path": "app/api/instagram/callback/route.ts", "language": "typescript", "sizeLines": 82, "fileCategory": "code"},
+    {"path": "app/api/instagram/token/route.ts", "language": "typescript", "sizeLines": 27, "fileCategory": "code"},
+    {"path": "lib/ig-token-store.ts", "language": "typescript", "sizeLines": 17, "fileCategory": "code"}
+  ],
+  "batchImportData": {"app/api/instagram/callback/route.ts":["lib/ig-token-store.ts"],"app/api/instagram/token/route.ts":["lib/ig-token-store.ts"],"lib/ig-token-store.ts":[]}
+}

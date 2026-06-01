@@ -144,19 +144,18 @@ export default function BrandProfileViewPage() {
           title="타깃 · 제품"
           icon="users"
           desc="이 브랜드가 겨냥하는 페르소나와 광고에 연결할 대표 제품이에요."
-          bodyClassName="grid grid-cols-12 gap-4 items-start"
+          bodyClassName="flex flex-col gap-4"
         >
           <Panel
             title="페르소나"
             icon="users"
             count={personas.length}
             desc="이 브랜드가 가장 자주 겨냥하는 타깃이에요."
-            className="col-span-7"
             nested
           >
             <div className="grid grid-cols-3 gap-3">
-              {personas.map((p) => (
-                <PersonaCard key={p.id} persona={p} canEdit={false} onEdit={() => {}} onDelete={() => {}} />
+              {personas.map((p, i) => (
+                <PersonaCard key={p.id} persona={p} index={i} canEdit={false} onEdit={() => {}} onDelete={() => {}} />
               ))}
               <EmptyCard label="미설정" hint="새 페르소나" href={editHref} />
             </div>
@@ -167,10 +166,9 @@ export default function BrandProfileViewPage() {
             icon="grid"
             count={products.length}
             desc="광고에 연결할 수 있는 대표 제품이에요."
-            className="col-span-5"
             nested
           >
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-4 gap-3">
               {products.map((p) => (
                 <ProductCard key={p.id} product={p} canEdit={false} onEdit={() => {}} onDelete={() => {}} />
               ))}

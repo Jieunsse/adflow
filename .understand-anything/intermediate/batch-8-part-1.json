@@ -1,0 +1,309 @@
+{
+  "nodes": [
+    {
+      "id": "file:app/api/cron/health/route.ts",
+      "type": "file",
+      "name": "route.ts",
+      "filePath": "app/api/cron/health/route.ts",
+      "summary": "cron 폴러의 dead-man's switch 헬스 Route Handler. 마지막 성공 실행을 조회해 8시간 이상 stale 이면 503 을 반환하는 공개 모니터링 엔드포인트.",
+      "tags": ["api-handler", "monitoring", "cron", "health-check"],
+      "complexity": "simple",
+      "languageNotes": "ADR-042 관측성 2겹 중 health 라우트. dynamic/runtime export 로 Next.js 캐싱 비활성."
+    },
+    {
+      "id": "function:app/api/cron/health/route.ts:GET",
+      "type": "function",
+      "name": "GET",
+      "filePath": "app/api/cron/health/route.ts",
+      "lineRange": [14, 41],
+      "summary": "마지막 성공 cron 실행을 조회하고 finished_at 경과 시간을 8시간 임계와 비교해 stale 여부에 따라 200/503 을 응답한다.",
+      "tags": ["api-handler", "health-check", "monitoring"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:app/api/cron/tournament-poller/route.ts",
+      "type": "file",
+      "name": "route.ts",
+      "filePath": "app/api/cron/tournament-poller/route.ts",
+      "summary": "Supabase pg_cron 이 트리거하는 토너먼트 폴러 Route Handler. live 토너먼트를 폴링·결산하고 자동 진행시키며, 종결 알림 push 와 cron_runs 자기기록을 수행한다.",
+      "tags": ["api-handler", "cron", "tournament", "scheduler"],
+      "complexity": "moderate",
+      "languageNotes": "ADR-042 트리거 이관. Bearer 토큰 가드 + recordCronRun try/finally best-effort."
+    },
+    {
+      "id": "function:app/api/cron/tournament-poller/route.ts:GET",
+      "type": "function",
+      "name": "GET",
+      "filePath": "app/api/cron/tournament-poller/route.ts",
+      "lineRange": [24, 82],
+      "summary": "인증 후 live 토너먼트를 순회하며 pollAndSettle·autoAdvance 를 실행하고, 종결 시 pushTournamentConcluded 로 SSE 알림을 보낸 뒤 cron 실행 결과를 기록한다.",
+      "tags": ["api-handler", "cron", "tournament", "orchestration"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:app/api/notifications/stream/route.ts",
+      "type": "file",
+      "name": "route.ts",
+      "filePath": "app/api/notifications/stream/route.ts",
+      "summary": "사용자별 알림 SSE 스트림 Route Handler. 세션 인증 후 ReadableStream 컨트롤러를 notification registry 에 등록해 광고 상태 변화·승자 알림을 실시간 push 한다.",
+      "tags": ["api-handler", "sse", "notifications", "streaming"],
+      "complexity": "moderate",
+      "languageNotes": "ReadableStream + AbortSignal 로 연결 종료 시 컨트롤러 정리."
+    },
+    {
+      "id": "function:app/api/notifications/stream/route.ts:GET",
+      "type": "function",
+      "name": "GET",
+      "filePath": "app/api/notifications/stream/route.ts",
+      "lineRange": [14, 70],
+      "summary": "세션을 검증하고 토큰 해시 기반으로 SSE ReadableStream 을 생성, registry 에 컨트롤러를 등록하며 연결 abort 시 정리한다.",
+      "tags": ["api-handler", "sse", "streaming"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:app/api/tournaments/[id]/action/route.ts",
+      "type": "file",
+      "name": "route.ts",
+      "filePath": "app/api/tournaments/[id]/action/route.ts",
+      "summary": "단일 토너먼트에 대한 결정 액션(챔피언 확정·챌린저 제안·라운드 게재·이상 신호 해소 등)을 디스패치하는 POST Route Handler. 소유자 검증 후 server runner 메서드로 라우팅한다.",
+      "tags": ["api-handler", "tournament", "command-dispatch"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:app/api/tournaments/[id]/action/route.ts:POST",
+      "type": "function",
+      "name": "POST",
+      "filePath": "app/api/tournaments/[id]/action/route.ts",
+      "lineRange": [32, 78],
+      "summary": "세션·소유자 검증 후 action 타입에 따라 runner 의 confirmChampion·proposeChallenger·launchRound 등 해당 결정 메서드를 호출하고 갱신된 토너먼트를 반환한다.",
+      "tags": ["api-handler", "command-dispatch", "tournament"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:app/api/tournaments/route.ts",
+      "type": "file",
+      "name": "route.ts",
+      "filePath": "app/api/tournaments/route.ts",
+      "summary": "토너먼트 컬렉션 Route Handler. GET 으로 소유자별 목록을 조회하고 POST 로 게재 설정(제품명·랜딩 URL·국가·CTA 등)을 검증해 새 토너먼트를 생성한다.",
+      "tags": ["api-handler", "tournament", "crud"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:app/api/tournaments/route.ts:requireRealSession",
+      "type": "function",
+      "name": "requireRealSession",
+      "filePath": "app/api/tournaments/route.ts",
+      "lineRange": [25, 38],
+      "summary": "서버 세션과 액세스 토큰을 검증해 소유자 키를 도출하는 가드. 미인증·게스트 시 401 응답을 반환한다.",
+      "tags": ["auth", "guard", "validation"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:app/api/tournaments/route.ts:POST",
+      "type": "function",
+      "name": "POST",
+      "filePath": "app/api/tournaments/route.ts",
+      "lineRange": [75, 123],
+      "summary": "게재 설정 본문을 검증하고 제품명·랜딩 URL 등 필수 필드를 확인한 뒤 real runner 의 createTournament 로 새 토너먼트를 생성한다.",
+      "tags": ["api-handler", "validation", "tournament"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:lib/meta-ads-campaign.ts",
+      "type": "file",
+      "name": "meta-ads-campaign.ts",
+      "filePath": "lib/meta-ads-campaign.ts",
+      "summary": "Meta Graph API 캠페인 생성·수정 코어. 타게팅·배치·캠페인/AdSet/Creative/Ad body 빌더와 createCampaign, split-test ad_studies 생성, 예산·상태 변경, 소재 교체, 게시물 부스트를 제공한다.",
+      "tags": ["service", "meta-ads", "campaign", "api-client"],
+      "complexity": "complex",
+      "languageNotes": "ADR-038 split test 게재. createSplitTestStudy 가 /act/ad_studies SPLIT_TEST 로 2셀 AdSet 게재. KST 유닉스 변환 헬퍼 포함."
+    },
+    {
+      "id": "function:lib/meta-ads-campaign.ts:buildPlacementTargeting",
+      "type": "function",
+      "name": "buildPlacementTargeting",
+      "filePath": "lib/meta-ads-campaign.ts",
+      "lineRange": [86, 109],
+      "summary": "배치 선택값을 publisher_platforms 및 facebook/instagram/audience_network/messenger positions 집합으로 변환해 Meta 타게팅 객체를 만든다.",
+      "tags": ["meta-ads", "targeting", "builder"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:lib/meta-ads-campaign.ts:deriveLaunchPlan",
+      "type": "function",
+      "name": "deriveLaunchPlan",
+      "filePath": "lib/meta-ads-campaign.ts",
+      "lineRange": [138, 181],
+      "summary": "캠페인 파라미터와 페이지 ID 로부터 objective·예산·타게팅을 종합한 게재 계획을 도출한다.",
+      "tags": ["meta-ads", "campaign", "planning"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:lib/meta-ads-campaign.ts:buildAdSetBody",
+      "type": "function",
+      "name": "buildAdSetBody",
+      "filePath": "lib/meta-ads-campaign.ts",
+      "lineRange": [197, 225],
+      "summary": "게재 계획과 캠페인 ID 로 AdSet 생성 본문(예산·입찰·일정·타게팅)을 KST 유닉스 시각으로 구성한다.",
+      "tags": ["meta-ads", "adset", "builder"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:lib/meta-ads-campaign.ts:buildCreativeBody",
+      "type": "function",
+      "name": "buildCreativeBody",
+      "filePath": "lib/meta-ads-campaign.ts",
+      "lineRange": [249, 271],
+      "summary": "페이지 ID·오버라이드·variant 로 Ad Creative 본문(링크 데이터·CTA·문구)을 구성한다.",
+      "tags": ["meta-ads", "creative", "builder"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:lib/meta-ads-campaign.ts:buildAdBody",
+      "type": "function",
+      "name": "buildAdBody",
+      "filePath": "lib/meta-ads-campaign.ts",
+      "lineRange": [273, 287],
+      "summary": "AdSet·Creative ID 와 상태·헤드라인·variant 로 Ad 생성 본문을 구성한다.",
+      "tags": ["meta-ads", "ad", "builder"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:lib/meta-ads-graph.ts",
+      "type": "file",
+      "name": "meta-ads-graph.ts",
+      "filePath": "lib/meta-ads-graph.ts",
+      "summary": "Meta Graph API 저수준 fetch 래퍼. GRAPH 베이스 URL 과 graphFetch 헬퍼, 에러 서브코드·유저 메시지를 모은 MetaApiError 클래스를 제공한다.",
+      "tags": ["service", "meta-ads", "api-client", "http"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:lib/meta-ads-graph.ts:graphFetch",
+      "type": "function",
+      "name": "graphFetch",
+      "filePath": "lib/meta-ads-graph.ts",
+      "lineRange": [22, 47],
+      "summary": "Graph API 경로로 fetch 를 수행하고 응답 에러를 파싱해 서브코드·유저 메시지를 합친 MetaApiError 를 던진다.",
+      "tags": ["meta-ads", "http", "error-handling"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:lib/meta-ads-graph.ts:MetaApiError",
+      "type": "class",
+      "name": "MetaApiError",
+      "filePath": "lib/meta-ads-graph.ts",
+      "lineRange": [11, 20],
+      "summary": "Meta Graph API 오류를 표현하는 Error 서브클래스. 서브코드·유저 메시지 등 진단 정보를 보존한다.",
+      "tags": ["meta-ads", "error", "type-definition"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:lib/meta-ads-insights.ts",
+      "type": "file",
+      "name": "meta-ads-insights.ts",
+      "filePath": "lib/meta-ads-insights.ts",
+      "summary": "Meta Graph 성과·인사이트 조회 코어. 캠페인 목록/상세 매핑, 결제 정보 정규화, split-test 결과 파싱, 목표별 인사이트 집계 및 폴링용 광고 스냅샷 추출을 제공한다.",
+      "tags": ["service", "meta-ads", "insights", "data-mapping"],
+      "complexity": "complex",
+      "languageNotes": "목표(goalId)·objective 별 분기 필드 선택. ad_studies 결과를 셀 A/B confidence 로 파싱(parseAdStudyResult)."
+    },
+    {
+      "id": "function:lib/meta-ads-insights.ts:mapRawCampaign",
+      "type": "function",
+      "name": "mapRawCampaign",
+      "filePath": "lib/meta-ads-insights.ts",
+      "lineRange": [190, 249],
+      "summary": "Graph 원본 캠페인 응답을 AdFlow 도메인 CampaignSummary 로 매핑한다. 상태·예산·인사이트·타게팅·이슈 사유를 정규화한다.",
+      "tags": ["meta-ads", "data-mapping", "campaign"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:lib/meta-ads-insights.ts:parseAdStudyResult",
+      "type": "function",
+      "name": "parseAdStudyResult",
+      "filePath": "lib/meta-ads-insights.ts",
+      "lineRange": [377, 399],
+      "summary": "Meta ad_studies 결과 데이터를 셀 A/B 엔트리로 정규화하고 유의성·confidence 를 도출해 split-test 판정 형태로 변환한다.",
+      "tags": ["meta-ads", "ab-test", "data-mapping"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:lib/meta-ads-insights.ts:mapRawBilling",
+      "type": "function",
+      "name": "mapRawBilling",
+      "filePath": "lib/meta-ads-insights.ts",
+      "lineRange": [294, 314],
+      "summary": "Graph 결제 원본을 최소 단위 금액·funding source 로 정규화한 빌링 요약으로 매핑한다.",
+      "tags": ["meta-ads", "billing", "data-mapping"],
+      "complexity": "moderate"
+    }
+  ],
+  "edges": [
+    {"source": "file:app/api/cron/health/route.ts", "target": "file:src/shared/lib/cron-runs.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:app/api/cron/health/route.ts", "target": "function:app/api/cron/health/route.ts:GET", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:app/api/cron/health/route.ts", "target": "function:app/api/cron/health/route.ts:GET", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "function:app/api/cron/health/route.ts:GET", "target": "function:src/shared/lib/cron-runs.ts:getLastSuccessfulRun", "type": "calls", "direction": "forward", "weight": 0.8},
+
+    {"source": "file:app/api/cron/tournament-poller/route.ts", "target": "file:lib/notifications/registry.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:app/api/cron/tournament-poller/route.ts", "target": "file:src/entities/ab-test/tournament/engine.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:app/api/cron/tournament-poller/route.ts", "target": "file:src/entities/ab-test/tournament/real.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:app/api/cron/tournament-poller/route.ts", "target": "file:src/shared/lib/cron-runs.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:app/api/cron/tournament-poller/route.ts", "target": "function:app/api/cron/tournament-poller/route.ts:GET", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:app/api/cron/tournament-poller/route.ts", "target": "function:app/api/cron/tournament-poller/route.ts:GET", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "function:app/api/cron/tournament-poller/route.ts:GET", "target": "function:lib/notifications/registry.ts:pushTournamentConcluded", "type": "calls", "direction": "forward", "weight": 0.8},
+    {"source": "function:app/api/cron/tournament-poller/route.ts:GET", "target": "function:src/entities/ab-test/tournament/engine.ts:deriveBeat", "type": "calls", "direction": "forward", "weight": 0.8},
+    {"source": "function:app/api/cron/tournament-poller/route.ts:GET", "target": "function:src/shared/lib/cron-runs.ts:recordCronRun", "type": "calls", "direction": "forward", "weight": 0.8},
+
+    {"source": "file:app/api/notifications/stream/route.ts", "target": "file:lib/auth.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:app/api/notifications/stream/route.ts", "target": "file:lib/notifications/registry.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:app/api/notifications/stream/route.ts", "target": "function:app/api/notifications/stream/route.ts:GET", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:app/api/notifications/stream/route.ts", "target": "function:app/api/notifications/stream/route.ts:GET", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "function:app/api/notifications/stream/route.ts:GET", "target": "function:lib/notifications/registry.ts:addController", "type": "calls", "direction": "forward", "weight": 0.8},
+
+    {"source": "file:app/api/tournaments/[id]/action/route.ts", "target": "file:lib/auth.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:app/api/tournaments/[id]/action/route.ts", "target": "file:lib/route-handler.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:app/api/tournaments/[id]/action/route.ts", "target": "file:src/entities/ab-test/tournament/engine.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:app/api/tournaments/[id]/action/route.ts", "target": "file:src/entities/ab-test/tournament/real.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:app/api/tournaments/[id]/action/route.ts", "target": "function:app/api/tournaments/[id]/action/route.ts:POST", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:app/api/tournaments/[id]/action/route.ts", "target": "function:app/api/tournaments/[id]/action/route.ts:POST", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "function:app/api/tournaments/[id]/action/route.ts:POST", "target": "function:src/entities/ab-test/tournament/real.ts:getRealTournamentRunner", "type": "calls", "direction": "forward", "weight": 0.8},
+
+    {"source": "file:app/api/tournaments/route.ts", "target": "file:lib/auth.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:app/api/tournaments/route.ts", "target": "file:lib/route-handler.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:app/api/tournaments/route.ts", "target": "file:src/entities/ab-test/tournament/engine.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:app/api/tournaments/route.ts", "target": "file:src/entities/ab-test/tournament/real.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:app/api/tournaments/route.ts", "target": "file:src/entities/ab-test/tournament/server-runner.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:app/api/tournaments/route.ts", "target": "function:app/api/tournaments/route.ts:requireRealSession", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:app/api/tournaments/route.ts", "target": "function:app/api/tournaments/route.ts:POST", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:app/api/tournaments/route.ts", "target": "function:app/api/tournaments/route.ts:POST", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "function:app/api/tournaments/route.ts:POST", "target": "function:src/entities/ab-test/tournament/real.ts:getRealTournamentRunner", "type": "calls", "direction": "forward", "weight": 0.8},
+
+    {"source": "file:lib/meta-ads-campaign.ts", "target": "file:lib/meta-ads-graph.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:lib/meta-ads-campaign.ts", "target": "file:src/entities/creative/options.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:lib/meta-ads-campaign.ts", "target": "function:lib/meta-ads-campaign.ts:buildPlacementTargeting", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:lib/meta-ads-campaign.ts", "target": "function:lib/meta-ads-campaign.ts:deriveLaunchPlan", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:lib/meta-ads-campaign.ts", "target": "function:lib/meta-ads-campaign.ts:buildAdSetBody", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:lib/meta-ads-campaign.ts", "target": "function:lib/meta-ads-campaign.ts:buildCreativeBody", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:lib/meta-ads-campaign.ts", "target": "function:lib/meta-ads-campaign.ts:buildAdBody", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:lib/meta-ads-campaign.ts", "target": "function:lib/meta-ads-campaign.ts:buildPlacementTargeting", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "function:lib/meta-ads-campaign.ts:deriveLaunchPlan", "target": "function:lib/meta-ads-campaign.ts:buildPlacementTargeting", "type": "calls", "direction": "forward", "weight": 0.8},
+    {"source": "function:lib/meta-ads-campaign.ts:buildAdSetBody", "target": "function:lib/meta-ads-graph.ts:graphFetch", "type": "calls", "direction": "forward", "weight": 0.8},
+
+    {"source": "file:lib/meta-ads-graph.ts", "target": "file:lib/route-handler.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:lib/meta-ads-graph.ts", "target": "function:lib/meta-ads-graph.ts:graphFetch", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:lib/meta-ads-graph.ts", "target": "class:lib/meta-ads-graph.ts:MetaApiError", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:lib/meta-ads-graph.ts", "target": "function:lib/meta-ads-graph.ts:graphFetch", "type": "exports", "direction": "forward", "weight": 0.8},
+    {"source": "file:lib/meta-ads-graph.ts", "target": "class:lib/meta-ads-graph.ts:MetaApiError", "type": "exports", "direction": "forward", "weight": 0.8},
+
+    {"source": "file:lib/meta-ads-insights.ts", "target": "file:lib/meta-ads-campaign.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:lib/meta-ads-insights.ts", "target": "file:lib/meta-ads-graph.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:lib/meta-ads-insights.ts", "target": "file:lib/notifications/ad-status-diff.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:lib/meta-ads-insights.ts", "target": "file:src/entities/billing/types.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:lib/meta-ads-insights.ts", "target": "file:src/entities/creative/options.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:lib/meta-ads-insights.ts", "target": "file:src/entities/insights/types.ts", "type": "imports", "direction": "forward", "weight": 0.7},
+    {"source": "file:lib/meta-ads-insights.ts", "target": "function:lib/meta-ads-insights.ts:mapRawCampaign", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:lib/meta-ads-insights.ts", "target": "function:lib/meta-ads-insights.ts:parseAdStudyResult", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "file:lib/meta-ads-insights.ts", "target": "function:lib/meta-ads-insights.ts:mapRawBilling", "type": "contains", "direction": "forward", "weight": 1.0},
+    {"source": "function:lib/meta-ads-insights.ts:mapRawCampaign", "target": "function:lib/meta-ads-graph.ts:graphFetch", "type": "calls", "direction": "forward", "weight": 0.8}
+  ]
+}

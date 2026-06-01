@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -136,7 +136,7 @@ function PostCard({ post, pageId }: { post: FbPagePostsResult["posts"][number]; 
   );
 }
 
-export default function FacebookPostsPage() {
+function FacebookPostsFlow() {
   const { data: session } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -236,5 +236,13 @@ export default function FacebookPostsPage() {
         </Card>
       )}
     </div>
+  );
+}
+
+export default function FacebookPostsPage() {
+  return (
+    <Suspense fallback={null}>
+      <FacebookPostsFlow />
+    </Suspense>
   );
 }

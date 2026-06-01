@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
@@ -82,7 +82,7 @@ async function fetchJson<T>(url: string, notFoundIs401Msg = "광고 계정을 �
   return data as T;
 }
 
-export default function CampaignDetailPage() {
+function CampaignDetailFlow() {
   const router = useRouter();
   const params = useParams<{ id: string }>();
   const id = params.id;
@@ -1377,5 +1377,13 @@ function RelaunchConfirmModal({
         </div>
       </div>
     </div>
+  );
+}
+
+export default function CampaignDetailPage() {
+  return (
+    <Suspense fallback={null}>
+      <CampaignDetailFlow />
+    </Suspense>
   );
 }

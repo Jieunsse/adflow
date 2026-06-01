@@ -102,3 +102,43 @@ create table if not exists cron_runs (
 
 create index if not exists cron_runs_job_ok_finished
   on cron_runs (job, ok, finished_at desc);
+
+-- ADR-024 — Product. Brand Profile 1:N. 라우트가 진실의 원천(localStorage 미러 아님):
+-- /api/brand-profile/[id]/products 가 직접 읽고 쓴다. created_at = epoch ms(클라 entry.createdAt) → bigint.
+-- 이미지는 storage 버킷 product-images, image_url 은 public URL.
+create table if not exists products (
+  id               text   primary key,
+  brand_profile_id text   not null,
+  name             text   not null,
+  description      text,
+  image_url        text,
+  price            text,
+  target_url       text,
+  created_at       bigint not null
+);
+
+create index if not exists products_brand_profile_created
+  on products (brand_profile_id, created_at);
+
+-- ADR-023 — Reference Material. Brand Profile 1:N 참고 자료(PDF·이미지·TXT).
+-- /api/brand-profile/[id]/reference-materials 가 직접 읽고 쓴다. uploaded_at = epoch ms(Date.now()) → bigint.
+-- 파일은 storage 버킷 reference-materials, storage_url 은 public URL.
+create table if not exists reference_materials (
+  id               text   primary key,
+  brand_profile_id text   not null,
+  name             text   not null,
+  type             text   not null,
+  mime_type        text   not null,
+  size_bytes       bigint not null,
+  storage_url      text   not null,
+  uploaded_at      bigint not null
+);
+
+create index if not exists reference_materials_brand_profile_uploaded
+  on reference_materials (brand_profile_id, uploaded_at desc);
+
+-- 위 두 테이블이 쓰는 public storage 버킷. getPublicUrl 로 서빙하므로 public = true.
+insert into storage.buckets (id, name, public)
+values ('product-images', 'product-images', true),
+       ('reference-materials', 'reference-materials', true)
+on conflict (id) do nothing;

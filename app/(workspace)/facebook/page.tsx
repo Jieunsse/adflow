@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -19,7 +19,7 @@ function fmtK(n: number): string {
   return String(n);
 }
 
-export default function FacebookInsightsPage() {
+function FacebookInsightsFlow() {
   const { data: session } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -142,5 +142,13 @@ export default function FacebookInsightsPage() {
         </>
       )}
     </div>
+  );
+}
+
+export default function FacebookInsightsPage() {
+  return (
+    <Suspense fallback={null}>
+      <FacebookInsightsFlow />
+    </Suspense>
   );
 }

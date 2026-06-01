@@ -1,7 +1,7 @@
 "use client";
 
 import { useSession, signOut } from "next-auth/react";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Icon from "@shared/ui/Icon";
 import { Button } from "@shared/ui/Button";
@@ -102,7 +102,7 @@ function SetupEmpty({ kind }: { kind: "account" | "page" }) {
   );
 }
 
-export default function SetupPage() {
+function SetupFlow() {
   const { update } = useSession();
   const searchParams = useSearchParams();
   const nextUrl = searchParams.get("next") ?? "/dashboard";
@@ -297,5 +297,13 @@ export default function SetupPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function SetupPage() {
+  return (
+    <Suspense fallback={null}>
+      <SetupFlow />
+    </Suspense>
   );
 }

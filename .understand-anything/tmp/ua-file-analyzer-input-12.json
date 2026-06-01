@@ -1,0 +1,27 @@
+{
+  "projectRoot": "/Users/jieunsse/jieunsse/dev/meta",
+  "batchFiles": [
+    {"path": "app/api/channel-suggestion/draft/route.ts", "language": "typescript", "sizeLines": 30, "fileCategory": "code"},
+    {"path": "app/api/generate-creative/route.ts", "language": "typescript", "sizeLines": 28, "fileCategory": "code"},
+    {"path": "app/api/generate-image-stream/route.ts", "language": "typescript", "sizeLines": 59, "fileCategory": "code"},
+    {"path": "app/api/instagram/posts/suggest-text/route.ts", "language": "typescript", "sizeLines": 32, "fileCategory": "code"},
+    {"path": "app/api/suggest-image-concepts/route.ts", "language": "typescript", "sizeLines": 21, "fileCategory": "code"},
+    {"path": "lib/gemini-channel-draft.ts", "language": "typescript", "sizeLines": 81, "fileCategory": "code"},
+    {"path": "lib/gemini-client.ts", "language": "typescript", "sizeLines": 52, "fileCategory": "code"},
+    {"path": "lib/gemini-creative.test.ts", "language": "typescript", "sizeLines": 155, "fileCategory": "code"},
+    {"path": "lib/gemini-creative.ts", "language": "typescript", "sizeLines": 430, "fileCategory": "code"},
+    {"path": "lib/gemini-image.test.ts", "language": "typescript", "sizeLines": 78, "fileCategory": "code"},
+    {"path": "lib/gemini-image.ts", "language": "typescript", "sizeLines": 279, "fileCategory": "code"},
+    {"path": "lib/gemini-post-suggest.ts", "language": "typescript", "sizeLines": 77, "fileCategory": "code"},
+    {"path": "lib/prompts/ad-copywriter.ts", "language": "typescript", "sizeLines": 157, "fileCategory": "code"},
+    {"path": "src/features/brand-profile/model/mergePersonaTargeting.test.ts", "language": "typescript", "sizeLines": 43, "fileCategory": "code"},
+    {"path": "src/features/brand-profile/model/mergePersonaTargeting.ts", "language": "typescript", "sizeLines": 30, "fileCategory": "code"},
+    {"path": "src/features/generate-image/brief-prompt.ts", "language": "typescript", "sizeLines": 46, "fileCategory": "code"},
+    {"path": "src/features/generate-image/refs.ts", "language": "typescript", "sizeLines": 39, "fileCategory": "code"},
+    {"path": "src/features/generate-image/stream.ts", "language": "typescript", "sizeLines": 43, "fileCategory": "code"},
+    {"path": "src/shared/lib/api/useApiMutation.ts", "language": "typescript", "sizeLines": 16, "fileCategory": "code"},
+    {"path": "src/widgets/creative-step/AiImageBlock.tsx", "language": "typescript", "sizeLines": 595, "fileCategory": "code"},
+    {"path": "src/widgets/tournament-setup/ChallengerImageGen.tsx", "language": "typescript", "sizeLines": 313, "fileCategory": "code"}
+  ],
+  "batchImportData": {"app/api/channel-suggestion/draft/route.ts":["lib/gemini-channel-draft.ts","lib/route-handler.ts"],"app/api/generate-creative/route.ts":["lib/gemini-creative.ts","lib/route-handler.ts","src/entities/creative/options.ts"],"app/api/generate-image-stream/route.ts":["lib/gemini-image.ts"],"app/api/instagram/posts/suggest-text/route.ts":["lib/gemini-post-suggest.ts","lib/route-handler.ts"],"app/api/suggest-image-concepts/route.ts":["lib/gemini-creative.ts","lib/route-handler.ts"],"lib/gemini-channel-draft.ts":["lib/gemini-client.ts"],"lib/gemini-client.ts":[],"lib/gemini-creative.test.ts":["lib/gemini-creative.ts"],"lib/gemini-creative.ts":["lib/gemini-client.ts","lib/prompts/ad-copywriter.ts","src/entities/creative/options.ts","src/features/sop/model/useSopStorage.ts"],"lib/gemini-image.test.ts":["lib/gemini-image.ts"],"lib/gemini-image.ts":["lib/gemini-client.ts"],"lib/gemini-post-suggest.ts":["lib/gemini-client.ts"],"lib/prompts/ad-copywriter.ts":[],"src/features/brand-profile/model/mergePersonaTargeting.test.ts":["src/features/brand-profile/model/mergePersonaTargeting.ts"],"src/features/brand-profile/model/mergePersonaTargeting.ts":["lib/gemini-creative.ts","src/features/brand-profile/model/usePersonasStorage.ts"],"src/features/generate-image/brief-prompt.ts":["src/entities/creative/options.ts"],"src/features/generate-image/refs.ts":["lib/gemini-image.ts"],"src/features/generate-image/stream.ts":["lib/gemini-image.ts"],"src/shared/lib/api/useApiMutation.ts":[],"src/widgets/creative-step/AiImageBlock.tsx":["lib/gemini-creative.ts","lib/gemini-image.ts","src/entities/creative/model.tsx","src/features/brand-profile/model/useBrandProfileStorage.ts","src/features/generate-image/brief-prompt.ts","src/features/generate-image/refs.ts","src/features/generate-image/stream.ts","src/shared/lib/api/useApiMutation.ts","src/shared/lib/cn.ts","src/shared/lib/products.ts","src/shared/lib/referenceMaterials.ts","src/shared/ui/Button.tsx","src/shared/ui/Icon.tsx","src/shared/ui/primitives.tsx","src/shared/ui/Skeleton.tsx","src/shared/ui/Toast.tsx","src/widgets/creative-step/BriefForm.tsx"],"src/widgets/tournament-setup/ChallengerImageGen.tsx":["lib/gemini-creative.ts","lib/gemini-image.ts","src/features/generate-image/refs.ts","src/features/generate-image/stream.ts","src/shared/lib/api/useApiMutation.ts","src/shared/lib/cn.ts","src/shared/ui/Button.tsx","src/shared/ui/Icon.tsx","src/shared/ui/Skeleton.tsx"]}
+}

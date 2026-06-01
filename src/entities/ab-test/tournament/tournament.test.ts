@@ -86,6 +86,38 @@ describe("settleRound — Meta 유의성 판정 (ADR-037)", () => {
   });
 });
 
+// ADR-037 V2 — awareness 목표는 CPM(노출 천 회당 비용) 으로 판정. championCtr=CPM 기준선(원).
+describe("roundAdKpis · settleRound — awareness(CPM) 분기", () => {
+  it("동일 예산에 노출 볼륨이 갈린다 — 챌린저 factor>1 이면 노출↑·CPM↓", () => {
+    const [a, b] = roundAdKpis(round({ fastForwardDays: 7 }), 8000, 50000, 1.2, "awareness");
+    expect(a.spend).toBe(b.spend); // 셀당 동일 예산
+    expect(b.impressions).toBeGreaterThan(a.impressions); // 챌린저가 더 많은 노출(=낮은 CPM)
+    const cpmA = (a.spend / a.impressions) * 1000;
+    const cpmB = (b.spend / b.impressions) * 1000;
+    expect(cpmB).toBeLessThan(cpmA);
+  });
+
+  it("CPM 우위 챌린저는 유의(노출 카운트 검정)하면 승격 — verdict 는 CPM 스케일", () => {
+    const res = settleRound(round({ fastForwardDays: 7 }), 8000, 50000, 1.3, "awareness");
+    expect(res.verdict.state).toBe("winner");
+    expect(res.rawWinner).toBe("B");
+    expect(res.verdict.ctrB).toBeLessThan(res.verdict.ctrA); // 낮은 CPM 이 우세
+    expect(res.verdict.ctrA).toBeGreaterThan(1000); // % 가 아닌 CPM(원) 스케일
+  });
+
+  it("챔피언이 더 낮은 CPM(factor<1)이면 챔피언 방어 — rawWinner=A", () => {
+    const res = settleRound(round({ fastForwardDays: 7 }), 8000, 50000, 0.75, "awareness");
+    expect(res.rawWinner).toBe("A");
+    expect(res.verdict.ctrB).toBeGreaterThan(res.verdict.ctrA); // 챌린저 CPM 이 더 높음(열위)
+  });
+
+  it("최소 게재 기간 미달이면 insufficient", () => {
+    const res = settleRound(round({ fastForwardDays: 3 }), 8000, 50000, 1.3, "awareness");
+    expect(res.verdict.state).toBe("insufficient");
+    expect(res.rawWinner).toBe("A");
+  });
+});
+
 // ADR-032 결정 3 — 좌표상승: 한 라운드는 한 축만 바꾼다(나머지 축은 챔피언 그대로).
 describe("buildChallenger (축 직교 정제)", () => {
   const gen = {

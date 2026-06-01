@@ -1,0 +1,2594 @@
+{
+  "scriptCompleted": true,
+  "filesAnalyzed": 22,
+  "filesSkipped": [],
+  "results": [
+    {
+      "path": "src/entities/insights/ab-verdict.test.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 97,
+      "nonEmptyLines": 85,
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/entities/insights/ab-verdict.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 49,
+      "nonEmptyLines": 41,
+      "functions": [
+        {
+          "name": "judgeAbTest",
+          "startLine": 24,
+          "endLine": 44,
+          "params": [
+            "a",
+            "b"
+          ]
+        },
+        {
+          "name": "rowToKpi",
+          "startLine": 47,
+          "endLine": 49,
+          "params": [
+            "row"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "AB_VERDICT_THRESHOLDS",
+          "line": 6,
+          "isDefault": false
+        },
+        {
+          "name": "judgeAbTest",
+          "line": 24,
+          "isDefault": false
+        },
+        {
+          "name": "rowToKpi",
+          "line": 47,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "judgeAbTest",
+          "callee": "Math.min",
+          "lineNumber": 29
+        },
+        {
+          "caller": "judgeAbTest",
+          "callee": "Math.min",
+          "lineNumber": 32
+        },
+        {
+          "caller": "judgeAbTest",
+          "callee": "Math.max",
+          "lineNumber": 36
+        },
+        {
+          "caller": "judgeAbTest",
+          "callee": "Math.min",
+          "lineNumber": 37
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 3,
+        "functionCount": 2,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/entities/insights/fake-performance.test.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 41,
+      "nonEmptyLines": 32,
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/entities/insights/fake-performance.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 52,
+      "nonEmptyLines": 45,
+      "functions": [
+        {
+          "name": "isFakePerformance",
+          "startLine": 28,
+          "endLine": 52,
+          "params": [
+            "ins",
+            "daysOfData"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "isFakePerformance",
+          "line": 28,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "isFakePerformance",
+          "callee": "Math.round",
+          "lineNumber": 48
+        },
+        {
+          "caller": "isFakePerformance",
+          "callee": "Math.round",
+          "lineNumber": 49
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/entities/insights/thresholds.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 15,
+      "nonEmptyLines": 12,
+      "exports": [
+        {
+          "name": "MIN_IMPRESSIONS",
+          "line": 4,
+          "isDefault": false
+        },
+        {
+          "name": "MIN_DAYS",
+          "line": 5,
+          "isDefault": false
+        },
+        {
+          "name": "GOOD_CTR_PCT",
+          "line": 7,
+          "isDefault": false
+        },
+        {
+          "name": "HIGH_CPC_KRW",
+          "line": 8,
+          "isDefault": false
+        },
+        {
+          "name": "HIGH_FREQUENCY",
+          "line": 9,
+          "isDefault": false
+        },
+        {
+          "name": "HIGH_CPM_KRW",
+          "line": 10,
+          "isDefault": false
+        },
+        {
+          "name": "GOOD_ENGAGEMENT_RATE",
+          "line": 11,
+          "isDefault": false
+        },
+        {
+          "name": "MIN_LINK_CLICKS_FOR_FAKE",
+          "line": 14,
+          "isDefault": false
+        },
+        {
+          "name": "LOW_LANDING_RATE_PCT",
+          "line": 15,
+          "isDefault": false
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 9,
+        "functionCount": 0,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/entities/insights/types.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 62,
+      "nonEmptyLines": 58,
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/entities/insights/winner-types.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 19,
+      "nonEmptyLines": 17,
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/shared/lib/autoRelaunch.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 80,
+      "nonEmptyLines": 69,
+      "functions": [
+        {
+          "name": "KEY",
+          "startLine": 18,
+          "endLine": 18,
+          "params": [
+            "id"
+          ]
+        },
+        {
+          "name": "readEntry",
+          "startLine": 20,
+          "endLine": 28,
+          "params": [
+            "campaignId"
+          ]
+        },
+        {
+          "name": "writeEntry",
+          "startLine": 30,
+          "endLine": 35,
+          "params": [
+            "entry"
+          ]
+        },
+        {
+          "name": "useAutoRelaunch",
+          "startLine": 37,
+          "endLine": 80,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "useAutoRelaunch",
+          "line": 37,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "readEntry",
+          "callee": "localStorage.getItem",
+          "lineNumber": 23
+        },
+        {
+          "caller": "readEntry",
+          "callee": "KEY",
+          "lineNumber": 23
+        },
+        {
+          "caller": "readEntry",
+          "callee": "JSON.parse",
+          "lineNumber": 24
+        },
+        {
+          "caller": "writeEntry",
+          "callee": "localStorage.setItem",
+          "lineNumber": 32
+        },
+        {
+          "caller": "writeEntry",
+          "callee": "KEY",
+          "lineNumber": 32
+        },
+        {
+          "caller": "writeEntry",
+          "callee": "JSON.stringify",
+          "lineNumber": 32
+        },
+        {
+          "caller": "writeEntry",
+          "callee": "syncUpsert",
+          "lineNumber": 34
+        },
+        {
+          "caller": "useAutoRelaunch",
+          "callee": "useCallback",
+          "lineNumber": 38
+        },
+        {
+          "caller": "useAutoRelaunch",
+          "callee": "readEntry",
+          "lineNumber": 39
+        },
+        {
+          "caller": "useAutoRelaunch",
+          "callee": "useCallback",
+          "lineNumber": 42
+        },
+        {
+          "caller": "useAutoRelaunch",
+          "callee": "new Date().toISOString",
+          "lineNumber": 43
+        },
+        {
+          "caller": "useAutoRelaunch",
+          "callee": "readEntry",
+          "lineNumber": 44
+        },
+        {
+          "caller": "useAutoRelaunch",
+          "callee": "writeEntry",
+          "lineNumber": 46
+        },
+        {
+          "caller": "useAutoRelaunch",
+          "callee": "writeEntry",
+          "lineNumber": 48
+        },
+        {
+          "caller": "useAutoRelaunch",
+          "callee": "useCallback",
+          "lineNumber": 58
+        },
+        {
+          "caller": "useAutoRelaunch",
+          "callee": "readEntry",
+          "lineNumber": 63
+        },
+        {
+          "caller": "useAutoRelaunch",
+          "callee": "new Date().toISOString",
+          "lineNumber": 64
+        },
+        {
+          "caller": "useAutoRelaunch",
+          "callee": "writeEntry",
+          "lineNumber": 65
+        },
+        {
+          "caller": "useAutoRelaunch",
+          "callee": "useCallback",
+          "lineNumber": 75
+        },
+        {
+          "caller": "useAutoRelaunch",
+          "callee": "readEntry",
+          "lineNumber": 76
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 1,
+        "functionCount": 4,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/shared/lib/format.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 89,
+      "nonEmptyLines": 81,
+      "functions": [
+        {
+          "name": "fmt",
+          "startLine": 1,
+          "endLine": 2,
+          "params": [
+            "n"
+          ]
+        },
+        {
+          "name": "fmtKRW",
+          "startLine": 4,
+          "endLine": 4,
+          "params": [
+            "n"
+          ]
+        },
+        {
+          "name": "shortDate",
+          "startLine": 6,
+          "endLine": 10,
+          "params": [
+            "iso"
+          ]
+        },
+        {
+          "name": "campaignGradient",
+          "startLine": 19,
+          "endLine": 23,
+          "params": [
+            "id"
+          ]
+        },
+        {
+          "name": "kDate",
+          "startLine": 25,
+          "endLine": 30,
+          "params": [
+            "iso"
+          ]
+        },
+        {
+          "name": "campaignDateInfo",
+          "startLine": 32,
+          "endLine": 56,
+          "params": [
+            "startDate",
+            "endDate",
+            "status"
+          ]
+        },
+        {
+          "name": "campaignRunDays",
+          "startLine": 59,
+          "endLine": 66,
+          "params": [
+            "startDate",
+            "endDate"
+          ]
+        },
+        {
+          "name": "maskId",
+          "startLine": 68,
+          "endLine": 76,
+          "params": [
+            "id",
+            "visible"
+          ]
+        },
+        {
+          "name": "timeAgo",
+          "startLine": 78,
+          "endLine": 89,
+          "params": [
+            "ts"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "fmt",
+          "line": 1,
+          "isDefault": false
+        },
+        {
+          "name": "fmtKRW",
+          "line": 4,
+          "isDefault": false
+        },
+        {
+          "name": "shortDate",
+          "line": 6,
+          "isDefault": false
+        },
+        {
+          "name": "campaignGradient",
+          "line": 19,
+          "isDefault": false
+        },
+        {
+          "name": "kDate",
+          "line": 25,
+          "isDefault": false
+        },
+        {
+          "name": "campaignDateInfo",
+          "line": 32,
+          "isDefault": false
+        },
+        {
+          "name": "campaignRunDays",
+          "line": 59,
+          "isDefault": false
+        },
+        {
+          "name": "maskId",
+          "line": 68,
+          "isDefault": false
+        },
+        {
+          "name": "timeAgo",
+          "line": 78,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "fmt",
+          "callee": "Number(n).toLocaleString",
+          "lineNumber": 2
+        },
+        {
+          "caller": "fmt",
+          "callee": "Number",
+          "lineNumber": 2
+        },
+        {
+          "caller": "fmtKRW",
+          "callee": "fmt",
+          "lineNumber": 4
+        },
+        {
+          "caller": "shortDate",
+          "callee": "isNaN",
+          "lineNumber": 8
+        },
+        {
+          "caller": "shortDate",
+          "callee": "d.getTime",
+          "lineNumber": 8
+        },
+        {
+          "caller": "shortDate",
+          "callee": "d.getMonth",
+          "lineNumber": 9
+        },
+        {
+          "caller": "shortDate",
+          "callee": "d.getDate",
+          "lineNumber": 9
+        },
+        {
+          "caller": "campaignGradient",
+          "callee": "id.charCodeAt",
+          "lineNumber": 21
+        },
+        {
+          "caller": "kDate",
+          "callee": "isNaN",
+          "lineNumber": 28
+        },
+        {
+          "caller": "kDate",
+          "callee": "d.getTime",
+          "lineNumber": 28
+        },
+        {
+          "caller": "kDate",
+          "callee": "d.getMonth",
+          "lineNumber": 29
+        },
+        {
+          "caller": "kDate",
+          "callee": "d.getDate",
+          "lineNumber": 29
+        },
+        {
+          "caller": "campaignDateInfo",
+          "callee": "kDate",
+          "lineNumber": 37
+        },
+        {
+          "caller": "campaignDateInfo",
+          "callee": "kDate",
+          "lineNumber": 37
+        },
+        {
+          "caller": "campaignDateInfo",
+          "callee": "kDate",
+          "lineNumber": 37
+        },
+        {
+          "caller": "campaignDateInfo",
+          "callee": "new Date(startDate).getTime",
+          "lineNumber": 43
+        },
+        {
+          "caller": "campaignDateInfo",
+          "callee": "new Date(endDate).getTime",
+          "lineNumber": 44
+        },
+        {
+          "caller": "campaignDateInfo",
+          "callee": "Date.now",
+          "lineNumber": 45
+        },
+        {
+          "caller": "campaignDateInfo",
+          "callee": "Number.isFinite",
+          "lineNumber": 46
+        },
+        {
+          "caller": "campaignDateInfo",
+          "callee": "Number.isFinite",
+          "lineNumber": 46
+        },
+        {
+          "caller": "campaignDateInfo",
+          "callee": "Math.max",
+          "lineNumber": 49
+        },
+        {
+          "caller": "campaignDateInfo",
+          "callee": "Math.round",
+          "lineNumber": 49
+        },
+        {
+          "caller": "campaignDateInfo",
+          "callee": "Math.round",
+          "lineNumber": 50
+        },
+        {
+          "caller": "campaignDateInfo",
+          "callee": "Math.round",
+          "lineNumber": 52
+        },
+        {
+          "caller": "campaignRunDays",
+          "callee": "Date.parse",
+          "lineNumber": 61
+        },
+        {
+          "caller": "campaignRunDays",
+          "callee": "Number.isFinite",
+          "lineNumber": 62
+        },
+        {
+          "caller": "campaignRunDays",
+          "callee": "Date.parse",
+          "lineNumber": 63
+        },
+        {
+          "caller": "campaignRunDays",
+          "callee": "Number.isFinite",
+          "lineNumber": 64
+        },
+        {
+          "caller": "campaignRunDays",
+          "callee": "Math.min",
+          "lineNumber": 64
+        },
+        {
+          "caller": "campaignRunDays",
+          "callee": "Date.now",
+          "lineNumber": 64
+        },
+        {
+          "caller": "campaignRunDays",
+          "callee": "Date.now",
+          "lineNumber": 64
+        },
+        {
+          "caller": "campaignRunDays",
+          "callee": "Math.max",
+          "lineNumber": 65
+        },
+        {
+          "caller": "campaignRunDays",
+          "callee": "Math.floor",
+          "lineNumber": 65
+        },
+        {
+          "caller": "maskId",
+          "callee": "\"•\".repeat",
+          "lineNumber": 70
+        },
+        {
+          "caller": "maskId",
+          "callee": "id.slice",
+          "lineNumber": 71
+        },
+        {
+          "caller": "maskId",
+          "callee": "id.slice",
+          "lineNumber": 72
+        },
+        {
+          "caller": "maskId",
+          "callee": "head.match",
+          "lineNumber": 73
+        },
+        {
+          "caller": "maskId",
+          "callee": "\"•\".repeat",
+          "lineNumber": 75
+        },
+        {
+          "caller": "timeAgo",
+          "callee": "Math.max",
+          "lineNumber": 79
+        },
+        {
+          "caller": "timeAgo",
+          "callee": "Date.now",
+          "lineNumber": 79
+        },
+        {
+          "caller": "timeAgo",
+          "callee": "Math.floor",
+          "lineNumber": 80
+        },
+        {
+          "caller": "timeAgo",
+          "callee": "Math.floor",
+          "lineNumber": 83
+        },
+        {
+          "caller": "timeAgo",
+          "callee": "Math.floor",
+          "lineNumber": 85
+        },
+        {
+          "caller": "timeAgo",
+          "callee": "dt.getFullYear",
+          "lineNumber": 88
+        },
+        {
+          "caller": "timeAgo",
+          "callee": "String(dt.getMonth() + 1).padStart",
+          "lineNumber": 88
+        },
+        {
+          "caller": "timeAgo",
+          "callee": "String",
+          "lineNumber": 88
+        },
+        {
+          "caller": "timeAgo",
+          "callee": "dt.getMonth",
+          "lineNumber": 88
+        },
+        {
+          "caller": "timeAgo",
+          "callee": "String(dt.getDate()).padStart",
+          "lineNumber": 88
+        },
+        {
+          "caller": "timeAgo",
+          "callee": "String",
+          "lineNumber": 88
+        },
+        {
+          "caller": "timeAgo",
+          "callee": "dt.getDate",
+          "lineNumber": 88
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 9,
+        "functionCount": 9,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/shared/lib/library.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 66,
+      "nonEmptyLines": 55,
+      "functions": [
+        {
+          "name": "newLibraryId",
+          "startLine": 12,
+          "endLine": 17,
+          "params": []
+        },
+        {
+          "name": "useLibrary",
+          "startLine": 38,
+          "endLine": 66,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "useLibrary",
+          "line": 38,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "newLibraryId",
+          "callee": "crypto.randomUUID",
+          "lineNumber": 14
+        },
+        {
+          "caller": "newLibraryId",
+          "callee": "Date.now().toString",
+          "lineNumber": 16
+        },
+        {
+          "caller": "newLibraryId",
+          "callee": "Date.now",
+          "lineNumber": 16
+        },
+        {
+          "caller": "newLibraryId",
+          "callee": "Math.random().toString(36).slice",
+          "lineNumber": 16
+        },
+        {
+          "caller": "newLibraryId",
+          "callee": "Math.random().toString",
+          "lineNumber": 16
+        },
+        {
+          "caller": "newLibraryId",
+          "callee": "Math.random",
+          "lineNumber": 16
+        },
+        {
+          "caller": "useLibrary",
+          "callee": "useScopedStorage",
+          "lineNumber": 39
+        },
+        {
+          "caller": "useLibrary",
+          "callee": "useMemo",
+          "lineNumber": 41
+        },
+        {
+          "caller": "useLibrary",
+          "callee": "rawList.filter",
+          "lineNumber": 43
+        },
+        {
+          "caller": "useLibrary",
+          "callee": "seen.has",
+          "lineNumber": 43
+        },
+        {
+          "caller": "useLibrary",
+          "callee": "seen.add",
+          "lineNumber": 43
+        },
+        {
+          "caller": "useLibrary",
+          "callee": "useCallback",
+          "lineNumber": 46
+        },
+        {
+          "caller": "useLibrary",
+          "callee": "newLibraryId",
+          "lineNumber": 48
+        },
+        {
+          "caller": "useLibrary",
+          "callee": "Date.now",
+          "lineNumber": 49
+        },
+        {
+          "caller": "useLibrary",
+          "callee": "setList",
+          "lineNumber": 50
+        },
+        {
+          "caller": "useLibrary",
+          "callee": "syncUpsert",
+          "lineNumber": 51
+        },
+        {
+          "caller": "useLibrary",
+          "callee": "useCallback",
+          "lineNumber": 57
+        },
+        {
+          "caller": "useLibrary",
+          "callee": "setList",
+          "lineNumber": 59
+        },
+        {
+          "caller": "useLibrary",
+          "callee": "prev.filter",
+          "lineNumber": 59
+        },
+        {
+          "caller": "useLibrary",
+          "callee": "syncDelete",
+          "lineNumber": 60
+        }
+      ],
+      "metrics": {
+        "importCount": 2,
+        "exportCount": 1,
+        "functionCount": 2,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/shared/lib/notifications.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 136,
+      "nonEmptyLines": 114,
+      "functions": [
+        {
+          "name": "loadNotifs",
+          "startLine": 42,
+          "endLine": 45,
+          "params": []
+        },
+        {
+          "name": "loadNotifSettings",
+          "startLine": 47,
+          "endLine": 50,
+          "params": []
+        },
+        {
+          "name": "saveNotifSettings",
+          "startLine": 52,
+          "endLine": 54,
+          "params": [
+            "s"
+          ]
+        },
+        {
+          "name": "loadReadIds",
+          "startLine": 56,
+          "endLine": 59,
+          "params": []
+        },
+        {
+          "name": "addNotification",
+          "startLine": 70,
+          "endLine": 86,
+          "params": [
+            "notif"
+          ]
+        },
+        {
+          "name": "useNotifications",
+          "startLine": 88,
+          "endLine": 118,
+          "params": []
+        },
+        {
+          "name": "useNotifSettings",
+          "startLine": 120,
+          "endLine": 136,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "WinnerEvidence",
+          "line": 4,
+          "isDefault": false
+        },
+        {
+          "name": "DEFAULT_NOTIF_SETTINGS",
+          "line": 33,
+          "isDefault": false
+        },
+        {
+          "name": "loadNotifSettings",
+          "line": 47,
+          "isDefault": false
+        },
+        {
+          "name": "saveNotifSettings",
+          "line": 52,
+          "isDefault": false
+        },
+        {
+          "name": "addNotification",
+          "line": 70,
+          "isDefault": false
+        },
+        {
+          "name": "useNotifications",
+          "line": 88,
+          "isDefault": false
+        },
+        {
+          "name": "useNotifSettings",
+          "line": 120,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "loadNotifs",
+          "callee": "JSON.parse",
+          "lineNumber": 43
+        },
+        {
+          "caller": "loadNotifs",
+          "callee": "localStorage.getItem",
+          "lineNumber": 43
+        },
+        {
+          "caller": "loadNotifSettings",
+          "callee": "JSON.parse",
+          "lineNumber": 48
+        },
+        {
+          "caller": "loadNotifSettings",
+          "callee": "localStorage.getItem",
+          "lineNumber": 48
+        },
+        {
+          "caller": "saveNotifSettings",
+          "callee": "localStorage.setItem",
+          "lineNumber": 53
+        },
+        {
+          "caller": "saveNotifSettings",
+          "callee": "JSON.stringify",
+          "lineNumber": 53
+        },
+        {
+          "caller": "loadReadIds",
+          "callee": "JSON.parse",
+          "lineNumber": 57
+        },
+        {
+          "caller": "loadReadIds",
+          "callee": "localStorage.getItem",
+          "lineNumber": 57
+        },
+        {
+          "caller": "addNotification",
+          "callee": "loadNotifSettings",
+          "lineNumber": 71
+        },
+        {
+          "caller": "addNotification",
+          "callee": "Date.now",
+          "lineNumber": 76
+        },
+        {
+          "caller": "addNotification",
+          "callee": "Math.random().toString(36).slice",
+          "lineNumber": 76
+        },
+        {
+          "caller": "addNotification",
+          "callee": "Math.random().toString",
+          "lineNumber": 76
+        },
+        {
+          "caller": "addNotification",
+          "callee": "Math.random",
+          "lineNumber": 76
+        },
+        {
+          "caller": "addNotification",
+          "callee": "Date.now",
+          "lineNumber": 77
+        },
+        {
+          "caller": "addNotification",
+          "callee": "loadNotifs",
+          "lineNumber": 80
+        },
+        {
+          "caller": "addNotification",
+          "callee": "existing.some",
+          "lineNumber": 81
+        },
+        {
+          "caller": "addNotification",
+          "callee": "[n, ...existing].slice",
+          "lineNumber": 82
+        },
+        {
+          "caller": "addNotification",
+          "callee": "localStorage.setItem",
+          "lineNumber": 83
+        },
+        {
+          "caller": "addNotification",
+          "callee": "JSON.stringify",
+          "lineNumber": 83
+        },
+        {
+          "caller": "addNotification",
+          "callee": "window.dispatchEvent",
+          "lineNumber": 85
+        },
+        {
+          "caller": "useNotifications",
+          "callee": "useState",
+          "lineNumber": 89
+        },
+        {
+          "caller": "useNotifications",
+          "callee": "useState",
+          "lineNumber": 90
+        },
+        {
+          "caller": "useNotifications",
+          "callee": "useCallback",
+          "lineNumber": 92
+        },
+        {
+          "caller": "useNotifications",
+          "callee": "setNotifs",
+          "lineNumber": 93
+        },
+        {
+          "caller": "useNotifications",
+          "callee": "loadNotifs",
+          "lineNumber": 93
+        },
+        {
+          "caller": "useNotifications",
+          "callee": "setReadSet",
+          "lineNumber": 94
+        },
+        {
+          "caller": "useNotifications",
+          "callee": "loadReadIds",
+          "lineNumber": 94
+        },
+        {
+          "caller": "useNotifications",
+          "callee": "useEffect",
+          "lineNumber": 97
+        },
+        {
+          "caller": "useNotifications",
+          "callee": "reload",
+          "lineNumber": 98
+        },
+        {
+          "caller": "useNotifications",
+          "callee": "window.addEventListener",
+          "lineNumber": 99
+        },
+        {
+          "caller": "useNotifications",
+          "callee": "window.addEventListener",
+          "lineNumber": 100
+        },
+        {
+          "caller": "useNotifications",
+          "callee": "window.removeEventListener",
+          "lineNumber": 102
+        },
+        {
+          "caller": "useNotifications",
+          "callee": "window.removeEventListener",
+          "lineNumber": 103
+        },
+        {
+          "caller": "useNotifications",
+          "callee": "useCallback",
+          "lineNumber": 107
+        },
+        {
+          "caller": "useNotifications",
+          "callee": "loadNotifs().map",
+          "lineNumber": 109
+        },
+        {
+          "caller": "useNotifications",
+          "callee": "loadNotifs",
+          "lineNumber": 109
+        },
+        {
+          "caller": "useNotifications",
+          "callee": "localStorage.setItem",
+          "lineNumber": 110
+        },
+        {
+          "caller": "useNotifications",
+          "callee": "JSON.stringify",
+          "lineNumber": 110
+        },
+        {
+          "caller": "useNotifications",
+          "callee": "window.dispatchEvent",
+          "lineNumber": 112
+        },
+        {
+          "caller": "useNotifications",
+          "callee": "notifs.filter",
+          "lineNumber": 115
+        },
+        {
+          "caller": "useNotifications",
+          "callee": "readSet.has",
+          "lineNumber": 115
+        },
+        {
+          "caller": "useNotifSettings",
+          "callee": "useState",
+          "lineNumber": 121
+        },
+        {
+          "caller": "useNotifSettings",
+          "callee": "useEffect",
+          "lineNumber": 123
+        },
+        {
+          "caller": "useNotifSettings",
+          "callee": "setSettings",
+          "lineNumber": 124
+        },
+        {
+          "caller": "useNotifSettings",
+          "callee": "loadNotifSettings",
+          "lineNumber": 124
+        },
+        {
+          "caller": "useNotifSettings",
+          "callee": "useCallback",
+          "lineNumber": 127
+        },
+        {
+          "caller": "useNotifSettings",
+          "callee": "setSettings",
+          "lineNumber": 128
+        },
+        {
+          "caller": "useNotifSettings",
+          "callee": "saveNotifSettings",
+          "lineNumber": 130
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 7,
+        "functionCount": 7,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/shared/lib/useNotificationStream.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 97,
+      "nonEmptyLines": 88,
+      "functions": [
+        {
+          "name": "isStreamMessage",
+          "startLine": 34,
+          "endLine": 38,
+          "params": [
+            "v"
+          ]
+        },
+        {
+          "name": "isAutoRelaunchEnabled",
+          "startLine": 40,
+          "endLine": 48,
+          "params": [
+            "campaignId"
+          ]
+        },
+        {
+          "name": "useNotificationStream",
+          "startLine": 50,
+          "endLine": 97,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "useNotificationStream",
+          "line": 50,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "isAutoRelaunchEnabled",
+          "callee": "localStorage.getItem",
+          "lineNumber": 42
+        },
+        {
+          "caller": "isAutoRelaunchEnabled",
+          "callee": "JSON.parse",
+          "lineNumber": 44
+        },
+        {
+          "caller": "useNotificationStream",
+          "callee": "useSession",
+          "lineNumber": 51
+        },
+        {
+          "caller": "useNotificationStream",
+          "callee": "useEffect",
+          "lineNumber": 54
+        },
+        {
+          "caller": "useNotificationStream",
+          "callee": "JSON.parse",
+          "lineNumber": 60
+        },
+        {
+          "caller": "useNotificationStream",
+          "callee": "isStreamMessage",
+          "lineNumber": 64
+        },
+        {
+          "caller": "useNotificationStream",
+          "callee": "es.close",
+          "lineNumber": 66
+        },
+        {
+          "caller": "useNotificationStream",
+          "callee": "signOut",
+          "lineNumber": 67
+        },
+        {
+          "caller": "useNotificationStream",
+          "callee": "isAutoRelaunchEnabled",
+          "lineNumber": 72
+        },
+        {
+          "caller": "useNotificationStream",
+          "callee": "addNotification",
+          "lineNumber": 73
+        },
+        {
+          "caller": "useNotificationStream",
+          "callee": "addNotification",
+          "lineNumber": 84
+        },
+        {
+          "caller": "useNotificationStream",
+          "callee": "es.close",
+          "lineNumber": 95
+        }
+      ],
+      "metrics": {
+        "importCount": 2,
+        "exportCount": 1,
+        "functionCount": 3,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/shared/ui/Chip.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 85,
+      "nonEmptyLines": 79,
+      "functions": [
+        {
+          "name": "Chip",
+          "startLine": 60,
+          "endLine": 85,
+          "params": [
+            "{\n  variant,\n  dot,\n  className,\n  children,\n  ...props\n}"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "Chip",
+          "line": 60,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "Chip",
+          "callee": "cn",
+          "lineNumber": 69
+        },
+        {
+          "caller": "Chip",
+          "callee": "cn",
+          "lineNumber": 72
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/shared/ui/DualChart.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 168,
+      "nonEmptyLines": 164,
+      "functions": [
+        {
+          "name": "DualChart",
+          "startLine": 5,
+          "endLine": 135,
+          "params": [
+            "{\n  labels,\n  clicks,\n  ctrs,\n}"
+          ]
+        },
+        {
+          "name": "ChartLegend",
+          "startLine": 137,
+          "endLine": 168,
+          "params": [
+            "{\n  color,\n  label,\n  type,\n}"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "DualChart",
+          "line": 5,
+          "isDefault": true
+        },
+        {
+          "name": "ChartLegend",
+          "line": 137,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "DualChart",
+          "callee": "Math.max",
+          "lineNumber": 23
+        },
+        {
+          "caller": "DualChart",
+          "callee": "Math.max",
+          "lineNumber": 24
+        },
+        {
+          "caller": "DualChart",
+          "callee": "ctrs.map",
+          "lineNumber": 28
+        },
+        {
+          "caller": "DualChart",
+          "callee": "linePts\n    .map(\n      (p, i) => (i === 0 ? \"M\" : \"L\") + p[0].toFixed(1) + \" \" + p[1].toFixed(1),\n    )\n    .join",
+          "lineNumber": 33
+        },
+        {
+          "caller": "DualChart",
+          "callee": "linePts\n    .map",
+          "lineNumber": 33
+        },
+        {
+          "caller": "DualChart",
+          "callee": "p[0].toFixed",
+          "lineNumber": 35
+        },
+        {
+          "caller": "DualChart",
+          "callee": "p[1].toFixed",
+          "lineNumber": 35
+        },
+        {
+          "caller": "DualChart",
+          "callee": "[0.25, 0.5, 0.75, 1].map",
+          "lineNumber": 41
+        },
+        {
+          "caller": "DualChart",
+          "callee": "clicks.map",
+          "lineNumber": 54
+        },
+        {
+          "caller": "DualChart",
+          "callee": "Math.max",
+          "lineNumber": 64
+        },
+        {
+          "caller": "DualChart",
+          "callee": "linePts.map",
+          "lineNumber": 77
+        },
+        {
+          "caller": "DualChart",
+          "callee": "labels.map",
+          "lineNumber": 88
+        },
+        {
+          "caller": "DualChart",
+          "callee": "[0, 0.5, 1].map",
+          "lineNumber": 101
+        },
+        {
+          "caller": "DualChart",
+          "callee": "fmt",
+          "lineNumber": 113
+        },
+        {
+          "caller": "DualChart",
+          "callee": "Math.round",
+          "lineNumber": 113
+        },
+        {
+          "caller": "DualChart",
+          "callee": "[0, 0.5, 1].map",
+          "lineNumber": 117
+        },
+        {
+          "caller": "DualChart",
+          "callee": "(maxCtr * t).toFixed",
+          "lineNumber": 129
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 2,
+        "functionCount": 2,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/shared/ui/SegControl.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 45,
+      "nonEmptyLines": 42,
+      "functions": [
+        {
+          "name": "SegControl",
+          "startLine": 15,
+          "endLine": 45,
+          "params": [
+            "{\n  value,\n  onChange,\n  options,\n  className,\n}"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "SegControl",
+          "line": 15,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "SegControl",
+          "callee": "cn",
+          "lineNumber": 23
+        },
+        {
+          "caller": "SegControl",
+          "callee": "options.map",
+          "lineNumber": 28
+        },
+        {
+          "caller": "SegControl",
+          "callee": "onChange",
+          "lineNumber": 32
+        },
+        {
+          "caller": "SegControl",
+          "callee": "cn",
+          "lineNumber": 33
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/shared/ui/Skeleton.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 17,
+      "nonEmptyLines": 16,
+      "functions": [
+        {
+          "name": "Skeleton",
+          "startLine": 4,
+          "endLine": 17,
+          "params": [
+            "{\n  className,\n  ...props\n}"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "Skeleton",
+          "line": 4,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "Skeleton",
+          "callee": "cn",
+          "lineNumber": 10
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/widgets/billing-alert/index.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 99,
+      "nonEmptyLines": 94,
+      "functions": [
+        {
+          "name": "BillingAlertWidget",
+          "startLine": 23,
+          "endLine": 35,
+          "params": [
+            "{ billing, mode }"
+          ]
+        },
+        {
+          "name": "AlertCard",
+          "startLine": 37,
+          "endLine": 99,
+          "params": [
+            "{\n  alert,\n  showCta,\n}"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "BillingAlertWidget",
+          "line": 23,
+          "isDefault": true
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "BillingAlertWidget",
+          "callee": "computeBillingAlerts",
+          "lineNumber": 25
+        },
+        {
+          "caller": "BillingAlertWidget",
+          "callee": "alerts.slice",
+          "lineNumber": 27
+        },
+        {
+          "caller": "BillingAlertWidget",
+          "callee": "visible.map",
+          "lineNumber": 30
+        },
+        {
+          "caller": "AlertCard",
+          "callee": "buttonVariants",
+          "lineNumber": 92
+        }
+      ],
+      "metrics": {
+        "importCount": 5,
+        "exportCount": 1,
+        "functionCount": 2,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/widgets/performance-step/AbTestResultCard.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 249,
+      "nonEmptyLines": 231,
+      "functions": [
+        {
+          "name": "AbTestResultCard",
+          "startLine": 31,
+          "endLine": 63,
+          "params": [
+            "{ axis, variantA, variantB, verdict, onCreateWithWinner, demoMode }"
+          ]
+        },
+        {
+          "name": "InsufficientBody",
+          "startLine": 66,
+          "endLine": 84,
+          "params": [
+            "{ verdict }"
+          ]
+        },
+        {
+          "name": "Bar",
+          "startLine": 86,
+          "endLine": 105,
+          "params": [
+            "{ label, progress, highlight }"
+          ]
+        },
+        {
+          "name": "InconclusiveBody",
+          "startLine": 108,
+          "endLine": 115,
+          "params": [
+            "{ axis }"
+          ]
+        },
+        {
+          "name": "WinnerBody",
+          "startLine": 117,
+          "endLine": 179,
+          "params": [
+            "{\n  axis, variantA, variantB, verdict, expanded, setExpanded, onCreateWithWinner,\n}"
+          ]
+        },
+        {
+          "name": "Panel",
+          "startLine": 181,
+          "endLine": 210,
+          "params": [
+            "{ label, winner, axis, variant, kpi }"
+          ]
+        },
+        {
+          "name": "PanelContent",
+          "startLine": 213,
+          "endLine": 230,
+          "params": [
+            "{ axis, variant }"
+          ]
+        },
+        {
+          "name": "KpiRow",
+          "startLine": 232,
+          "endLine": 239,
+          "params": [
+            "{ label, value }"
+          ]
+        },
+        {
+          "name": "DetailRow",
+          "startLine": 241,
+          "endLine": 249,
+          "params": [
+            "{ label, a, b }"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "AbTestResultCard",
+          "line": 31,
+          "isDefault": true
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "AbTestResultCard",
+          "callee": "useState",
+          "lineNumber": 32
+        },
+        {
+          "caller": "InsufficientBody",
+          "callee": "Math.min",
+          "lineNumber": 71
+        },
+        {
+          "caller": "InsufficientBody",
+          "callee": "Math.min",
+          "lineNumber": 71
+        },
+        {
+          "caller": "InsufficientBody",
+          "callee": "Math.min",
+          "lineNumber": 72
+        },
+        {
+          "caller": "InsufficientBody",
+          "callee": "Math.min",
+          "lineNumber": 72
+        },
+        {
+          "caller": "InsufficientBody",
+          "callee": "fmt",
+          "lineNumber": 79
+        },
+        {
+          "caller": "InsufficientBody",
+          "callee": "Math.min",
+          "lineNumber": 79
+        },
+        {
+          "caller": "InsufficientBody",
+          "callee": "fmt",
+          "lineNumber": 79
+        },
+        {
+          "caller": "InsufficientBody",
+          "callee": "fmt",
+          "lineNumber": 80
+        },
+        {
+          "caller": "InsufficientBody",
+          "callee": "Math.min",
+          "lineNumber": 80
+        },
+        {
+          "caller": "InsufficientBody",
+          "callee": "fmt",
+          "lineNumber": 80
+        },
+        {
+          "caller": "Bar",
+          "callee": "Math.round",
+          "lineNumber": 95
+        },
+        {
+          "caller": "WinnerBody",
+          "callee": "Math.round",
+          "lineNumber": 129
+        },
+        {
+          "caller": "WinnerBody",
+          "callee": "setExpanded",
+          "lineNumber": 153
+        },
+        {
+          "caller": "WinnerBody",
+          "callee": "verdict.a.ctr.toFixed",
+          "lineNumber": 169
+        },
+        {
+          "caller": "WinnerBody",
+          "callee": "verdict.b.ctr.toFixed",
+          "lineNumber": 169
+        },
+        {
+          "caller": "WinnerBody",
+          "callee": "fmt",
+          "lineNumber": 170
+        },
+        {
+          "caller": "WinnerBody",
+          "callee": "fmt",
+          "lineNumber": 170
+        },
+        {
+          "caller": "WinnerBody",
+          "callee": "fmt",
+          "lineNumber": 171
+        },
+        {
+          "caller": "WinnerBody",
+          "callee": "fmt",
+          "lineNumber": 171
+        },
+        {
+          "caller": "WinnerBody",
+          "callee": "fmtKRW",
+          "lineNumber": 172
+        },
+        {
+          "caller": "WinnerBody",
+          "callee": "fmtKRW",
+          "lineNumber": 172
+        },
+        {
+          "caller": "Panel",
+          "callee": "kpi.ctr.toFixed",
+          "lineNumber": 203
+        },
+        {
+          "caller": "Panel",
+          "callee": "fmt",
+          "lineNumber": 204
+        },
+        {
+          "caller": "Panel",
+          "callee": "fmt",
+          "lineNumber": 205
+        },
+        {
+          "caller": "Panel",
+          "callee": "fmtKRW",
+          "lineNumber": 206
+        },
+        {
+          "caller": "PanelContent",
+          "callee": "variant.slice",
+          "lineNumber": 226
+        }
+      ],
+      "metrics": {
+        "importCount": 6,
+        "exportCount": 1,
+        "functionCount": 9,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/widgets/performance-step/DailyTrend.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 96,
+      "nonEmptyLines": 90,
+      "functions": [
+        {
+          "name": "DailyTrend",
+          "startLine": 29,
+          "endLine": 96,
+          "params": [
+            "{ data, labels, clicks, ctrs, exampleMode }"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "DailyTrend",
+          "line": 29,
+          "isDefault": true
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "DailyTrend",
+          "callee": "cn",
+          "lineNumber": 54
+        },
+        {
+          "caller": "DailyTrend",
+          "callee": "cn",
+          "lineNumber": 55
+        },
+        {
+          "caller": "DailyTrend",
+          "callee": "cn",
+          "lineNumber": 56
+        },
+        {
+          "caller": "DailyTrend",
+          "callee": "cn",
+          "lineNumber": 57
+        },
+        {
+          "caller": "DailyTrend",
+          "callee": "cn",
+          "lineNumber": 58
+        },
+        {
+          "caller": "DailyTrend",
+          "callee": "data.daily.map",
+          "lineNumber": 62
+        },
+        {
+          "caller": "DailyTrend",
+          "callee": "Math.abs",
+          "lineNumber": 66
+        },
+        {
+          "caller": "DailyTrend",
+          "callee": "cn",
+          "lineNumber": 69
+        },
+        {
+          "caller": "DailyTrend",
+          "callee": "shortDate",
+          "lineNumber": 69
+        },
+        {
+          "caller": "DailyTrend",
+          "callee": "fmt",
+          "lineNumber": 70
+        },
+        {
+          "caller": "DailyTrend",
+          "callee": "row.ctr.toFixed",
+          "lineNumber": 71
+        },
+        {
+          "caller": "DailyTrend",
+          "callee": "fmtKRW",
+          "lineNumber": 72
+        },
+        {
+          "caller": "DailyTrend",
+          "callee": "delta.toFixed",
+          "lineNumber": 81
+        }
+      ],
+      "metrics": {
+        "importCount": 6,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/widgets/performance-step/KpiGrid.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 103,
+      "nonEmptyLines": 93,
+      "functions": [
+        {
+          "name": "KpiGrid",
+          "startLine": 19,
+          "endLine": 103,
+          "params": [
+            "{ goalId, objective, data, exampleMode, scenario, clicks, ctrs }"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "KpiGrid",
+          "line": 19,
+          "isDefault": true
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "KpiGrid",
+          "callee": "fmt",
+          "lineNumber": 26
+        },
+        {
+          "caller": "KpiGrid",
+          "callee": "(data.frequency ?? 0).toFixed",
+          "lineNumber": 27
+        },
+        {
+          "caller": "KpiGrid",
+          "callee": "fmtKRW",
+          "lineNumber": 28
+        },
+        {
+          "caller": "KpiGrid",
+          "callee": "fmt",
+          "lineNumber": 29
+        },
+        {
+          "caller": "KpiGrid",
+          "callee": "fmt",
+          "lineNumber": 38
+        },
+        {
+          "caller": "KpiGrid",
+          "callee": "fmt",
+          "lineNumber": 39
+        },
+        {
+          "caller": "KpiGrid",
+          "callee": "data.ctr.toFixed",
+          "lineNumber": 40
+        },
+        {
+          "caller": "KpiGrid",
+          "callee": "fmtKRW",
+          "lineNumber": 41
+        },
+        {
+          "caller": "KpiGrid",
+          "callee": "data.daily.map",
+          "lineNumber": 41
+        },
+        {
+          "caller": "KpiGrid",
+          "callee": "fmt",
+          "lineNumber": 50
+        },
+        {
+          "caller": "KpiGrid",
+          "callee": "fmt",
+          "lineNumber": 51
+        },
+        {
+          "caller": "KpiGrid",
+          "callee": "fmtKRW",
+          "lineNumber": 52
+        },
+        {
+          "caller": "KpiGrid",
+          "callee": "fmt",
+          "lineNumber": 53
+        },
+        {
+          "caller": "KpiGrid",
+          "callee": "fmt",
+          "lineNumber": 62
+        },
+        {
+          "caller": "KpiGrid",
+          "callee": "fmt",
+          "lineNumber": 63
+        },
+        {
+          "caller": "KpiGrid",
+          "callee": "fmtKRW",
+          "lineNumber": 64
+        },
+        {
+          "caller": "KpiGrid",
+          "callee": "fmt",
+          "lineNumber": 65
+        },
+        {
+          "caller": "KpiGrid",
+          "callee": "fmt",
+          "lineNumber": 74
+        },
+        {
+          "caller": "KpiGrid",
+          "callee": "fmt",
+          "lineNumber": 75
+        },
+        {
+          "caller": "KpiGrid",
+          "callee": "fmtKRW",
+          "lineNumber": 76
+        },
+        {
+          "caller": "KpiGrid",
+          "callee": "fmt",
+          "lineNumber": 77
+        },
+        {
+          "caller": "KpiGrid",
+          "callee": "fmt",
+          "lineNumber": 86
+        },
+        {
+          "caller": "KpiGrid",
+          "callee": "fmt",
+          "lineNumber": 87
+        },
+        {
+          "caller": "KpiGrid",
+          "callee": "fmt",
+          "lineNumber": 88
+        },
+        {
+          "caller": "KpiGrid",
+          "callee": "fmt",
+          "lineNumber": 89
+        },
+        {
+          "caller": "KpiGrid",
+          "callee": "fmt",
+          "lineNumber": 97
+        },
+        {
+          "caller": "KpiGrid",
+          "callee": "fmt",
+          "lineNumber": 98
+        },
+        {
+          "caller": "KpiGrid",
+          "callee": "data.ctr.toFixed",
+          "lineNumber": 99
+        },
+        {
+          "caller": "KpiGrid",
+          "callee": "fmtKRW",
+          "lineNumber": 100
+        },
+        {
+          "caller": "KpiGrid",
+          "callee": "data.daily.map",
+          "lineNumber": 100
+        }
+      ],
+      "metrics": {
+        "importCount": 4,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/widgets/performance-step/index.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 282,
+      "nonEmptyLines": 256,
+      "functions": [
+        {
+          "name": "PerformanceStep",
+          "startLine": 55,
+          "endLine": 282,
+          "params": [
+            "{ onRestart }"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "PerformanceStep",
+          "line": 55,
+          "isDefault": true
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "PerformanceStep",
+          "callee": "useCreativeDraft",
+          "lineNumber": 56
+        },
+        {
+          "caller": "PerformanceStep",
+          "callee": "useLaunchDraft",
+          "lineNumber": 57
+        },
+        {
+          "caller": "PerformanceStep",
+          "callee": "useToast",
+          "lineNumber": 58
+        },
+        {
+          "caller": "PerformanceStep",
+          "callee": "useRouter",
+          "lineNumber": 59
+        },
+        {
+          "caller": "PerformanceStep",
+          "callee": "useState",
+          "lineNumber": 64
+        },
+        {
+          "caller": "PerformanceStep",
+          "callee": "useQuery",
+          "lineNumber": 71
+        },
+        {
+          "caller": "PerformanceStep",
+          "callee": "launched?.adIds?.join",
+          "lineNumber": 72
+        },
+        {
+          "caller": "PerformanceStep",
+          "callee": "fetch",
+          "lineNumber": 76
+        },
+        {
+          "caller": "PerformanceStep",
+          "callee": "res.json",
+          "lineNumber": 77
+        },
+        {
+          "caller": "PerformanceStep",
+          "callee": "useMemo",
+          "lineNumber": 84
+        },
+        {
+          "caller": "PerformanceStep",
+          "callee": "launched.adIds.every",
+          "lineNumber": 87
+        },
+        {
+          "caller": "PerformanceStep",
+          "callee": "a.startsWith",
+          "lineNumber": 87
+        },
+        {
+          "caller": "PerformanceStep",
+          "callee": "seedMockAdRows",
+          "lineNumber": 89
+        },
+        {
+          "caller": "PerformanceStep",
+          "callee": "useApiMutation",
+          "lineNumber": 93
+        },
+        {
+          "caller": "applyControl",
+          "callee": "control.mutate",
+          "lineNumber": 97
+        },
+        {
+          "caller": "applyControl",
+          "callee": "launchDispatch",
+          "lineNumber": 101
+        },
+        {
+          "caller": "applyControl",
+          "callee": "showToast",
+          "lineNumber": 109
+        },
+        {
+          "caller": "applyControl",
+          "callee": "q.refetch",
+          "lineNumber": 110
+        },
+        {
+          "caller": "applyControl",
+          "callee": "showToast",
+          "lineNumber": 112
+        },
+        {
+          "caller": "PerformanceStep",
+          "callee": "q.refetch",
+          "lineNumber": 126
+        },
+        {
+          "caller": "PerformanceStep",
+          "callee": "router.push",
+          "lineNumber": 135
+        },
+        {
+          "caller": "PerformanceStep",
+          "callee": "q.refetch",
+          "lineNumber": 166
+        },
+        {
+          "caller": "PerformanceStep",
+          "callee": "q.refetch",
+          "lineNumber": 183
+        },
+        {
+          "caller": "PerformanceStep",
+          "callee": "data.daily.map",
+          "lineNumber": 193
+        },
+        {
+          "caller": "PerformanceStep",
+          "callee": "shortDate",
+          "lineNumber": 193
+        },
+        {
+          "caller": "PerformanceStep",
+          "callee": "data.daily.map",
+          "lineNumber": 194
+        },
+        {
+          "caller": "PerformanceStep",
+          "callee": "data.daily.map",
+          "lineNumber": 195
+        },
+        {
+          "caller": "PerformanceStep",
+          "callee": "suggestOptimizations",
+          "lineNumber": 204
+        },
+        {
+          "caller": "PerformanceStep",
+          "callee": "assessAutomationReadiness",
+          "lineNumber": 205
+        },
+        {
+          "caller": "PerformanceStep",
+          "callee": "useRef",
+          "lineNumber": 207
+        },
+        {
+          "caller": "PerformanceStep",
+          "callee": "useEffect",
+          "lineNumber": 208
+        },
+        {
+          "caller": "PerformanceStep",
+          "callee": "addNotification",
+          "lineNumber": 211
+        },
+        {
+          "caller": "PerformanceStep",
+          "callee": "useMemo",
+          "lineNumber": 216
+        },
+        {
+          "caller": "PerformanceStep",
+          "callee": "abVariantLabel",
+          "lineNumber": 244
+        },
+        {
+          "caller": "PerformanceStep",
+          "callee": "judgeAbTest",
+          "lineNumber": 245
+        },
+        {
+          "caller": "PerformanceStep",
+          "callee": "rowToKpi",
+          "lineNumber": 245
+        },
+        {
+          "caller": "PerformanceStep",
+          "callee": "rowToKpi",
+          "lineNumber": 245
+        },
+        {
+          "caller": "PerformanceStep",
+          "callee": "router.push",
+          "lineNumber": 246
+        },
+        {
+          "caller": "PerformanceStep",
+          "callee": "judgeAbTest",
+          "lineNumber": 257
+        },
+        {
+          "caller": "PerformanceStep",
+          "callee": "rowToKpi",
+          "lineNumber": 257
+        },
+        {
+          "caller": "PerformanceStep",
+          "callee": "rowToKpi",
+          "lineNumber": 257
+        },
+        {
+          "caller": "PerformanceStep",
+          "callee": "applyControl",
+          "lineNumber": 271
+        },
+        {
+          "caller": "PerformanceStep",
+          "callee": "applyControl",
+          "lineNumber": 272
+        },
+        {
+          "caller": "PerformanceStep",
+          "callee": "applyControl",
+          "lineNumber": 273
+        }
+      ],
+      "metrics": {
+        "importCount": 19,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/widgets/presenter-fast-forward/index.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 109,
+      "nonEmptyLines": 100,
+      "functions": [
+        {
+          "name": "PresenterFastForwardBar",
+          "startLine": 22,
+          "endLine": 109,
+          "params": [
+            "{ camp }"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "PresenterFastForwardBar",
+          "line": 22,
+          "isDefault": true
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "PresenterFastForwardBar",
+          "callee": "useRouter",
+          "lineNumber": 23
+        },
+        {
+          "caller": "PresenterFastForwardBar",
+          "callee": "useToast",
+          "lineNumber": 24
+        },
+        {
+          "caller": "PresenterFastForwardBar",
+          "callee": "useAutoRelaunch",
+          "lineNumber": 25
+        },
+        {
+          "caller": "PresenterFastForwardBar",
+          "callee": "usePresenterConsole",
+          "lineNumber": 26
+        },
+        {
+          "caller": "PresenterFastForwardBar",
+          "callee": "useState",
+          "lineNumber": 27
+        },
+        {
+          "caller": "PresenterFastForwardBar",
+          "callee": "getAutoRelaunch",
+          "lineNumber": 29
+        },
+        {
+          "caller": "PresenterFastForwardBar",
+          "callee": "useMemo",
+          "lineNumber": 30
+        },
+        {
+          "caller": "PresenterFastForwardBar",
+          "callee": "buildBrowseInsights",
+          "lineNumber": 30
+        },
+        {
+          "caller": "PresenterFastForwardBar",
+          "callee": "useMemo",
+          "lineNumber": 31
+        },
+        {
+          "caller": "PresenterFastForwardBar",
+          "callee": "isWinner",
+          "lineNumber": 32
+        },
+        {
+          "caller": "fastForward",
+          "callee": "evaluateAutoPilot",
+          "lineNumber": 41
+        },
+        {
+          "caller": "fastForward",
+          "callee": "applyAutoPilotAction",
+          "lineNumber": 43
+        },
+        {
+          "caller": "fastForward",
+          "callee": "addNotification",
+          "lineNumber": 44
+        },
+        {
+          "caller": "fastForward",
+          "callee": "showToast",
+          "lineNumber": 45
+        },
+        {
+          "caller": "fastForward",
+          "callee": "upsertBrowse",
+          "lineNumber": 48
+        },
+        {
+          "caller": "fastForward",
+          "callee": "setNotified",
+          "lineNumber": 49
+        },
+        {
+          "caller": "sendNotification",
+          "callee": "addNotification",
+          "lineNumber": 54
+        },
+        {
+          "caller": "sendNotification",
+          "callee": "setNotified",
+          "lineNumber": 60
+        },
+        {
+          "caller": "sendNotification",
+          "callee": "showToast",
+          "lineNumber": 61
+        },
+        {
+          "caller": "reset",
+          "callee": "resetBrowse",
+          "lineNumber": 65
+        },
+        {
+          "caller": "reset",
+          "callee": "showToast",
+          "lineNumber": 66
+        },
+        {
+          "caller": "reset",
+          "callee": "router.push",
+          "lineNumber": 67
+        },
+        {
+          "caller": "PresenterFastForwardBar",
+          "callee": "insights.impressions.toLocaleString",
+          "lineNumber": 78
+        },
+        {
+          "caller": "PresenterFastForwardBar",
+          "callee": "insights.ctr.toFixed",
+          "lineNumber": 79
+        }
+      ],
+      "metrics": {
+        "importCount": 11,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    }
+  ]
+}

@@ -42,53 +42,72 @@ export type AppUser = {
 
 // 첫 로그인이면 생성(기본 역할 팀장 — 기존 FB 흐름과 동일), 있으면 신원 필드만 갱신.
 // 역할·워크스페이스는 자체 관리값이므로 로그인 때 덮어쓰지 않고 보존한다.
+//
+// 신원의 출처는 OAuth(axhub) 이지 Supabase 가 아니다. 영속 레이어가 죽어도(테이블 부재·PostgREST 타임아웃)
+// 로그인은 기본값으로 통과시키고 에러는 로그만 — 그래야 Supabase 장애가 로그인 전체를 500 내지 않는다.
 export async function upsertUserOnLogin(u: AxhubUser): Promise<AppUser> {
+  const fallback: AppUser = { axhubId: u.axhubId, email: u.email, name: u.name, image: u.image, role: "팀장" }
   const supabase = getSupabaseServer()
-  if (!supabase) return { axhubId: u.axhubId, email: u.email, name: u.name, image: u.image, role: "팀장" }
+  if (!supabase) return fallback
 
-  const { data: existing } = await supabase
-    .from(TABLE)
-    .select("role, workspace_id")
-    .eq("axhub_id", u.axhubId)
-    .maybeSingle()
+  try {
+    const { data: existing } = await supabase
+      .from(TABLE)
+      .select("role, workspace_id")
+      .eq("axhub_id", u.axhubId)
+      .maybeSingle()
 
-  const role: Role = (existing?.role as Role) ?? "팀장"
-  const workspaceId: string | undefined = existing?.workspace_id ?? undefined
+    const role: Role = (existing?.role as Role) ?? "팀장"
+    const workspaceId: string | undefined = existing?.workspace_id ?? undefined
 
-  const { error } = await supabase.from(TABLE).upsert({
-    axhub_id: u.axhubId,
-    email: u.email,
-    name: u.name ?? null,
-    image: u.image ?? null,
-    role,
-    workspace_id: workspaceId ?? null,
-    updated_at: new Date().toISOString(),
-  })
-  if (error) throw new Error(`사용자 저장 실패: ${error.message}`)
+    const { error } = await supabase.from(TABLE).upsert({
+      axhub_id: u.axhubId,
+      email: u.email,
+      name: u.name ?? null,
+      image: u.image ?? null,
+      role,
+      workspace_id: workspaceId ?? null,
+      updated_at: new Date().toISOString(),
+    })
+    if (error) throw error
 
-  return { axhubId: u.axhubId, email: u.email, name: u.name, image: u.image, role, workspaceId }
+    return { axhubId: u.axhubId, email: u.email, name: u.name, image: u.image, role, workspaceId }
+  } catch (e) {
+    console.error("[user-store] upsertUserOnLogin 실패 — 기본값으로 로그인 진행", e)
+    return fallback
+  }
 }
 
-// 2회차+ 로그인 시 저장된 Meta 연결을 꺼내 JWT 로 복원.
+// 2회차+ 로그인 시 저장된 Meta 연결을 꺼내 JWT 로 복원. 조회 실패는 "복원 못 함"(null)으로 흡수.
 export async function loadMetaConnection(axhubId: string): Promise<MetaConnection | null> {
   const supabase = getSupabaseServer()
   if (!supabase) return null
-  const { data, error } = await supabase
-    .from(TABLE)
-    .select("meta_connection")
-    .eq("axhub_id", axhubId)
-    .maybeSingle()
-  if (error || !data) return null
-  return (data.meta_connection as MetaConnection | null) ?? null
+  try {
+    const { data, error } = await supabase
+      .from(TABLE)
+      .select("meta_connection")
+      .eq("axhub_id", axhubId)
+      .maybeSingle()
+    if (error || !data) return null
+    return (data.meta_connection as MetaConnection | null) ?? null
+  } catch (e) {
+    console.error("[user-store] loadMetaConnection 실패 — 복원 생략", e)
+    return null
+  }
 }
 
 // Facebook·Instagram 연결(또는 계정 스위처) 변경 시 호출 → 다음 로그인 자동 복원용으로 영속.
+// 영속 실패는 로그인·연결 흐름을 깨지 않게 흡수 — 다음 변경 때 다시 저장 시도된다.
 export async function saveMetaConnection(axhubId: string, conn: MetaConnection): Promise<void> {
   const supabase = getSupabaseServer()
   if (!supabase) return
-  const { error } = await supabase
-    .from(TABLE)
-    .update({ meta_connection: conn, updated_at: new Date().toISOString() })
-    .eq("axhub_id", axhubId)
-  if (error) throw new Error(`Meta 연결 저장 실패: ${error.message}`)
+  try {
+    const { error } = await supabase
+      .from(TABLE)
+      .update({ meta_connection: conn, updated_at: new Date().toISOString() })
+      .eq("axhub_id", axhubId)
+    if (error) throw error
+  } catch (e) {
+    console.error("[user-store] saveMetaConnection 실패 — 무시(다음 변경 시 재시도)", e)
+  }
 }

@@ -109,7 +109,7 @@ export default function DashboardPage() {
       </div>
 
       {/* 미연결 배너 */}
-      {!accountConnected && (
+      {!accountConnected && !session?.browseMode && (
         <Card className="flex items-center gap-4 border-[var(--w-status-cautionary)] bg-[rgba(255,146,0,0.05)]">
           <div className="w-10 h-10 rounded-[10px] bg-[rgba(255,146,0,0.15)] text-[var(--w-status-cautionary)] grid place-items-center shrink-0">
             <Icon name="warn" size={20} />

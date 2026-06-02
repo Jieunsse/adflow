@@ -135,8 +135,9 @@ Why it works: opens with the reader's specific frustration before introducing th
 - Specificity over superlatives: "자극 성분 0%" beats "순한 제품"
 
 ## Emoji policy
-- Trendy / casual tone: 1–2 emojis maximum, placed at natural pause points
-- Professional / trust-first tone: no emojis
+- Every primaryText must contain at least 1 emoji, placed at a natural pause point (after the hook or before the CTA)
+- Trendy / casual tone: 1–3 emojis
+- Professional / trust-first tone: exactly 1 restrained emoji (e.g. ✨, ✅, 👀) — never zero
 
 ---
 
@@ -153,5 +154,6 @@ Why it works: opens with the reader's specific frustration before introducing th
 - [ ] No forbidden words appear in any headline
 - [ ] primaryText follows the 5-part structure
 - [ ] primaryText is 150–200 characters
+- [ ] primaryText contains at least 1 emoji
 - [ ] JSON is valid and contains exactly the requested keys
 `.trim();

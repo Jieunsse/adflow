@@ -224,6 +224,12 @@ function stripHanja(text: string): string {
   return text.replace(/[一-鿿]/g, "");
 }
 
+// 본문에 이모지가 하나도 없으면 1개를 보강해요 (프롬프트 정책 폴백, 최소 1개 보장).
+function ensureEmoji(text: string): string {
+  if (/\p{Extended_Pictographic}/u.test(text)) return text;
+  return `${text.replace(/\s+$/, "")} ✨`;
+}
+
 // ADR-031 검증 — 근거 자료에서 성과 수치 토큰을 뽑아요 (재구매율 73%, 누적 12만 개 …).
 // 단일 자릿수(0종·3개)는 흔한 일반어와 충돌해 false-positive 가 많으므로 제외:
 // 2자리 이상이거나 단위(%·만·점 등)가 붙은 토큰만 인용 판정 대상으로 둬요.
@@ -374,9 +380,9 @@ export const geminiCreative = {
           stripHanja(parsed.headlines[2]),
         ],
         primaryTexts: [
-          stripHanja(parsed.primaryTexts[0]),
-          stripHanja(parsed.primaryTexts[1]),
-          stripHanja(parsed.primaryTexts[2]),
+          ensureEmoji(stripHanja(parsed.primaryTexts[0])),
+          ensureEmoji(stripHanja(parsed.primaryTexts[1])),
+          ensureEmoji(stripHanja(parsed.primaryTexts[2])),
         ],
         targeting: sanitizeTargeting(parsed.targeting),
         // 훅은 우리가 변형에 배정한 값이 진실원 — 모델 echo 에 의존하지 않음 (ADR-029).

@@ -27,7 +27,7 @@ const isConfigured = isGeminiConfigured();
 
 async function suggest(params: SuggestCampaignParams): Promise<SuggestCampaignResult> {
   const genAI = new GoogleGenerativeAI(requireGeminiKey());
-  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
 
   const brandCtx = [
     params.brandDescription && `브랜드 설명: ${params.brandDescription}`,

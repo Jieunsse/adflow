@@ -4,7 +4,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const API_KEY_ENV = "GOOGLE_AI_API_KEY";
-const TEXT_MODELS = ["gemini-2.0-flash", "gemini-2.5-flash"];
+const TEXT_MODELS = ["gemini-2.5-flash-lite", "gemini-2.5-flash"];
 
 export function isGeminiConfigured(): boolean {
   return !!process.env[API_KEY_ENV];

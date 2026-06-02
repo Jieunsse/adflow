@@ -10,6 +10,7 @@ import { useCreativeDraft } from "@entities/creative/model";
 import { useLaunchDraft, type LaunchParams, type LaunchResponse } from "@entities/campaign/model";
 import { saveLaunchedCampaign } from "@entities/campaign/launched-storage";
 import { createBrowseCampaign } from "@entities/campaign/browse/seed";
+import { shrinkImageDataUrl } from "@shared/lib/shrink-image";
 import { type ObjectivePhase1Id } from "@entities/creative/options";
 import { isBoost, goalDefOf } from "@entities/creative/outcome-routing";
 import { profileOf } from "@entities/launch-objective/profile";
@@ -115,8 +116,9 @@ export default function LaunchStep({ onNext, goSettings, goCreative, brandName }
   const testAccountActive = devModeOn && !!testAccountId;
 
   const runLaunch = async (skipAdCreation: boolean) => {
-    if (!skipAdCreation && state.imageDataUrl) {
-      const result = await validateAdImage(state.imageDataUrl);
+    const imgToSend = state.finalImageDataUrl ?? state.imageDataUrl;
+    if (!skipAdCreation && imgToSend) {
+      const result = await validateAdImage(imgToSend);
       if (!result.ok) { showToast(result.reason); return; }
     }
     const params = buildLaunchParams(creative.state, state, { skipAdCreation, brandName });
@@ -125,7 +127,9 @@ export default function LaunchStep({ onNext, goSettings, goCreative, brandName }
       const plan = planBrowseLaunch(params, { brandName, ts: Date.now() });
       dispatch({ type: "SET_LAUNCHED_CAMPAIGN", value: plan.launched });
       saveLaunchedCampaign(plan.launched);
-      createBrowseCampaign(plan.browseCampaign);
+      // 둘러보기는 실 Gemini 이미지(수 MB base64)를 쓴다 — localStorage 용량 초과로 캠페인이 조용히 버려지지 않게 축소.
+      const imageUrl = await shrinkImageDataUrl(plan.browseCampaign.imageUrl);
+      createBrowseCampaign({ ...plan.browseCampaign, imageUrl });
       addNotification({ type: "launch", message: plan.message });
       if (state.autoRelaunchEnabled) setAutoRelaunch(plan.launched.campaignId, true);
       // 둘러보기 모드 — 기술적 ID 패널을 건너뛰고 바로 STEP 03 마무리 점검으로.

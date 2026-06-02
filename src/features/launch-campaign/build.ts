@@ -79,7 +79,7 @@ export function buildLaunchParams(
     linkUrl: launch.landingUrl.trim(),
     cta: creative.cta,
     status: effectiveStatus,
-    imageDataUrl: launch.imageDataUrl ?? undefined,
+    imageDataUrl: (launch.finalImageDataUrl ?? launch.imageDataUrl) ?? undefined,
     objective: creative.objective ?? "OUTCOME_TRAFFIC",
     goalId: primaryGoalId(creative.outcome),
     mode: launch.mode,

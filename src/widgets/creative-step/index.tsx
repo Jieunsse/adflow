@@ -47,6 +47,8 @@ interface Props {
   onNext: () => void;
   imageDataUrl: string | null;
   setImageDataUrl: (v: string | null) => void;
+  finalImageDataUrl: string | null;
+  setFinalImageDataUrl: (v: string | null) => void;
 }
 
 export default function CreativeStep(p: Props) {
@@ -59,6 +61,8 @@ export default function CreativeStep(p: Props) {
         productId={p.productId}
         imageDataUrl={p.imageDataUrl}
         setImageDataUrl={p.setImageDataUrl}
+        finalImageDataUrl={p.finalImageDataUrl}
+        setFinalImageDataUrl={p.setFinalImageDataUrl}
         onBackToCopy={() => setPhase("copy")}
         onNext={p.onNext}
       />

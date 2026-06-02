@@ -3,27 +3,34 @@
 // ADR-040 — 소재 만들기 phase 2(이미지). 선택된 카피를 상단 요약(읽기전용)으로 접고,
 // 이미지 컨셉·생성에 집중. "← 카피 수정"으로 phase 1 복귀. 최상위 Stepper(STEP 02=집행) 불변.
 
+import { useState } from "react";
 import Icon from "@shared/ui/Icon";
 import { Badge } from "@shared/ui/primitives";
 import { Button } from "@shared/ui/Button";
 import { Card } from "@shared/ui/Card";
 import { useCreativeDraft } from "@entities/creative/model";
 import AiImageBlock from "./AiImageBlock";
+import TextOverlayEditor from "./TextOverlayEditor";
 
 export default function ImagePhase({
   productId,
   imageDataUrl,
   setImageDataUrl,
+  finalImageDataUrl,
+  setFinalImageDataUrl,
   onBackToCopy,
   onNext,
 }: {
   productId: string | null;
   imageDataUrl: string | null;
   setImageDataUrl: (v: string | null) => void;
+  finalImageDataUrl: string | null;
+  setFinalImageDataUrl: (v: string | null) => void;
   onBackToCopy: () => void;
   onNext: () => void;
 }) {
   const { state } = useCreativeDraft();
+  const [editing, setEditing] = useState(false);
 
   return (
     <Card variant="lg">
@@ -52,9 +59,34 @@ export default function ImagePhase({
 
       <AiImageBlock productId={productId} imageDataUrl={imageDataUrl} setImageDataUrl={setImageDataUrl} />
 
-      <div className="flex items-center justify-end gap-3" style={{ paddingTop: 16, borderTop: "1px solid var(--w-line-alternative)" }}>
+      <div className="flex items-center gap-3" style={{ paddingTop: 16, borderTop: "1px solid var(--w-line-alternative)" }}>
+        {finalImageDataUrl && (
+          <div className="flex items-center gap-2 mr-auto">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={finalImageDataUrl} alt="텍스트 적용된 최종 이미지" style={{ width: 40, height: 40, borderRadius: 8, objectFit: "cover", border: "1px solid var(--w-line-normal)" }} />
+            <span className="text-[12px] font-semibold text-[var(--w-fg-neutral)]">텍스트 적용됨</span>
+          </div>
+        )}
+        <Button
+          variant="ghost"
+          type="button"
+          disabled={!imageDataUrl}
+          onClick={() => setEditing(true)}
+          className="border border-[var(--w-line-normal)]"
+          style={finalImageDataUrl ? undefined : { marginLeft: "auto" }}
+        >
+          <Icon name="edit" size={14} /> 텍스트 편집
+        </Button>
         <Button variant="primary" type="button" onClick={onNext}>다음: 광고 집행 <Icon name="arrow-right" size={14} /></Button>
       </div>
+
+      {editing && imageDataUrl && (
+        <TextOverlayEditor
+          baseImageUrl={imageDataUrl}
+          onClose={() => setEditing(false)}
+          onSave={(final) => setFinalImageDataUrl(final)}
+        />
+      )}
     </Card>
   );
 }

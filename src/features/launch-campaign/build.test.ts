@@ -47,6 +47,7 @@ const baseLaunch: LaunchState = {
   personaLocation: [],
   delivery: "PAUSED",
   imageDataUrl: null,
+  finalImageDataUrl: null,
   launchedCampaign: null,
 };
 

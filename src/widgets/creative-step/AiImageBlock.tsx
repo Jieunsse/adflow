@@ -82,7 +82,9 @@ export default function AiImageBlock({
   const [mode, setMode] = useState<AiImageMode>("concept");
   const [zoomedSrc, setZoomedSrc] = useState<string | null>(null);
   const [pendingSlots, setPendingSlots] = useState<number[]>([]);
+  const [rerollingSlots, setRerollingSlots] = useState<number[]>([]);
   const suggest = useApiMutation<SuggestImageConceptsParams, SuggestImageConceptsResult>("/api/suggest-image-concepts");
+  const rerollOne = useApiMutation<SuggestImageConceptsParams, SuggestImageConceptsResult>("/api/suggest-image-concepts");
 
   // concept 모드 — 슬롯 i ↔ concept i ↔ generatedImages[i].
   const [concepts, setConcepts] = useState<ImageConcept[]>(EMPTY_CONCEPTS);
@@ -190,6 +192,34 @@ export default function AiImageBlock({
       {
         onSuccess: (data) => setConcepts(data.concepts.slice(0, 3)),
         onError: () => showToast("컨셉 제안에 실패했어요, 다시 시도해주세요"),
+      },
+    );
+  };
+
+  // 슬롯 하나의 프롬프트만 다시 제안 — 같은 엔드포인트로 3개를 받아 해당 인덱스만 교체.
+  const handleRerollConcept = (i: number) => {
+    if (!state.primaryText?.trim()) {
+      showToast("카피를 먼저 만들어 주세요");
+      return;
+    }
+    setRerollingSlots((prev) => Array.from(new Set([...prev, i])));
+    rerollOne.mutate(
+      {
+        headline: state.headline,
+        primaryText: state.primaryText,
+        tone: state.tone,
+        productName: productMeta?.name || undefined,
+        productDescription: productMeta?.description || undefined,
+        outcome: state.outcome ?? undefined,
+        stageProduct: stagingActive,
+      },
+      {
+        onSuccess: (data) => {
+          const fresh = data.concepts[i] ?? data.concepts[0];
+          if (fresh) setConcepts((prev) => prev.map((c, idx) => (idx === i ? fresh : c)));
+        },
+        onError: () => showToast("컨셉 제안에 실패했어요, 다시 시도해주세요"),
+        onSettled: () => setRerollingSlots((prev) => prev.filter((s) => s !== i)),
       },
     );
   };
@@ -495,8 +525,20 @@ export default function AiImageBlock({
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 10 }}>
             {[0, 1, 2].map((i) => (
               <div key={`concept-${i}`} className="flex flex-col gap-2 p-2.5 rounded-xl border border-[var(--w-line-normal)] bg-[var(--w-bg-elevated)]">
-                <div className="font-[600] text-[11px] leading-tight text-[var(--w-fg-neutral)] tracking-[0.03em] uppercase">
-                  {concepts[i]?.label?.trim() || `컨셉 ${i + 1}`}
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex-1 min-w-0 font-[600] text-[11px] leading-tight text-[var(--w-fg-neutral)] tracking-[0.03em] uppercase">
+                    {concepts[i]?.label?.trim() || `컨셉 ${i + 1}`}
+                  </div>
+                  <button
+                    type="button"
+                    aria-label={`컨셉 ${i + 1} 프롬프트만 다시 제안`}
+                    title="이 컨셉 프롬프트만 다시 제안"
+                    disabled={rerollingSlots.includes(i) || !state.primaryText}
+                    onClick={() => handleRerollConcept(i)}
+                    className="flex-none grid place-items-center w-6 h-6 rounded-md border border-[var(--w-line-normal)] text-[var(--w-fg-neutral)] hover:text-[var(--w-fg-strong)] hover:bg-[var(--w-bg-neutral)] disabled:opacity-40 disabled:cursor-not-allowed transition-[background,color] duration-[120ms]"
+                  >
+                    <Icon name="refresh" size={12} spin={rerollingSlots.includes(i)} />
+                  </button>
                 </div>
                 <textarea
                   className="w-full px-2.5 py-2 border border-[var(--w-line-normal)] rounded-lg bg-[var(--w-bg-elevated)] font-medium text-[12px] leading-[1.5] text-[var(--w-fg-strong)] outline-none focus:border-[var(--w-primary-normal)] resize-y"

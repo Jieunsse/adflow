@@ -117,6 +117,9 @@ export type LaunchState = {
   personaLocation: string[];
   delivery: DeliveryStatus;
   imageDataUrl: string | null;
+  // 텍스트 편집(Text Overlay) 결과 — 베이스(imageDataUrl) 위에 텍스트를 canvas 합성해 구운 PNG.
+  // 있으면 launch 가 이걸 사용. 베이스가 바뀌면(SET_IMAGE_DATA_URL) 자동 무효화 → 이중 인쇄 방지.
+  finalImageDataUrl: string | null;
 
   launchedCampaign: LaunchedCampaign | null;
 };
@@ -147,6 +150,7 @@ export type LaunchAction =
   | { type: "SET_PERSONA_LOCATION"; value: string[] }
   | { type: "SET_DELIVERY"; value: DeliveryStatus }
   | { type: "SET_IMAGE_DATA_URL"; value: string | null }
+  | { type: "SET_FINAL_IMAGE_DATA_URL"; value: string | null }
   | { type: "SET_LAUNCHED_CAMPAIGN"; value: LaunchedCampaign }
   // Creative.targeting → LaunchDraft 의 age/gender prefill. STEP 02 진입 시점에 widget 이 1회 dispatch.
   | { type: "APPLY_CREATIVE_TARGETING"; targeting: ExtractedTargeting }
@@ -186,6 +190,7 @@ export const INITIAL_LAUNCH_STATE: LaunchState = {
   personaLocation: [],
   delivery: "PAUSED",
   imageDataUrl: null,
+  finalImageDataUrl: null,
 
   launchedCampaign: null,
 };
@@ -236,7 +241,8 @@ function reducer(state: LaunchState, action: LaunchAction): LaunchState {
     case "SET_COUNTRIES":            return { ...state, countries: action.value };
     case "SET_PERSONA_LOCATION":     return { ...state, personaLocation: action.value };
     case "SET_DELIVERY":             return { ...state, delivery: action.value };
-    case "SET_IMAGE_DATA_URL":       return { ...state, imageDataUrl: action.value };
+    case "SET_IMAGE_DATA_URL":       return { ...state, imageDataUrl: action.value, finalImageDataUrl: null };
+    case "SET_FINAL_IMAGE_DATA_URL": return { ...state, finalImageDataUrl: action.value };
     case "SET_LAUNCHED_CAMPAIGN":    return { ...state, launchedCampaign: action.value };
     case "APPLY_CREATIVE_TARGETING": {
       const t = action.targeting;

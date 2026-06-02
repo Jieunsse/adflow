@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import Image from "next/image";
 import Icon from "./Icon";
 
@@ -30,6 +31,7 @@ export function IgPostPreview({
   sponsored,
   ctaLabel = "더 알아보기",
   className,
+  overlay,
 }: {
   imageUrl: string;
   caption: string;
@@ -42,6 +44,8 @@ export function IgPostPreview({
   sponsored?: boolean;
   ctaLabel?: string;
   className?: string;
+  // 텍스트 편집 — 정사각 이미지 영역 위에 절대배치되는 레이어(드래그 surface 등). 미전달 시 기존 동작.
+  overlay?: ReactNode;
 }) {
   const tokens = tokenizeCaption(caption);
   const showImage = imageUrl && !broken;
@@ -113,6 +117,7 @@ export function IgPostPreview({
             </div>
           </div>
         )}
+        {overlay}
       </div>
 
       {headline && (

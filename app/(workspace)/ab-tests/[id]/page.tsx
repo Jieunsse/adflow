@@ -26,9 +26,16 @@ import {
   type TourRound,
   type TourAxis,
   type Hypothesis,
-  type HypothesisVerdict,
 } from "@entities/ab-test/tournament/tournament";
 import { leverLabel } from "@entities/ab-test/tournament/lever";
+import {
+  VERDICT_META,
+  RATIONALE_SOURCE_LABEL,
+  HypothesisDetailRow,
+  latestResolvedByLever,
+  verdictCounts,
+} from "@entities/ab-test/tournament/ui/ledger-view";
+import Link from "next/link";
 import { tournamentClient } from "@entities/ab-test/tournament/client";
 import { buildRoundReport, type AdReport, type RoundReport } from "@entities/ab-test/tournament/report";
 import {
@@ -70,21 +77,6 @@ function tournamentTotals(t: Tournament, isReal: boolean): { spend: number; days
 const krw = (n: number) => `₩${n.toLocaleString("ko-KR")}`;
 
 // ADR-044 — 가설 verdict 표시. 입증=positive / 반증=warning / 미결=neutral.
-const VERDICT_META: Record<HypothesisVerdict, { label: string; mark: string; chip: "live" | "paused" | "neutral" }> = {
-  confirmed: { label: "입증", mark: "✓", chip: "live" },
-  refuted: { label: "반증", mark: "✗", chip: "paused" },
-  inconclusive: { label: "미결", mark: "~", chip: "neutral" },
-};
-
-const RATIONALE_SOURCE_LABEL: Record<Hypothesis["rationaleSource"], string> = {
-  "brand-profile": "브랜드 프로필",
-  persona: "페르소나",
-  "performance-archive": "성과 아카이브",
-  "platform-prior": "플랫폼 통계",
-  ledger: "누적 학습",
-  principle: "마케팅 원칙",
-};
-
 export default function AbTournamentDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
@@ -271,7 +263,7 @@ export default function AbTournamentDetailPage() {
       )}
 
       {/* ADR-044/047 학습 노트 — 데모=localStorage Ledger, 실=tournaments 투영. 양쪽 공통. */}
-      <LedgerPanel entries={ledger} />
+      <LedgerPanel entries={ledger} brandProfileId={t.brandProfileId} />
 
       {/* 데모만 발표자 빨리감기 — 실 라운드는 서버 cron 이 결산·진행한다. */}
       {!isReal && <PresenterTournamentBar t={t} />}
@@ -365,47 +357,47 @@ function HypothesisBanner({ h }: { h: Hypothesis }) {
   );
 }
 
-// ADR-044 Hypothesis Ledger 패널 — 이 제품 토너먼트에서 검증돼 브랜드에 누적된 가설(입증·반증·미결).
-// 다음 가설 생성기가 읽는 학습 자산을 그대로 노출 — 음성 학습("긴박감 반증→회피")을 한눈에 보여준다.
-function LedgerPanel({ entries }: { entries: Hypothesis[] }) {
-  if (!entries.length) return null;
-  // 레버별 최신 resolved 기준 집계 (같은 레버 재검증 시 마지막 판정).
-  const byLever = new Map<string, Hypothesis>();
-  for (const h of entries) if (h.verdict) byLever.set(h.lever, h);
-  const list = [...byLever.values()];
+// ADR-044/050 Hypothesis Ledger 패널 — 이 토너먼트 맥락에서 검증된 가설(입증·반증·미결).
+// 정보 과부하를 피해 기본 접힘(요약 칩만) + 펼치면 가설별 "왜"까지. 전체 아카이브는 브랜드 프로필 '학습' 탭.
+function LedgerPanel({ entries, brandProfileId }: { entries: Hypothesis[]; brandProfileId: string }) {
+  const [open, setOpen] = useState(false);
+  const list = latestResolvedByLever(entries);
   if (!list.length) return null;
-  const order: HypothesisVerdict[] = ["confirmed", "refuted", "inconclusive"];
-  list.sort((a, b) => order.indexOf(a.verdict!) - order.indexOf(b.verdict!));
+  const c = verdictCounts(list);
   return (
     <div>
-      <div className="flex items-baseline justify-between gap-3 mb-1">
-        <div className="font-bold text-[14px] text-[var(--w-fg-strong)]">학습 노트</div>
-        <div className="font-medium text-[12px] text-[var(--w-fg-neutral)]">브랜드에 누적된 검증 결과</div>
-      </div>
-      <div className="font-medium text-[12px] leading-[1.5] text-[var(--w-fg-neutral)] mb-3">
-        검증한 가설이 브랜드 지식으로 쌓여요. 다음 가설은 반증된 레버를 피하고 미탐색 레버를 우선해요. 이 학습은 카피를 만들 때 추천 훅에도 반영돼요.
-      </div>
-      <Card className="p-4 flex flex-wrap gap-2">
-        {list.map((h) => {
-          const v = VERDICT_META[h.verdict!];
-          return (
-            <span
-              key={h.id}
-              title={h.statement}
-              className="inline-flex items-center gap-1.5 py-1.5 px-2.5 rounded-lg border font-semibold text-[12px]"
-              style={
-                h.verdict === "confirmed"
-                  ? { background: "var(--w-primary-soft)", borderColor: "var(--w-primary-weak)", color: "var(--w-primary-press)" }
-                  : h.verdict === "refuted"
-                    ? { background: "rgba(229,53,53,0.1)", borderColor: "rgba(229,53,53,0.34)", color: "#d92020" }
-                    : { background: "var(--w-bg-alternative)", borderColor: "var(--w-line-normal)", color: "var(--w-fg-neutral)" }
-              }
-            >
-              {leverLabel(h.lever)} <span className="opacity-70">{v.mark} {v.label}</span>
-            </span>
-          );
-        })}
-      </Card>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="w-full flex items-center justify-between gap-3 py-3 px-4 rounded-xl bg-[var(--w-bg-alternative)] border border-[var(--w-line-normal)] text-left hover:border-[var(--w-line-strong)] transition-colors"
+      >
+        <div className="flex items-baseline gap-2 min-w-0">
+          <span className="font-bold text-[14px] text-[var(--w-fg-strong)]">학습 노트</span>
+          <span className="font-medium text-[12px] text-[var(--w-fg-neutral)] truncate">브랜드에 누적된 검증 결과</span>
+        </div>
+        <div className="flex items-center gap-1.5 shrink-0">
+          {c.confirmed > 0 && <Chip variant="live">✓ 입증 {c.confirmed}</Chip>}
+          {c.refuted > 0 && <Chip variant="paused">✗ 반증 {c.refuted}</Chip>}
+          {c.inconclusive > 0 && <Chip variant="neutral">~ 미결 {c.inconclusive}</Chip>}
+          <Icon name="chev-down" size={16} className={open ? "rotate-180 transition-transform" : "transition-transform"} />
+        </div>
+      </button>
+      {open && (
+        <div className="mt-2 flex flex-col gap-2">
+          <div className="font-medium text-[12px] leading-[1.5] text-[var(--w-fg-neutral)] px-1">
+            검증한 가설이 브랜드 지식으로 쌓여요. 다음 가설은 반증된 레버를 피하고 미탐색 레버를 우선해요. 이 학습은 카피를 만들 때 추천 훅에도 반영돼요.
+          </div>
+          {list.map((h) => (
+            <HypothesisDetailRow key={h.id} h={h} />
+          ))}
+          <Link
+            href={`/brand-profile/${brandProfileId}?tab=learning`}
+            className="inline-flex items-center gap-1 self-start mt-0.5 px-1 font-semibold text-[12px] text-[var(--w-primary-press)] no-underline hover:underline"
+          >
+            이 브랜드의 전체 학습 보기 <Icon name="arrow-right" size={13} />
+          </Link>
+        </div>
+      )}
     </div>
   );
 }

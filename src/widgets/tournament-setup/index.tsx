@@ -1,8 +1,8 @@
 "use client";
 
 // ADR-032/033 — A/B Tournament 셋업(흐름2 진입). /ab-tests/new 가 browseMode 면 단판 위저드 대신 이 폼을 렌더.
-// 2-step 위저드: ①방식 선택(출발 챔피언 출처 카드) → ②세부 설정(제품·톤·목표·라운드·예산). 시작 후 /ab-tests/[id] 로.
-// mode: 실 유저 = auto(ADR-038 완전 무인, cron 폴러가 전개) / 데모(browseMode) = manual-n(발표자 클릭 시연, runner.ts 고정).
+// 2-step 위저드: ①방식 선택(출발 챔피언 출처 카드) → ②세부 설정(제품·톤·목표·총예산·일예산). 시작 후 /ab-tests/[id] 로.
+// ADR-054 — 실/데모 모두 auto 완전 무인. 총예산(봉투) 소진 시 winner-handling 으로 사람 결정(돈 방향만).
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -110,7 +110,7 @@ export default function TournamentSetup({ real = false }: { real?: boolean }) {
   const [description, setDescription] = useState(DEMO_INPUTS.brand);
   const [tone, setTone] = useState<Tone>("warm");
   const [objective, setObjective] = useState("traffic");
-  const [maxRounds, setMaxRounds] = useState(3);
+  const [totalBudget, setTotalBudget] = useState(600000);
   const [dailyBudget, setDailyBudget] = useState(30000);
   const [step, setStep] = useState<WizardStep>("method");
   const [championMode, setChampionMode] = useState<ChampionMode>("existing");
@@ -208,7 +208,7 @@ export default function TournamentSetup({ real = false }: { real?: boolean }) {
     description,
     tone,
     objective,
-    maxRounds,
+    totalBudget,
     dailyBudget,
     chAxis,
     challenger: { headline: chHeadline, primary: chPrimary, image: chImage },
@@ -523,20 +523,11 @@ export default function TournamentSetup({ real = false }: { real?: boolean }) {
               </Field>
 
               <div className="grid grid-cols-2 gap-5">
-                <Field label="라운드 수" hint="이 횟수만큼 챌린저를 붙이면 끝나요">
-                  <Stepper value={maxRounds} min={1} max={6} onChange={setMaxRounds} suffix="라운드" />
+                <Field label="총예산" hint="이 예산을 다 쓰면 멈추고 위너 처리를 물어봐요">
+                  <BudgetInput value={totalBudget} onChange={setTotalBudget} />
                 </Field>
                 <Field label="일 예산">
-                  <div className="relative">
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      value={dailyBudget ? dailyBudget.toLocaleString("ko-KR") : ""}
-                      onChange={(e) => setDailyBudget(Number(e.target.value.replace(/[^0-9]/g, "")) || 0)}
-                      className="w-full bg-[var(--w-bg-elevated)] border border-[var(--w-line-normal)] rounded-xl pl-3.5 pr-9 py-3 font-semibold text-[14px] leading-[1.5] text-[var(--w-fg-strong)] outline-none transition-[border-color,box-shadow] duration-[120ms] focus:border-[var(--w-primary-normal)] focus:shadow-[0_0_0_4px_rgba(0,102,255,0.14)]"
-                    />
-                    <span className="absolute right-3.5 top-1/2 -translate-y-1/2 font-medium text-[13px] text-[var(--w-fg-alternative)]">원</span>
-                  </div>
+                  <BudgetInput value={dailyBudget} onChange={setDailyBudget} />
                 </Field>
               </div>
             </SectionCard>
@@ -589,8 +580,8 @@ export default function TournamentSetup({ real = false }: { real?: boolean }) {
 
           {/* ── 우: 진화·조건 미리보기 + 시작 ── */}
           <aside className="lg:sticky lg:top-6 flex flex-col gap-4">
-            <EvolutionChain maxRounds={maxRounds} />
-            <ConditionSummary toneLabel={championMode === "ai" ? toneLabel : ""} objectiveLabel={objectiveLabel} maxRounds={maxRounds} dailyBudget={dailyBudget} />
+            <EvolutionChain rounds={Math.max(2, Math.min(6, Math.round(totalBudget / Math.max(1, dailyBudget * 7))))} />
+            <ConditionSummary toneLabel={championMode === "ai" ? toneLabel : ""} objectiveLabel={objectiveLabel} totalBudget={totalBudget} dailyBudget={dailyBudget} />
 
             <div className="py-2.5 px-3.5 rounded-lg flex items-start gap-2" style={{ background: "var(--w-primary-soft)", border: "1px solid var(--w-primary-weak)" }}>
               <Icon name="info" size={14} style={{ color: "var(--w-primary-normal)", flex: "0 0 auto", marginTop: 1 }} />
@@ -771,13 +762,13 @@ function SideCard({ tag, tagColor, variant, chAxis, highlight, badge }: {
   );
 }
 
-// 진화 흐름 — 라운드 수만큼 챔피언↔챌린저 사슬을 시각화.
-function EvolutionChain({ maxRounds }: { maxRounds: number }) {
+// 진화 흐름 — 총예산으로 추정한 라운드 수만큼 챔피언↔챌린저 사슬을 시각화(예상치).
+function EvolutionChain({ rounds }: { rounds: number }) {
   return (
     <div className="rounded-2xl border border-[var(--w-line-normal)] bg-[var(--w-bg-elevated)] p-4">
-      <div className="font-bold text-[13px] leading-none text-[var(--w-fg-strong)] mb-3">진화 흐름</div>
+      <div className="font-bold text-[13px] leading-none text-[var(--w-fg-strong)] mb-3">진화 흐름 <span className="font-medium text-[11px] text-[var(--w-fg-alternative)]">예산 기준 약 {rounds}라운드</span></div>
       <div className="flex flex-col gap-0">
-        {Array.from({ length: maxRounds }).map((_, i) => (
+        {Array.from({ length: rounds }).map((_, i) => (
           <div key={i}>
             <div className="flex items-center gap-2">
               <span className="font-bold text-[11px] leading-none grid place-items-center w-6 h-6 rounded-lg bg-[var(--w-primary-soft)] text-[var(--w-primary-press)]" style={{ flex: "0 0 auto" }}>R{i + 1}</span>
@@ -785,7 +776,7 @@ function EvolutionChain({ maxRounds }: { maxRounds: number }) {
                 {i === 0 ? "출발 챔피언 vs 첫 챌린저" : "이전 우세 안 vs 새 챌린저"}
               </span>
             </div>
-            {i < maxRounds - 1 && (
+            {i < rounds - 1 && (
               <div className="flex items-center gap-1.5 ml-3 my-1 font-medium text-[11px] leading-none text-[var(--w-fg-alternative)]">
                 <span className="leading-none">↓</span> 우세 안이 다음 챔피언
               </div>
@@ -797,15 +788,15 @@ function EvolutionChain({ maxRounds }: { maxRounds: number }) {
   );
 }
 
-function ConditionSummary({ toneLabel, objectiveLabel, maxRounds, dailyBudget }: {
-  toneLabel: string; objectiveLabel: string; maxRounds: number; dailyBudget: number;
+function ConditionSummary({ toneLabel, objectiveLabel, totalBudget, dailyBudget }: {
+  toneLabel: string; objectiveLabel: string; totalBudget: number; dailyBudget: number;
 }) {
   return (
     <div className="rounded-2xl border border-[var(--w-line-normal)] bg-[var(--w-bg-elevated)] p-4 flex flex-col gap-2">
       <div className="font-bold text-[13px] leading-none text-[var(--w-fg-strong)] mb-1">조건 요약</div>
       {toneLabel && <SummaryRow label="카피 톤" value={toneLabel} />}
       <SummaryRow label="광고 목표" value={objectiveLabel} />
-      <SummaryRow label="라운드" value={`${maxRounds}라운드`} />
+      <SummaryRow label="총예산" value={`${totalBudget.toLocaleString("ko-KR")}원`} />
       <SummaryRow label="일 예산" value={`${dailyBudget.toLocaleString("ko-KR")}원`} />
     </div>
   );
@@ -878,26 +869,18 @@ function Field({ label, hint, children }: { label: string; hint?: string; childr
   );
 }
 
-function Stepper({ value, min, max, onChange, suffix }: { value: number; min: number; max: number; onChange: (v: number) => void; suffix: string }) {
+// 원 단위 예산 입력 — 총예산·일예산 공용. 천 단위 콤마 표시, 숫자만 파싱.
+function BudgetInput({ value, onChange }: { value: number; onChange: (v: number) => void }) {
   return (
-    <div className="flex w-full items-center justify-between gap-2 bg-[var(--w-bg-elevated)] border border-[var(--w-line-normal)] rounded-xl px-2 py-1.5">
-      <button
-        type="button"
-        onClick={() => onChange(Math.max(min, value - 1))}
-        disabled={value <= min}
-        className="w-8 h-8 grid place-items-center rounded-lg text-[18px] leading-none text-[var(--w-fg-neutral)] hover:bg-[var(--w-bg-neutral)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-      >
-        −
-      </button>
-      <span className="flex-1 text-center font-semibold text-[14px] text-[var(--w-fg-strong)]">{value} {suffix}</span>
-      <button
-        type="button"
-        onClick={() => onChange(Math.min(max, value + 1))}
-        disabled={value >= max}
-        className="w-8 h-8 grid place-items-center rounded-lg hover:bg-[var(--w-bg-neutral)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-      >
-        <Icon name="plus" size={14} />
-      </button>
+    <div className="relative">
+      <input
+        type="text"
+        inputMode="numeric"
+        value={value ? value.toLocaleString("ko-KR") : ""}
+        onChange={(e) => onChange(Number(e.target.value.replace(/[^0-9]/g, "")) || 0)}
+        className="w-full bg-[var(--w-bg-elevated)] border border-[var(--w-line-normal)] rounded-xl pl-3.5 pr-9 py-3 font-semibold text-[14px] leading-[1.5] text-[var(--w-fg-strong)] outline-none transition-[border-color,box-shadow] duration-[120ms] focus:border-[var(--w-primary-normal)] focus:shadow-[0_0_0_4px_rgba(0,102,255,0.14)]"
+      />
+      <span className="absolute right-3.5 top-1/2 -translate-y-1/2 font-medium text-[13px] text-[var(--w-fg-alternative)]">원</span>
     </div>
   );
 }

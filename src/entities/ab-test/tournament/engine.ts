@@ -1,5 +1,5 @@
 // A/B Tournament(ADR-032/037) 순수 엔진 — 타입 + 결정 함수. 데모·실제 공유 (ADR-038 결정 6).
-// "use client" 없음 — 서버 cron 폴러(섬2)가 settleRound·deriveBeat·detectAnomaly 를 import 할 수 있어야 한다.
+// "use client" 없음 — 서버 cron 폴러(섬2)가 settleRound·deriveBeat 를 import 할 수 있어야 한다.
 // 영속화·게재·KPI 소스 같은 부작용은 어댑터(adapters.ts)로 분리, 여기엔 순수 함수만 둔다.
 // 우세 판정은 Meta 유의성(데모: z-검정), 승격=confidence ≥ WINNER_CONFIDENCE, inconclusive=챔피언 방어.
 
@@ -44,7 +44,7 @@ export type HypothesisLedger = {
 };
 
 // ADR-039 — 단일 축을 *얼마나* 다르게(변형 폭). 텍스트 축(헤드라인·카피) AI 챌린저 생성에만 적용.
-// 토너먼트 상수로 저장 → 무인 auto 루프(R2+)가 그대로 사용, manual-n 만 라운드별 override.
+// 토너먼트 상수로 저장 → 무인 auto 루프(R2+)가 그대로 사용 (ADR-054 — 라운드별 override 없음).
 export type VariationIntensity = "subtle" | "moderate" | "bold";
 
 export type RoundVerdict = {
@@ -72,7 +72,8 @@ export type TourRound = {
   hypothesis?: Hypothesis; // ADR-044 — 이 라운드가 검증하는 가설. 동인은 hypothesis.lever, axis 는 표시 파생 유지
 };
 
-export type TourMode = "manual-n" | "auto";
+// ADR-054 — 완전 무인화: manual-n 폐기, auto 단일. mode 필드는 Supabase 컬럼(NOT NULL)이라 유지하되 값은 항상 auto.
+export type TourMode = "auto";
 export type TourEnvelope = { totalBudget?: number; targetDate?: string };
 
 // 실 게재 자격증명 + 게재 스펙 (ADR-038 결정 3). 데모는 undefined — cron 폴러가 세션 없이 라운드를
@@ -102,8 +103,7 @@ export type Tournament = {
   tone: string; // Gemini 톤 (warm|pro|trendy)
   objective: string; // ObjectiveId — Gemini outcome
   mode: TourMode;
-  maxRounds?: number; // 수동-N
-  envelope?: TourEnvelope; // 자동
+  envelope?: TourEnvelope; // 자동 봉투 — 총예산·(선택)목표일. 소진 = winner-handling 브레이크(유일한 사람 결정)
   dailyBudget: number;
   champion: TourVariant; // 현 챔피언 크리에이티브
   championCtr: number; // 현 챔피언 CTR 기준선 (%)
@@ -112,8 +112,7 @@ export type Tournament = {
   championConfirmed?: boolean; // 출발 광고 승인 결정 지점 통과 여부
   pendingChallenger?: TourVariant; // 결정 대기 중인 챌린저 제안 (게재 전)
   pendingHypothesis?: Hypothesis; // ADR-044 — pendingChallenger 와 짝인 가설 (게재 시 라운드로 이동)
-  prohibitedWords?: string[]; // ADR-035 ⓑ — 브랜드 금칙어 (챌린저 위반 시 이상 신호)
-  anomalyClearedRound?: number; // ADR-035 ⓑ — 사람이 "계속"으로 해소한 이상 신호 라운드
+  prohibitedWords?: string[]; // ADR-054 — 브랜드 금칙어. 챌린저 생성 Gemini 프롬프트에 주입해 구조 차단(브레이크 X)
   brandDescription?: string; // 셋업 시 고른 브랜드 컨텍스트 — 라운드별 Gemini 주입
   productDescription?: string; // 셋업 시 고른 제품 컨텍스트 — 라운드별 Gemini 주입
   variationIntensity?: VariationIntensity; // ADR-039 변형 폭 (토너먼트 상수, undefined=moderate)
@@ -322,11 +321,8 @@ function daysBetweenIso(start: string, end: string): number {
   return Math.round((e - s) / 86400000);
 }
 
-// 봉투 소진 — 수동-N: settled 라운드 수 ≥ maxRounds / 자동: 예산 또는 목표일 도달.
+// 봉투 소진 (ADR-054) — 자동: 누적 예산 또는 목표일 도달. 소진 시 winner-handling 브레이크로 surface.
 export function isEnvelopeExhausted(t: Tournament): boolean {
-  if (t.mode === "manual-n") {
-    return t.rounds.filter((r) => r.status === "settled").length >= (t.maxRounds ?? 0);
-  }
   const env = t.envelope ?? {};
   if (env.totalBudget != null && t.spentBudget >= env.totalBudget) return true;
   if (env.targetDate) {
@@ -337,72 +333,32 @@ export function isEnvelopeExhausted(t: Tournament): boolean {
   return false;
 }
 
-/* ─── ADR-035 무인 루프 비트 + 필요 브레이크 ──────────────── */
+/* ─── ADR-054 무인 루프 비트 — 예산(winner-handling)만 사람 ──────────────── */
 
 export type TourBeat =
-  | "champion-review" // ⓒ 출발 챔피언 확인 (셋업 게이트)
-  | "auto-running" // auto 무인 진행 — 사람 개입 없음
-  | "anomaly" // ⓑ 이상 신호 — auto 일시정지, 사람 대기
-  | "winner-handling" // ⓐ 봉투 소진 — 사람 처리 대기
-  | "live" // manual-n 라이브 라운드
-  | "challenger-review" // manual-n 챌린저 검토
-  | "between" // manual-n 라운드 전환
+  | "champion-review" // 출발 챔피언 확인 게이트 (existing 1회 확인 / 레거시 미확정). AI 부트스트랩은 자동 확정.
+  | "auto-running" // 무인 진행 — 사람 개입 없음 (라운드 라이브·라운드 전환 모두)
+  | "winner-handling" // 봉투 소진 — 돈 방향 결정이라 사람 처리 대기 (유일한 자동 정지점)
   | "done";
 
-export type TourAnomaly = { kind: "stagnation" | "prohibited"; round: number; words?: string[] };
-
-// auto 무인 루프를 멈춰야 하는 이상 신호 감지 (ADR-035 ⓑ · ADR-037 정련).
-// V1 트리거: ① 마지막 챌린저 텍스트가 브랜드 금칙어 위반 ② 연속 3라운드 챌린저 미승격.
-// inconclusive 가 정상이 된 실 Meta 정합상 "방어"가 흔하므로 임계 2→3 (AXIS_CYCLE 한 바퀴+α).
-// anomalyClearedRound 이하로 사람이 "계속"한 라운드는 해소된 것으로 본다.
-export function detectAnomaly(t: Tournament): TourAnomaly | null {
-  const settled = t.rounds.filter((r) => r.status === "settled");
-  const last = settled.at(-1);
-  if (!last) return null;
-  if ((t.anomalyClearedRound ?? 0) >= last.index) return null;
-
-  const words = t.prohibitedWords ?? [];
-  const text = `${last.challenger.headline} ${last.challenger.primaryText}`;
-  const hits = words.map((w) => w.trim()).filter((w) => w && text.includes(w));
-  if (hits.length) {
-    return { kind: "prohibited", round: last.index, words: hits };
-  }
-  const prev = settled.at(-2);
-  const prev2 = settled.at(-3);
-  if (prev && prev2 && last.rawWinner === "A" && prev.rawWinner === "A" && prev2.rawWinner === "A") {
-    return { kind: "stagnation", round: last.index };
-  }
-  return null;
-}
-
-// 현재 상태 → 비트. auto = 무인(브레이크만 멈춤), manual-n = 매 단계 제어 (ADR-035).
-// 우선순위: done > champion-review > winner-handling > anomaly > 진행.
+// 현재 상태 → 비트 (ADR-054). 완전 무인: 예산 소진(winner-handling)에서만 멈춘다.
+// 금칙어는 생성 단계에서 구조 차단, 정체는 selectNextLever 가 다른 레버로 자동 돌파하므로 정지 비트가 없다.
+// 우선순위: done > champion-review > winner-handling > 진행.
 export function deriveBeat(t: Tournament): TourBeat {
   if (!t.championConfirmed) return "champion-review";
   if (t.status === "completed") return "done";
-  if (t.mode === "auto") {
-    if (isEnvelopeExhausted(t)) return "winner-handling";
-    if (detectAnomaly(t)) return "anomaly";
-    return "auto-running";
-  }
-  if (t.rounds.some((r) => r.status === "running")) return "live";
-  if (t.pendingChallenger) return "challenger-review";
-  return "between";
+  if (isEnvelopeExhausted(t)) return "winner-handling";
+  return "auto-running";
 }
 
-// 대시보드 "결정 대기" = 꼭 사람이 봐야 하는 비트만 (ADR-035 브레이크 + manual-n 제어).
+// 대시보드 "결정 대기" = 꼭 사람이 봐야 하는 비트만. ADR-054 — 예산(winner-handling)만.
+// champion-review 는 existing 출발 광고 1회 확인 경로 보존용(AI 부트스트랩은 자동 확정이라 실제론 미발동).
 export function isDecisionBeat(b: TourBeat): boolean {
-  return (
-    b === "winner-handling" ||
-    b === "anomaly" ||
-    b === "champion-review" ||
-    b === "challenger-review" ||
-    b === "between"
-  );
+  return b === "winner-handling" || b === "champion-review";
 }
 
 export function isRunningBeat(b: TourBeat): boolean {
-  return b === "auto-running" || b === "live";
+  return b === "auto-running";
 }
 
 // Gemini 결과에서 해당 축 필드만 챔피언과 다르게 교체해 챌린저 변형 구성.

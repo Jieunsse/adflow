@@ -14,8 +14,8 @@ function cascade(t: Tournament): Hypothesis[] {
   for (let i = 0; i < 16; i++) {
     const beat = deriveBeat(t);
     if (beat === "done") break;
-    // 진짜 브레이크만 정지 — manual-n 의 between·challenger-review 는 발표자 캐스케이드가 자동 통과(client.demoCascade 와 동일).
-    if (beat === "winner-handling" || beat === "anomaly" || beat === "champion-review") break;
+    // ADR-054 — 예산 소진(winner-handling)·셋업 게이트(champion-review)에서만 정지.
+    if (beat === "winner-handling" || beat === "champion-review") break;
     const running = t.rounds.find((r) => r.status === "running");
     if (running) {
       const { result } = applySettle(t, running.fastForwardDays + 7);
@@ -36,7 +36,6 @@ function ampleTournament(): Tournament {
     tone: "pro",
     objective: "traffic",
     mode: "auto",
-    maxRounds: 6,
     dailyBudget: 50000,
     champion: { headline: "칙칙한 피부에 비타민 한 방울", primaryText: "식물성 비타민 앰플." },
     championCtr: 1.7,
@@ -50,40 +49,13 @@ function ampleTournament(): Tournament {
   };
 }
 
-// manual-n — 사람이 매 라운드 결정하는 모드. 발표자 빨리감기는 between·challenger-review 를 자동 통과해야 한다.
-function manualTournament(): Tournament {
-  return {
-    ...ampleTournament(),
-    mode: "manual-n",
-    maxRounds: 4,
-    envelope: undefined,
-  };
-}
-
-describe("manual-n 발표자 캐스케이드 (둘러보기 빨리감기)", () => {
-  it("between·challenger-review 결정 지점을 자동 통과해 maxRounds 까지 돌고 done 에서 멈춘다", () => {
-    const t = manualTournament();
-    cascade(t);
-    expect(deriveBeat(t)).toBe("done");
-    expect(t.status).toBe("completed");
-    expect(t.rounds.filter((r) => r.status === "settled").length).toBe(4);
-  });
-
-  it("모든 결산 라운드에 resolved 가설이 붙는다(자동 제안→게재가 가설을 세운다)", () => {
-    const t = manualTournament();
-    const resolved = cascade(t);
-    expect(resolved.length).toBe(4);
-    for (const h of resolved) expect(h.status).toBe("resolved");
-  });
-});
-
-describe("가설 캐스케이드 (ADR-044)", () => {
-  it("여러 라운드를 돌고 ADR-035 브레이크(봉투 소진 또는 정체 이상신호)에서 멈춘다", () => {
+describe("가설 캐스케이드 (ADR-044/054)", () => {
+  it("여러 라운드를 돌고 예산 소진(winner-handling)에서 멈춘다 — 정체는 자동 돌파", () => {
     const t = ampleTournament();
     cascade(t);
     const beat = deriveBeat(t);
     expect(isDecisionBeat(beat)).toBe(true);
-    expect(["winner-handling", "anomaly"]).toContain(beat);
+    expect(beat).toBe("winner-handling");
     expect(t.rounds.filter((r) => r.status === "settled").length).toBeGreaterThanOrEqual(3);
   });
 

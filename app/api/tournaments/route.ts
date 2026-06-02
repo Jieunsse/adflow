@@ -53,9 +53,7 @@ interface CreateBody {
   productDescription?: string;
   tone: string;
   objective: string;
-  mode: "manual-n" | "auto";
-  maxRounds?: number;
-  envelope?: { totalBudget?: number; targetDate?: string };
+  envelope?: { totalBudget?: number; targetDate?: string }; // ADR-054 — 총예산·(선택)목표일
   dailyBudget: number;
   startingCtr: number;
   championSource?: "ai" | "existing";
@@ -106,8 +104,6 @@ export async function POST(req: NextRequest) {
       productDescription: b.productDescription,
       tone: b.tone || "warm",
       objective: b.objective || "traffic",
-      mode: b.mode === "auto" ? "auto" : "manual-n",
-      maxRounds: b.maxRounds,
       envelope: b.envelope,
       dailyBudget: b.dailyBudget,
       startingCtr: b.startingCtr ?? 1.8,

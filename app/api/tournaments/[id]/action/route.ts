@@ -1,6 +1,6 @@
 // ADR-038 — 실 유저 토너먼트 라운드 진행 액션. 상세 UI(섬2 후속)가 호출.
 // 한 라우트로 비트별 액션을 묶는다 — confirm-champion / regenerate-champion / propose-challenger /
-// set-challenger / launch / resolve-anomaly / discard-challenger / refill-envelope.
+// set-challenger / launch / refill-envelope (ADR-054 — anomaly 액션 폐기).
 // launch 는 실제 Meta 게재라 비용이 발생 — 소유 검증을 통과한 유저만.
 
 import { NextRequest, NextResponse } from "next/server";
@@ -19,8 +19,6 @@ type Action =
   | "propose-challenger"
   | "set-challenger"
   | "launch"
-  | "resolve-anomaly"
-  | "discard-challenger"
   | "refill-envelope";
 
 interface ActionBody {
@@ -60,12 +58,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         break;
       case "launch":
         await r.launchRound(id);
-        break;
-      case "resolve-anomaly":
-        await r.resolveAnomaly(id);
-        break;
-      case "discard-challenger":
-        await r.discardPendingChallenger(id);
         break;
       case "refill-envelope":
         await r.refillEnvelope(id, b.addBudget);

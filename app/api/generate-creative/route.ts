@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
     'GOOGLE_AI_API_KEY 가 .env.local 에 설정되지 않았어요.',
     async () => {
       const body = (await req.json()) as Partial<GenerateCreativeParams>
-      const { brand, target, tone, outcome, hint, brandProfile, persona, product, hooks } = body
+      const { brand, target, tone, outcome, hint, brandProfile, persona, product, hooks, variationIntensity, prohibitedWords } = body
       if (!brand || !tone) {
         throw new ValidationError('필수 필드가 누락됐어요.')
       }
@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
       if (!outcome || !VALID_OUTCOMES.has(outcome)) {
         throw new ValidationError('원하는 결과(outcome)를 선택해주세요.')
       }
-      const result = await geminiCreative.generate({ brand, target, tone, outcome, hint, brandProfile, persona, product, hooks })
+      const result = await geminiCreative.generate({ brand, target, tone, outcome, hint, brandProfile, persona, product, hooks, variationIntensity, prohibitedWords })
       return NextResponse.json(result)
     }
   )

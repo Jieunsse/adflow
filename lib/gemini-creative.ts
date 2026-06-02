@@ -52,6 +52,8 @@ export interface GenerateCreativeParams {
   hooks?: CopyHook[];
   /** ADR-039 — A/B 토너먼트 챌린저 변형 폭. 텍스트 축 한정, 미지정 시 moderate(특수 지시 없음). */
   variationIntensity?: "subtle" | "moderate" | "bold";
+  /** ADR-054 — 절대 쓰면 안 되는 브랜드 금칙어. 프롬프트에 주입해 생성 단계에서 구조 차단. */
+  prohibitedWords?: string[];
 }
 
 // ADR-039 — 변형 폭 → 생성 지시 매핑. moderate 는 기존 동작(특수 지시 없음).
@@ -173,6 +175,10 @@ export function buildCreativePrompt(p: GenerateCreativeParams): string {
 
   const policyLines = bp ? buildPolicyLines(bp) : "";
 
+  // ADR-054 — 토너먼트 금칙어 직접 주입(brandProfile.policy 와 별개). 생성 단계에서 위반을 구조 차단.
+  const directProhibited = p.prohibitedWords?.map((w) => w.trim()).filter(Boolean) ?? [];
+  const prohibitedDirectLine = directProhibited.length ? `\n금지어 (절대 사용 금지): ${directProhibited.join(", ")}` : "";
+
   const proofPoints = bp?.proofPoints?.filter((t) => t.trim());
   const proofPointLines = proofPoints?.length
     ? `\n\n근거 자료 (검증된 성과·사회적 증거 — 카피에 성과·판매·별점·효과% 등 수치를 넣을 땐 반드시 아래에서만 인용하고, 여기 없는 수치는 지어내지 마세요. 가능하면 한 변형 이상에서 자연스럽게 활용하세요):\n${proofPoints.map((t) => `- ${t.trim()}`).join("\n")}`
@@ -199,7 +205,7 @@ export function buildCreativePrompt(p: GenerateCreativeParams): string {
 타겟 오디언스: ${audienceLine}${customerVoiceLine}${personaInterestsLine}
 톤앤매너: ${toneText(p.tone)}
 원하는 결과: ${outcomeDef.outcomeLabel} (Meta ${outcomeDef.metaObjective})
-카피 방향: ${outcomeDef.copyTone}${variationLine}${hookLines}${hintLine}${policyLines}${proofPointLines}${copyRefLines}
+카피 방향: ${outcomeDef.copyTone}${variationLine}${hookLines}${hintLine}${policyLines}${prohibitedDirectLine}${proofPointLines}${copyRefLines}
 
 다음 JSON 형식으로 응답하세요:
 {

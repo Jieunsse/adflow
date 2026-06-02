@@ -11,7 +11,6 @@ import {
   initialChampion,
   judgeRoundKpis,
   isEnvelopeExhausted,
-  detectAnomaly,
   newTournamentId,
   roundCampaignId,
   MIN_ROUND_DAYS,
@@ -41,6 +40,7 @@ async function genCreative(t: Tournament): Promise<CreativeGen> {
     outcome: t.objective as ObjectiveId,
     product: { name: t.productName, description: t.productDescription || t.productName },
     variationIntensity: t.variationIntensity,
+    prohibitedWords: t.prohibitedWords, // ADR-054 — 금칙어 구조 차단(생성 단계에서 배제)
   });
   return { headlines: res.headlines, primaryTexts: res.primaryTexts };
 }
@@ -61,9 +61,7 @@ export type ServerTournamentSetup = {
   productDescription?: string;
   tone: string;
   objective: string;
-  mode: "manual-n" | "auto";
-  maxRounds?: number;
-  envelope?: { totalBudget?: number; targetDate?: string };
+  envelope?: { totalBudget?: number; targetDate?: string }; // ADR-054 — 총예산·(선택)목표일
   dailyBudget: number;
   startingCtr: number;
   // 출발 챔피언 출처 (ADR-038 결정 7). existing = 실 캠페인 카피+실 CTR 즉시 확정, ai = Gemini 부트스트랩.
@@ -106,15 +104,14 @@ export function createServerRunner(deps: {
       productDescription: setup.productDescription,
       tone: setup.tone,
       objective: setup.objective,
-      mode: setup.mode,
-      maxRounds: setup.maxRounds,
+      mode: "auto",
       envelope: setup.envelope,
       dailyBudget: setup.dailyBudget,
       champion: { headline: "", primaryText: "" },
       championCtr: setup.startingCtr,
       championSource: fromExisting ? "existing" : "ai",
       championSourceName: fromExisting ? setup.championSourceName : undefined,
-      championConfirmed: fromExisting,
+      championConfirmed: true, // ADR-054 — AI 부트스트랩·기존 광고 모두 자동 확정(예산만 사람)
       axisCursor: 0,
       rounds: [],
       spentBudget: 0,
@@ -218,7 +215,7 @@ export function createServerRunner(deps: {
   }
 
   // cron 핵심 — 활성 라운드를 Meta KPI 로 결산. MIN_ROUND_DAYS 미달이면 insufficient(미종료, 다음 폴에 재시도).
-  // settle 시 챔피언 승격 + 봉투 정지 체크. manual-n 은 봉투 소진 즉시 완료, auto 는 winner-handling 브레이크로 surface.
+  // settle 시 챔피언 승격 + 봉투 정지 체크. ADR-054 — 봉투 소진은 winner-handling 브레이크로 surface(자동 완료 X).
   async function pollAndSettle(id: string): Promise<ServerSettleResult> {
     const t = await store.get(id);
     if (!t) return { status: "no-active" };
@@ -253,8 +250,7 @@ export function createServerRunner(deps: {
     t.axisCursor += 1;
     t.spentBudget += t.dailyBudget * MIN_ROUND_DAYS; // 실 게재 라운드당 최소 기간만큼 봉투 차감(보수적)
 
-    const exhausted = isEnvelopeExhausted(t);
-    if (t.mode === "manual-n" && exhausted) t.status = "completed";
+    const exhausted = isEnvelopeExhausted(t); // ADR-054 — auto 는 자동 완료 X, winner-handling 으로 사람 대기
     await store.upsert(t);
 
     return {
@@ -266,35 +262,20 @@ export function createServerRunner(deps: {
     };
   }
 
-  // auto 무인 체인 — 결산 후 브레이크(봉투 소진·이상 신호) 없으면 다음 챌린저 자동 생성·게재.
+  // auto 무인 체인 (ADR-054) — 봉투 미소진이면 다음 챌린저 자동 생성·게재. 금칙어 구조 차단·정체 자동 돌파라 정지 없음.
   // cron 이 pollAndSettle → autoAdvance 순으로 호출. 챌린저 생성/게재 실패는 swallow(다음 폴에 재시도).
   async function autoAdvance(id: string): Promise<void> {
     const t = await store.get(id);
-    if (!t || t.mode !== "auto" || t.status === "completed") return;
+    if (!t || t.status === "completed") return;
     if (!t.championConfirmed) return;
     if (t.rounds.some((r) => r.status === "running")) return;
-    if (isEnvelopeExhausted(t) || detectAnomaly(t)) return;
+    if (isEnvelopeExhausted(t)) return;
     try {
       if (!t.pendingChallenger) await proposeChallenger(id);
       await launchRound(id);
     } catch {
       // 무인 체인만 건너뛴다.
     }
-  }
-
-  async function discardPendingChallenger(id: string): Promise<void> {
-    const t = await store.get(id);
-    if (!t) return;
-    t.pendingChallenger = undefined;
-    await store.upsert(t);
-  }
-
-  async function resolveAnomaly(id: string): Promise<void> {
-    const t = await store.get(id);
-    if (!t) return;
-    const last = t.rounds.filter((r) => r.status === "settled").at(-1);
-    t.anomalyClearedRound = last?.index ?? 0;
-    await store.upsert(t);
   }
 
   async function refillEnvelope(id: string, addBudget = 300000): Promise<void> {
@@ -315,8 +296,6 @@ export function createServerRunner(deps: {
     endTournament,
     pollAndSettle,
     autoAdvance,
-    discardPendingChallenger,
-    resolveAnomaly,
     refillEnvelope,
   };
 }

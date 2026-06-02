@@ -11,8 +11,6 @@ import {
   proposeChallenger,
   setManualChallenger,
   endTournament,
-  resolveAnomaly,
-  discardPendingChallenger,
   refillEnvelope,
 } from "./runner";
 import { getTournament, upsertTournament, listTournaments, deriveBeat } from "./tournament";
@@ -59,9 +57,8 @@ export async function demoCascade(id: string, roundDays = 7): Promise<CascadeSte
     if (!t) break;
     const beat = deriveBeat(t);
     if (beat === "done") break;
-    // ADR-035 진짜 브레이크 — 사람이 처리해야 멈춘다(완료·봉투 소진·이상 신호·셋업 게이트).
-    // manual-n 의 between·challenger-review 는 발표자 캐스케이드가 자동 통과(다음 챌린저 제안→게재).
-    if (beat === "winner-handling" || beat === "anomaly" || beat === "champion-review") break;
+    // ADR-054 진짜 브레이크 — 예산 소진(winner-handling)·출발 챔피언 게이트(champion-review)만 멈춘다.
+    if (beat === "winner-handling" || beat === "champion-review") break;
     const running = t.rounds.find((r) => r.status === "running");
     if (running) {
       const { result } = await demoMutate(id, { action: "settle", days: running.fastForwardDays + roundDays });
@@ -86,8 +83,6 @@ export interface TournamentClient {
   setChallenger(id: string, v: TourVariant): Promise<Tournament | null>;
   launch(id: string): Promise<Tournament | null>;
   end(id: string): Promise<Tournament | null>;
-  resolveAnomaly(id: string): Promise<Tournament | null>;
-  discardChallenger(id: string): Promise<Tournament | null>;
   refillEnvelope(id: string, addBudget?: number): Promise<Tournament | null>;
   // ADR-047 — 이 토너먼트 맥락(브랜드·제품·목표)에 관련된 학습 노트(Hypothesis Ledger). 데모=localStorage, 실=투영.
   getLedger(id: string): Promise<Hypothesis[]>;
@@ -135,14 +130,6 @@ function demoClient(): TournamentClient {
       endTournament(id);
       return snap(id);
     },
-    async resolveAnomaly(id) {
-      resolveAnomaly(id);
-      return snap(id);
-    },
-    async discardChallenger(id) {
-      discardPendingChallenger(id);
-      return snap(id);
-    },
     async refillEnvelope(id, addBudget) {
       refillEnvelope(id, addBudget);
       return snap(id);
@@ -182,8 +169,6 @@ function realClient(): TournamentClient {
       await apiJson(`/api/tournaments/${id}`, { method: "DELETE" });
       return get(id);
     },
-    resolveAnomaly: (id) => act(id, { action: "resolve-anomaly" }),
-    discardChallenger: (id) => act(id, { action: "discard-challenger" }),
     refillEnvelope: (id, addBudget) => act(id, { action: "refill-envelope", addBudget }),
     async getLedger(id) {
       return (await apiJson<{ ledger: Hypothesis[] }>(`/api/tournaments/${id}/ledger`)).ledger;

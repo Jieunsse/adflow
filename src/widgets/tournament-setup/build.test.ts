@@ -22,7 +22,7 @@ const baseForm: SetupFormState = {
   description: "  비건 보습  ",
   tone: "warm",
   objective: "traffic",
-  maxRounds: 3,
+  totalBudget: 600000,
   dailyBudget: 30000,
   chAxis: "headline",
   challenger: { headline: "", primary: "", image: "" },
@@ -141,6 +141,7 @@ describe("canStart 게이트", () => {
   });
   it("예산 0 → 차단", () => {
     expect(canStart({ ...existingForm, dailyBudget: 0 }, false)).toBe(false);
+    expect(canStart({ ...existingForm, totalBudget: 0 }, false)).toBe(false);
   });
   it("challengerReady — image 축은 image 입력 필요", () => {
     expect(challengerReady("image", { headline: "", primary: "", image: "" })).toBe(false);

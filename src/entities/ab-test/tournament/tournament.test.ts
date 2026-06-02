@@ -153,7 +153,7 @@ describe("nextAxis (좌표상승 순회)", () => {
   });
 });
 
-// ADR-032 결정 4 — 정지는 자원 봉투(수동-N 라운드 / 자동 예산·목표일), 통계 수렴 아님.
+// ADR-054 — 정지는 자원 봉투(자동 예산·목표일) 소진, 통계 수렴 아님.
 function settledRound(ff: number): TourRound {
   return { ...round({ fastForwardDays: ff }), status: "settled" };
 }
@@ -165,7 +165,7 @@ function tour(extra: Partial<Tournament>): Tournament {
     productName: "데모 제품",
     tone: "warm",
     objective: "traffic",
-    mode: "manual-n",
+    mode: "auto",
     dailyBudget: 50000,
     champion: A,
     championCtr: 1.8,
@@ -179,12 +179,6 @@ function tour(extra: Partial<Tournament>): Tournament {
 }
 
 describe("isEnvelopeExhausted (자원 봉투 정지)", () => {
-  it("수동-N: settled 라운드 수가 maxRounds 에 도달하면 소진", () => {
-    const base = { mode: "manual-n" as const, maxRounds: 3 };
-    expect(isEnvelopeExhausted(tour({ ...base, rounds: [settledRound(7), settledRound(7)] }))).toBe(false);
-    expect(isEnvelopeExhausted(tour({ ...base, rounds: [settledRound(7), settledRound(7), settledRound(7)] }))).toBe(true);
-  });
-
   it("자동 예산: 누적 소진이 총예산 이상이면 소진", () => {
     const base = { mode: "auto" as const, envelope: { totalBudget: 300000 } };
     expect(isEnvelopeExhausted(tour({ ...base, spentBudget: 200000 }))).toBe(false);

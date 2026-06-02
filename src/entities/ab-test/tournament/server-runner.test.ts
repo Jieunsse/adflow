@@ -75,12 +75,12 @@ describe("createServerRunner", () => {
     expect(t?.delivery?.accessToken).toBe("tok");
   });
 
-  it("ai 챔피언은 Gemini 로 생성하고 미확정 상태로 둔다", async () => {
+  it("ai 챔피언은 Gemini 로 생성하고 자동 확정된다 (ADR-054)", async () => {
     const id = await runner().createTournament(
       baseSetup({ championSource: "ai", startingChampion: undefined, championSourceName: undefined }),
     );
     const t = await store.get(id);
-    expect(t?.championConfirmed).toBe(false);
+    expect(t?.championConfirmed).toBe(true);
     expect(t?.champion.headline).toBe("AI 헤드라인1");
   });
 
@@ -173,11 +173,11 @@ describe("createServerRunner", () => {
     expect(res.status).toBe("insufficient");
   });
 
-  it("autoAdvance 는 챔피언 미확정(ai 부트스트랩) 시 게재하지 않는다", async () => {
+  it("autoAdvance 는 챔피언 미확정(championConfirmed=false) 게이트면 게재하지 않는다", async () => {
     const r = runner();
-    const id = await r.createTournament(
-      baseSetup({ championSource: "ai", startingChampion: undefined, championSourceName: undefined }),
-    );
+    const id = await r.createTournament(baseSetup());
+    const gated = await store.get(id);
+    await store.upsert({ ...gated!, championConfirmed: false }); // 셋업 게이트 통과 전 상태
     await r.autoAdvance(id);
     const t = await store.get(id);
     expect(t?.rounds.length).toBe(0);

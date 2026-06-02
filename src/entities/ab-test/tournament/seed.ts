@@ -4,8 +4,8 @@
 // listTournaments() 가 비면 대시보드가 빈 상태만 보이므로, 결정 대기·진행 중·완료 세 서사를 모두 채우는
 // 고정 토너먼트 7개를 멱등 seed 한다. 라운드 성과는 실제 엔진(settleRound)으로 시뮬레이션해
 // 대시보드 집계(lift·누적 지출·trophy)와 일관성을 유지한다 — mock 은 Meta 게재·시간 경과뿐.
-// ADR-035 — 시드는 전부 auto 무인. "결정 대기"는 꼭 사람이 봐야 해서 자동화가 멈춘 브레이크 3종
-// (ⓐ 봉투 소진 winner-handling · ⓑ 이상 신호 anomaly · ⓒ 출발 챔피언 champion-review) 만 surface 한다.
+// ADR-054 — 시드는 전부 auto 무인. "결정 대기"는 예산 소진(winner-handling) 하나뿐 — 돈 방향만 사람.
+// 금칙어는 생성 단계 구조 차단, 정체는 selectNextLever 자동 돌파, AI 챔피언은 자동 확정이라 멈추지 않는다.
 
 import {
   getTournament,
@@ -43,16 +43,14 @@ type SeedSpec = {
   productId?: string; // Ledger 맥락 키 — 생략 시 id (제품별 학습 격리). ADR-044
   tone: string;
   objective: string;
-  maxRounds: number;
   startChampion: TourVariant;
   startCtr: number;
   mutations: Mutation[]; // 라운드별 챌린저 — 현 챔피언에서 한 필드만 교체
   finalStatus: "running" | "completed";
   championConfirmed: boolean;
-  mode?: TourMode; // 기본 auto (ADR-035 무인)
+  mode?: TourMode; // 기본 auto (ADR-054 무인)
   runningLast?: boolean; // 마지막 mutation 을 결산하지 않고 라이브 라운드로 둠
-  envelope?: TourEnvelope; // ⓐ winner-handling 시드 — 소진된 자원 봉투
-  prohibitedWords?: string[]; // ⓑ anomaly 시드 — 금칙어 위반 챌린저 감지용
+  envelope?: TourEnvelope; // winner-handling 시드 — 소진된 자원 봉투
 };
 
 const DAILY_BUDGET = 50000;
@@ -110,14 +108,12 @@ function build(spec: SeedSpec): Tournament {
     tone: spec.tone,
     objective: spec.objective,
     mode: spec.mode ?? "auto",
-    maxRounds: spec.maxRounds,
     dailyBudget: DAILY_BUDGET,
     champion,
     championCtr,
     championSource: "ai",
     championConfirmed: spec.championConfirmed,
     envelope: spec.envelope,
-    prohibitedWords: spec.prohibitedWords,
     axisCursor,
     rounds,
     spentBudget,
@@ -126,7 +122,8 @@ function build(spec: SeedSpec): Tournament {
   };
 }
 
-// 고정 시드 7종 — 완료 2 / 진행 2 / 결정 대기 3(ADR-035 브레이크: winner-handling·anomaly·champion-review).
+// 고정 시드 7종 (ADR-054) — 완료 2 / 진행 3 / 결정 대기 1(winner-handling=예산) + 캐스케이드 1.
+// 옛 anomaly·champion-review 시드는 정상 무인 진행으로 전환했다(금칙어·정체·AI 챔피언은 더는 멈추지 않음).
 const SPECS: SeedSpec[] = [
   // ── 완료 ① 수분 크림 (4라운드, 최대 lift 후보) ──
   {
@@ -135,7 +132,6 @@ const SPECS: SeedSpec[] = [
     productName: "수분 가득 비건 크림",
     tone: "warm",
     objective: "traffic",
-    maxRounds: 4,
     startCtr: 1.85,
     startChampion: {
       headline: "건조한 피부에 수분 한 겹",
@@ -158,7 +154,6 @@ const SPECS: SeedSpec[] = [
     productName: "진정 비건 토너",
     tone: "warm",
     objective: "traffic",
-    maxRounds: 3,
     startCtr: 1.60,
     startChampion: {
       headline: "세안 후 첫 단계, 순한 진정 토너",
@@ -180,7 +175,6 @@ const SPECS: SeedSpec[] = [
     productName: "약산성 비건 클렌저",
     tone: "warm",
     objective: "traffic",
-    maxRounds: 4,
     startCtr: 1.95,
     startChampion: {
       headline: "하루의 끝, 순하게 씻어내요",
@@ -203,7 +197,6 @@ const SPECS: SeedSpec[] = [
     productName: "딥클렌징 비건 오일",
     tone: "warm",
     objective: "traffic",
-    maxRounds: 4,
     startCtr: 2.25,
     startChampion: {
       headline: "메이크업도 산뜻하게 녹여내요",
@@ -227,7 +220,6 @@ const SPECS: SeedSpec[] = [
     productName: "수분 충전 비건 세럼",
     tone: "pro",
     objective: "traffic",
-    maxRounds: 4,
     startCtr: 2.05,
     startChampion: {
       headline: "속건조 피부에 수분 채우기",
@@ -242,14 +234,13 @@ const SPECS: SeedSpec[] = [
     championConfirmed: true,
     envelope: { totalBudget: 600000 }, // 2R 누적 지출 70만 > 60만 → isEnvelopeExhausted
   },
-  // ── 결정 대기 ⓑ anomaly — 금칙어 위반 챌린저 (선크림, AI 가 '최저가' 표현 생성 → 자동 진행 정지) ──
+  // ── 진행 중 ③ 선크림 (2 결산 + 1 라이브) — 옛 anomaly 시드, 금칙어 없이 정상 무인 진행 ──
   {
     id: "browse_demo_tourn_suncream",
     createdAt: "2026-05-30T07:20:00+09:00",
     productName: "데일리 비건 선크림",
     tone: "pro",
     objective: "traffic",
-    maxRounds: 3,
     startCtr: 1.95,
     startChampion: {
       headline: "매일 바르는 순한 식물성 자외선 차단",
@@ -257,32 +248,34 @@ const SPECS: SeedSpec[] = [
       imageUrl: "/demo/library/suncream.png",
     },
     mutations: [
-      // R1·R2 는 정상 카피로 무인 진행, R3 에서 AI 가 '최저가' 표현을 생성 → 자동 진행 정지.
       { field: "primaryText", value: "백탁 없이 산뜻하게 흡수되는 비건 선크림. 민감 피부도 매일 부담 없이 발라요.", outcome: "win" },
       { field: "headline", value: "데일리 식물성 자외선 차단, 순하게", outcome: "hold" },
-      { field: "primaryText", value: "지금 최저가로 만나는 데일리 비건 선크림. 백탁 없이 산뜻하게 발리고 민감한 피부도 부담 없어요.", outcome: "hold" },
+      { field: "primaryText", value: "끈적임 없이 흡수되는 데일리 비건 선크림. 백탁 없이 산뜻하게 발리고 민감한 피부도 부담 없어요.", outcome: "win" },
     ],
     finalStatus: "running",
     championConfirmed: true,
-    prohibitedWords: ["최저가"], // R3 챌린저 광고 카피가 금칙어 → detectAnomaly(prohibited)
+    runningLast: true,
   },
-  // ── 결정 대기 ⓒ champion-review — 출발 챔피언 미확정 (립밤, AI 부트스트랩 셋업 게이트) ──
+  // ── 진행 중 ④ 립밤 — 옛 champion-review 시드, AI 챔피언 자동 확정 후 무인 진행 ──
   {
     id: "browse_demo_tourn_lipbalm",
     createdAt: "2026-05-30T07:00:00+09:00",
     productName: "보습 비건 립밤",
     tone: "trendy",
     objective: "traffic",
-    maxRounds: 3,
     startCtr: 2.10,
     startChampion: {
       headline: "건조한 입술에 촉촉 한 겹",
       primaryText: "식물성 보습 성분을 담은 비건 립밤. 무향으로 자극 없이, 하루 종일 촉촉하게.",
       imageUrl: "/demo/library/lipbalm.png",
     },
-    mutations: [],
+    mutations: [
+      { field: "headline", value: "갈라지는 입술, 촉촉하게 채워요", outcome: "win" },
+      { field: "primaryText", value: "식물성 보습 성분으로 하루 종일 촉촉하게. 무향·무색소라 민감한 입술도 편하게 발라요.", outcome: "hold" },
+    ],
     finalStatus: "running",
-    championConfirmed: false,
+    championConfirmed: true,
+    runningLast: true,
   },
   // ── 가설 캐스케이드 쇼케이스 (ADR-044) — auto·봉투 보유·라운드 0 ──
   // 콘솔 시간 1회 advance 가 봉투 소진(winner-handling)까지 전체 루프를 돈다. 라운드는 가설 생성기가
@@ -293,7 +286,6 @@ const SPECS: SeedSpec[] = [
     productName: "비타민 비건 앰플",
     tone: "pro",
     objective: "traffic",
-    maxRounds: 6,
     startCtr: 1.70,
     startChampion: {
       headline: "칙칙한 피부에 비타민 한 방울",
@@ -317,7 +309,9 @@ export function seedTournamentDemo(): void {
     if (!isDemoSeed) continue; // 유저가 만든 토너먼트(tourn_*)는 건드리지 않는다.
     // 현 SPEC 에 없거나, 옛 brandProfileId("browse_demo")로 박힌 데모 시드는 정리 후 재시드
     // — ADR-050 Ledger 키 정렬(demo-greenroutine-001)을 기존 localStorage 에도 한 번 반영한다.
-    if (!validIds.has(t.id) || t.brandProfileId === "browse_demo") removeTournament(t.id);
+    // ADR-054 — 옛 브레이크 시드(미확정 챔피언·금칙어)는 자가 치유: 제거 후 정상 무인 시드로 재시드.
+    const staleAdr054 = t.championConfirmed === false || !!t.prohibitedWords?.length;
+    if (!validIds.has(t.id) || t.brandProfileId === "browse_demo" || staleAdr054) removeTournament(t.id);
   }
   for (const spec of SPECS) {
     if (!getTournament(spec.id)) upsertTournament(build(spec));

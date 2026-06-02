@@ -1,7 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
   deriveBeat,
-  detectAnomaly,
   isDecisionBeat,
   isRunningBeat,
   type Tournament,
@@ -52,74 +51,43 @@ function tour(extra: Partial<Tournament>): Tournament {
   };
 }
 
-describe("ADR-035 deriveBeat — auto 무인 / 필요 브레이크", () => {
+describe("ADR-054 deriveBeat — 완전 무인 / 예산만 사람", () => {
   it("출발 챔피언 미확정 = champion-review (셋업 게이트)", () => {
     expect(deriveBeat(tour({ championConfirmed: false }))).toBe("champion-review");
   });
 
-  it("auto · 봉투 미소진 · 정상 = auto-running (무인)", () => {
+  it("봉투 미소진 · 정상 = auto-running (무인)", () => {
     const t = tour({ envelope: { totalBudget: 1_000_000 }, rounds: [settled(1, "B")], spentBudget: 350000 });
     expect(deriveBeat(t)).toBe("auto-running");
   });
 
-  it("auto · 봉투 소진 = winner-handling (ⓐ)", () => {
+  it("봉투 소진 = winner-handling (예산 — 유일한 사람 결정)", () => {
     const t = tour({ envelope: { totalBudget: 300000 }, spentBudget: 300000, rounds: [settled(1, "B")] });
     expect(deriveBeat(t)).toBe("winner-handling");
   });
 
-  it("auto · 연속 3R 챌린저 미승격 = anomaly (ⓑ 정체, ADR-037)", () => {
-    const two = tour({ envelope: { totalBudget: 1_000_000 }, rounds: [settled(1, "A"), settled(2, "A")] });
-    expect(detectAnomaly(two)).toBeNull(); // 2R 만으로는 미발동 (inconclusive 정상)
+  it("연속 3R 챌린저 미승격이라도 멈추지 않는다 (정체 자동 돌파)", () => {
     const three = tour({ envelope: { totalBudget: 1_000_000 }, rounds: [settled(1, "A"), settled(2, "A"), settled(3, "A")] });
-    expect(detectAnomaly(three)?.kind).toBe("stagnation");
-    expect(deriveBeat(three)).toBe("anomaly");
+    expect(deriveBeat(three)).toBe("auto-running");
   });
 
-  it("auto · 금칙어 위반 챌린저 = anomaly (ⓑ 금칙어)", () => {
+  it("금칙어가 든 챌린저라도 멈추지 않는다 (생성 단계 구조 차단)", () => {
     const bad: TourVariant = { headline: "역대급 1위 할인", primaryText: "지금 사세요" };
-    const t = tour({
-      envelope: { totalBudget: 1_000_000 },
-      prohibitedWords: ["역대급", "1위"],
-      rounds: [settled(1, "B", bad)],
-    });
-    expect(detectAnomaly(t)?.kind).toBe("prohibited");
-    expect(deriveBeat(t)).toBe("anomaly");
-  });
-
-  it("이상 신호를 사람이 '계속'(anomalyClearedRound)하면 auto-running 으로 재개", () => {
-    const t = tour({
-      envelope: { totalBudget: 1_000_000 },
-      rounds: [settled(1, "A"), settled(2, "A"), settled(3, "A")],
-      anomalyClearedRound: 3,
-    });
+    const t = tour({ envelope: { totalBudget: 1_000_000 }, prohibitedWords: ["역대급", "1위"], rounds: [settled(1, "B", bad)] });
     expect(deriveBeat(t)).toBe("auto-running");
   });
 
-  it("완료 = done, 우선순위는 winner > anomaly", () => {
+  it("완료 = done, 봉투 소진이 진행보다 우선", () => {
     expect(deriveBeat(tour({ status: "completed" }))).toBe("done");
-    const both = tour({
-      envelope: { totalBudget: 300000 },
-      spentBudget: 300000,
-      rounds: [settled(1, "A"), settled(2, "A"), settled(3, "A")],
-    });
-    expect(deriveBeat(both)).toBe("winner-handling");
+    const exhausted = tour({ envelope: { totalBudget: 300000 }, spentBudget: 300000, rounds: [settled(1, "A")] });
+    expect(deriveBeat(exhausted)).toBe("winner-handling");
   });
 
-  it("manual-n = 매 단계 제어 (live / challenger-review / between)", () => {
-    const live = tour({ mode: "manual-n", rounds: [{ ...settled(1, "B"), status: "running" }] });
-    expect(deriveBeat(live)).toBe("live");
-    const review = tour({ mode: "manual-n", pendingChallenger: B });
-    expect(deriveBeat(review)).toBe("challenger-review");
-    const between = tour({ mode: "manual-n", rounds: [settled(1, "B")] });
-    expect(deriveBeat(between)).toBe("between");
-  });
-
-  it("isDecisionBeat / isRunningBeat 분류", () => {
+  it("isDecisionBeat / isRunningBeat 분류 (ADR-054 — 예산·셋업 게이트만 결정)", () => {
     expect(isDecisionBeat("winner-handling")).toBe(true);
-    expect(isDecisionBeat("anomaly")).toBe(true);
+    expect(isDecisionBeat("champion-review")).toBe(true);
     expect(isDecisionBeat("auto-running")).toBe(false);
     expect(isRunningBeat("auto-running")).toBe(true);
-    expect(isRunningBeat("live")).toBe(true);
     expect(isRunningBeat("winner-handling")).toBe(false);
   });
 });

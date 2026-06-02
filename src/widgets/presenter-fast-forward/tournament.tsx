@@ -24,12 +24,11 @@ export default function PresenterTournamentBar({ t }: { t: Tournament }) {
   const spec = tourMetricSpec(t.objective);
   const active = t.rounds.find((r) => r.status === "running") ?? null;
   const live = active ? roundAdKpis(active, t.championCtr, t.dailyBudget, undefined, t.objective) : null;
-  // ADR-044 캐스케이드 — 진짜 브레이크(완료·봉투 소진·이상 신호·셋업 게이트)가 아니면 끝까지 돌릴 수 있다.
-  // manual-n 의 between·challenger-review(다음 챌린저 제안→게재)도 발표자 빨리감기가 자동 통과한다.
+  // ADR-054 캐스케이드 — 예산 소진(winner-handling)·셋업 게이트(champion-review)가 아니면 끝까지 돌린다.
   const beat = deriveBeat(t);
-  const canAdvance = beat !== "done" && beat !== "winner-handling" && beat !== "anomaly" && beat !== "champion-review";
+  const canAdvance = beat !== "done" && beat !== "winner-handling" && beat !== "champion-review";
 
-  // 콘솔 시간 1회 advance = 봉투 소진/필요 브레이크(ADR-035)까지 전체 auto 루프 캐스케이드.
+  // 콘솔 시간 1회 advance = 봉투 소진까지 전체 auto 루프 캐스케이드 (ADR-054).
   const fastForward = async () => {
     setRunning(true);
     try {
@@ -77,7 +76,7 @@ export default function PresenterTournamentBar({ t }: { t: Tournament }) {
       <ConsoleStatusBadge ok icon="check-circle">토너먼트 완료 · {settledCount}라운드</ConsoleStatusBadge>
     ) : (
       <span className="font-medium text-[12.5px] leading-[1.5] text-[var(--w-fg-neutral)]">
-        {settledCount}/{t.maxRounds ?? "—"}라운드 완료 · 빨리감기로 남은 라운드를 자동 진행해요
+        {settledCount}라운드 완료 · 빨리감기로 다음 라운드를 자동 진행해요
       </span>
     );
 

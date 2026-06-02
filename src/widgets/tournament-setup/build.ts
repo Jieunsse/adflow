@@ -24,7 +24,7 @@ export type SetupFormState = {
   description: string;
   tone: string;
   objective: string;
-  maxRounds: number;
+  totalBudget: number; // ADR-054 — 토너먼트 총예산(봉투). 소진 시 winner-handling 으로 사람 결정
   dailyBudget: number;
   chAxis: TourAxis;
   challenger: ChallengerInputs;
@@ -46,7 +46,7 @@ export type TournamentRequestBody = {
   tone: string;
   objective: string;
   mode: "auto";
-  maxRounds: number;
+  envelope: { totalBudget: number };
   dailyBudget: number;
   startingCtr: number;
   championSource: "ai" | "existing";
@@ -77,7 +77,7 @@ export function buildTournamentRequest(f: SetupFormState, brandProfileId: string
     tone: f.tone,
     objective: f.objective,
     mode: "auto",
-    maxRounds: f.maxRounds,
+    envelope: { totalBudget: f.totalBudget },
     dailyBudget: f.dailyBudget,
     startingCtr: fromExisting ? f.selected!.ctr : STARTING_CTR,
     championSource: fromExisting ? "existing" : "ai",
@@ -103,7 +103,7 @@ export function buildDemoSetup(f: SetupFormState): TournamentSetup {
     productDescription: f.description.trim(),
     tone: f.tone,
     objective: f.objective,
-    maxRounds: f.maxRounds,
+    envelope: { totalBudget: f.totalBudget },
     dailyBudget: f.dailyBudget,
     startingCtr: fromExisting ? f.selected!.ctr : STARTING_CTR,
     championSource: fromExisting ? "existing" : "ai",
@@ -149,5 +149,5 @@ export function canAdvanceDesign(f: SetupFormState): boolean {
 
 // 시작 가능 — 게재 조건까지 충족. real 은 랜딩 URL 필수.
 export function canStart(f: SetupFormState, real: boolean): boolean {
-  return canAdvanceDesign(f) && f.maxRounds >= 1 && f.dailyBudget > 0 && (!real || !!f.landingUrl.trim());
+  return canAdvanceDesign(f) && f.totalBudget > 0 && f.dailyBudget > 0 && (!real || !!f.landingUrl.trim());
 }

@@ -113,7 +113,7 @@ export default function AbTestsPage() {
 const krw = (n: number) => `₩${(n || 0).toLocaleString("ko-KR")}`;
 const FONT_MONO = "font-[family-name:var(--w-font-mono)]";
 
-// ADR-035 — 비트는 엔진 deriveBeat 단일 소스 (auto 무인 / manual-n 제어 분기).
+// ADR-054 — 비트는 엔진 deriveBeat 단일 소스 (완전 무인 / 예산 소진만 사람).
 
 const settledCount = (t: Tournament) => t.rounds.filter((r) => r.status === "settled").length;
 const startCtrOf = (t: Tournament) => t.rounds[0]?.verdict?.ctrA ?? t.championCtr;
@@ -141,11 +141,8 @@ function roundPos(t: Tournament): number {
 }
 
 function decisionStage(b: TourBeat): string {
-  if (b === "winner-handling") return "위너 처리 대기";
-  if (b === "anomaly") return "이상 신호 감지";
   if (b === "champion-review") return "챔피언 검토 대기";
-  if (b === "challenger-review") return "챌린저 검토 대기";
-  return "다음 라운드 결정";
+  return "위너 처리 대기"; // ADR-054 — 결정 대기는 예산 소진(winner-handling)이 기본
 }
 
 // 헤더 부제 — 정적 설명 대신 현황 한 줄. 우선순위: 결정 대기 > 진행 중 > 완료 평균 Lift.
@@ -415,7 +412,7 @@ function RoundDots({ round, total }: { round: number; total: number }) {
 
 function RunningCard({ t, onClick }: { t: Tournament; onClick: () => void }) {
   const last = t.rounds.at(-1);
-  const total = t.maxRounds ?? roundPos(t);
+  const total = roundPos(t); // ADR-054 — 고정 라운드 수 폐기, 진행 위치로 표시
   const spec = tourMetricSpec(t.objective);
   return (
     <div
@@ -454,7 +451,7 @@ function RunningCard({ t, onClick }: { t: Tournament; onClick: () => void }) {
 }
 
 function DecisionCard({ t, onClick }: { t: Tournament; onClick: () => void }) {
-  const total = t.maxRounds ?? roundPos(t);
+  const total = roundPos(t); // ADR-054 — 고정 라운드 수 폐기, 진행 위치로 표시
   const spec = tourMetricSpec(t.objective);
   return (
     <div

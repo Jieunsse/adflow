@@ -11,6 +11,15 @@ const TABLE = "tournaments";
 
 type Row = { data: Tournament };
 
+// ADR-054 데이터 패치 — 레거시 manual-n 행을 auto 로 흡수(읽기 경계). 폴러가 mode==="auto" 만 진행하므로
+// 패치하지 않으면 옛 토너먼트가 자동 진행에서 누락돼 멈춘다. maxRounds 등 죽은 필드는 무시.
+function normalize(t: Tournament): Tournament {
+  return (t.mode as string) === "auto" ? t : { ...t, mode: "auto" };
+}
+function normalizeRows(rows: Row[] | null): Tournament[] {
+  return (rows ?? []).map((r) => normalize(r.data));
+}
+
 function client() {
   const c = getSupabaseServer();
   if (!c) throw new Error("Supabase not configured — tournaments require persistence");
@@ -21,7 +30,7 @@ export const supabaseTournamentStore: TournamentStore = {
   async list() {
     const { data, error } = await client().from(TABLE).select("data").order("created_at", { ascending: false });
     if (error) throw error;
-    return ((data as Row[]) ?? []).map((r) => r.data);
+    return normalizeRows(data as Row[] | null);
   },
 
   async listByOwner(ownerKey) {
@@ -31,7 +40,7 @@ export const supabaseTournamentStore: TournamentStore = {
       .eq("user_email", ownerKey)
       .order("created_at", { ascending: false });
     if (error) throw error;
-    return ((data as Row[]) ?? []).map((r) => r.data);
+    return normalizeRows(data as Row[] | null);
   },
 
   // ADR-047 — Ledger 투영 입력. brand_profile_id·user_email 컬럼으로 좁혀 소유 유저의 같은 브랜드 토너먼트만.
@@ -43,13 +52,13 @@ export const supabaseTournamentStore: TournamentStore = {
       .eq("user_email", ownerKey)
       .order("created_at", { ascending: false });
     if (error) throw error;
-    return ((data as Row[]) ?? []).map((r) => r.data);
+    return normalizeRows(data as Row[] | null);
   },
 
   async get(id) {
     const { data, error } = await client().from(TABLE).select("data").eq("id", id).maybeSingle();
     if (error) throw error;
-    return (data as Row | null)?.data ?? null;
+    { const d = (data as Row | null)?.data; return d ? normalize(d) : null; }
   },
 
   async upsert(t) {

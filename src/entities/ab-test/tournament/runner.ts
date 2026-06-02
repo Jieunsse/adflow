@@ -11,10 +11,10 @@ import {
   newTournamentId,
   initialChampion,
   isEnvelopeExhausted,
-  detectAnomaly,
   type Tournament,
   type TourVariant,
   type TourRound,
+  type TourEnvelope,
   type VariationIntensity,
 } from "./tournament";
 import { selectNextLever, buildHypothesis, buildLeverChallenger, summarizeLedger } from "./hypothesis";
@@ -37,6 +37,7 @@ async function genCreative(t: Tournament): Promise<CreativeGen> {
       outcome: t.objective,
       product: { name: t.productName, description: t.productDescription || t.productName },
       variationIntensity: t.variationIntensity,
+      prohibitedWords: t.prohibitedWords, // ADR-054 — 금칙어 구조 차단(생성 단계에서 배제)
     }),
   });
   if (!res.ok) throw new Error("gen failed");
@@ -51,7 +52,7 @@ export type TournamentSetup = {
   productDescription?: string;
   tone: string;
   objective: string;
-  maxRounds: number;
+  envelope?: TourEnvelope; // ADR-054 — 총예산·(선택)목표일. 소진 = winner-handling
   dailyBudget: number;
   startingCtr: number;
   // 출발 챔피언 출처. existing 이면 기존 광고 카피를 시드로 받아 즉시 확정, 생략 시 AI 부트스트랩.
@@ -75,14 +76,14 @@ export async function startTournament(setup: TournamentSetup): Promise<string> {
     tone: setup.tone,
     objective: setup.objective,
     variationIntensity: setup.variationIntensity,
-    mode: "manual-n",
-    maxRounds: setup.maxRounds,
+    mode: "auto",
+    envelope: setup.envelope,
     dailyBudget: setup.dailyBudget,
     champion: { headline: "", primaryText: "" },
     championCtr: setup.startingCtr,
     championSource: fromExisting ? "existing" : "ai",
     championSourceName: fromExisting ? setup.championSourceName : undefined,
-    championConfirmed: fromExisting,
+    championConfirmed: true, // ADR-054 — AI 부트스트랩·기존 광고 모두 자동 확정(예산만 사람)
     axisCursor: 0,
     rounds: [],
     spentBudget: 0,
@@ -175,15 +176,16 @@ export function settleActiveRound(id: string, days = 0): RoundSettleResult {
   return result;
 }
 
-/* ─── ADR-035 무인 루프 + 필요 브레이크 ──────────────────── */
+/* ─── ADR-054 무인 루프 — 예산 소진에서만 멈춤 ──────────────────── */
 
-// auto 무인 체인: 결산 후 브레이크(봉투 소진·이상 신호)가 없으면 다음 챌린저를 자동 생성·게재.
+// auto 무인 체인: 봉투 미소진이면 다음 챌린저를 자동 생성·게재. 금칙어는 생성 단계에서 차단,
+// 정체는 proposeChallenger 의 selectNextLever 가 다른 레버로 자동 돌파 — 멈추지 않는다.
 export async function autoAdvanceTournament(id: string): Promise<void> {
   const t = getTournament(id);
-  if (!t || t.mode !== "auto" || t.status === "completed") return;
-  if (!t.championConfirmed) return; // ⓒ 출발 챔피언 미확정 — 셋업 게이트, 사람 대기
+  if (!t || t.status === "completed") return;
+  if (!t.championConfirmed) return; // 출발 챔피언 게이트 (existing 1회 확인)
   if (t.rounds.some((r) => r.status === "running")) return; // 이미 라이브
-  if (isEnvelopeExhausted(t) || detectAnomaly(t)) return; // 브레이크 — 사람 대기
+  if (isEnvelopeExhausted(t)) return; // 봉투 소진 — winner-handling 사람 대기
   try {
     if (!t.pendingChallenger) await proposeChallenger(id); // 사람이 손본 챌린저가 있으면 그대로, 없으면 Gemini 생성
     launchRound(id); // pending → 라운드 게재
@@ -192,24 +194,7 @@ export async function autoAdvanceTournament(id: string): Promise<void> {
   }
 }
 
-// ⓑ 이상 신호 "챌린저 손보기" 취소 — 손보던 pending 챌린저를 버려 무인 생성으로 되돌린다.
-export function discardPendingChallenger(id: string): void {
-  const t = getTournament(id);
-  if (!t) return;
-  t.pendingChallenger = undefined;
-  upsertTournament(t);
-}
-
-// ⓑ 이상 신호 "계속" — 현재 라운드까지 해소 표시 후 auto 루프 재개.
-export function resolveAnomaly(id: string): void {
-  const t = getTournament(id);
-  if (!t) return;
-  const last = t.rounds.filter((r) => r.status === "settled").at(-1);
-  t.anomalyClearedRound = last?.index ?? 0;
-  upsertTournament(t);
-}
-
-// ⓐ winner 처리 "봉투 리필" — 총예산을 늘려 무인 루프 재개.
+// winner 처리 "봉투 리필" — 총예산을 늘려 무인 루프 재개.
 export function refillEnvelope(id: string, addBudget = 300000): void {
   const t = getTournament(id);
   if (!t) return;

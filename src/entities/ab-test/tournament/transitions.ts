@@ -7,7 +7,6 @@ import {
   deriveAxis,
   settleRound,
   isEnvelopeExhausted,
-  detectAnomaly,
   roundCampaignId,
   type Tournament,
   type TourRound,
@@ -87,8 +86,7 @@ export function applySettle(t: Tournament, days = 0): { t: Tournament; result: R
   t.axisCursor += 1;
   t.spentBudget += t.dailyBudget * r.fastForwardDays;
 
-  const exhausted = isEnvelopeExhausted(t);
-  if (t.mode === "manual-n" && exhausted) t.status = "completed";
+  const exhausted = isEnvelopeExhausted(t); // ADR-054 — auto 는 winner-handling 으로 사람 대기(자동 완료 X)
 
   return {
     t,
@@ -105,16 +103,15 @@ export function applySettle(t: Tournament, days = 0): { t: Tournament; result: R
   };
 }
 
-// 다음 가설을 세워 챌린저 자동 생성·게재. auto 무인 체인 + manual-n 데모 캐스케이드(발표자 빨리감기) 공용.
+// 다음 가설을 세워 챌린저 자동 생성·게재. auto 무인 체인 + 데모 캐스케이드(발표자 빨리감기) 공용.
 // ADR-044 — AXIS_CYCLE 순회 대신 Ledger(호출 측이 brandProfile 맥락으로 필터해 주입)를 읽어 레버 선택.
 // gen 은 호출 측 주입(클라=정적 데모 응답, 서버 라우트=DEMO_CREATIVE_RESULT) — 생성 부작용을 순수 로직과 분리.
-// 이상 신호 브레이크는 auto 한정 — manual-n 은 deriveBeat 가 anomaly 를 surface 하지 않으므로 캐스케이드가 통과한다.
+// ADR-054 — 봉투 소진에서만 멈춘다. 정체는 selectNextLever 가 다른 레버로 자동 돌파한다.
 export function applyAutoAdvance(t: Tournament, gen: CreativeGen, ledger: Hypothesis[] = []): { t: Tournament } {
   if (t.status === "completed") return { t };
   if (!t.championConfirmed) return { t };
   if (t.rounds.some((r) => r.status === "running")) return { t };
   if (isEnvelopeExhausted(t)) return { t };
-  if (t.mode === "auto" && detectAnomaly(t)) return { t };
   if (!t.pendingChallenger) {
     const index = t.rounds.length + 1;
     const ctx = { productId: t.productId, objective: t.objective };

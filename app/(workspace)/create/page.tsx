@@ -173,10 +173,8 @@ function CreateFlow() {
     setSavedId(null);
   }, [displayedHeadlines, headlineIdx, creative.state.primaryText, creative.state.cta]);
 
-  // 카피 훅 = 사용자가 칩으로 직접 채움. outcome 바뀌면 비움(빈 칸은 생성 시 AI가 결정).
-  useEffect(() => {
-    setHooks([]);
-  }, [creative.state.outcome]);
+  // 카피 훅 기본값은 InputForm 이 소유(ADR-050) — outcome·제품 선택 시 Ledger 편향을 추천 훅에 적용.
+  // 디테일 유저가 칩으로 직접 바꾸면 그 선택이 우선(소프트 편향).
 
   // 둘러보기 모드 1회 자동 시드 — 비어있는 입력값에만 placeholder 텍스트를 채워 데모 진입을 매끄럽게.
   useEffect(() => {
@@ -484,6 +482,8 @@ function CreateFlow() {
               }}
               imageDataUrl={launch.state.imageDataUrl}
               setImageDataUrl={(v) => launch.dispatch({ type: "SET_IMAGE_DATA_URL", value: v })}
+              finalImageDataUrl={launch.state.finalImageDataUrl}
+              setFinalImageDataUrl={(v) => launch.dispatch({ type: "SET_FINAL_IMAGE_DATA_URL", value: v })}
             />
           )}
 

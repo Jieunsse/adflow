@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Icon from "@shared/ui/Icon";
@@ -17,6 +17,10 @@ import { usePersonasStorage } from "@features/brand-profile/model/usePersonasSto
 import PersonaQuickCreateModal from "@features/brand-profile/ui/PersonaQuickCreateModal";
 import BrandProfilePickerModal from "@features/brand-profile/ui/BrandProfilePickerModal";
 import { useProducts } from "@shared/lib/products";
+import { readLedger } from "@entities/ab-test/tournament/ledger";
+import { ledgerLadder, type LedgerContext } from "@entities/ab-test/tournament/hypothesis";
+import { ledgerBiasedHooks } from "@entities/ab-test/tournament/ledger-bias";
+import type { Hypothesis } from "@entities/ab-test/tournament/engine";
 
 interface Props {
   brand: string;
@@ -57,6 +61,47 @@ export default function InputForm(p: Props) {
   const selectedProduct = products.find((pr) => pr.id === p.productId) ?? null;
   const selectedPersona = personas.find((pe) => pe.id === p.personaId) ?? null;
   const hasBrandProfile = !!bpBrand;
+
+  // ADR-050 — A/B 토너먼트가 검증한 학습(Hypothesis Ledger)으로 추천 카피 훅을 편향한다.
+  // 데모=localStorage / 실유저=API 투영(brand_profile 단위 전체 토너먼트 평탄화).
+  const outcome = creative.state.outcome;
+  const [ledgerEntries, setLedgerEntries] = useState<Hypothesis[]>([]);
+
+  useEffect(() => {
+    if (!activeId) { setLedgerEntries([]); return; }
+    if (browseMode) {
+      setLedgerEntries(readLedger(activeId));
+      return;
+    }
+    fetch(`/api/ledger?brandProfileId=${encodeURIComponent(activeId)}`)
+      .then((r) => r.ok ? r.json() : { ledger: [] })
+      .then((d: { ledger?: Hypothesis[] }) => setLedgerEntries(d.ledger ?? []))
+      .catch(() => setLedgerEntries([]));
+  }, [activeId, browseMode]);
+
+  const biased = useMemo(() => {
+    if (!outcome) return null;
+    const ctx: LedgerContext = { productId: p.productId ?? "", objective: outcome };
+    return ledgerBiasedHooks(outcome, ledgerLadder(ledgerEntries, ctx));
+  }, [outcome, p.productId, ledgerEntries]);
+
+  const hooksTouched = useRef(false);
+  useEffect(() => {
+    // outcome·제품 바뀌면 편향 기본값을 추천 훅에 적용(소프트). 유저가 칩을 만진 뒤엔 덮어쓰지 않음.
+    hooksTouched.current = false;
+    if (outcome) p.setHooks(biased ? biased.hooks : []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [outcome, p.productId, activeId]);
+
+  // 디테일 모드 칩 팔레트 순서 — 입증 승격(상단)·중립 유지·반증 강등(하단).
+  const paletteOrder = useMemo(() => {
+    if (!biased) return COPY_HOOKS;
+    const rank = (id: CopyHook) => {
+      const v = biased.bias[id]?.verdict;
+      return v === "confirmed" ? 0 : v === "refuted" ? 2 : 1;
+    };
+    return [...COPY_HOOKS].sort((a, b) => rank(a.id) - rank(b.id));
+  }, [biased]);
 
   const [inputMode, setInputMode] = useState<"profile" | "custom">(() => {
     try {
@@ -440,11 +485,23 @@ export default function InputForm(p: Props) {
                   비운 칸은 AI가 골라요.
                 </p>
 
+                {biased && Object.keys(biased.bias).length > 0 && (
+                  <div className="flex items-start gap-1.5 px-3 py-2.5 rounded-[10px] bg-[var(--w-status-positive-soft)] border border-[var(--w-status-positive-line)]">
+                    <Icon name="sparkles" size={13} className="text-[var(--w-status-positive)] mt-0.5 shrink-0" />
+                    <span className="font-medium text-[12px] leading-[1.5] text-[var(--w-fg-normal)]">
+                      이 브랜드의 A/B 학습이 추천에 반영됐어요.{" "}
+                      <span className="text-[var(--w-green-700)] font-semibold">입증</span>된 훅은 위로,{" "}
+                      <span className="text-[var(--w-status-negative)] font-semibold">반증</span>된 훅은 빼서 추천해요.
+                    </span>
+                  </div>
+                )}
+
                 <div className="flex flex-wrap gap-1.5">
-                  {COPY_HOOKS.map((hk) => {
+                  {paletteOrder.map((hk) => {
                     const active = p.hooks.includes(hk.id);
                     const full = p.hooks.length >= 3;
                     const disabled = !active && full;
+                    const b = biased?.bias[hk.id];
                     return (
                       <button
                         key={hk.id}
@@ -452,19 +509,31 @@ export default function InputForm(p: Props) {
                         title={hk.uiDesc}
                         disabled={disabled}
                         onClick={() => {
+                          hooksTouched.current = true;
                           if (active) p.setHooks(p.hooks.filter((h) => h !== hk.id));
                           else if (!full) p.setHooks([...p.hooks, hk.id]);
                         }}
                         className={cn(
-                          "inline-flex items-center px-3 py-1.5 rounded-full border font-medium text-[12.5px] leading-none transition-[background,border-color,color,opacity] duration-[120ms]",
+                          "inline-flex items-center gap-1 px-3 py-1.5 rounded-full border font-medium text-[12.5px] leading-none transition-[background,border-color,color,opacity] duration-[120ms]",
                           active
                             ? "border-[var(--w-primary-normal)] bg-[rgba(0,102,255,0.08)] text-[var(--w-primary-press)] font-semibold cursor-pointer"
                             : disabled
                             ? "border-[var(--w-line-normal)] text-[var(--w-fg-neutral)] opacity-50 cursor-not-allowed"
-                            : "border-[var(--w-line-normal)] text-[var(--w-fg-strong)] hover:border-[var(--w-fg-normal)] cursor-pointer"
+                            : "border-[var(--w-line-normal)] text-[var(--w-fg-strong)] hover:border-[var(--w-fg-normal)] cursor-pointer",
+                          b?.verdict === "refuted" && !active && "opacity-55"
                         )}
                       >
                         {hk.ko}
+                        {b?.verdict === "confirmed" && (
+                          <span className="inline-flex items-center px-1 py-[1px] rounded-full bg-[var(--w-status-positive-soft)] text-[var(--w-green-700)] font-bold text-[9.5px] leading-none">
+                            +{b.effectSize}%
+                          </span>
+                        )}
+                        {b?.verdict === "refuted" && (
+                          <span className="inline-flex items-center px-1 py-[1px] rounded-full bg-[var(--w-status-negative-soft)] text-[var(--w-status-negative)] font-bold text-[9.5px] leading-none">
+                            반증
+                          </span>
+                        )}
                       </button>
                     );
                   })}

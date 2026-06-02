@@ -228,6 +228,16 @@
   --w-status-cautionary:#ff9200;
   --w-status-negative:  #ff4242;
   --w-status-info:      #0066ff;
+  --w-status-positive-soft:  rgba(0,191,64,0.12);
+  --w-status-cautionary-soft:rgba(255,146,0,0.12);
+  --w-status-negative-soft:  rgba(255,66,66,0.12);
+  --w-status-positive-line:  rgba(0,191,64,0.25);
+  --w-status-cautionary-line:rgba(255,146,0,0.25);
+  --w-status-negative-line:  rgba(255,66,66,0.25);
+
+  --w-focus-ring:       rgba(0,102,255,0.14);
+  --w-brand-facebook:   #1877f2;
+  --w-brand-facebook-hover:#1465d6;
 
   --w-accent-violet:    #6541f2;
   --w-accent-cyan:      #00bdde;
@@ -305,6 +315,12 @@
   --w-line-strong:      rgba(255,255,255,0.88);
 
   --w-primary-soft:     rgba(0,102,255,0.18);
+  --w-status-positive-soft:  rgba(0,191,64,0.20);
+  --w-status-cautionary-soft:rgba(255,146,0,0.20);
+  --w-status-negative-soft:  rgba(255,66,66,0.20);
+  --w-status-positive-line:  rgba(0,191,64,0.34);
+  --w-status-cautionary-line:rgba(255,146,0,0.34);
+  --w-status-negative-line:  rgba(255,66,66,0.34);
   --w-shadow-card:      0 1px 2px rgba(0,0,0,0.4), 0 4px 12px rgba(0,0,0,0.45);
 }
 

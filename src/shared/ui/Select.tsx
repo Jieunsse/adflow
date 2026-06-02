@@ -71,7 +71,7 @@ export function Select({
           gap: 8,
           background: "var(--w-bg-elevated)",
           border: `1px solid ${open ? "var(--w-primary-normal)" : "var(--w-line-normal)"}`,
-          boxShadow: open ? "0 0 0 4px rgba(0,102,255,0.14)" : "none",
+          boxShadow: open ? "0 0 0 4px var(--w-focus-ring)" : "none",
           borderRadius: 12,
           padding: "12px 14px",
           font: "500 14px/1.5 var(--w-font-sans)",

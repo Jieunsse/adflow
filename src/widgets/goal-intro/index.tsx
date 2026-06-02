@@ -356,7 +356,7 @@ export default function GoalIntro({ onNext }: Props) {
         <div className="flex items-center gap-2">
           <Icon name="sparkles" size={14} className="shrink-0 text-[var(--w-primary-normal)]" />
           <span className="font-bold text-[15px] leading-[1.3] tracking-[-0.008em] text-[var(--w-fg-strong)]">목표 고르는 게 어렵다면?</span>
-          <span className="font-medium text-[12px] text-[var(--w-fg-subtle)] ml-1">
+          <span className="font-medium text-[12px] text-[var(--w-fg-neutral)] ml-1">
             {suggestions ? "AI가 계정 상태를 분석해 추천했어요" : "AI가 계정 상태를 분석해 추천해 드릴게요"}
           </span>
         </div>

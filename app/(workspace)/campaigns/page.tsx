@@ -60,7 +60,7 @@ function FakePerfBadge() {
     <span
       title="클릭은 많은데 페이지 도착이 적어요 — 상세 성과 탭에서 점검 제안을 확인하세요"
       className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full font-semibold text-[11px] leading-none whitespace-nowrap"
-      style={{ background: "rgba(255,146,0,0.14)", color: "var(--w-status-cautionary)" }}
+      style={{ background: "var(--w-status-cautionary-soft)", color: "var(--w-status-cautionary)" }}
     >
       <Icon name="warn" size={11} /> 가짜 성과 의심
     </span>
@@ -239,8 +239,8 @@ export default function CampaignsPage() {
         <>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", border: "1px solid var(--w-line-normal)", borderRadius: 14, background: "var(--w-bg-elevated)", overflow: "hidden", marginBottom: 16 }}>
             <SummaryItem label="총 캠페인" value={fmt(summary.total)} />
-            <SummaryItem label="게재 중" value={fmt(summary.live)} dot="#00bf40" />
-            <SummaryItem label="검토 중" value={fmt(summary.review)} dot="#0066ff" />
+            <SummaryItem label="게재 중" value={fmt(summary.live)} dot="var(--w-status-positive)" />
+            <SummaryItem label="검토 중" value={fmt(summary.review)} dot="var(--w-status-info)" />
             <SummaryItem label="노출 합" value={fmt(summary.impressions)} mono />
             <SummaryItem label="클릭 합" value={fmt(summary.clicks)} mono />
             <SummaryItem label="평균 CTR" value={summary.ctr.toFixed(2) + "%"} mono />
@@ -578,7 +578,7 @@ function TableSkeleton() {
 function ErrorCard({ icon = "warn", title, reason, ctaLabel = "다시 시도", onAction }: { icon?: IconName; title: string; reason: string; ctaLabel?: string; onAction: () => void }) {
   return (
     <Card className="py-10 px-8 flex flex-col items-center gap-3 text-center">
-      <div style={{ width: 56, height: 56, borderRadius: "50%", background: "rgba(255,66,66,0.10)", color: "var(--w-status-negative)", display: "grid", placeItems: "center" }}><Icon name={icon} size={24} /></div>
+      <div style={{ width: 56, height: 56, borderRadius: "50%", background: "var(--w-status-negative-soft)", color: "var(--w-status-negative)", display: "grid", placeItems: "center" }}><Icon name={icon} size={24} /></div>
       <div style={{ font: "700 17px/1.3 var(--w-font-sans)", color: "var(--w-fg-strong)", letterSpacing: "-0.01em" }}>{title}</div>
       <div style={{ font: "500 13px/1.5 var(--w-font-sans)", color: "var(--w-fg-neutral)", maxWidth: 380 }}>{reason}</div>
       <Button variant="secondary" type="button" className="mt-2" onClick={onAction}>{ctaLabel}</Button>

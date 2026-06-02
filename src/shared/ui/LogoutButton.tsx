@@ -124,7 +124,7 @@ export default function LogoutButton() {
                 borderRadius: 8,
                 border: "none",
                 background: "var(--w-status-negative)",
-                color: "#fff",
+                color: "var(--w-fg-on-color)",
                 font: "600 12.5px/1 var(--w-font-sans)",
                 cursor: "pointer",
                 display: "flex",

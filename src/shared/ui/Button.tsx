@@ -35,11 +35,11 @@ const VARIANT: Record<ButtonVariant, string> = {
     "hover:bg-[#d63838] hover:border-[#d63838]",
   inverse:
     "bg-[var(--w-fg-strong)] text-[var(--w-bg-elevated)] border-transparent " +
-    "hover:bg-[#333438] disabled:opacity-50",
+    "hover:bg-[var(--w-neutral-700)] disabled:opacity-50",
   fb:
     "h-[46px] px-[22px] gap-2 font-bold text-[13.5px] rounded-[10px] " +
-    "bg-[#1877F2] text-white border-[#1877F2] " +
-    "hover:bg-[#1465d6] hover:border-[#1465d6]",
+    "bg-[var(--w-brand-facebook)] text-white border-[var(--w-brand-facebook)] " +
+    "hover:bg-[var(--w-brand-facebook-hover)] hover:border-[var(--w-brand-facebook-hover)]",
 };
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {

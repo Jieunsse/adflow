@@ -9,6 +9,14 @@
 - Tailwind class 는 길어도 분리하지 말고 인라인 유지 (vibe coder 가 한 곳에서 다 보는 게 편함).
 - 변경 보고: `file:line` 형식.
 
+## Design System (Wanted DS) — [ADR-049](./.document/adr/ADR-049-design-tokens-single-source.md)
+
+`app/styles/design-system.css` 의 시맨틱 토큰·`w-*` 타입 스케일이 색·타이포의 **단일 소스**. 강제는 lint 아닌 **컨벤션**(이 문서) — 리뷰/에이전트가 잡는다.
+
+- 색은 토큰(`--w-*`)으로. **신규 코드에 raw hex/rgba 금지** (smell). 대응 토큰 없으면 *지어내지 말고* 시맨틱 토큰을 신설(`-soft` 틴트·`green-700` 등 숫자 스케일 = 읽는 텍스트·`--w-focus-ring`·`--w-brand-facebook`).
+- 헤딩/캡션/오버라인 타이포는 `w-h1`~`w-h4`·`w-body`·`w-label`·`w-caption`·`w-overline` 클래스로. **임의 `text-[13.5px]` 같은 반픽셀/매직 사이즈 금지**.
+- 마이그레이션은 점진 — 만지는 코드의 raw 값만 기회적 치환. `shared/ui` 는 근원이라 별도 1회 스윕 대상.
+
 ## 절대 규칙 (negative-phrased)
 
 - DO NOT `APPHUB_API_KEY` 를 클라이언트 컴포넌트 / 응답 본문 / 로그 어디에도 노출.

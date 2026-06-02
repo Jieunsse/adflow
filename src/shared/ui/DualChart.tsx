@@ -80,7 +80,7 @@ export default function DualChart({
           cx={p[0]}
           cy={p[1]}
           r="3.4"
-          fill="#fff"
+          fill="var(--w-common-100)"
           stroke="var(--w-accent-violet)"
           strokeWidth="2"
         />

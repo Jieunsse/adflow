@@ -19,15 +19,15 @@ const BASE =
   "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full font-semibold text-xs leading-none tracking-[0.006em] whitespace-nowrap";
 
 const VARIANT: Record<ChipVariant, string> = {
-  live: "bg-[#d9ffe6] text-[#006e25] dark:bg-[rgba(0,191,64,0.14)] dark:text-[#49e57d]",
+  live: "bg-[var(--w-green-100)] text-[var(--w-green-800)] dark:bg-[rgba(0,191,64,0.14)] dark:text-[var(--w-green-400)]",
   paused:
-    "bg-[#fef4e6] text-[#9c5800] dark:bg-[rgba(255,146,0,0.16)] dark:text-[#ffb24d]",
+    "bg-[var(--w-yellow-100)] text-[var(--w-yellow-800)] dark:bg-[rgba(255,146,0,0.16)] dark:text-[#ffb24d]",
   review:
-    "bg-[#eaf2fe] text-[#0054d1] dark:bg-[rgba(0,102,255,0.18)] dark:text-[#6ea7ff]",
+    "bg-[var(--w-primary-soft)] text-[var(--w-primary-press)] dark:text-[#6ea7ff]",
   ended:
     "bg-[rgba(112,115,124,0.10)] text-[var(--w-fg-neutral)] dark:bg-[rgba(255,255,255,0.08)]",
   issue:
-    "bg-[#feecec] text-[#b20c0c] dark:bg-[rgba(255,66,66,0.16)] dark:text-[#ff7a7a]",
+    "bg-[var(--w-red-100)] text-[var(--w-red-800)] dark:bg-[rgba(255,66,66,0.16)] dark:text-[#ff7a7a]",
   neutral:
     "bg-[rgba(112,115,124,0.08)] text-[var(--w-fg-strong)] dark:bg-[rgba(255,255,255,0.06)]",
   "obj-traffic":
@@ -37,19 +37,19 @@ const VARIANT: Record<ChipVariant, string> = {
   "obj-awareness":
     "bg-[rgba(0,189,222,0.14)] text-[#0095b0] dark:bg-[rgba(0,189,222,0.22)] dark:text-[#5dd5e8]",
   "obj-leads":
-    "bg-[rgba(255,146,0,0.14)] text-[#9c5800] dark:bg-[rgba(255,146,0,0.20)] dark:text-[#ffb74d]",
+    "bg-[rgba(255,146,0,0.14)] text-[var(--w-yellow-800)] dark:bg-[var(--w-status-cautionary-soft)] dark:text-[#ffb74d]",
   "obj-engagement":
-    "bg-[rgba(0,191,64,0.12)] text-[#006e25] dark:bg-[rgba(0,191,64,0.18)] dark:text-[#49e57d]",
+    "bg-[var(--w-status-positive-soft)] text-[var(--w-green-800)] dark:bg-[rgba(0,191,64,0.18)] dark:text-[var(--w-green-400)]",
   "obj-install":
     "bg-[rgba(217,75,167,0.14)] text-[#c2185b] dark:bg-[rgba(217,75,167,0.22)] dark:text-[#ff7fbf]",
 };
 
 const DOT_COLOR: Partial<Record<ChipVariant, string>> = {
-  live: "bg-[#00bf40] dark:bg-[#49e57d]",
-  paused: "bg-[#ff9200] dark:bg-[#ffb24d]",
-  review: "bg-[#0066ff] dark:bg-[#6ea7ff]",
+  live: "bg-[var(--w-status-positive)] dark:bg-[var(--w-green-400)]",
+  paused: "bg-[var(--w-status-cautionary)] dark:bg-[#ffb24d]",
+  review: "bg-[var(--w-status-info)] dark:bg-[#6ea7ff]",
   ended: "bg-[var(--w-fg-alternative)]",
-  issue: "bg-[#ff4242] dark:bg-[#ff7a7a]",
+  issue: "bg-[var(--w-status-negative)] dark:bg-[#ff7a7a]",
 };
 
 interface ChipProps extends HTMLAttributes<HTMLSpanElement> {

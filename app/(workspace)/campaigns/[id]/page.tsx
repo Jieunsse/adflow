@@ -31,6 +31,7 @@ import type { CampaignSummary, InsightsPeriod } from "@/lib/meta-ads";
 import type { AdInsightsRow } from "@entities/insights/types";
 import { Button, buttonVariants } from "@shared/ui/Button";
 import { Card } from "@shared/ui/Card";
+import { Callout } from "@shared/ui/Callout";
 import { Chip, type ChipVariant } from "@shared/ui/Chip";
 import { Skeleton } from "@shared/ui/Skeleton";
 import { SegControl } from "@shared/ui/SegControl";
@@ -398,37 +399,25 @@ function DetailBody({
   return (
     <>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 14, marginBottom: 16 }}>
-        <KpiCard label="총 노출수" value={fmt(data.impressions)} trend={[120, 145, 162, 180, 175, 210, 225, 240, 268, 254, 285]} />
+        <KpiCard label="총 노출수" value={fmt(data.impressions)} trend={data.daily.map((x) => (x.ctr > 0 ? Math.round((x.clicks / x.ctr) * 100) : 0))} />
         <KpiCard label="총 클릭수" value={fmt(data.clicks)} trend={clicks} />
         <KpiCard label="CTR" value={data.ctr.toFixed(2)} suffix="%" trend={ctrs} />
         <KpiCard label="총 지출" value={fmtKRW(data.spend)} trend={data.daily.map((x) => x.spend / 1000)} color="var(--w-accent-violet)" />
       </div>
 
       {isPaused ? (
-        <Card style={{ background: "rgba(255,146,0,0.06)", border: "1px solid rgba(255,146,0,0.25)" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
-            <div style={{ width: 44, height: 44, borderRadius: 12, background: "rgba(255,146,0,0.15)", color: "var(--w-status-cautionary)", display: "grid", placeItems: "center", flex: "0 0 auto" }}><Icon name="pause" size={20} /></div>
-            <div style={{ flex: 1, minWidth: 200 }}>
-              <div className="font-bold text-[16px] leading-[1.3] text-[var(--w-fg-strong)]">이 광고는 일시정지 상태예요</div>
-              <div className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)]" style={{ marginTop: 4 }}>재개하거나 새 소재로 다시 만들어볼 수 있어요. Meta 광고 관리자에서 외부로 상태가 바뀌었다면 새로고침 후 다시 확인해주세요.</div>
-            </div>
-            <div style={{ display: "inline-flex", gap: 8 }}>
-              <Button variant="secondary" type="button" disabled={busy || !c.adSetId} onClick={() => onApply({ adSetId: c.adSetId ?? undefined, adId: c.adId ?? undefined, action: "resume" }, "광고를 재개했어요")}><Icon name="play" size={14} /> {busy ? "처리 중…" : "광고 재개"}</Button>
-              <Button variant="primary" type="button" onClick={onRemake}><Icon name="sparkles" size={14} /> 새 소재로 다시 만들기</Button>
-            </div>
-          </div>
-        </Card>
+        <Callout tone="cautionary" icon="pause" title="이 광고는 일시정지 상태예요"
+          actions={<>
+            <Button variant="secondary" type="button" disabled={busy || !c.adSetId} onClick={() => onApply({ adSetId: c.adSetId ?? undefined, adId: c.adId ?? undefined, action: "resume" }, "광고를 재개했어요")}><Icon name="play" size={14} /> {busy ? "처리 중…" : "광고 재개"}</Button>
+            <Button variant="primary" type="button" onClick={onRemake}><Icon name="sparkles" size={14} /> 새 소재로 다시 만들기</Button>
+          </>}>
+          <span className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)]">재개하거나 새 소재로 다시 만들어볼 수 있어요. Meta 광고 관리자에서 외부로 상태가 바뀌었다면 새로고침 후 다시 확인해주세요.</span>
+        </Callout>
       ) : isIssue ? (
-        <Card style={{ background: "rgba(255,66,66,0.06)", border: "1px solid rgba(255,66,66,0.30)" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
-            <div style={{ width: 44, height: 44, borderRadius: 12, background: "rgba(255,66,66,0.12)", color: "var(--w-status-negative)", display: "grid", placeItems: "center", flex: "0 0 auto" }}><Icon name="warn" size={20} /></div>
-            <div style={{ flex: 1, minWidth: 200 }}>
-              <div className="font-bold text-[16px] leading-[1.3] text-[var(--w-fg-strong)]">이 광고에 문제가 있어요</div>
-              <div className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)]" style={{ marginTop: 4 }}>Meta 광고 관리자에서 사유를 확인하고 조치해 주세요.</div>
-            </div>
-            <a className={buttonVariants({ variant: "secondary" })} href={adsManagerUrl} target="_blank" rel="noreferrer">Meta 광고 관리자에서 사유 확인 <Icon name="arrow-right" size={14} /></a>
-          </div>
-        </Card>
+        <Callout tone="negative" icon="warn" title="이 광고에 문제가 있어요"
+          actions={<a className={buttonVariants({ variant: "secondary" })} href={adsManagerUrl} target="_blank" rel="noreferrer">Meta 광고 관리자에서 사유 확인 <Icon name="arrow-right" size={14} /></a>}>
+          <span className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)]">Meta 광고 관리자에서 사유를 확인하고 조치해 주세요.</span>
+        </Callout>
       ) : (
         <Card style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: 24, alignItems: "flex-start" }}>
           <div>
@@ -528,7 +517,7 @@ function AutomationReadinessCard({ readiness, autoPilot, lowPerformance }: { rea
   const ACTION_ICON: Record<AutoPilotAction["kind"], IconName> = { "increase-budget": "trend-up", "decrease-budget": "trend-down", pause: "pause" };
   if (autoPilot?.on) {
     return (
-      <div style={{ background: "rgba(0,191,64,0.06)", border: "1px solid rgba(0,191,64,0.20)", borderRadius: 12, padding: 18 }}>
+      <Callout tone="positive">
         <Chip variant="live" dot>자동 운영 중</Chip>
         <div className="font-bold text-[16px] leading-[1.3] text-[var(--w-fg-strong)]" style={{ marginTop: 10 }}>AI가 광고를 자동 운영하고 있어요</div>
         <p className="font-medium text-[13px] leading-[1.55] text-[var(--w-fg-neutral)]" style={{ margin: "8px 0 12px" }}>성과를 지켜보다 예산·게재를 자동으로 조정해요. 모든 조치는 알림으로 알려드려요.</p>
@@ -545,12 +534,12 @@ function AutomationReadinessCard({ readiness, autoPilot, lowPerformance }: { rea
           </div>
         )}
         <Button variant="ghost" size="sm" type="button" onClick={autoPilot.onDisable}>자동 운영 끄기</Button>
-      </div>
+      </Callout>
     );
   }
   if (readiness.ready) {
     return (
-      <div style={{ background: "rgba(0,191,64,0.06)", border: "1px solid rgba(0,191,64,0.20)", borderRadius: 12, padding: 18 }}>
+      <Callout tone="positive">
         <Chip variant="live" dot>자동화 준비 완료</Chip>
         <div className="font-bold text-[16px] leading-[1.3] text-[var(--w-fg-strong)]" style={{ marginTop: 10 }}>AI 자동 운영을 켤 수 있어요</div>
         <p className="font-medium text-[13px] leading-[1.55] text-[var(--w-fg-neutral)]" style={{ margin: "8px 0 14px" }}>{readiness.reason}</p>
@@ -559,7 +548,7 @@ function AutomationReadinessCard({ readiness, autoPilot, lowPerformance }: { rea
         ) : (
           <Button variant="primary" size="sm" type="button" disabled title="자동 실행 환경 연동 후 활성화돼요">자동화 켜기</Button>
         )}
-      </div>
+      </Callout>
     );
   }
   return (
@@ -630,7 +619,7 @@ function fakePerfSuggestion(e: FakePerformanceEvidence): Suggestion {
 function OptCard({ icon, good, title, lines, children }: { icon: IconName; good: boolean; title: string; lines: string[]; children?: React.ReactNode }) {
   return (
     <div style={{ display: "flex", gap: 14, padding: 14, border: "1px solid var(--w-line-alternative)", borderRadius: 12 }}>
-      <div style={{ width: 36, height: 36, borderRadius: 10, background: good ? "rgba(0,191,64,0.10)" : "rgba(255,146,0,0.12)", color: good ? "var(--w-status-positive)" : "var(--w-status-cautionary)", display: "grid", placeItems: "center", flex: "0 0 auto" }}><Icon name={icon} size={18} /></div>
+      <div style={{ width: 36, height: 36, borderRadius: 10, background: good ? "var(--w-status-positive-soft)" : "var(--w-status-cautionary-soft)", color: good ? "var(--w-status-positive)" : "var(--w-status-cautionary)", display: "grid", placeItems: "center", flex: "0 0 auto" }}><Icon name={icon} size={18} /></div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div className="font-semibold text-[14px] leading-[1.4] text-[var(--w-fg-strong)]">{title}</div>
         {lines.map((l, j) => <div key={j} className="font-medium text-[12.5px] leading-[1.55] text-[var(--w-fg-neutral)]" style={{ marginTop: 4 }}>{l}</div>)}
@@ -643,7 +632,7 @@ function OptCard({ icon, good, title, lines, children }: { icon: IconName; good:
 function DetailErrorCard({ icon = "warn", title, reason, ctaLabel, onAction }: { icon?: IconName; title: string; reason: string; ctaLabel: string; onAction: () => void }) {
   return (
     <Card className="py-10 px-8 flex flex-col items-center gap-3 text-center">
-      <div style={{ width: 56, height: 56, borderRadius: "50%", background: "rgba(255,66,66,0.10)", color: "var(--w-status-negative)", display: "grid", placeItems: "center" }}><Icon name={icon} size={24} /></div>
+      <div style={{ width: 56, height: 56, borderRadius: "50%", background: "var(--w-status-negative-soft)", color: "var(--w-status-negative)", display: "grid", placeItems: "center" }}><Icon name={icon} size={24} /></div>
       <div className="font-bold text-[17px] leading-[1.3] text-[var(--w-fg-strong)]">{title}</div>
       <div className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)]" style={{ maxWidth: 380 }}>{reason}</div>
       <Button variant="secondary" type="button" style={{ marginTop: 8 }} onClick={onAction}>{ctaLabel}</Button>
@@ -925,21 +914,17 @@ function CampaignConfigurationTab({ c, isLoading, campaignId, onRefetch, isAbCam
         {editingCreative ? (
           <>
             {c.status === "issue" && c.issueReason && (
-              <div style={{ marginBottom: 14, padding: "10px 14px", borderRadius: 8, background: "rgba(255,66,66,0.06)", border: "1px solid rgba(255,66,66,0.25)", display: "flex", gap: 8 }}>
-                <Icon name="warn" size={14} style={{ color: "var(--w-status-negative)", flex: "0 0 auto", marginTop: 1 }} />
-                <div>
-                  <div className="font-semibold text-[13px] leading-[1.3] text-[var(--w-status-negative)]">거절 사유: {c.issueReason.summary}</div>
-                  {c.issueReason.message !== c.issueReason.summary && (
-                    <div className="font-medium text-[12px] leading-[1.5] text-[var(--w-fg-neutral)]" style={{ marginTop: 4 }}>{c.issueReason.message.slice(0, 200)}</div>
-                  )}
-                </div>
-              </div>
+              <Callout tone="negative" icon="warn" size="sm" style={{ marginBottom: 14 }}>
+                <div className="font-semibold text-[13px] leading-[1.3] text-[var(--w-status-negative)]">거절 사유: {c.issueReason.summary}</div>
+                {c.issueReason.message !== c.issueReason.summary && (
+                  <div className="font-medium text-[12px] leading-[1.5] text-[var(--w-fg-neutral)]" style={{ marginTop: 4 }}>{c.issueReason.message.slice(0, 200)}</div>
+                )}
+              </Callout>
             )}
             {c.status === "live" && (
-              <div style={{ marginBottom: 14, padding: "10px 14px", borderRadius: 8, background: "rgba(255,146,0,0.08)", border: "1px solid rgba(255,146,0,0.25)", display: "flex", gap: 8 }}>
-                <Icon name="warn" size={14} style={{ color: "var(--w-status-cautionary)", flex: "0 0 auto", marginTop: 1 }} />
+              <Callout tone="cautionary" icon="warn" size="sm" style={{ marginBottom: 14 }}>
                 <span className="font-medium text-[12px] leading-[1.4] text-[var(--w-fg-neutral)]">소재 교체는 <strong>성과 안정화 구간 재시작 + 재심사</strong>를 일으켜요. 검토 동안 이전 소재가 잠시 노출될 수 있어요.</span>
-              </div>
+              </Callout>
             )}
             {c.status === "paused" && (
               <div style={{ marginBottom: 14, padding: "10px 14px", borderRadius: 8, background: "var(--w-bg-alternative)", display: "flex", gap: 8 }}>
@@ -1049,10 +1034,9 @@ function CampaignConfigurationTab({ c, isLoading, campaignId, onRefetch, isAbCam
                 style={{ maxWidth: 220 }}
               />
               {bigBudgetChange && (
-                <div style={{ marginTop: 6, display: "flex", alignItems: "center", gap: 6, padding: "6px 10px", borderRadius: 8, background: "rgba(255,146,0,0.08)", border: "1px solid rgba(255,146,0,0.25)" }}>
-                  <Icon name="warn" size={13} style={{ color: "var(--w-status-cautionary)", flex: "0 0 auto" }} />
+                <Callout tone="cautionary" icon="warn" size="sm" style={{ marginTop: 6 }}>
                   <span className="font-medium text-[12px] leading-[1.4] text-[var(--w-fg-neutral)]">큰 예산 변경은 성과 안정화 구간이 재시작될 수 있어요</span>
-                </div>
+                </Callout>
               )}
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
@@ -1156,10 +1140,9 @@ function CampaignConfigurationTab({ c, isLoading, campaignId, onRefetch, isAbCam
         <div style={{ marginTop: 14 }}>
         {editingBid ? (
           <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-            <div style={{ padding: "10px 14px", borderRadius: 8, background: "rgba(255,146,0,0.08)", border: "1px solid rgba(255,146,0,0.25)", display: "flex", alignItems: "center", gap: 8 }}>
-              <Icon name="warn" size={13} style={{ color: "var(--w-status-cautionary)", flex: "0 0 auto" }} />
+            <Callout tone="cautionary" icon="warn" size="sm">
               <span className="font-medium text-[12px] leading-[1.4] text-[var(--w-fg-neutral)]">입찰 전략·배치 변경은 성과 안정화 구간이 재시작될 수 있어요</span>
-            </div>
+            </Callout>
             <div>
               <div className="font-semibold text-[12.5px] leading-[1.3] text-[var(--w-fg-strong)]" style={{ marginBottom: 8 }}>입찰 전략</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -1341,9 +1324,9 @@ function RelaunchConfirmModal({
         </div>
 
         {evidence ? (
-          <div style={{ padding: "14px 16px", borderRadius: 10, background: "rgba(0,191,64,0.06)", border: "1px solid rgba(0,191,64,0.20)" }}>
+          <Callout tone="positive">
             <EvidenceText evidence={evidence} />
-          </div>
+          </Callout>
         ) : (
           <div style={{ padding: "12px 16px", borderRadius: 10, background: "var(--w-bg-alternative)" }}>
             <div className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)]">
@@ -1353,9 +1336,9 @@ function RelaunchConfirmModal({
         )}
 
         {error && (
-          <div style={{ padding: "10px 14px", borderRadius: 8, background: "rgba(255,66,66,0.06)", border: "1px solid rgba(255,66,66,0.25)" }}>
+          <Callout tone="negative" size="sm">
             <div className="font-medium text-[12.5px] leading-[1.4] text-[var(--w-status-negative)]">{error}</div>
-          </div>
+          </Callout>
         )}
 
         <label className="flex items-center gap-2 cursor-pointer">

@@ -90,7 +90,7 @@ export default function DatePicker({
           gap: 8,
           background: "var(--w-bg-elevated)",
           border: `1px solid ${open ? "var(--w-primary-normal)" : "var(--w-line-normal)"}`,
-          boxShadow: open ? "0 0 0 4px rgba(0,102,255,0.14)" : "none",
+          boxShadow: open ? "0 0 0 4px var(--w-focus-ring)" : "none",
           borderRadius: 12,
           padding: "11px 14px",
           font: "500 14px/1.5 var(--w-font-sans)",
@@ -208,7 +208,7 @@ export default function DatePicker({
                         ? "var(--w-accent-violet-soft)"
                         : "transparent",
                     color: selected
-                      ? "#fff"
+                      ? "var(--w-fg-on-color)"
                       : isToday
                         ? "var(--w-accent-violet)"
                         : "var(--w-fg-normal)",

@@ -101,7 +101,7 @@ export default function NotificationBell() {
               height: 16,
               borderRadius: 999,
               background: "var(--w-status-negative)",
-              color: "#fff",
+              color: "var(--w-fg-on-color)",
               font: "700 10px/16px var(--w-font-sans)",
               textAlign: "center",
               padding: "0 3px",

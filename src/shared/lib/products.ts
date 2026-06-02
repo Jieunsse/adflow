@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 
 export interface ProductEntry {
   id: string;
@@ -34,12 +35,15 @@ function writeLocal(brandProfileId: string, items: ProductEntry[]): void {
 }
 
 export function useProducts(brandProfileId: string) {
+  const { data: session } = useSession();
+  const browseMode = !!session?.browseMode;
+  const local = !useSupabase || browseMode;
   const [products, setProducts] = useState<ProductEntry[]>([]);
   const [loading, setLoading] = useState(false);
 
   const refresh = useCallback(async () => {
     if (!brandProfileId) return;
-    if (!useSupabase) {
+    if (local) {
       setProducts(readLocal(brandProfileId));
       return;
     }
@@ -53,12 +57,12 @@ export function useProducts(brandProfileId: string) {
     } finally {
       setLoading(false);
     }
-  }, [brandProfileId]);
+  }, [brandProfileId, local]);
 
   useEffect(() => { refresh(); }, [refresh]);
 
   const save = useCallback(async (entry: ProductEntry, imageFile?: File): Promise<ProductEntry> => {
-    if (!useSupabase) {
+    if (local) {
       const all = readLocal(brandProfileId);
       const idx = all.findIndex((p) => p.id === entry.id);
       const next = idx >= 0 ? all.map((p, i) => (i === idx ? entry : p)) : [...all, entry];
@@ -83,10 +87,10 @@ export function useProducts(brandProfileId: string) {
       return i >= 0 ? prev.map((p, idx) => (idx === i ? saved : p)) : [...prev, saved];
     });
     return saved;
-  }, [brandProfileId, products]);
+  }, [brandProfileId, products, local]);
 
   const remove = useCallback(async (id: string): Promise<void> => {
-    if (!useSupabase) {
+    if (local) {
       const next = readLocal(brandProfileId).filter((p) => p.id !== id);
       writeLocal(brandProfileId, next);
       setProducts((prev) => prev.filter((p) => p.id !== id));
@@ -98,7 +102,7 @@ export function useProducts(brandProfileId: string) {
     const next = readLocal(brandProfileId).filter((p) => p.id !== id);
     writeLocal(brandProfileId, next);
     setProducts((prev) => prev.filter((p) => p.id !== id));
-  }, [brandProfileId]);
+  }, [brandProfileId, local]);
 
   return { products, loading, save, remove, refresh };
 }

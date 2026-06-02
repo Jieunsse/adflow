@@ -17,12 +17,30 @@ create table if not exists ig_messages (
 create index if not exists ig_messages_ig_user_id_conv_created
   on ig_messages (ig_user_id, conversation_id, created_at desc);
 
+-- ADR-046 — Synced Store 파일럿. 미러 → source-of-truth(read-back) 승격. user_email = Owner Key(NextAuth email).
 create table if not exists library_items (
   id text primary key,
+  user_email text,
   saved_at bigint not null,
   data jsonb not null,
   synced_at timestamptz default now()
 );
+-- 소급 보강(create table if not exists 는 컬럼 추가 안 함). 기존 owner-blind 행은 null(데모, 폐기 대상).
+alter table library_items add column if not exists user_email text;
+create index if not exists library_items_user_email on library_items (user_email);
+-- 결정 6 — RLS 방어 심층. 쓰기·읽기는 service-role 서버가 수행(RLS 우회), 공개 anon-key 직접 접근만 차단(정책 없음 = anon 전면 거부).
+alter table library_items enable row level security;
+
+-- ADR-046 — Synced Store 린치핀(brand_profiles). 미러 → source-of-truth(read-back). data = BrandProfileEntry jsonb.
+-- /api/stores/brand-profiles 가 user_email(Owner Key) 스코핑으로 R/W. 자식(persona·product·reference·sop)은 후속.
+create table if not exists brand_profiles (
+  id text primary key,
+  user_email text,
+  data jsonb not null,
+  synced_at timestamptz default now()
+);
+create index if not exists brand_profiles_user_email on brand_profiles (user_email);
+alter table brand_profiles enable row level security;
 
 create table if not exists campaign_launches (
   campaign_id text primary key,
@@ -67,6 +85,8 @@ create table if not exists tournaments (
 );
 
 create index if not exists tournaments_status on tournaments (status);
+-- ADR-047 — Hypothesis Ledger 투영 조회(소유 유저의 같은 Brand Profile 토너먼트 평탄화).
+create index if not exists tournaments_brand_profile_id on tournaments (brand_profile_id);
 
 -- axhub(Google) 신원에 매달리는 사용자 + Meta 연결 영속 (lib/user-store.ts).
 -- 신원=앵커, meta_connection=최초 Facebook 연결로 받은 토큰 묶음(2회차+ 자동 복원), role/workspace=자체 관리.
@@ -150,6 +170,21 @@ create table if not exists notion_connections (
   workspace_icon text,
   created_at     timestamptz not null default now(),
   updated_at     timestamptz not null default now()
+);
+
+-- ADR-045 — 플로(Flo) Briefing 영속. 활성 광고 계정당 최신 1건만 보관(on-demand 캐시).
+-- user_key = 소유 유저(ownerKeyFrom: email 우선·토큰 해시 폴백, 토너먼트와 동일). browse 게스트는
+-- ad_account_id='browse'. findings = Finding[] jsonb. (user_key, ad_account_id) 복합 PK → upsert 로 최신 1건 유지.
+create table if not exists flo_briefings (
+  user_key      text not null,
+  ad_account_id text not null,
+  id            text not null,
+  model         text not null,
+  headline      text not null,
+  findings      jsonb not null default '[]',
+  created_at    text not null,
+  updated_at    timestamptz default now(),
+  primary key (user_key, ad_account_id)
 );
 
 -- 위 두 테이블이 쓰는 public storage 버킷. getPublicUrl 로 서빙하므로 public = true.

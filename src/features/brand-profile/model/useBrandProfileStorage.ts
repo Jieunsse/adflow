@@ -1,9 +1,23 @@
 "use client";
 
+// Brand Profile — 도메인 형태(타입)와 읽기/쓰기 표면. ADR-046: Synced Store(Tier 1)로 이관 —
+// Supabase=source-of-truth(로그인 시 하이드레이션), localStorage(persist)=오프라인 캐시, 게스트=로컬만.
+// store·동기·영속은 brandProfileStore 가 담당(런타임 순환 회피). 동기 리더는 워밍된 getState 스냅샷을 읽는다.
+// (이전: useScopedStorage + 단방향 syncUpsert 미러 — 기기 바뀌면 소실)
+
 import { useCallback, useEffect, useState } from "react";
-import { syncUpsert } from "@shared/lib/supabase-sync";
 import { seedDemoIfEmpty } from "@features/brand-profile/model/seed-demo";
 import type { SopSection } from "@features/sop/model/useSopStorage";
+import {
+  brandProfiles,
+  useSyncBrandProfiles,
+  profilesSnapshot,
+  upsertProfile,
+  removeProfile,
+  setDefaultProfile,
+  getActiveId,
+  setActiveIdInStorage,
+} from "./brandProfileStore";
 
 export type CopyReference = {
   id: string;
@@ -30,67 +44,7 @@ export interface BrandProfileEntry extends BrandProfile {
   policy?: SopSection[];
 }
 
-const PROFILES_KEY = "adflow:brand-profiles";
-const ACTIVE_ID_KEY = "adflow:brand-profile:active-id";
-const LEGACY_KEY = "adflow:brand-profile";
-
-function migrateIfNeeded(): void {
-  if (localStorage.getItem(PROFILES_KEY)) return;
-  const legacy = localStorage.getItem(LEGACY_KEY);
-  if (!legacy) return;
-  try {
-    const bp = JSON.parse(legacy) as BrandProfile;
-    const entry: BrandProfileEntry = { id: "default", name: "기본 프로필", isDefault: true, ...bp };
-    localStorage.setItem(PROFILES_KEY, JSON.stringify([entry]));
-    localStorage.removeItem(LEGACY_KEY);
-  } catch {}
-}
-
-export function readProfiles(): BrandProfileEntry[] {
-  if (typeof window === "undefined") return [];
-  migrateIfNeeded();
-  try {
-    return JSON.parse(localStorage.getItem(PROFILES_KEY) ?? "[]") as BrandProfileEntry[];
-  } catch {
-    return [];
-  }
-}
-
-function persistProfiles(profiles: BrandProfileEntry[]): void {
-  try {
-    localStorage.setItem(PROFILES_KEY, JSON.stringify(profiles));
-  } catch {}
-}
-
-function getActiveId(): string | null {
-  try {
-    return localStorage.getItem(ACTIVE_ID_KEY);
-  } catch {
-    return null;
-  }
-}
-
-function setActiveIdInStorage(id: string): void {
-  try {
-    localStorage.setItem(ACTIVE_ID_KEY, id);
-  } catch {}
-}
-
-export function readBrandProfile(): BrandProfile {
-  const profiles = readProfiles();
-  if (!profiles.length) return {};
-  const activeId = getActiveId();
-  const entry =
-    profiles.find((p) => p.id === activeId) ??
-    profiles.find((p) => p.isDefault) ??
-    profiles[0];
-  const { id: _id, name: _name, isDefault: _isDefault, ...bp } = entry;
-  return bp;
-}
-
-export function readActiveBrandProfileEntry(): BrandProfileEntry | null {
-  const profiles = readProfiles();
-  if (!profiles.length) return null;
+function activeOf(profiles: BrandProfileEntry[]): BrandProfileEntry | undefined {
   const activeId = getActiveId();
   return (
     profiles.find((p) => p.id === activeId) ??
@@ -99,34 +53,54 @@ export function readActiveBrandProfileEntry(): BrandProfileEntry | null {
   );
 }
 
+export function readProfiles(): BrandProfileEntry[] {
+  return profilesSnapshot();
+}
+
+export function readBrandProfile(): BrandProfile {
+  const entry = activeOf(profilesSnapshot());
+  if (!entry) return {};
+  const { id: _id, name: _name, isDefault: _isDefault, ...bp } = entry;
+  return bp;
+}
+
+export function readActiveBrandProfileEntry(): BrandProfileEntry | null {
+  return activeOf(profilesSnapshot()) ?? null;
+}
+
 export function appendToBrandProfile(
   field: "brandVoice" | "imageGuide",
   content: string
 ): void {
-  const profiles = readProfiles();
-  if (!profiles.length) return;
-  const activeId = getActiveId();
-  let idx = profiles.findIndex((p) => p.id === activeId);
-  if (idx < 0) idx = profiles.findIndex((p) => p.isDefault);
-  if (idx < 0) idx = 0;
-  const entry = { ...profiles[idx] };
+  const entry = activeOf(profilesSnapshot());
+  if (!entry) return;
   const existing = ((entry[field] ?? "") as string).trim();
-  entry[field] = existing ? `${existing}\n${content.trim()}` : content.trim();
-  profiles[idx] = entry;
-  persistProfiles(profiles);
+  upsertProfile({
+    ...entry,
+    [field]: existing ? `${existing}\n${content.trim()}` : content.trim(),
+  });
+}
+
+// SSR 가드: status 가 idle(아직 mount 전)이면 빈 배열 — 서버 HTML 과 첫 렌더 일치.
+// mount 후 useSyncBrandProfiles 의 hydrate 가 status 를 올리면 워밍된 items 노출.
+function useProfilesReactive(): BrandProfileEntry[] {
+  const items = brandProfiles.useStore((s) => s.items);
+  const ready = brandProfiles.useStore((s) => s.status !== "idle");
+  return ready ? items : [];
 }
 
 // For STEP 01 — reads active profile, exposes list for selector.
 // seedDemo: 둘러보기 모드 진입 시 비어있으면 데모 브랜드 프로필을 자동 주입 (ADR-033).
 export function useBrandProfileStorage(seedDemo = false) {
-  const [profiles, setProfiles] = useState<BrandProfileEntry[]>([]);
+  useSyncBrandProfiles();
   const [activeId, setActiveIdState] = useState<string | null>(null);
 
   useEffect(() => {
     if (seedDemo) seedDemoIfEmpty();
-    setProfiles(readProfiles());
     setActiveIdState(getActiveId());
   }, [seedDemo]);
+
+  const profiles = useProfilesReactive();
 
   const activeEntry =
     profiles.find((p) => p.id === activeId) ??
@@ -148,36 +122,19 @@ export function useBrandProfileStorage(seedDemo = false) {
 
 // For brand-profile list page — full CRUD
 export function useBrandProfilesStorage() {
-  const [profiles, setProfiles] = useState<BrandProfileEntry[]>([]);
-
-  useEffect(() => {
-    setProfiles(readProfiles());
-  }, []);
+  useSyncBrandProfiles();
+  const profiles = useProfilesReactive();
 
   const saveProfile = useCallback((entry: BrandProfileEntry): void => {
-    setProfiles((prev) => {
-      const idx = prev.findIndex((p) => p.id === entry.id);
-      const next = idx >= 0 ? prev.map((p, i) => (i === idx ? entry : p)) : [...prev, entry];
-      persistProfiles(next);
-      syncUpsert("brand_profile", entry as unknown as Record<string, unknown>);
-      return next;
-    });
+    upsertProfile(entry);
   }, []);
 
   const deleteProfile = useCallback((id: string): void => {
-    setProfiles((prev) => {
-      const next = prev.filter((p) => p.id !== id);
-      persistProfiles(next);
-      return next;
-    });
+    removeProfile(id);
   }, []);
 
   const setDefault = useCallback((id: string): void => {
-    setProfiles((prev) => {
-      const next = prev.map((p) => ({ ...p, isDefault: p.id === id }));
-      persistProfiles(next);
-      return next;
-    });
+    setDefaultProfile(id);
   }, []);
 
   return { profiles, saveProfile, deleteProfile, setDefault };

@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react";
 import Icon from "@shared/ui/Icon";
 import { Button } from "@shared/ui/Button";
 import { readProfiles, type BrandProfileEntry } from "@features/brand-profile/model/useBrandProfileStorage";
+import { upsertProfile, setActiveIdInStorage } from "@features/brand-profile/model/brandProfileStore";
 import { onboardedKey } from "@widgets/onboarding-guard";
 
 type Step = 1 | 2 | 3;
@@ -133,17 +134,16 @@ function Step2({ onNext, onSkip }: { onNext: () => void; onSkip: () => void }) {
     try {
       const profiles = readProfiles();
       const id = `bp-${Date.now()}`;
+      const isFirst = profiles.length === 0;
       const entry: BrandProfileEntry = {
         id,
         name: name.trim() || "내 브랜드",
         brandDescription: desc.trim() || undefined,
-        isDefault: profiles.length === 0,
+        isDefault: isFirst,
       };
-      const next = profiles.length === 0 ? [entry] : [...profiles, entry];
-      localStorage.setItem("adflow:brand-profiles", JSON.stringify(next));
-      if (profiles.length === 0) {
-        localStorage.setItem("adflow:brand-profile:active-id", id);
-      }
+      // Synced Store 경유 — 실유저면 Supabase 동기, 게스트면 로컬만.
+      upsertProfile(entry);
+      if (isFirst) setActiveIdInStorage(id);
     } catch {
       /* quota 등 — 무시 */
     }

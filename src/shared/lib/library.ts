@@ -1,11 +1,12 @@
 "use client";
 
-// Library Entry — STEP 01 Creative 를 localStorage 에 영구 저장. 도메인 어휘는 .document/CONTEXT.md §Library Entry.
-// 저장소 sync/hydrate 는 useScopedStorage primitive 가 담당. 여기선 도메인 형태(id 생성·prepend) 만.
+// Library Entry — STEP 01 Creative 저장. 도메인 어휘는 .document/CONTEXT.md §Library Entry.
+// ADR-046: Synced Store(Tier 1)로 이관 — Supabase=source-of-truth(로그인 시 하이드레이션),
+// localStorage(persist)=오프라인 캐시, 게스트=로컬만. 동기화·영속은 createSyncedStore 가 담당,
+// 여기선 도메인 형태(id 생성·저장 시각)만. (이전: useScopedStorage + 단방향 syncUpsert 미러)
 
-import { useCallback, useMemo } from "react";
-import { useScopedStorage } from "./storage/useScopedStorage";
-import { syncDelete, syncUpsert } from "./supabase-sync";
+import { useCallback } from "react";
+import { createSyncedStore } from "./store";
 
 const LIBRARY_KEY = "adflow_library_v1";
 
@@ -35,32 +36,27 @@ export interface LibraryItem {
 
 export type NewLibraryItem = Omit<LibraryItem, "id" | "savedAt">;
 
-export function useLibrary() {
-  const [rawList, setList] = useScopedStorage<LibraryItem[]>("local", LIBRARY_KEY, []);
+const { useStore, useSync } = createSyncedStore<LibraryItem>({
+  name: LIBRARY_KEY,
+  endpoint: "/api/stores/library",
+});
 
-  const list = useMemo(() => {
-    const seen = new Set<string>();
-    return rawList.filter((x) => (seen.has(x.id) ? false : (seen.add(x.id), true)));
-  }, [rawList]);
+export function useLibrary() {
+  useSync();
+  const list = useStore((s) => s.items);
+  const add = useStore((s) => s.add);
+  const removeById = useStore((s) => s.removeById);
 
   const save = useCallback(
     (item: NewLibraryItem): string => {
       const id = newLibraryId();
-      const entry = { id, savedAt: Date.now(), ...item };
-      setList((prev) => [entry, ...prev]);
-      syncUpsert("library_items", { id, saved_at: entry.savedAt, data: entry });
+      add({ id, savedAt: Date.now(), ...item });
       return id;
     },
-    [setList],
+    [add],
   );
 
-  const remove = useCallback(
-    (id: string) => {
-      setList((prev) => prev.filter((x) => x.id !== id));
-      syncDelete("library_items", "id", id);
-    },
-    [setList],
-  );
+  const remove = useCallback((id: string) => removeById(id), [removeById]);
 
   return { list, save, remove };
 }

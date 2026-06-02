@@ -12,6 +12,7 @@
     "test": "vitest"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.100.1",
     "@google/genai": "^2.0.1",
     "@google/generative-ai": "^0.24.1",
     "@notionhq/client": "^5.22.0",
@@ -22,7 +23,8 @@
     "next-auth": "^4.24.14",
     "react": "^19.2.1",
     "react-dom": "^19.2.1",
-    "tailwind-merge": "^3.6.0"
+    "tailwind-merge": "^3.6.0",
+    "zustand": "^5.0.14"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

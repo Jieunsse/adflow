@@ -29,6 +29,7 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
     items: [
       { href: "/dashboard", label: "대시보드", icon: "grid" },
       { href: "/create", label: "광고 만들기", icon: "sparkles", chip: "AI" },
+      { href: "/flo", label: "플로", icon: "megaphone", chip: "AI" },
     ],
   },
   {

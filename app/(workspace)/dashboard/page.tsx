@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useQuery } from "@tanstack/react-query";
@@ -10,7 +10,6 @@ import { Button } from "@shared/ui/Button";
 import { Card } from "@shared/ui/Card";
 import { Chip, type ChipVariant } from "@shared/ui/Chip";
 import { Skeleton } from "@shared/ui/Skeleton";
-import { SegControl } from "@shared/ui/SegControl";
 import { fmt, fmtKRW, campaignDateInfo, timeAgo } from "@shared/lib/format";
 import BillingAlertWidget from "@widgets/billing-alert";
 import type { Billing } from "@entities/billing/types";
@@ -46,18 +45,9 @@ function StatusChip({ status }: { status: CampaignStatusBucket }) {
 
 const DASHBOARD_LIST_LIMIT = 5;
 
-type RangeKey = "day" | "week" | "month" | "custom";
-const RANGE_OPTIONS: { value: RangeKey; label: string }[] = [
-  { value: "day",    label: "오늘" },
-  { value: "week",   label: "이번 주" },
-  { value: "month",  label: "이번 달" },
-  { value: "custom", label: "기간 지정" },
-];
-
 export default function DashboardPage() {
   const router = useRouter();
   const { data: session } = useSession();
-  const [range, setRange] = useState<RangeKey>("week");
 
   const accountConnected = !!(session?.adAccountName && session?.pageName);
   const name = session?.user?.name?.trim();
@@ -86,6 +76,13 @@ export default function DashboardPage() {
   const totalClicks = campaigns.reduce((s, c) => s + c.clicks, 0);
   const totalSpend = campaigns.reduce((s, c) => s + c.spend, 0);
   const avgCtr = totalImpressions ? (totalClicks / totalImpressions) * 100 : 0;
+  const liveCount = campaigns.filter((c) => c.status === "live").length;
+  const heroSubtitle =
+    campaigns.length === 0
+      ? "첫 광고를 만들어 성과를 확인해 보세요."
+      : liveCount > 0
+        ? `지금 광고 ${liveCount}개가 게재되고 있어요.`
+        : "현재 게재 중인 광고가 없어요.";
 
   return (
     <div className="px-12 py-9 pb-16 max-w-[1280px] w-full mx-auto flex flex-col gap-7" data-screen-label="대시보드">
@@ -100,7 +97,7 @@ export default function DashboardPage() {
             안녕하세요{name ? `, ${name}님` : ""} 👋
           </h1>
           <p className="mt-1.5 mb-0 font-medium text-[14px] leading-[1.5] text-[var(--w-fg-neutral)] tracking-[0.004em]">
-            오늘 광고 3개가 게재 중이고, 어제 대비 클릭이 12% 늘었어요.
+            {heroSubtitle}
           </p>
         </div>
         <div className="flex gap-2">
@@ -124,17 +121,36 @@ export default function DashboardPage() {
 
       <BillingAlertWidget billing={billingQ.data} mode="top" />
 
+      {/* 플로 티저 (ADR-045) */}
+      <Card
+        role="button"
+        tabIndex={0}
+        onClick={() => router.push("/flo")}
+        onKeyDown={(e) => { if (e.key === "Enter") router.push("/flo"); }}
+        className="flex items-center gap-4 cursor-pointer bg-[var(--w-primary-soft)] border-transparent hover:bg-[var(--w-primary-normal)]/[0.12] transition-colors"
+      >
+        <span className="text-[26px] leading-none shrink-0">🌊</span>
+        <div className="flex-1">
+          <div className="font-semibold text-[14.5px] leading-[1.3] text-[var(--w-fg-strong)]">플로에게 물어보세요</div>
+          <div className="font-medium text-[12.5px] leading-[1.5] text-[var(--w-fg-neutral)] mt-[3px]">
+            광고·오가닉·A/B 테스트를 한데 모아 지금 무엇을 할지 진단해드려요.
+          </div>
+        </div>
+        <span className="inline-flex items-center gap-1 text-[13px] font-semibold text-[var(--w-primary-press)] shrink-0">
+          분석하러 가기 <Icon name="arrow-right" size={14} />
+        </span>
+      </Card>
+
       {/* 성과 요약 */}
       <div>
         <div className="flex items-center justify-between gap-3 mb-3.5">
           <h2 className="m-0 font-bold text-[17px] leading-[1.3] tracking-[-0.012em] text-[var(--w-fg-strong)]">전체 성과 요약</h2>
-          <SegControl value={range} onChange={setRange} options={RANGE_OPTIONS} />
         </div>
         <div className="grid grid-cols-4 gap-3.5">
-          <KpiCard label="총 노출수" value={fmt(totalImpressions)} delta="+8.4%" up trend={[20, 28, 32, 40, 45, 55, 60, 72, 85, 92, 98, 104, 118, 128]} />
-          <KpiCard label="총 클릭수" value={fmt(totalClicks)} delta="+12.1%" up trend={[10, 14, 16, 22, 28, 30, 32, 38, 46, 54, 58, 62, 70, 78]} />
-          <KpiCard label="평균 CTR" value={avgCtr.toFixed(2)} suffix="%" delta="+0.18%p" up trend={[2.1, 2.2, 2.15, 2.3, 2.4, 2.35, 2.4, 2.5, 2.55, 2.6, 2.62, 2.65, 2.7, 2.67]} />
-          <KpiCard label="총 지출" value={fmtKRW(totalSpend)} delta="−3.2%" down trend={[40, 55, 62, 58, 72, 68, 75, 80, 82, 76, 72, 70, 68, 65]} color="var(--w-accent-violet)" />
+          <KpiCard label="총 노출수" value={fmt(totalImpressions)} />
+          <KpiCard label="총 클릭수" value={fmt(totalClicks)} />
+          <KpiCard label="평균 CTR" value={avgCtr.toFixed(2)} suffix="%" />
+          <KpiCard label="총 지출" value={fmtKRW(totalSpend)} color="var(--w-accent-violet)" />
         </div>
       </div>
 

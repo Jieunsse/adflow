@@ -9,8 +9,6 @@ import {
   getTournament,
   upsertTournament,
   newTournamentId,
-  nextAxis,
-  buildChallenger,
   initialChampion,
   isEnvelopeExhausted,
   detectAnomaly,
@@ -19,6 +17,8 @@ import {
   type TourRound,
   type VariationIntensity,
 } from "./tournament";
+import { selectNextLever, buildHypothesis, buildLeverChallenger, summarizeLedger } from "./hypothesis";
+import { relevantLedger } from "./ledger";
 import { applyLaunch, applySettle, type RoundSettleResult } from "./transitions";
 
 export type { RoundSettleResult } from "./transitions";
@@ -118,13 +118,23 @@ export function confirmChampion(id: string, edited?: TourVariant): void {
   upsertTournament(t);
 }
 
-// AI 챌린저 제안 — 축 순회로 한 축만 바꿔 생성, 게재 전 pending 으로 보관 (재호출 시 재제안).
+// AI 챌린저 제안 (ADR-044) — Ledger 를 읽어 다음 레버를 고르고 가설을 세운 뒤 챌린저 생성, pending 으로 보관.
 export async function proposeChallenger(id: string): Promise<TourVariant | null> {
   const t = getTournament(id);
   if (!t || t.status === "completed" || t.rounds.some((r) => r.status === "running")) return null;
-  const axis = nextAxis(t.axisCursor);
   const gen = await genCreative(t);
-  t.pendingChallenger = buildChallenger(t.champion, axis, gen);
+  const index = t.rounds.length + 1;
+  const ctx = { productId: t.productId, objective: t.objective };
+  const ledger = relevantLedger(t.brandProfileId, ctx);
+  const lever = selectNextLever(ledger, ctx, index);
+  const hasPrior = summarizeLedger(ledger, ctx).relevant.length > 0;
+  t.pendingHypothesis = buildHypothesis({
+    lever,
+    ctx,
+    rationaleSource: hasPrior ? "ledger" : "platform-prior",
+    idSeed: `${t.id}_r${index}`,
+  });
+  t.pendingChallenger = buildLeverChallenger(t.champion, lever, gen);
   upsertTournament(t);
   return t.pendingChallenger;
 }

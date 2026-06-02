@@ -8,7 +8,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { withRouteHandler, ValidationError } from "@/lib/route-handler";
 import { applyLaunch, applySettle, applyAutoAdvance, type CreativeGen } from "@entities/ab-test/tournament/transitions";
-import type { Tournament } from "@entities/ab-test/tournament/engine";
+import type { Tournament, Hypothesis } from "@entities/ab-test/tournament/engine";
 import { DEMO_CREATIVE_RESULT } from "@/lib/demo/content";
 
 export const dynamic = "force-dynamic";
@@ -20,7 +20,7 @@ const DEMO_GEN: CreativeGen = {
   primaryTexts: DEMO_CREATIVE_RESULT.primaryTexts,
 };
 
-type Body = { tournament?: Tournament; action?: string; days?: number };
+type Body = { tournament?: Tournament; action?: string; days?: number; ledger?: Hypothesis[] };
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ tournament: nt, result });
       }
       case "auto-advance": {
-        const { t: nt } = applyAutoAdvance(t, DEMO_GEN);
+        const { t: nt } = applyAutoAdvance(t, DEMO_GEN, b.ledger ?? []);
         return NextResponse.json({ tournament: nt });
       }
       default:

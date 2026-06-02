@@ -1,3 +1,4 @@
+import { profilesSnapshot, replaceProfiles } from "./brandProfileStore";
 import type { BrandProfileEntry } from "./useBrandProfileStorage";
 import type { PersonaEntry } from "./usePersonasStorage";
 import type { ReferenceMaterial } from "@shared/lib/referenceMaterials";
@@ -265,21 +266,32 @@ const DEMO_PRODUCTS: ProductEntry[] = [
     price: "12,000원",
     createdAt: Date.now() - 1000 * 60 * 60 * 24 * 6,
   },
+  // ADR-050 — A/B 토너먼트 데모(browse_demo_tourn_ample)와 동일 id. /create 에서 이 제품을 고르면
+  // 토너먼트가 쌓은 Ledger(trust 입증·rush 반증)가 카피 훅 1단 편향으로 흐르는 걸 시연한다.
+  {
+    id: "browse_demo_tourn_ample",
+    brandProfileId: DEMO_PROFILE_ID,
+    name: "비타민 비건 앰플",
+    description:
+      "식물성 비타민 앰플로 생기 없는 피부에 활력을. 매일 아침 한 방울로 톤을 정돈해요. 비건 인증·무향·무색소.",
+    imageUrl: "/demo/library/serum.jpg",
+    price: "34,000원",
+    createdAt: Date.now() - 1000 * 60 * 60 * 24 * 4,
+  },
 ];
 
-const PROFILES_KEY = "adflow:brand-profiles";
 const PERSONAS_KEY = "adflow:personas";
 const PRODUCTS_KEY_PREFIX = "adflow:products:";
 const MATERIALS_KEY_PREFIX = "adflow:ref-materials:";
 const SEED_VERSION_KEY = "adflow:brand-profiles:seed-version";
 // 데모 프로필 스키마가 바뀌면 이 값을 올린다 — 옛 localStorage 의 데모 항목이 한 번 새 시드로 교체된다 (browse/store.ts 패턴).
-const SEED_VERSION = "2026-05-30-products";
+const SEED_VERSION = "2026-06-02-ample";
 
 export function seedDemoIfEmpty(): void {
   if (typeof window === "undefined") return;
   try {
-    const existing = localStorage.getItem(PROFILES_KEY);
-    const parsed: BrandProfileEntry[] = existing ? JSON.parse(existing) : [];
+    // 프로필은 Synced Store(brandProfileStore)가 source-of-truth — 스냅샷 읽고 store 로 쓴다(게스트=로컬만).
+    const parsed: BrandProfileEntry[] = profilesSnapshot();
     const versionStale = localStorage.getItem(SEED_VERSION_KEY) !== SEED_VERSION;
     const hasDemo = parsed.some((p) => p.id === DEMO_PROFILE_ID);
 
@@ -290,7 +302,7 @@ export function seedDemoIfEmpty(): void {
     }
 
     const others = parsed.filter((p) => p.id !== DEMO_PROFILE_ID);
-    localStorage.setItem(PROFILES_KEY, JSON.stringify([DEMO_PROFILE, ...others]));
+    replaceProfiles([DEMO_PROFILE, ...others]);
     localStorage.setItem(SEED_VERSION_KEY, SEED_VERSION);
 
     const existingPersonas: PersonaEntry[] = (() => {

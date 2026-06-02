@@ -4,12 +4,13 @@
 // +7일 결산해 대시보드를 앞으로 굴린다. 단일 토너먼트용 PresenterTournamentBar 의 목록 버전.
 // production 기능 아님 — 목록 페이지가 browseMode 일 때만 렌더한다.
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@shared/ui/Button";
 import { useToast } from "@shared/ui/Toast";
 import { deriveBeat, isRunningBeat, type Tournament } from "@entities/ab-test/tournament/tournament";
 import { resetTournamentDemo } from "@entities/ab-test/tournament/seed";
-import { demoSettleRound, demoAutoAdvance } from "@entities/ab-test/tournament/client";
+import { demoCascade } from "@entities/ab-test/tournament/client";
 import { usePresenterConsole } from "@shared/lib/usePresenterConsole";
 import { PresenterConsoleShell, ConsoleStatGrid } from "./console-shell";
 
@@ -17,28 +18,31 @@ export default function PresenterTournamentListBar({ tournaments }: { tournament
   const router = useRouter();
   const showToast = useToast();
   const [consoleOn] = usePresenterConsole();
+  const [busy, setBusy] = useState(false);
 
   const running = tournaments.filter((t) => isRunningBeat(deriveBeat(t)));
   const completed = tournaments.filter((t) => t.status === "completed");
 
+  // ADR-044 — 진행 중인 모든 토너먼트를 각자의 브레이크/봉투 소진까지 캐스케이드.
   const fastForward = async () => {
     if (running.length === 0) return;
-    let settled = 0;
-    let insufficient = 0;
-    for (const t of tournaments) {
-      if (t.status === "completed") continue;
-      const active = t.rounds.find((r) => r.status === "running");
-      if (active) {
-        const res = await demoSettleRound(t.id, active.fastForwardDays + 7);
-        if (res.status === "settled") settled += 1;
-        else if (res.status === "insufficient") insufficient += 1;
+    setBusy(true);
+    try {
+      let rounds = 0;
+      let advanced = 0;
+      for (const t of tournaments) {
+        if (!isRunningBeat(deriveBeat(t))) continue;
+        const log = await demoCascade(t.id);
+        if (log.length) {
+          rounds += log.length;
+          advanced += 1;
+        }
       }
-      // ADR-035 — auto 무인: 브레이크가 없으면 다음 챌린저를 자동 게재(무인 체인).
-      if (t.mode === "auto") await demoAutoAdvance(t.id);
+      if (rounds > 0) showToast(`${advanced}개 토너먼트 · ${rounds}개 라운드 자동 진행 — 결정 대기만 올렸어요`);
+      else showToast("자동 진행 중인 토너먼트를 앞으로 넘겼어요");
+    } finally {
+      setBusy(false);
     }
-    if (settled > 0) showToast(`${settled}개 토너먼트 라운드 결산 — 꼭 필요한 것만 결정 대기로 올렸어요`);
-    else if (insufficient > 0) showToast("아직 데이터가 부족해요 — 한 번 더 빨리감기 해보세요");
-    else showToast("자동 진행 중인 토너먼트를 한 주 앞으로 넘겼어요");
   };
 
   const reset = () => {
@@ -67,12 +71,12 @@ export default function PresenterTournamentListBar({ tournaments }: { tournament
             size="md"
             block
             onClick={fastForward}
-            disabled={running.length === 0}
+            disabled={running.length === 0 || busy}
             title={running.length === 0 ? "진행 중인 토너먼트가 있을 때 빨리감기로 결산할 수 있어요" : undefined}
           >
-            +7일
+            {busy ? "진행 중…" : "빨리감기"}
           </Button>
-          <Button variant="secondary" size="md" block onClick={reset}>초기화</Button>
+          <Button variant="secondary" size="md" block onClick={reset} disabled={busy}>초기화</Button>
         </>
       }
     />

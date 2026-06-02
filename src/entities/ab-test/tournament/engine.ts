@@ -5,9 +5,43 @@
 
 import { type AdKpi } from "@entities/insights/ab-verdict";
 import { tourMetricSpec, metricCpm } from "./objective-metric";
+import type { Lever } from "./lever";
+
+export type { Lever, CopyLever, NonCopyLever } from "./lever";
 
 export type TourAxis = "headline" | "primary_text" | "image";
 export type TourVariant = { headline: string; primaryText: string; imageUrl?: string };
+
+/* ─── 가설 (ADR-044) — A/B 한 라운드가 검증하는 반증 가능한 인과 단언 ───── */
+
+export type HypothesisVerdict = "confirmed" | "refuted" | "inconclusive";
+
+export type Hypothesis = {
+  id: string;
+  lever: Lever; // 구조화 키 — Ledger 집계 단위
+  statement: string; // "긴박감을 주면 CTR이 오른다"
+  predictedMetric: string; // 목표별 결정 지표 라벨 (CTR / CPM / 참여율 …)
+  predictedDirection: "up" | "down"; // 개선 방향 (rate=up, cpm=down)
+  rationale: string; // 근거 강제 — 어느 재료에서 나왔는지
+  rationaleSource:
+    | "brand-profile"
+    | "persona"
+    | "performance-archive"
+    | "platform-prior"
+    | "ledger"
+    | "principle";
+  contextTags: { productId: string; personaId?: string; objective: string }; // Ledger 필터·가중 키
+  status: "proposed" | "testing" | "resolved";
+  verdict?: HypothesisVerdict; // resolved 시
+  effectSize?: number; // 챌린저 대비 lift % (verdict 와 함께)
+  resolvedAt?: string;
+};
+
+// Brand Profile 단위 누적 — resolved 가설이 영구 적재되는 브랜드 지식 자산. 데모=localStorage / 실=Supabase(후속).
+export type HypothesisLedger = {
+  brandProfileId: string;
+  entries: Hypothesis[]; // resolved 만 적재
+};
 
 // ADR-039 — 단일 축을 *얼마나* 다르게(변형 폭). 텍스트 축(헤드라인·카피) AI 챌린저 생성에만 적용.
 // 토너먼트 상수로 저장 → 무인 auto 루프(R2+)가 그대로 사용, manual-n 만 라운드별 override.
@@ -35,6 +69,7 @@ export type TourRound = {
   studyId?: string; // Meta ad study(SPLIT_TEST) ID — KpiSource 가 Meta verdict 를 조회하는 키. 데모는 미사용
   launchedAt?: string; // 실 게재 시각 ISO — cron 이 MIN_ROUND_DAYS 경과 판정에 사용. 데모는 fastForwardDays 사용
   status: "running" | "settled";
+  hypothesis?: Hypothesis; // ADR-044 — 이 라운드가 검증하는 가설. 동인은 hypothesis.lever, axis 는 표시 파생 유지
 };
 
 export type TourMode = "manual-n" | "auto";
@@ -76,6 +111,7 @@ export type Tournament = {
   championSourceName?: string; // existing 일 때 원본 캠페인명 (provenance 표기용)
   championConfirmed?: boolean; // 출발 광고 승인 결정 지점 통과 여부
   pendingChallenger?: TourVariant; // 결정 대기 중인 챌린저 제안 (게재 전)
+  pendingHypothesis?: Hypothesis; // ADR-044 — pendingChallenger 와 짝인 가설 (게재 시 라운드로 이동)
   prohibitedWords?: string[]; // ADR-035 ⓑ — 브랜드 금칙어 (챌린저 위반 시 이상 신호)
   anomalyClearedRound?: number; // ADR-035 ⓑ — 사람이 "계속"으로 해소한 이상 신호 라운드
   brandDescription?: string; // 셋업 시 고른 브랜드 컨텍스트 — 라운드별 Gemini 주입

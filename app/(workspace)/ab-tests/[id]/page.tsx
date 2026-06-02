@@ -27,7 +27,10 @@ import {
   type TourVariant,
   type TourRound,
   type TourAxis,
+  type Hypothesis,
+  type HypothesisVerdict,
 } from "@entities/ab-test/tournament/tournament";
+import { leverLabel } from "@entities/ab-test/tournament/lever";
 import { tournamentClient } from "@entities/ab-test/tournament/client";
 import { buildRoundReport, type AdReport, type RoundReport } from "@entities/ab-test/tournament/report";
 import {
@@ -68,6 +71,22 @@ function tournamentTotals(t: Tournament, isReal: boolean): { spend: number; days
 
 const krw = (n: number) => `₩${n.toLocaleString("ko-KR")}`;
 
+// ADR-044 — 가설 verdict 표시. 입증=positive / 반증=warning / 미결=neutral.
+const VERDICT_META: Record<HypothesisVerdict, { label: string; mark: string; chip: "live" | "paused" | "neutral" }> = {
+  confirmed: { label: "입증", mark: "✓", chip: "live" },
+  refuted: { label: "반증", mark: "✗", chip: "paused" },
+  inconclusive: { label: "미결", mark: "~", chip: "neutral" },
+};
+
+const RATIONALE_SOURCE_LABEL: Record<Hypothesis["rationaleSource"], string> = {
+  "brand-profile": "브랜드 프로필",
+  persona: "페르소나",
+  "performance-archive": "성과 아카이브",
+  "platform-prior": "플랫폼 통계",
+  ledger: "누적 학습",
+  principle: "마케팅 원칙",
+};
+
 export default function AbTournamentDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
@@ -78,17 +97,21 @@ export default function AbTournamentDetailPage() {
   const client = useMemo(() => tournamentClient(browseMode), [browseMode]);
 
   const [t, setT] = useState<Tournament | null>(null);
+  const [ledger, setLedger] = useState<Hypothesis[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     let alive = true;
-    const reload = () =>
+    const reload = () => {
       client.get(id).then((next) => {
         if (!alive) return;
         setT(next);
         setLoading(false);
       });
+      // ADR-047 학습 노트 — 데모=localStorage 투영, 실=brand-scoped 서버 투영. 본문 렌더를 막지 않게 별도 페치.
+      client.getLedger(id).then((l) => { if (alive) setLedger(l); }).catch(() => {});
+    };
     reload();
     if (browseMode) {
       // 데모 — localStorage 변경 이벤트로 즉시 반영.
@@ -158,6 +181,12 @@ export default function AbTournamentDetailPage() {
         ? `기존 광고 〈${t.championSourceName ?? "—"}〉에서 시작`
         : undefined;
   const nextAxisLabel = AXIS_LABEL[nextAxis(t.axisCursor)];
+  // VS 상단 — 결정 대기 챌린저(pending) 또는 게재 중 라운드의 챌린저가 있으면 챔피언과 나란히 비교.
+  const runningRound = t.rounds.find((r) => r.status === "running");
+  const activeChallenger = t.pendingChallenger ?? runningRound?.challenger;
+  const challengerAxis = activeChallenger ? deriveAxis(t.champion, activeChallenger) : undefined;
+  // 게시중(running 라운드) VS = IG 풀 프리뷰 대신 헤드라인/광고카피 텍스트 비교. 게재 전(pending) 검토 단계는 그대로 IG.
+  const liveVs = !t.pendingChallenger && !!runningRound;
 
   return (
     <div className="px-12 py-9 pb-28 max-w-[860px] w-full mx-auto flex flex-col gap-6" data-screen-label="A/B 토너먼트 상세">
@@ -207,8 +236,8 @@ export default function AbTournamentDetailPage() {
         </div>
       )}
 
-      {/* 챔피언 카드 */}
-      <ChampionCard champion={t.champion} ctr={t.championCtr} spec={spec} confirmed={!!t.championConfirmed} note={promotionNote} />
+      {/* 챔피언 카드 — 챌린저가 있으면 VS 구도 */}
+      <ChampionCard champion={t.champion} challenger={activeChallenger} axis={challengerAxis} ctr={t.championCtr} spec={spec} confirmed={!!t.championConfirmed} note={promotionNote} live={liveVs} />
 
       {/* 비트별 패널 */}
       {beat === "champion-review" && (
@@ -289,6 +318,9 @@ export default function AbTournamentDetailPage() {
         />
       )}
 
+      {/* ADR-044/047 학습 노트 — 데모=localStorage Ledger, 실=tournaments 투영. 양쪽 공통. */}
+      <LedgerPanel entries={ledger} />
+
       {/* 데모만 발표자 빨리감기 — 실 라운드는 서버 cron 이 결산·진행한다. */}
       {!isReal && <PresenterTournamentBar t={t} />}
     </div>
@@ -361,6 +393,71 @@ function AutoBanner({ title, desc }: { title: string; desc: string }) {
   );
 }
 
+// ADR-044 — 라운드가 검증한 가설 + 근거 + verdict. SettledResult·라운드 기록·이상신호 카드 공용.
+function HypothesisBanner({ h }: { h: Hypothesis }) {
+  const v = h.verdict ? VERDICT_META[h.verdict] : null;
+  return (
+    <div className="flex items-start gap-3 py-3 px-4 rounded-xl bg-[var(--w-bg-alternative)] border border-[var(--w-line-normal)]">
+      <span className="text-[16px] leading-none mt-0.5">🔬</span>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 flex-wrap mb-1">
+          <Chip variant="neutral">{leverLabel(h.lever)}</Chip>
+          <span className="font-bold text-[13px] leading-[1.4] text-[var(--w-fg-strong)]">{h.statement}</span>
+          {v && <Chip variant={v.chip} className="ml-auto">{v.mark} {v.label}{h.effectSize != null && h.verdict === "confirmed" ? ` +${h.effectSize}%` : ""}</Chip>}
+        </div>
+        <div className="font-medium text-[12px] leading-[1.5] text-[var(--w-fg-neutral)]">
+          근거 〈{RATIONALE_SOURCE_LABEL[h.rationaleSource]}〉 · {h.rationale}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ADR-044 Hypothesis Ledger 패널 — 이 제품 토너먼트에서 검증돼 브랜드에 누적된 가설(입증·반증·미결).
+// 다음 가설 생성기가 읽는 학습 자산을 그대로 노출 — 음성 학습("긴박감 반증→회피")을 한눈에 보여준다.
+function LedgerPanel({ entries }: { entries: Hypothesis[] }) {
+  if (!entries.length) return null;
+  // 레버별 최신 resolved 기준 집계 (같은 레버 재검증 시 마지막 판정).
+  const byLever = new Map<string, Hypothesis>();
+  for (const h of entries) if (h.verdict) byLever.set(h.lever, h);
+  const list = [...byLever.values()];
+  if (!list.length) return null;
+  const order: HypothesisVerdict[] = ["confirmed", "refuted", "inconclusive"];
+  list.sort((a, b) => order.indexOf(a.verdict!) - order.indexOf(b.verdict!));
+  return (
+    <div>
+      <div className="flex items-baseline justify-between gap-3 mb-1">
+        <div className="font-bold text-[14px] text-[var(--w-fg-strong)]">학습 노트</div>
+        <div className="font-medium text-[12px] text-[var(--w-fg-neutral)]">브랜드에 누적된 검증 결과</div>
+      </div>
+      <div className="font-medium text-[12px] leading-[1.5] text-[var(--w-fg-neutral)] mb-3">
+        검증한 가설이 브랜드 지식으로 쌓여요. 다음 가설은 반증된 레버를 피하고 미탐색 레버를 우선해요. 이 학습은 카피를 만들 때 추천 훅에도 반영돼요.
+      </div>
+      <Card className="p-4 flex flex-wrap gap-2">
+        {list.map((h) => {
+          const v = VERDICT_META[h.verdict!];
+          return (
+            <span
+              key={h.id}
+              title={h.statement}
+              className="inline-flex items-center gap-1.5 py-1.5 px-2.5 rounded-lg border font-semibold text-[12px]"
+              style={
+                h.verdict === "confirmed"
+                  ? { background: "var(--w-primary-soft)", borderColor: "var(--w-primary-weak)", color: "var(--w-primary-press)" }
+                  : h.verdict === "refuted"
+                    ? { background: "rgba(229,53,53,0.1)", borderColor: "rgba(229,53,53,0.34)", color: "#d92020" }
+                    : { background: "var(--w-bg-alternative)", borderColor: "var(--w-line-normal)", color: "var(--w-fg-neutral)" }
+              }
+            >
+              {leverLabel(h.lever)} <span className="opacity-70">{v.mark} {v.label}</span>
+            </span>
+          );
+        })}
+      </Card>
+    </div>
+  );
+}
+
 /* ─── 챔피언 카드 ───────────────────────────────────────── */
 
 function StatItem({ label, value }: { label: string; value: string }) {
@@ -384,33 +481,83 @@ function Metric({ label, value }: { label: string; value: string }) {
 // Browse Mode 시연 광고 계정 — IG 프리뷰 핸들. 실연동 시 연결 IG 계정에서 도출.
 const BRAND_HANDLE = "greenroutine_official";
 
-function ChampionCard({ champion, ctr, spec, confirmed, note }: { champion: TourVariant; ctr: number; spec: TourMetricSpec; confirmed: boolean; note?: string }) {
+// 변형 하나를 풀 IG 프리뷰로 — VS 컬럼/단독 공용. accent=챌린저(B) 강조, axisLabel=바뀐 축 배지.
+// live=게시중 라운드 — 풀 IG 프리뷰 대신 헤드라인/광고카피 텍스트 비교(게재 전 검토 카드와 동일 스타일).
+function VsPreviewColumn({ variant, likeCount, label, tag, accent, axisLabel, live, highlight }: {
+  variant: TourVariant; likeCount: number; label: string; tag: string; accent?: boolean; axisLabel?: string; live?: boolean; highlight?: TourAxis;
+}) {
+  return (
+    <div className="flex flex-col gap-2.5">
+      <div className="flex items-center gap-1.5">
+        <span
+          style={{ width: 22, height: 22, borderRadius: "50%", background: accent ? "var(--w-primary-soft)" : "var(--w-bg-alternative)", border: `1.5px solid ${accent ? "var(--w-primary-normal)" : "var(--w-line-normal)"}`, color: accent ? "var(--w-primary-press)" : "var(--w-fg-neutral)", display: "grid", placeItems: "center" }}
+          className="font-bold text-[11px]"
+        >
+          {label}
+        </span>
+        <span className="font-semibold text-[12.5px]" style={{ color: accent ? "var(--w-primary-press)" : "var(--w-fg-neutral)" }}>{tag}</span>
+        {axisLabel && <Chip variant="review" className="ml-auto">{axisLabel} 변경</Chip>}
+      </div>
+      {live ? (
+        <div className={`rounded-xl p-3 border ${accent ? "border-[var(--w-primary-normal)]" : "border-[var(--w-line-normal)]"}`}>
+          <VariantBody variant={variant} highlight={highlight} noImage />
+        </div>
+      ) : (
+        <div className={accent ? "rounded-[16px] p-1 -m-1 bg-[var(--w-primary-soft)]" : ""}>
+          <IgPostPreview
+            imageUrl={variant.imageUrl ?? ""}
+            caption={variant.primaryText}
+            headline={variant.headline}
+            handle={BRAND_HANDLE}
+            sponsored
+            likeCount={likeCount}
+            className="w-full"
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ChampionCard({ champion, challenger, axis, ctr, spec, confirmed, note, live }: {
+  champion: TourVariant; challenger?: TourVariant; axis?: TourAxis; ctr: number; spec: TourMetricSpec; confirmed: boolean; note?: string; live?: boolean;
+}) {
   // 좋아요 수는 표시용 — cpm(원 단위)을 곱하면 비현실적이라 비율 지표일 때만 ctr 기반, 아니면 명목값.
   const likeBase = spec.kind === "cpm" ? 1.8 : ctr;
+  const likeCount = Math.round(likeBase * 200);
+  const vs = !!challenger;
   return (
     <Card className="p-5">
       <div className="flex items-center gap-2 mb-3">
-        <span style={{ width: 24, height: 24, borderRadius: "50%", background: "var(--w-status-positive-bg, var(--w-bg-alternative))", color: "var(--w-status-positive)", display: "grid", placeItems: "center" }} className="font-bold text-[11px]">
+        <span style={{ width: 24, height: 24, borderRadius: "50%", background: "var(--w-status-positive-soft)", color: "var(--w-status-positive)", display: "grid", placeItems: "center" }} className="font-bold text-[11px]">
           <Icon name="check-circle" size={15} />
         </span>
-        <span className="font-bold text-[13px] text-[var(--w-fg-strong)]">현재 챔피언</span>
+        <span className="font-bold text-[13px] text-[var(--w-fg-strong)]">{vs ? "챔피언 vs 챌린저" : "현재 챔피언"}</span>
         <Chip variant="neutral" className="ml-auto">{spec.rateLabel} {formatPrimary(spec, ctr)}</Chip>
         {!confirmed && <Chip variant="review">검토 대기</Chip>}
       </div>
       {note && (
         <div className="font-semibold text-[11.5px] text-[var(--w-status-positive)] -mt-1 mb-2.5">↑ {note}</div>
       )}
-      <div className="flex justify-center">
-        <IgPostPreview
-          imageUrl={champion.imageUrl ?? ""}
-          caption={champion.primaryText}
-          headline={champion.headline}
-          handle={BRAND_HANDLE}
-          sponsored
-          likeCount={Math.round(likeBase * 200)}
-          className="w-full max-w-[360px]"
-        />
-      </div>
+      {vs ? (
+        <div className="grid grid-cols-[1fr_auto_1fr] gap-3 items-start">
+          <VsPreviewColumn variant={champion} likeCount={likeCount} label="A" tag="챔피언" live={live} />
+          <div className="self-center font-bold text-[12px] text-[var(--w-fg-alternative)] py-1.5 px-2.5 rounded-full bg-[var(--w-bg-alternative)] border border-[var(--w-line-normal)]">VS</div>
+          <VsPreviewColumn variant={challenger!} likeCount={likeCount} label="B" tag="챌린저" accent axisLabel={axis ? AXIS_LABEL[axis] : undefined} live={live} highlight={axis} />
+        </div>
+      ) : (
+        <div className="flex justify-center">
+          <IgPostPreview
+            imageUrl={champion.imageUrl ?? ""}
+            caption={champion.primaryText}
+            headline={champion.headline}
+            handle={BRAND_HANDLE}
+            sponsored
+            likeCount={likeCount}
+            className="w-full max-w-[360px]"
+          />
+        </div>
+      )}
     </Card>
   );
 }
@@ -434,10 +581,10 @@ function Prohibited({ text, words }: { text: string; words?: string[] }) {
 }
 
 // only 가 주어지면 그 축 한 필드만 노출 (head-to-head 카드는 바뀐 축만, 앵커·검토 카드는 전문).
-function VariantBody({ variant, highlight, only, prohibited }: { variant: TourVariant; highlight?: TourAxis; only?: TourAxis; prohibited?: string[] }) {
+function VariantBody({ variant, highlight, only, prohibited, noImage }: { variant: TourVariant; highlight?: TourAxis; only?: TourAxis; prohibited?: string[]; noImage?: boolean }) {
   return (
     <div className="flex flex-col gap-2">
-      {variant.imageUrl && (!only || only === "image") && (
+      {variant.imageUrl && !noImage && (!only || only === "image") && (
         <div className={highlight === "image" ? "rounded-lg p-1 -m-1 bg-[var(--w-primary-soft)]" : ""}>
           <img src={variant.imageUrl} alt="광고 이미지" style={{ width: "100%", aspectRatio: "1", objectFit: "cover", borderRadius: 10, border: "1px solid var(--w-line-normal)" }} />
         </div>
@@ -715,9 +862,10 @@ function SettledResult({ round, dailyBudget, spec, prohibited, isReal }: { round
   const pb = primaryMetricValue(spec, report.ads[1]);
   return (
     <div className="flex flex-col gap-3">
+      {round.hypothesis && <HypothesisBanner h={round.hypothesis} />}
       <AutoBanner
         title={`라운드 ${round.index} 결산 — ${winnerIsB ? "챌린저(B) 우세" : "챔피언(A) 방어"}`}
-        desc={`${AXIS_LABEL[round.axis]} 비교 · ${sig} · ${promo}`}
+        desc={`${round.hypothesis ? leverLabel(round.hypothesis.lever) : AXIS_LABEL[round.axis]} 비교 · ${sig} · ${promo}`}
       />
       <VerdictStrip report={report} winnerIsB={winnerIsB} />
       <div className="grid grid-cols-2 gap-4">
@@ -937,19 +1085,25 @@ function RoundHistory({ rounds, summary, dailyBudget, spec, isReal }: { rounds: 
                 className="flex items-center gap-3 py-3 px-4 rounded-xl bg-[var(--w-bg-elevated)] border border-[var(--w-line-normal)] text-left cursor-pointer hover:border-[var(--w-line-strong)] transition-colors"
               >
                 <span className="font-bold text-[12px] text-[var(--w-fg-alternative)] w-12">R{r.index}</span>
-                <Chip variant="neutral">{AXIS_LABEL[r.axis]}</Chip>
-                <div className="flex flex-col gap-0.5">
-                  <span className="font-medium text-[12.5px] text-[var(--w-fg-neutral)]">
-                    A {formatPrimary(spec, r.verdict?.ctrA ?? 0)} → B {formatPrimary(spec, r.verdict?.ctrB ?? 0)}
+                <Chip variant="neutral">{r.hypothesis ? leverLabel(r.hypothesis.lever) : AXIS_LABEL[r.axis]}</Chip>
+                <div className="flex flex-col gap-0.5 min-w-0">
+                  <span className="font-medium text-[12.5px] text-[var(--w-fg-neutral)] truncate">
+                    {r.hypothesis ? r.hypothesis.statement : `A ${formatPrimary(spec, r.verdict?.ctrA ?? 0)} → B ${formatPrimary(spec, r.verdict?.ctrB ?? 0)}`}
                     {winnerIsB && <span className="text-[var(--w-status-positive)] font-semibold"> ▲</span>}
                   </span>
                   <span className="font-medium text-[11px] text-[var(--w-fg-alternative)]">
                     노출 {imp.toLocaleString("ko-KR")} · 지출 {krw(spend)}
                   </span>
                 </div>
-                <Chip variant={winnerIsB ? "live" : "neutral"} className="ml-auto">
-                  {winnerIsB ? "챌린저 승격" : "챔피언 방어"}
-                </Chip>
+                {r.hypothesis?.verdict ? (
+                  <Chip variant={VERDICT_META[r.hypothesis.verdict].chip} className="ml-auto">
+                    {VERDICT_META[r.hypothesis.verdict].mark} {VERDICT_META[r.hypothesis.verdict].label}
+                  </Chip>
+                ) : (
+                  <Chip variant={winnerIsB ? "live" : "neutral"} className="ml-auto">
+                    {winnerIsB ? "챌린저 승격" : "챔피언 방어"}
+                  </Chip>
+                )}
                 <Icon name="chev-down" size={16} className={`text-[var(--w-fg-alternative)] transition-transform ${expanded ? "rotate-180" : ""}`} />
               </button>
               {expanded && (

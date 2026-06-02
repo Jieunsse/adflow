@@ -28,6 +28,9 @@ function memStore(): TournamentStore & { _all: Map<string, Tournament> } {
     _all: all,
     async list() { return [...all.values()]; },
     async listByOwner(key) { return [...all.values()].filter((t) => t.delivery?.ownerEmail === key); },
+    async listByBrandOwner(brandProfileId, key) {
+      return [...all.values()].filter((t) => t.brandProfileId === brandProfileId && t.delivery?.ownerEmail === key);
+    },
     async get(id) { return all.get(id) ?? null; },
     async upsert(t) { all.set(t.id, structuredClone(t)); },
     async remove(id) { all.delete(id); },
@@ -189,5 +192,51 @@ describe("createServerRunner", () => {
     expect(t?.rounds.length).toBe(1);
     expect(t?.rounds[0].status).toBe("running");
     expect(t?.rounds[0].adIds).toEqual(["ad_A", "ad_B"]);
+  });
+
+  /* ─── ADR-044/047 가설 생명주기 + Ledger 투영 ─────────────── */
+
+  it("proposeChallenger 가 가설을 세우고(proposed), launch 가 라운드로(testing), settle 이 verdict 로 확정한다", async () => {
+    const r = runner();
+    const id = await r.createTournament(baseSetup());
+
+    await r.proposeChallenger(id);
+    expect((await store.get(id))?.pendingHypothesis?.status).toBe("proposed");
+
+    await r.launchRound(id);
+    const live = await store.get(id);
+    expect(live?.pendingHypothesis).toBeUndefined();
+    expect(live?.rounds[0].hypothesis?.status).toBe("testing");
+
+    nowMs += (MIN_ROUND_DAYS + 1) * 86400000;
+    vi.mocked(kpiSource.roundKpis).mockResolvedValue([
+      { ctr: 1.0, impressions: 50000, clicks: 500, spend: 200000 },
+      { ctr: 2.0, impressions: 50000, clicks: 1000, spend: 200000 },
+    ]);
+    await r.pollAndSettle(id);
+    const settled = await store.get(id);
+    expect(settled?.rounds[0].hypothesis?.status).toBe("resolved");
+    expect(settled?.rounds[0].hypothesis?.verdict).toBe("confirmed"); // B 유의 승 = 입증
+  });
+
+  it("이전 토너먼트에서 반증된 레버는 다음 토너먼트의 가설 생성에서 회피된다 (Ledger 투영이 결정에 반영)", async () => {
+    // 토너먼트 1 — 챔피언(A) 유의 승 → 라운드 가설 반증(refuted)
+    const r = runner();
+    const id1 = await r.createTournament(baseSetup());
+    await r.proposeChallenger(id1);
+    const refutedLever = (await store.get(id1))?.pendingHypothesis?.lever;
+    await r.launchRound(id1);
+    nowMs += (MIN_ROUND_DAYS + 1) * 86400000;
+    vi.mocked(kpiSource.roundKpis).mockResolvedValue([
+      { ctr: 2.0, impressions: 50000, clicks: 1000, spend: 200000 }, // A(챔피언) 유의 우위
+      { ctr: 1.0, impressions: 50000, clicks: 500, spend: 200000 },
+    ]);
+    await r.pollAndSettle(id1);
+    expect((await store.get(id1))?.rounds[0].hypothesis?.verdict).toBe("refuted");
+
+    // 토너먼트 2 — 같은 브랜드·제품·목표·소유자. 투영된 Ledger 가 반증 레버를 가지치기해야 한다.
+    const id2 = await r.createTournament(baseSetup());
+    await r.proposeChallenger(id2);
+    expect((await store.get(id2))?.pendingHypothesis?.lever).not.toBe(refutedLever);
   });
 });

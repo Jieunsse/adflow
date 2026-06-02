@@ -34,6 +34,18 @@ export const supabaseTournamentStore: TournamentStore = {
     return ((data as Row[]) ?? []).map((r) => r.data);
   },
 
+  // ADR-047 — Ledger 투영 입력. brand_profile_id·user_email 컬럼으로 좁혀 소유 유저의 같은 브랜드 토너먼트만.
+  async listByBrandOwner(brandProfileId, ownerKey) {
+    const { data, error } = await client()
+      .from(TABLE)
+      .select("data")
+      .eq("brand_profile_id", brandProfileId)
+      .eq("user_email", ownerKey)
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+    return ((data as Row[]) ?? []).map((r) => r.data);
+  },
+
   async get(id) {
     const { data, error } = await client().from(TABLE).select("data").eq("id", id).maybeSingle();
     if (error) throw error;

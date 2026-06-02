@@ -79,7 +79,7 @@ describe("buildTournamentRequest", () => {
     expect(r.ageMin).toBe(18);
     expect(r.ageMax).toBe(65);
     expect(r.goalId).toBe("traffic");
-    expect(r.mode).toBe("manual-n");
+    expect(r.mode).toBe("auto");
   });
 });
 

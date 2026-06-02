@@ -4,16 +4,23 @@
 // "use client" 없음 — 서버 라우트가 import 한다. 부작용(localStorage·fetch)은 호출 측이 가진다.
 
 import {
-  nextAxis,
   deriveAxis,
-  buildChallenger,
   settleRound,
   isEnvelopeExhausted,
   detectAnomaly,
   roundCampaignId,
   type Tournament,
   type TourRound,
+  type Hypothesis,
 } from "./engine";
+import {
+  selectNextLever,
+  buildHypothesis,
+  buildLeverChallenger,
+  summarizeLedger,
+  resolveHypothesis,
+  demoLeverFactor,
+} from "./hypothesis";
 
 export type CreativeGen = { headlines: string[]; primaryTexts: string[] };
 
@@ -45,9 +52,11 @@ export function applyLaunch(t: Tournament): { t: Tournament; round: TourRound | 
     challenger: t.pendingChallenger,
     fastForwardDays: 0,
     status: "running",
+    hypothesis: t.pendingHypothesis ? { ...t.pendingHypothesis, status: "testing" } : undefined,
   };
   t.rounds = [...t.rounds, round];
   t.pendingChallenger = undefined;
+  t.pendingHypothesis = undefined;
   return { t, round };
 }
 
@@ -57,7 +66,9 @@ export function applySettle(t: Tournament, days = 0): { t: Tournament; result: R
   if (!r) return { t, result: { status: "no-active" } };
 
   r.fastForwardDays = Math.max(r.fastForwardDays, days);
-  const result = settleRound(r, t.championCtr, t.dailyBudget, undefined, t.objective);
+  // ADR-044 데모 — 가설이 있으면 레버별 결과 authoring(반증 연출). 없으면 종전 해시 기반 challengerFactor.
+  const factorOverride = r.hypothesis ? demoLeverFactor(r.hypothesis.lever, r.campaignId) : undefined;
+  const result = settleRound(r, t.championCtr, t.dailyBudget, factorOverride, t.objective);
   if (result.verdict.state === "insufficient") {
     return { t, result: { status: "insufficient" } }; // 누적 ff 는 저장하도록 t 반환
   }
@@ -66,6 +77,9 @@ export function applySettle(t: Tournament, days = 0): { t: Tournament; result: R
   r.rawWinner = result.rawWinner;
   r.adKpis = result.kpis;
   r.status = "settled";
+  if (r.hypothesis) {
+    r.hypothesis = resolveHypothesis(r.hypothesis, result.verdict, result.rawWinner, new Date().toISOString());
+  }
 
   const winnerIsB = result.rawWinner === "B";
   t.champion = winnerIsB ? r.challenger : r.champion;
@@ -91,15 +105,28 @@ export function applySettle(t: Tournament, days = 0): { t: Tournament; result: R
   };
 }
 
-// auto 무인 체인 — 브레이크(봉투 소진·이상 신호) 없으면 다음 챌린저 자동 생성·게재. gen 은 호출 측 주입
-// (클라=정적 데모 응답, 서버 라우트=DEMO_CREATIVE_RESULT) — 챌린저 생성 부작용을 순수 로직과 분리한다.
-export function applyAutoAdvance(t: Tournament, gen: CreativeGen): { t: Tournament } {
-  if (t.mode !== "auto" || t.status === "completed") return { t };
+// 다음 가설을 세워 챌린저 자동 생성·게재. auto 무인 체인 + manual-n 데모 캐스케이드(발표자 빨리감기) 공용.
+// ADR-044 — AXIS_CYCLE 순회 대신 Ledger(호출 측이 brandProfile 맥락으로 필터해 주입)를 읽어 레버 선택.
+// gen 은 호출 측 주입(클라=정적 데모 응답, 서버 라우트=DEMO_CREATIVE_RESULT) — 생성 부작용을 순수 로직과 분리.
+// 이상 신호 브레이크는 auto 한정 — manual-n 은 deriveBeat 가 anomaly 를 surface 하지 않으므로 캐스케이드가 통과한다.
+export function applyAutoAdvance(t: Tournament, gen: CreativeGen, ledger: Hypothesis[] = []): { t: Tournament } {
+  if (t.status === "completed") return { t };
   if (!t.championConfirmed) return { t };
   if (t.rounds.some((r) => r.status === "running")) return { t };
-  if (isEnvelopeExhausted(t) || detectAnomaly(t)) return { t };
+  if (isEnvelopeExhausted(t)) return { t };
+  if (t.mode === "auto" && detectAnomaly(t)) return { t };
   if (!t.pendingChallenger) {
-    t.pendingChallenger = buildChallenger(t.champion, nextAxis(t.axisCursor), gen);
+    const index = t.rounds.length + 1;
+    const ctx = { productId: t.productId, objective: t.objective };
+    const lever = selectNextLever(ledger, ctx, index);
+    const hasPrior = summarizeLedger(ledger, ctx).relevant.length > 0;
+    t.pendingHypothesis = buildHypothesis({
+      lever,
+      ctx,
+      rationaleSource: hasPrior ? "ledger" : "platform-prior",
+      idSeed: `${t.id}_r${index}`,
+    });
+    t.pendingChallenger = buildLeverChallenger(t.champion, lever, gen);
   }
   const { t: launched } = applyLaunch(t);
   return { t: launched };

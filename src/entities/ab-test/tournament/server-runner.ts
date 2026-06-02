@@ -7,9 +7,7 @@ import { geminiCreative } from "@/lib/gemini-creative";
 import type { ObjectiveId } from "@entities/creative/options";
 import type { TournamentStore, RoundLauncher, KpiSource } from "./adapters";
 import {
-  nextAxis,
   deriveAxis,
-  buildChallenger,
   initialChampion,
   judgeRoundKpis,
   isEnvelopeExhausted,
@@ -23,6 +21,14 @@ import {
   type TournamentDelivery,
   type SettleResult,
 } from "./engine";
+import {
+  deriveLedger,
+  selectNextLever,
+  summarizeLedger,
+  buildHypothesis,
+  buildLeverChallenger,
+  resolveHypothesis,
+} from "./hypothesis";
 
 type CreativeGen = { headlines: string[]; primaryTexts: string[] };
 
@@ -143,12 +149,25 @@ export function createServerRunner(deps: {
     await store.upsert(t);
   }
 
+  // ADR-044/047 — Ledger 구동 가설 생성. 소유 유저의 같은 브랜드 토너먼트를 투영해 다음 레버를 고르고
+  // (ⓐ재탕 회피 ⓑ미탐색 우선 ⓒ음성 가지치기) 가설 + 챌린저를 pending 으로 보관. 데모 runner 와 대칭.
   async function proposeChallenger(id: string): Promise<TourVariant | null> {
     const t = await store.get(id);
     if (!t || t.status === "completed" || t.rounds.some((r) => r.status === "running")) return null;
-    const axis = nextAxis(t.axisCursor);
     const gen = await genCreative(t);
-    t.pendingChallenger = buildChallenger(t.champion, axis, gen);
+    const index = t.rounds.length + 1;
+    const ctx = { productId: t.productId, objective: t.objective };
+    const ownerKey = t.delivery?.ownerEmail;
+    const ledger = ownerKey ? deriveLedger(await store.listByBrandOwner(t.brandProfileId, ownerKey)) : [];
+    const lever = selectNextLever(ledger, ctx, index);
+    const hasPrior = summarizeLedger(ledger, ctx).relevant.length > 0;
+    t.pendingHypothesis = buildHypothesis({
+      lever,
+      ctx,
+      rationaleSource: hasPrior ? "ledger" : "platform-prior",
+      idSeed: `${t.id}_r${index}`,
+    });
+    t.pendingChallenger = buildLeverChallenger(t.champion, lever, gen);
     await store.upsert(t);
     return t.pendingChallenger;
   }
@@ -175,6 +194,7 @@ export function createServerRunner(deps: {
       challenger: t.pendingChallenger,
       fastForwardDays: 0,
       status: "running",
+      hypothesis: t.pendingHypothesis ? { ...t.pendingHypothesis, status: "testing" } : undefined, // ADR-044
     };
     const { campaignId, adIds, adSetIds, studyId } = await launcher.launch(t, round);
     round.campaignId = campaignId;
@@ -184,6 +204,7 @@ export function createServerRunner(deps: {
     round.launchedAt = new Date(now()).toISOString();
     t.rounds = [...t.rounds, round];
     t.pendingChallenger = undefined;
+    t.pendingHypothesis = undefined;
     await store.upsert(t);
     return round;
   }
@@ -221,6 +242,10 @@ export function createServerRunner(deps: {
     r.rawWinner = result.rawWinner;
     r.adKpis = result.kpis;
     r.status = "settled";
+    // ADR-044/047 — 가설 verdict 확정. resolved 가설은 토너먼트 jsonb 에 박혀 그대로 Ledger 투영 대상이 된다.
+    if (r.hypothesis) {
+      r.hypothesis = resolveHypothesis(r.hypothesis, result.verdict, result.rawWinner, new Date(now()).toISOString());
+    }
 
     const winnerIsB = result.rawWinner === "B";
     t.champion = winnerIsB ? r.challenger : r.champion;

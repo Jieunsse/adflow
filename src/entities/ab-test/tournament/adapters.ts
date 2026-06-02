@@ -11,6 +11,8 @@ import type { Tournament, TourRound, RoundVerdict } from "./engine";
 export interface TournamentStore {
   list(): Promise<Tournament[]>;
   listByOwner(ownerKey: string): Promise<Tournament[]>;
+  // ADR-047 — Hypothesis Ledger 투영 입력. 소유 유저의 같은 Brand Profile 토너먼트만(resolved 가설 평탄화 대상).
+  listByBrandOwner(brandProfileId: string, ownerKey: string): Promise<Tournament[]>;
   get(id: string): Promise<Tournament | null>;
   upsert(t: Tournament): Promise<void>;
   remove(id: string): Promise<void>;

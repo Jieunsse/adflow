@@ -23,6 +23,7 @@ import {
   type TourMode,
   type TourEnvelope,
 } from "./tournament";
+import { clearAllLedgers } from "./ledger";
 
 // outcome — 라운드별 승부 authoring (시연 믹스 제어). win=챌린저 유의 승격 / hold=챔피언 방어(우열 불명).
 // 해시 기반 challengerFactor 는 후반 라운드 상승 편향으로 거의 전승하므로, 시드는 결과를 직접 정한다.
@@ -39,6 +40,7 @@ type SeedSpec = {
   id: string;
   createdAt: string;
   productName: string;
+  productId?: string; // Ledger 맥락 키 — 생략 시 id (제품별 학습 격리). ADR-044
   tone: string;
   objective: string;
   maxRounds: number;
@@ -100,8 +102,10 @@ function build(spec: SeedSpec): Tournament {
 
   return {
     id: spec.id,
-    brandProfileId: "browse_demo",
-    productId: "browse_demo",
+    // ADR-050 — 데모 Ledger 키를 /create 데모 브랜드 프로필(seed-demo.ts DEMO_PROFILE_ID)과 일치시켜
+    // 토너먼트 학습이 /create 카피 훅 편향으로 흐르게 한다. 옛 "browse_demo" 시드는 아래 stale 정리가 재시드.
+    brandProfileId: "demo-greenroutine-001",
+    productId: spec.productId ?? spec.id,
     productName: spec.productName,
     tone: spec.tone,
     objective: spec.objective,
@@ -280,6 +284,27 @@ const SPECS: SeedSpec[] = [
     finalStatus: "running",
     championConfirmed: false,
   },
+  // ── 가설 캐스케이드 쇼케이스 (ADR-044) — auto·봉투 보유·라운드 0 ──
+  // 콘솔 시간 1회 advance 가 봉투 소진(winner-handling)까지 전체 루프를 돈다. 라운드는 가설 생성기가
+  // Ledger 를 읽어 만든다(시드에 박지 않음): trust 입증 → rush 반증(이후 회피) → 미결 다수 → 5R 후 소진.
+  {
+    id: "browse_demo_tourn_ample",
+    createdAt: "2026-05-30T10:00:00+09:00",
+    productName: "비타민 비건 앰플",
+    tone: "pro",
+    objective: "traffic",
+    maxRounds: 6,
+    startCtr: 1.70,
+    startChampion: {
+      headline: "칙칙한 피부에 비타민 한 방울",
+      primaryText: "식물성 비타민 앰플로 생기 없는 피부에 활력을. 매일 아침 한 방울로 톤을 정돈해요.",
+      imageUrl: "/demo/library/serum.jpg",
+    },
+    mutations: [],
+    finalStatus: "running",
+    championConfirmed: true,
+    envelope: { totalBudget: 1500000 }, // 5R(라운드당 35만) 후 소진 → winner-handling
+  },
 ];
 
 // 멱등 — 이미 있으면 건드리지 않음. /ab-tests 목록(browseMode) 진입 시 호출.
@@ -288,19 +313,21 @@ const SPECS: SeedSpec[] = [
 export function seedTournamentDemo(): void {
   const validIds = new Set(SPECS.map((s) => s.id));
   for (const t of listTournaments()) {
-    const isStaleSeed =
-      (t.brandProfileId === "browse_demo" || t.id.startsWith("browse_demo_tourn_")) &&
-      !validIds.has(t.id);
-    if (isStaleSeed) removeTournament(t.id);
+    const isDemoSeed = t.id.startsWith("browse_demo_tourn_") || t.brandProfileId === "browse_demo";
+    if (!isDemoSeed) continue; // 유저가 만든 토너먼트(tourn_*)는 건드리지 않는다.
+    // 현 SPEC 에 없거나, 옛 brandProfileId("browse_demo")로 박힌 데모 시드는 정리 후 재시드
+    // — ADR-050 Ledger 키 정렬(demo-greenroutine-001)을 기존 localStorage 에도 한 번 반영한다.
+    if (!validIds.has(t.id) || t.brandProfileId === "browse_demo") removeTournament(t.id);
   }
   for (const spec of SPECS) {
     if (!getTournament(spec.id)) upsertTournament(build(spec));
   }
 }
 
-// Presenter 초기화 — 전부 비우고 고정 시드 7종을 다시 세운다. 멱등 seed 와 달리
-// 사용자가 만들거나 진행시킨 토너먼트까지 지우고 원래 목업 상태로 되돌린다.
+// Presenter 초기화 — 전부 비우고 고정 시드를 다시 세운다. 멱등 seed 와 달리
+// 사용자가 만들거나 진행시킨 토너먼트까지 지우고 원래 목업 상태로 되돌린다. ADR-044 Ledger 도 함께 비운다.
 export function resetTournamentDemo(): void {
   resetTournaments();
+  clearAllLedgers();
   for (const spec of SPECS) upsertTournament(build(spec));
 }

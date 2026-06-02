@@ -15,9 +15,10 @@ import {
   discardPendingChallenger,
   refillEnvelope,
 } from "./runner";
-import { getTournament, upsertTournament, listTournaments } from "./tournament";
-import type { Tournament, TourVariant } from "./tournament";
+import { getTournament, upsertTournament, listTournaments, deriveBeat } from "./tournament";
+import type { Tournament, TourVariant, Lever, HypothesisVerdict, Hypothesis } from "./tournament";
 import type { RoundSettleResult } from "./transitions";
+import { relevantLedger, syncResolvedFromTournament } from "./ledger";
 
 // 데모 mutation 을 stateless mock 라우트로 위임 — 현재 tournament 를 보내고 서버가 engine 으로 변형한 결과를
 // localStorage 에 upsert(변경 이벤트 발화)한다. 게재/결산/무인진행이 클라 내부가 아니라 서버에서 돈다.
@@ -27,23 +28,52 @@ async function demoMutate(
 ): Promise<{ tournament: Tournament | null; result?: RoundSettleResult }> {
   const t = getTournament(id);
   if (!t) return { tournament: null };
+  // ADR-044 — auto-advance 의 가설 생성기가 Ledger 를 읽어 레버를 고른다(서버 무상태라 클라가 맥락 필터해 주입).
+  const ledger = relevantLedger(t.brandProfileId, { productId: t.productId, objective: t.objective });
   const data = await apiJson<{ tournament: Tournament; result?: RoundSettleResult }>("/api/tournaments/demo", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ tournament: t, ...body }),
+    body: JSON.stringify({ tournament: t, ledger, ...body }),
   });
-  if (data.tournament) upsertTournament(data.tournament);
+  if (data.tournament) {
+    syncResolvedFromTournament(data.tournament); // 먼저 Ledger 적재(패널이 변경 이벤트로 최신 읽도록) 후 토너먼트 upsert
+    upsertTournament(data.tournament);
+  }
   return data;
 }
 
-// PresenterTournamentBar 전용 — 결산/무인진행을 데모 mock 라우트로 위임(서버에서 engine 실행).
-export async function demoSettleRound(id: string, days: number): Promise<RoundSettleResult> {
-  const { result } = await demoMutate(id, { action: "settle", days });
-  return result ?? { status: "no-active" };
-}
+// ADR-044 캐스케이드 — 콘솔 시간 1회 advance 가 봉투 소진/필요 브레이크(ADR-035)까지 전체 auto 루프를 돈다.
+// 만기 결산→가설 판정→챔피언 갱신→Ledger 적재→다음 가설 게재 반복. 각 결산 라운드를 관전 로그로 push.
+export type CascadeStep = {
+  round: number;
+  lever?: Lever;
+  statement?: string;
+  verdict?: HypothesisVerdict;
+  winnerIsB: boolean;
+};
 
-export async function demoAutoAdvance(id: string): Promise<void> {
-  await demoMutate(id, { action: "auto-advance" });
+export async function demoCascade(id: string, roundDays = 7): Promise<CascadeStep[]> {
+  const log: CascadeStep[] = [];
+  for (let i = 0; i < 16; i++) {
+    const t = getTournament(id);
+    if (!t) break;
+    const beat = deriveBeat(t);
+    if (beat === "done") break;
+    // ADR-035 진짜 브레이크 — 사람이 처리해야 멈춘다(완료·봉투 소진·이상 신호·셋업 게이트).
+    // manual-n 의 between·challenger-review 는 발표자 캐스케이드가 자동 통과(다음 챌린저 제안→게재).
+    if (beat === "winner-handling" || beat === "anomaly" || beat === "champion-review") break;
+    const running = t.rounds.find((r) => r.status === "running");
+    if (running) {
+      const { result } = await demoMutate(id, { action: "settle", days: running.fastForwardDays + roundDays });
+      if (result?.status === "settled") {
+        const h = result.round.hypothesis;
+        log.push({ round: result.round.index, lever: h?.lever, statement: h?.statement, verdict: h?.verdict, winnerIsB: result.winnerIsB });
+      }
+    } else {
+      await demoMutate(id, { action: "auto-advance" });
+    }
+  }
+  return log;
 }
 
 export interface TournamentClient {
@@ -59,6 +89,8 @@ export interface TournamentClient {
   resolveAnomaly(id: string): Promise<Tournament | null>;
   discardChallenger(id: string): Promise<Tournament | null>;
   refillEnvelope(id: string, addBudget?: number): Promise<Tournament | null>;
+  // ADR-047 — 이 토너먼트 맥락(브랜드·제품·목표)에 관련된 학습 노트(Hypothesis Ledger). 데모=localStorage, 실=투영.
+  getLedger(id: string): Promise<Hypothesis[]>;
 }
 
 async function apiJson<T>(url: string, init?: RequestInit): Promise<T> {
@@ -115,6 +147,11 @@ function demoClient(): TournamentClient {
       refillEnvelope(id, addBudget);
       return snap(id);
     },
+    async getLedger(id) {
+      const t = getTournament(id);
+      if (!t) return [];
+      return relevantLedger(t.brandProfileId, { productId: t.productId, objective: t.objective });
+    },
   };
 }
 
@@ -148,6 +185,9 @@ function realClient(): TournamentClient {
     resolveAnomaly: (id) => act(id, { action: "resolve-anomaly" }),
     discardChallenger: (id) => act(id, { action: "discard-challenger" }),
     refillEnvelope: (id, addBudget) => act(id, { action: "refill-envelope", addBudget }),
+    async getLedger(id) {
+      return (await apiJson<{ ledger: Hypothesis[] }>(`/api/tournaments/${id}/ledger`)).ledger;
+    },
   };
 }
 

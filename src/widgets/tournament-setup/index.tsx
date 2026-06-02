@@ -2,7 +2,7 @@
 
 // ADR-032/033 — A/B Tournament 셋업(흐름2 진입). /ab-tests/new 가 browseMode 면 단판 위저드 대신 이 폼을 렌더.
 // 2-step 위저드: ①방식 선택(출발 챔피언 출처 카드) → ②세부 설정(제품·톤·목표·라운드·예산). 시작 후 /ab-tests/[id] 로.
-// mode 는 수동-N 고정(ADR-032 결정 4 — 자원 봉투 정지).
+// mode: 실 유저 = auto(ADR-038 완전 무인, cron 폴러가 전개) / 데모(browseMode) = manual-n(발표자 클릭 시연, runner.ts 고정).
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -625,7 +625,7 @@ function MethodStep({ onPick }: { onPick: (m: ChampionMode) => void }) {
         <MethodCard
           icon="folder"
           title="기존 광고로 시작"
-          desc="이미 돌고 있는 광고를 출발 챔피언으로 앉혀요. 실제 CTR 부터 챌린저가 그 위로 진화해요."
+          desc="이미 진행중인 광고를 챔피언으로 지정해요. 새로운 챌린저를 생성해서 토너먼트를 시작해요."
           tag="추천"
           tagColor="var(--w-primary-normal)"
           onClick={() => onPick("existing")}
@@ -633,7 +633,7 @@ function MethodStep({ onPick }: { onPick: (m: ChampionMode) => void }) {
         <MethodCard
           icon="sparkles"
           title="AI 가 생성"
-          desc="출발 광고가 아직 없을 때. AI 가 제안한 광고를 다음 화면에서 검토 후 확정해요."
+          desc="출발 광고가 아직 없을 때. AI가 제안한 광고를 다음 화면에서 검토 후 토너먼트를 시작해요."
           tag="새로 시작"
           tagColor="var(--w-accent-violet)"
           onClick={() => onPick("ai")}
@@ -669,9 +669,9 @@ function FlowStrip() {
               >
                 {i + 1}
               </span>
-              <Icon name={s.icon} size={15} style={{ color: "var(--w-fg-alternative)" }} />
+              <Icon name={s.icon} size={15} style={{ color: "var(--w-fg-alternative)", flex: "0 0 auto" }} />
+              <div className="font-bold text-[13px] leading-[1.4] text-[var(--w-fg-strong)]">{s.title}</div>
             </div>
-            <div className="font-bold text-[13px] leading-[1.4] text-[var(--w-fg-strong)]">{s.title}</div>
             <p className="font-medium text-[12px] leading-[1.55] text-[var(--w-fg-neutral)] m-0">{s.desc}</p>
           </div>
         ))}
@@ -690,20 +690,20 @@ function MethodCard({ icon, title, desc, tag, tagColor, onClick }: {
       className="bg-[var(--w-bg-elevated)] rounded-2xl text-left cursor-pointer transition-[border-color,transform,box-shadow] duration-[160ms] flex flex-col gap-3.5 p-6 pr-5 hover:border-[var(--w-primary-normal)] hover:-translate-y-0.5 hover:shadow-[0_8px_24px_-12px_rgba(0,0,0,0.18)]"
       style={{ border: "1.5px solid var(--w-line-alternative)" }}
     >
-      <div className="flex items-center justify-between">
-        <div style={{ width: 44, height: 44, borderRadius: 12, background: "var(--w-primary-soft)", color: "var(--w-primary-normal)", display: "grid", placeItems: "center" }}>
-          <Icon name={icon} size={22} />
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div style={{ width: 44, height: 44, borderRadius: 12, background: "var(--w-primary-soft)", color: "var(--w-primary-normal)", display: "grid", placeItems: "center", flex: "0 0 auto" }}>
+            <Icon name={icon} size={22} />
+          </div>
+          <div className="font-bold text-[15px] leading-[1.4] text-[var(--w-fg-strong)]">{title}</div>
         </div>
-        <span className="font-bold text-[11.5px] leading-none" style={{ color: tagColor, background: `color-mix(in srgb, ${tagColor} 12%, transparent)`, padding: "4px 9px", borderRadius: 999, border: `1px solid color-mix(in srgb, ${tagColor} 30%, transparent)` }}>
+        <span className="font-bold text-[11.5px] leading-none" style={{ color: tagColor, background: `color-mix(in srgb, ${tagColor} 12%, transparent)`, padding: "4px 9px", borderRadius: 999, border: `1px solid color-mix(in srgb, ${tagColor} 30%, transparent)`, flex: "0 0 auto" }}>
           {tag}
         </span>
       </div>
-      <div>
-        <div className="font-bold text-[15px] leading-[1.4] text-[var(--w-fg-strong)] mb-1.5">{title}</div>
-        <p className="font-medium text-[13px] leading-[1.6] text-[var(--w-fg-neutral)] m-0">{desc}</p>
-      </div>
+      <p className="font-medium text-[13px] leading-[1.6] text-[var(--w-fg-neutral)] m-0">{desc}</p>
       <div className="flex items-center gap-1 font-semibold text-[13px] leading-none text-[var(--w-primary-normal)] mt-auto">
-        선택하기 <Icon name="arrow-right" size={14} />
+        선택하기
       </div>
     </button>
   );

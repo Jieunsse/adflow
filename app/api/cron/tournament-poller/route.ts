@@ -41,13 +41,15 @@ export async function GET(req: NextRequest) {
     for (const t of active) {
       try {
         const result = await runner.pollAndSettle(t.id);
-        if (result.status !== "settled") continue;
-        settled += 1;
+        if (result.status === "settled") settled += 1;
 
-        // auto 무인 체인 — 봉투/이상신호 브레이크가 없으면 다음 라운드 자동 게재.
+        // auto 무인 체인 — 부트스트랩(1라운드) + 결산 후 다음 라운드. 러닝/미확정 챔피언/봉투·이상신호
+        // 브레이크는 autoAdvance 가 가드하므로 매 틱 호출해도 안전. settle 안 됐어도 굴려 1라운드를 띄운다.
         if (t.mode === "auto") {
           await runner.autoAdvance(t.id);
         }
+
+        if (result.status !== "settled") continue;
 
         // 결산 후 최신 상태로 SSE push (autoAdvance 가 status 를 바꿨을 수 있어 다시 읽는다).
         const fresh = await supabaseTournamentStore.get(t.id);

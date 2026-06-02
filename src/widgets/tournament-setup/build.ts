@@ -45,7 +45,7 @@ export type TournamentRequestBody = {
   productDescription: string;
   tone: string;
   objective: string;
-  mode: "manual-n";
+  mode: "auto";
   maxRounds: number;
   dailyBudget: number;
   startingCtr: number;
@@ -76,7 +76,7 @@ export function buildTournamentRequest(f: SetupFormState, brandProfileId: string
     productDescription: f.description.trim(),
     tone: f.tone,
     objective: f.objective,
-    mode: "manual-n",
+    mode: "auto",
     maxRounds: f.maxRounds,
     dailyBudget: f.dailyBudget,
     startingCtr: fromExisting ? f.selected!.ctr : STARTING_CTR,

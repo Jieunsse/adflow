@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Icon from "@shared/ui/Icon";
 import { Button } from "@shared/ui/Button";
 import { useBrandProfilesStorage } from "@features/brand-profile/model/useBrandProfileStorage";
@@ -18,14 +18,18 @@ import EmptyCard from "@features/brand-profile/ui/EmptyCard";
 import StyleSection from "@features/brand-profile/ui/StyleSection";
 import Panel from "@features/brand-profile/ui/Panel";
 import StatTile from "@features/brand-profile/ui/StatTile";
+import LearningSection from "@features/brand-profile/ui/LearningSection";
 import { SegControl } from "@shared/ui/SegControl";
+import { readLedger } from "@entities/ab-test/tournament/ledger";
+import type { Hypothesis } from "@entities/ab-test/tournament/tournament";
 
-type ProfileTab = "identity" | "policy" | "audience";
+type ProfileTab = "identity" | "policy" | "audience" | "learning";
 
 export default function BrandProfileViewPage() {
   const params = useParams<{ id: string }>();
   const id = params.id;
   const router = useRouter();
+  const searchParams = useSearchParams();
   seedDemoIfEmpty();
 
   const { profiles } = useBrandProfilesStorage();
@@ -33,7 +37,13 @@ export default function BrandProfileViewPage() {
   const { products } = useProducts(id);
 
   const [loaded, setLoaded] = useState(false);
-  const [tab, setTab] = useState<ProfileTab>("identity");
+  const [tab, setTab] = useState<ProfileTab>(
+    searchParams.get("tab") === "learning" ? "learning" : "identity",
+  );
+  const [ledger, setLedger] = useState<Hypothesis[]>([]);
+  useEffect(() => {
+    setLedger(readLedger(id));
+  }, [id]);
 
   useEffect(() => {
     if (profiles.length === 0 && !loaded) return;
@@ -114,6 +124,7 @@ export default function BrandProfileViewPage() {
           { value: "identity", label: "정체성" },
           { value: "policy", label: `정책 ${filledPolicy.length}` },
           { value: "audience", label: `타깃 · 제품 ${personas.length + products.length}` },
+          { value: "learning", label: `학습 ${ledger.filter((h) => h.verdict).length}` },
         ]}
         className="mb-4"
       />
@@ -177,6 +188,9 @@ export default function BrandProfileViewPage() {
           </Panel>
         </Panel>
       )}
+
+      {/* 학습 — A/B 검증 가설 아카이브 (ADR-044/050) */}
+      {tab === "learning" && <LearningSection entries={ledger} products={products} />}
     </div>
   );
 }

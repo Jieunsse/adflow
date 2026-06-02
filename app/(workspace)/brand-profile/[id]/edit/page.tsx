@@ -31,6 +31,7 @@ import ReferenceMaterialsTab from "@features/brand-profile/ui/ReferenceMaterials
 import CopyReferenceSection from "@features/brand-profile/ui/CopyReferenceSection";
 import ProductCard from "@features/brand-profile/ui/ProductCard";
 import ProductEditModal from "@features/brand-profile/ui/ProductEditModal";
+import NotionImportModal, { type NotionImportResult } from "@features/brand-profile/ui/NotionImportModal";
 import { useProducts, type ProductEntry } from "@shared/lib/products";
 import type { CopyReference } from "@features/brand-profile/model/useBrandProfileStorage";
 
@@ -79,6 +80,7 @@ export default function BrandProfileEditPage() {
   const showToast = useToast();
   const { data: session } = useSession();
   const isOwner = session?.role === "팀장";
+  const browseMode = !!session?.browseMode;
   seedDemoIfEmpty();
   const { profiles, saveProfile } = useBrandProfilesStorage();
   const { personas, savePersona, deletePersona } = usePersonasForProfile(id);
@@ -90,6 +92,7 @@ export default function BrandProfileEditPage() {
   const [editingType, setEditingType] = useState<SopItemType | null>(null);
   const [editingPersona, setEditingPersona] = useState<PersonaEntry | "new" | null>(null);
   const [editingProduct, setEditingProduct] = useState<ProductEntry | "new" | null>(null);
+  const [notionOpen, setNotionOpen] = useState(false);
 
   const [name, setName] = useState("");
   const [tone, setTone] = useState("");
@@ -140,6 +143,42 @@ export default function BrandProfileEditPage() {
     showToast("저장됐어요");
   };
 
+  // ADR-043 — 노션 가져오기: 빈 필드만 채우고(스타일·proofPoints) 정책은 없는 type 만 병합·즉시 저장.
+  const handleNotionImport = (result: NotionImportResult) => {
+    const filled: string[] = [];
+    const fill = (cur: string, val: string | undefined, set: (v: string) => void, label: string) => {
+      if (!cur.trim() && val) { set(val); filled.push(label); }
+    };
+    fill(tone, result.style.tone, setTone, "톤");
+    fill(brandDescription, result.style.brandDescription, setBrandDescription, "브랜드 설명");
+    fill(brandVoice, result.style.brandVoice, setBrandVoice, "브랜드 보이스");
+    fill(customerVoiceSummary, result.style.customerVoiceSummary, setCustomerVoiceSummary, "고객 목소리");
+    fill(imageGuide, result.style.imageGuide, setImageGuide, "이미지 가이드");
+    if (!proofPointsText.trim() && result.proofPoints.length) {
+      setProofPointsText(result.proofPoints.join("\n"));
+      filled.push("근거 자료");
+    }
+
+    if (entry && result.policy.length) {
+      const existing = entry.policy ?? [];
+      const existingTypes = new Set(existing.map((s) => s.type));
+      const added = result.policy.filter((s) => !existingTypes.has(s.type));
+      if (added.length) {
+        const updated = { ...entry, policy: [...existing, ...added] };
+        saveProfile(updated);
+        setEntry(updated);
+        filled.push(`정책 ${added.length}개`);
+      }
+    }
+
+    setNotionOpen(false);
+    showToast(
+      filled.length
+        ? `노션에서 ${filled.join(", ")}을(를) 가져왔어요. 검토 후 저장하세요.`
+        : "이미 채워진 항목이라 가져올 내용이 없었어요.",
+    );
+  };
+
   const handleSectionSave = (section: SopSection) => {
     if (!entry) return;
     const others = (entry.policy ?? []).filter((s) => s.type !== section.type);
@@ -188,11 +227,18 @@ export default function BrandProfileEditPage() {
               {entry.name} 수정
             </h1>
           </div>
-          {entry.isDefault && (
-            <span className="inline-flex items-center px-3 py-1 rounded-full bg-[var(--w-primary-soft)] font-semibold text-[12px] text-[var(--w-primary-normal)]">
-              기본값
-            </span>
-          )}
+          <div className="flex items-center gap-3 flex-none">
+            {isOwner && (
+              <Button variant="secondary" size="sm" type="button" onClick={() => setNotionOpen(true)}>
+                <Icon name="doc" size={13} /> 노션에서 가져오기
+              </Button>
+            )}
+            {entry.isDefault && (
+              <span className="inline-flex items-center px-3 py-1 rounded-full bg-[var(--w-primary-soft)] font-semibold text-[12px] text-[var(--w-primary-normal)]">
+                기본값
+              </span>
+            )}
+          </div>
         </div>
       </div>
 
@@ -449,6 +495,14 @@ export default function BrandProfileEditPage() {
           product={editingProduct === "new" ? undefined : editingProduct}
           onSave={(p, img) => saveProduct(p, img).then(() => {})}
           onClose={() => setEditingProduct(null)}
+        />
+      )}
+
+      {notionOpen && (
+        <NotionImportModal
+          browseMode={browseMode}
+          onClose={() => setNotionOpen(false)}
+          onImport={handleNotionImport}
         />
       )}
     </div>

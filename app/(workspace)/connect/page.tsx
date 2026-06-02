@@ -127,6 +127,15 @@ export default function ConnectPage() {
       window.history.replaceState({}, "", "/connect");
       showToast("Instagram 연결에 실패했어요. 다시 시도해주세요.");
     }
+    if (params.get("notionLinked") === "1") {
+      window.history.replaceState({}, "", "/connect");
+      queryClient.invalidateQueries({ queryKey: ["notion-status"] });
+      showToast("Notion 워크스페이스를 연결했어요");
+    }
+    if (params.get("notionError")) {
+      window.history.replaceState({}, "", "/connect");
+      showToast("Notion 연결에 실패했어요. 다시 시도해주세요.");
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -259,6 +268,14 @@ export default function ConnectPage() {
           </div>
         </div>
       )}
+
+      <div className="flex flex-col gap-3 mt-2">
+        <div>
+          <span className="font-semibold text-[11px] leading-[1.45] tracking-[0.04em] uppercase text-[var(--w-fg-neutral)]">콘텐츠 소스</span>
+          <h2 className="m-0 font-bold text-[18px] leading-[1.3] tracking-[-0.016em] text-[var(--w-fg-strong)]" style={{ marginTop: 4 }}>외부 자료 연결</h2>
+        </div>
+        <NotionCard browseMode={browseMode} onBrowseBlock={() => showToast(BROWSE_BLOCK_MSG)} />
+      </div>
 
       {pickerOpen === "account" && (
         <PickerModal kind="account" title="광고 계정 변경" subtitle="이 워크스페이스에서 사용할 Meta 광고 계정을 골라주세요." currentId={session?.adAccountId} onClose={() => setPickerOpen(null)} onPick={pickAccount} />
@@ -562,6 +579,73 @@ function InstagramCard({ username, id, picture, pageId, igAccessToken, disabled,
             </Button>
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+// ADR-043 — Notion Connection 카드. Meta 연결과 독립(자체 상태 조회).
+function NotionCard({ browseMode, onBrowseBlock }: { browseMode: boolean; onBrowseBlock: () => void }) {
+  const showToast = useToast();
+  const [disconnecting, setDisconnecting] = useState(false);
+  const statusQ = useQuery({
+    queryKey: ["notion-status"],
+    queryFn: async () => {
+      const res = await fetch("/api/notion/status");
+      return (await res.json()) as { connected: boolean; workspaceName: string | null; workspaceIcon: string | null };
+    },
+    enabled: !browseMode,
+  });
+
+  const connected = browseMode ? true : !!statusQ.data?.connected;
+  const workspaceName = browseMode ? "AdFlow Demo Workspace" : statusQ.data?.workspaceName ?? null;
+
+  const handleDisconnect = async () => {
+    if (browseMode) return onBrowseBlock();
+    setDisconnecting(true);
+    await fetch("/api/notion/disconnect", { method: "POST" });
+    await statusQ.refetch();
+    setDisconnecting(false);
+    showToast("Notion 연결을 해제했어요");
+  };
+
+  return (
+    <div className={connCardClass(connected ? "neutral" : "warn")}>
+      <div className="w-12 h-12 rounded-xl grid place-items-center flex-none bg-[rgba(101,65,242,0.14)] text-[var(--w-accent-violet)] dark:bg-[rgba(101,65,242,0.22)] dark:text-[#b9a4ff]"><Icon name="doc" size={20} /></div>
+      <div className="flex-1 min-w-0">
+        <div className="flex justify-between items-start gap-4">
+          <div style={{ minWidth: 0 }}>
+            <div className="font-semibold text-[11px] leading-[1.45] tracking-[0.04em] uppercase text-[var(--w-fg-neutral)]" style={{ color: "var(--w-fg-alternative)", marginBottom: 6 }}>
+              Notion 워크스페이스
+            </div>
+            <div className="font-bold text-[16.5px] leading-[1.35] [font-family:var(--w-font-display)] tracking-[-0.012em]" style={{ color: "var(--w-fg-strong)" }}>
+              {connected ? workspaceName ?? "연결됨" : "연결되지 않음"}
+            </div>
+            <div className="font-medium text-[12.5px] leading-[1.5] text-[var(--w-fg-neutral)]" style={{ marginTop: 6 }}>
+              {connected
+                ? "브랜드 프로필 만들 때 '노션에서 가져오기'로 흩어진 브랜드 자료를 끌어올 수 있어요."
+                : "노션에 정리해둔 브랜드 자료를 브랜드 프로필로 가져오려면 워크스페이스를 연결하세요."}
+            </div>
+          </div>
+          <div className="flex flex-col gap-2.5 items-end flex-none">
+            {connected
+              ? <span className="inline-flex items-center gap-[5px] px-[9px] py-[3px] rounded-full font-semibold text-[11.5px] leading-none text-[var(--w-status-positive)] bg-[rgba(0,191,64,0.10)] dark:bg-[rgba(73,229,125,0.14)] dark:text-[#49e57d]"><span className="w-1.5 h-1.5 rounded-full bg-[var(--w-status-positive)] dark:bg-[#49e57d]" /> 연결됨</span>
+              : <span className="inline-flex items-center gap-[5px] px-2.5 py-1 rounded-full font-semibold text-[12px] leading-none text-[var(--w-status-cautionary)] bg-[rgba(255,146,0,0.12)]"><Icon name="warn" size={12} /> 미연결</span>}
+            {connected ? (
+              <Button variant="ghost" size="sm" type="button" onClick={handleDisconnect} disabled={disconnecting}>
+                <Icon name="link" size={13} /> {disconnecting ? "해제 중…" : "연결 해제"}
+              </Button>
+            ) : browseMode ? (
+              <Button variant="primary" size="sm" type="button" onClick={onBrowseBlock}>
+                <Icon name="link" size={13} /> Notion 연결하기
+              </Button>
+            ) : (
+              <a className={buttonVariants({ variant: "primary", size: "sm" })} href="/api/notion/connect">
+                <Icon name="link" size={13} /> Notion 연결하기
+              </a>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

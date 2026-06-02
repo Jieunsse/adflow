@@ -137,6 +137,21 @@ create table if not exists reference_materials (
 create index if not exists reference_materials_brand_profile_uploaded
   on reference_materials (brand_profile_id, uploaded_at desc);
 
+-- ADR-043 — Notion Connection. 노션 OAuth(public integration) 토큰 영속.
+-- 다른 OAuth(meta_connection JSONB)와 달리 별도 테이블: server-side only, 광고 세션(JWT)과 무관하게
+-- import 시에만 server 가 읽는다. user_key = NextAuth sub/email (callback 에서 getToken 으로 해석).
+-- 토큰 만료·refresh 없음(결정 9), 연결=지속, 동기화 X(1회 import).
+create table if not exists notion_connections (
+  user_key       text primary key,
+  access_token   text not null,
+  bot_id         text,
+  workspace_id   text,
+  workspace_name text,
+  workspace_icon text,
+  created_at     timestamptz not null default now(),
+  updated_at     timestamptz not null default now()
+);
+
 -- 위 두 테이블이 쓰는 public storage 버킷. getPublicUrl 로 서빙하므로 public = true.
 insert into storage.buckets (id, name, public)
 values ('product-images', 'product-images', true),

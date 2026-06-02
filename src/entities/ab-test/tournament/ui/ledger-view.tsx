@@ -5,7 +5,7 @@
 // 토너먼트 상세(접힘 패널)와 브랜드 프로필 '학습' 탭(전체 아카이브) 두 곳이 공유한다.
 
 import { Chip } from "@shared/ui/Chip";
-import { leverLabel } from "../lever";
+import { leverLabel, type Lever } from "../lever";
 import type { Hypothesis, HypothesisVerdict } from "../engine";
 
 export const VERDICT_META: Record<HypothesisVerdict, { label: string; mark: string; chip: "live" | "paused" | "neutral" }> = {
@@ -87,4 +87,91 @@ export function verdictCounts(entries: Hypothesis[]): Record<HypothesisVerdict, 
   const c: Record<HypothesisVerdict, number> = { confirmed: 0, refuted: 0, inconclusive: 0 };
   for (const h of entries) if (h.verdict) c[h.verdict]++;
   return c;
+}
+
+// ── 레버 성과 집계 (PRD-learning-tab-lever-aggregate) ─────────────────────────
+// Ledger 의 세 번째 투영: 제품 무관·레버 단위로 resolved 가설을 모아 "이 브랜드에서 뭐가 통하나"를 답한다.
+// 메인 신호 = 승률(입증/전체). cross-metric effectSize 평균은 단위 혼합(CTR%·CPM%)이라 거짓 숫자라
+// 메인화하지 않고, 동일 지표끼리만 보조 lift 로 쓴다(PRD 비목표).
+
+export type LeverVerdictClass = "works" | "neutral" | "backfires"; // 통함/중립/안통함
+
+export interface LeverAggregate {
+  lever: Lever;
+  label: string;
+  klass: LeverVerdictClass;
+  confirmed: number;
+  refuted: number;
+  inconclusive: number;
+  total: number; // resolved 만
+  avgLift?: number; // klass 를 만든 건들의 effectSize 평균 (없으면 undefined)
+  liftMetricLabel?: string; // 단일 지표면 그 라벨, 2종 이상 혼합이면 "목표"
+}
+
+const CLASS_ORDER: LeverVerdictClass[] = ["works", "neutral", "backfires"];
+
+// klass 를 만든 가설들(통함→입증·안통함→반증)의 effectSize 평균 + 지표 라벨.
+function liftOf(driving: Hypothesis[]): { avgLift?: number; liftMetricLabel?: string } {
+  const sized = driving.filter((h) => h.effectSize != null);
+  if (sized.length === 0) return {};
+  const avgLift = sized.reduce((s, h) => s + h.effectSize!, 0) / sized.length;
+  const metrics = new Set(sized.map((h) => h.predictedMetric));
+  return { avgLift, liftMetricLabel: metrics.size === 1 ? [...metrics][0] : "목표" };
+}
+
+// resolved 가설 → 레버별 집계. 통함>중립>안통함 그룹, 그룹 내 |평균 lift| 큰 순.
+export function aggregateByLever(entries: Hypothesis[]): LeverAggregate[] {
+  const byLever = new Map<Lever, Hypothesis[]>();
+  for (const h of entries) {
+    if (!h.verdict) continue;
+    if (!byLever.has(h.lever)) byLever.set(h.lever, []);
+    byLever.get(h.lever)!.push(h);
+  }
+
+  const aggs: LeverAggregate[] = [...byLever.entries()].map(([lever, hs]) => {
+    const confirmed = hs.filter((h) => h.verdict === "confirmed");
+    const refuted = hs.filter((h) => h.verdict === "refuted");
+    const inconclusive = hs.filter((h) => h.verdict === "inconclusive");
+    const klass: LeverVerdictClass =
+      confirmed.length > refuted.length ? "works" : refuted.length > confirmed.length ? "backfires" : "neutral";
+    const driving = klass === "works" ? confirmed : klass === "backfires" ? refuted : [];
+    return {
+      lever,
+      label: leverLabel(lever),
+      klass,
+      confirmed: confirmed.length,
+      refuted: refuted.length,
+      inconclusive: inconclusive.length,
+      total: hs.length,
+      ...liftOf(driving),
+    };
+  });
+
+  return aggs.sort((a, b) => {
+    const byClass = CLASS_ORDER.indexOf(a.klass) - CLASS_ORDER.indexOf(b.klass);
+    if (byClass !== 0) return byClass;
+    return Math.abs(b.avgLift ?? 0) - Math.abs(a.avgLift ?? 0);
+  });
+}
+
+export function formatLift(n: number): string {
+  const r = Math.round(n);
+  return `${r > 0 ? "+" : ""}${r}%`;
+}
+
+// 1순위 집계 → 결론 한 줄(VerdictBanner 패턴). resolved 0건이면 null.
+export function deriveLearningHeadline(entries: Hypothesis[]): string | null {
+  const aggs = aggregateByLever(entries);
+  if (aggs.length === 0) return null;
+
+  const top = aggs.find((a) => a.klass === "works");
+  if (top) {
+    const lift = top.avgLift != null ? ` — ${top.liftMetricLabel} 평균 ${formatLift(top.avgLift)}, ${top.confirmed}번 검증` : ` — ${top.confirmed}번 검증`;
+    return `이 브랜드에선 '${top.label}' 방식이 가장 잘 통해요${lift}`;
+  }
+
+  const bad = aggs.find((a) => a.klass === "backfires");
+  if (bad) return `아직 뚜렷하게 통한 방식이 없어요 — '${bad.label}' 방식은 오히려 역효과였어요`;
+
+  return "아직 결론이 난 방식이 없어요 — 검증을 더 쌓아봐요";
 }

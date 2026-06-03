@@ -394,3 +394,60 @@
   letter-spacing: -0.03em;
   color: var(--w-fg-strong);
 }
+
+/* 텍스트 편집기 — 2-column(좌 미리보기 sticky·우 컨트롤 스크롤). 720px 컨테이너 쿼리로 세로 스택 폴백.
+   to-editor-body 가 컨테이너(inline-size). overlay 의 cqw 는 overlay 자기 div 의 container-type 에 묶이므로 충돌 없음. */
+.adflow .to-editor-body {
+  container-type: inline-size;
+  min-height: 0;
+  overflow: hidden;
+}
+.adflow .to-editor-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  height: 100%;
+  min-height: 0;
+}
+.adflow .to-editor-preview {
+  align-self: start;
+  position: sticky;
+  top: 0;
+  padding: 16px;
+  border-right: 1px solid var(--w-line-normal);
+}
+.adflow .to-editor-controls-wrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.adflow .to-editor-controls {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+/* 스크롤 어포던스 — 컨트롤 패널 하단 fade mask */
+.adflow .to-editor-controls-wrap::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 28px;
+  pointer-events: none;
+  background: linear-gradient(to top, var(--w-bg-elevated), transparent);
+}
+@container (max-width: 720px) {
+  .adflow .to-editor-grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+  .adflow .to-editor-preview {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    border-right: none;
+    border-bottom: 1px solid var(--w-line-normal);
+    background: var(--w-bg-elevated);
+  }
+}

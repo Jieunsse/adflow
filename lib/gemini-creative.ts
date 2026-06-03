@@ -77,6 +77,15 @@ export interface ExtractedTargeting {
   genders: number[];
 }
 
+// ADR-052 — 귀인 진실성 경계. reflected=출력에서 사용 검증된 신호(근거자료 인용),
+// injected=프롬프트에 넣었으나 반영을 검증 못 하는 신호("전달한 재료").
+export interface CreativeAttribution {
+  reflected: Array<"proofPoints">;
+  injected: Array<
+    "tone" | "brandVoice" | "customerVoice" | "imageGuide" | "persona" | "product" | "copyReferences"
+  >;
+}
+
 export interface GenerateCreativeResult {
   headlines: [string, string, string];
   primaryTexts: [string, string, string];
@@ -85,6 +94,22 @@ export interface GenerateCreativeResult {
   hooks: [CopyHook, CopyHook, CopyHook];
   /** ADR-031 — 근거 자료 수치를 인용한 변형 표시 (`근거 ✓`). 근거 자료에 수치가 없으면 undefined. */
   proofPointsCited?: [boolean, boolean, boolean];
+  /** ADR-052 — 이 카피에 전달/반영된 브랜드 프로필 신호. */
+  attribution?: CreativeAttribution;
+}
+
+// ADR-052 — 실제로 프롬프트에 들어간 브랜드 신호만 집계(주입은 우리가 100% 안다). imageGuide 는
+// 카피 생성 프롬프트에 주입하지 않으므로 제외 — 안 넣은 걸 "전달함"으로 표기하면 거짓.
+function deriveInjected(params: GenerateCreativeParams): CreativeAttribution["injected"] {
+  const bp = params.brandProfile;
+  const out: CreativeAttribution["injected"] = [];
+  if (params.tone?.trim()) out.push("tone");
+  if (bp?.brandVoice?.trim()) out.push("brandVoice");
+  if (bp?.customerVoiceSummary?.trim()) out.push("customerVoice");
+  if (params.persona) out.push("persona");
+  if (params.product) out.push("product");
+  if (bp?.copyReferences?.some((t) => t.trim())) out.push("copyReferences");
+  return out;
 }
 
 const AGE_FLOOR = 18;
@@ -417,6 +442,12 @@ export const geminiCreative = {
       }
       result.proofPointsCited = flags;
     }
+
+    // ADR-052 — 귀인: 반영(검증)은 근거자료 인용만, 나머지는 주입("전달함").
+    result.attribution = {
+      reflected: result.proofPointsCited?.some(Boolean) ? ["proofPoints"] : [],
+      injected: deriveInjected(params),
+    };
 
     return result;
   },

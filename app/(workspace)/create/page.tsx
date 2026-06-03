@@ -7,7 +7,7 @@ import { Badge } from "@shared/ui/primitives";
 import { Button } from "@shared/ui/Button";
 import { useSessionStorage } from "@shared/lib/storage/useSessionStorage";
 import { useApiMutation } from "@shared/lib/api/useApiMutation";
-import type { GenerateCreativeParams, GenerateCreativeResult } from "@/lib/gemini-creative";
+import type { GenerateCreativeParams, GenerateCreativeResult, CreativeAttribution } from "@/lib/gemini-creative";
 import { INITIAL_CREATIVE_STATE, useCreativeDraft } from "@entities/creative/model";
 import { abVariantLabel, INITIAL_LAUNCH_STATE, useLaunchDraft, type AbTestAxis } from "@entities/campaign/model";
 import { loadLaunchedCampaign } from "@entities/campaign/launched-storage";
@@ -24,9 +24,13 @@ import CreativeStep from "@widgets/creative-step";
 import LaunchStep from "@widgets/launch-step";
 import PostLaunchChecklist from "@widgets/post-launch-checklist";
 import { autoModeFromObjective } from "@features/switch-mode/objective-routing";
-import { readBrandProfile, readActiveBrandProfileEntry } from "@features/brand-profile/model/useBrandProfileStorage";
-import { readPersonas } from "@features/brand-profile/model/usePersonasStorage";
+import { readBrandProfile, readActiveBrandProfileEntry, useBrandProfileStorage } from "@features/brand-profile/model/useBrandProfileStorage";
+import { readPersonas, usePersonasStorage } from "@features/brand-profile/model/usePersonasStorage";
 import { mergePersonaTargeting } from "@features/brand-profile/model/mergePersonaTargeting";
+import { useProducts } from "@shared/lib/products";
+import PersonaQuickCreateModal from "@features/brand-profile/ui/PersonaQuickCreateModal";
+import ProductEditModal from "@features/brand-profile/ui/ProductEditModal";
+import { selectProfileNudge, NUDGE_LABEL, type ProfileNudge, type ProfileNudgeTarget } from "@entities/creative/profile-nudge";
 
 const GRADIENTS = [
   "linear-gradient(135deg, #0066ff 0%, #6541f2 60%, #00bdde 100%)",
@@ -163,6 +167,16 @@ function CreateFlow() {
   const [primaryTextIdx, setPrimaryTextIdx] = useState(0);
   const [elapsed, setElapsed] = useState(0);
   const [savedId, setSavedId] = useState<string | null>(null);
+  // ADR-052 — 보상 루프 상태.
+  const [customBrand, setCustomBrand] = useState(false);
+  const [attribution, setAttribution] = useState<CreativeAttribution | null>(null);
+  const [nudge, setNudge] = useState<ProfileNudge | null>(null);
+  const [addedTarget, setAddedTarget] = useState<ProfileNudgeTarget | null>(null);
+  const [beforeAfter, setBeforeAfter] = useState<{ before: string; label: string } | null>(null);
+  const [nudgeModal, setNudgeModal] = useState<"persona" | "product" | null>(null);
+  const { activeId: nudgeBrandProfileId, profiles: nudgeProfiles } = useBrandProfileStorage(!!session?.browseMode);
+  const { savePersona } = usePersonasStorage();
+  const { save: saveProduct } = useProducts(nudgeBrandProfileId ?? "");
   const generateMutation = useApiMutation<GenerateCreativeParams, GenerateCreativeResult>('/api/generate-creative');
   const generating = generateMutation.isPending;
   const generated = displayedHeadlines !== null;
@@ -227,7 +241,7 @@ function CreateFlow() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [productId]);
 
-  const handleGenerate = () => {
+  const runGenerate = () => {
     if (!creative.state.outcome) {
       showToast("원하는 결과(outcome)를 먼저 골라주세요");
       return;
@@ -235,7 +249,7 @@ function CreateFlow() {
     const startedAt = Date.now();
     const bp = readBrandProfile();
     const bpEntry = readActiveBrandProfileEntry();
-    const isCustomBrandMode = (() => { try { return sessionStorage.getItem("adflow_input_mode") === "custom"; } catch { return false; } })();
+    const isCustomBrandMode = customBrand;
     const personaEntry = personaId ? readPersonas().find((pe) => pe.id === personaId) : undefined;
     const productEntry = productId
       ? (() => {
@@ -295,6 +309,21 @@ function CreateFlow() {
           setDisplayedPrimaryTexts(data.primaryTexts);
           setDisplayedHooks(data.hooks);
           setProofPointsCited(data.proofPointsCited ?? null);
+          setAttribution(data.attribution ?? null);
+          // ADR-052 — 빈 필드 보상 넛지. 프로필 모드에서만(직접입력·무프로필은 프로필 채울 대상 없음).
+          const profileMode = !!bpEntry && !isCustomBrandMode;
+          setNudge(
+            profileMode
+              ? selectProfileNudge(creative.state.outcome!, {
+                  persona: !!personaId,
+                  product: !!productId,
+                  proofPoints: !!bp.proofPoints?.some((t) => t.trim()),
+                  imageGuide: !!bp.imageGuide?.trim(),
+                  tone: !!bp.tone?.trim(),
+                  brandVoice: !!bp.brandVoice?.trim(),
+                })
+              : null,
+          );
           setPrimaryTextIdx(0);
           creative.dispatch({ type: "SET_HEADLINE", headline: data.headlines[0] });
           // PRD §5.4.2 (5) — STEP 02 디테일 A/B 시험 B안 풀로 사용. 재생성 시 후보 교체 → DetailKnobs 의 sync useEffect 가 B안 reset.
@@ -313,6 +342,28 @@ function CreateFlow() {
         },
       },
     );
+  };
+
+  // 새 생성(InputForm 버튼) — before/after·추가상태 초기화.
+  const handleGenerate = () => {
+    setBeforeAfter(null);
+    setAddedTarget(null);
+    runGenerate();
+  };
+
+  // ADR-052 — 넛지로 추가한 뒤 "추가하고 다시 생성". 현재 안을 이전 안으로 스냅샷.
+  const handleRegenerate = () => {
+    const before = displayedHeadlines?.[headlineIdx];
+    if (before && addedTarget) setBeforeAfter({ before, label: NUDGE_LABEL[addedTarget] });
+    setAddedTarget(null);
+    runGenerate();
+  };
+
+  const handleNudgeAdd = () => {
+    if (!nudge) return;
+    if (nudge.target === "persona") setNudgeModal("persona");
+    else if (nudge.target === "product") setNudgeModal("product");
+    else router.push(nudgeBrandProfileId ? `/brand-profile/${nudgeBrandProfileId}` : "/brand-profile");
   };
 
   const handleSelectHeadline = (i: number) => {
@@ -359,6 +410,11 @@ function CreateFlow() {
     setPrimaryTextIdx(0);
     setSavedId(null);
     setElapsed(0);
+    setAttribution(null);
+    setNudge(null);
+    setAddedTarget(null);
+    setBeforeAfter(null);
+    setCustomBrand(false);
     setStep(0);
     setIntroCompleted(false);
   };
@@ -447,6 +503,14 @@ function CreateFlow() {
               setSelectedCopyRefIds={setSelectedCopyRefIds}
               hooks={hooks}
               setHooks={setHooks}
+              customBrand={customBrand}
+              setCustomBrand={setCustomBrand}
+              attribution={attribution}
+              nudge={nudge}
+              onNudgeAdd={handleNudgeAdd}
+              addedLabel={addedTarget ? NUDGE_LABEL[addedTarget] : null}
+              onRegenerate={handleRegenerate}
+              beforeAfter={beforeAfter}
               displayedHooks={displayedHooks}
               proofPointsCited={proofPointsCited}
               headlines={displayedHeadlines}
@@ -498,6 +562,33 @@ function CreateFlow() {
 
           {step === 2 && <PostLaunchChecklist onRestart={handleRestart} />}
         </>
+      )}
+
+      {/* ADR-052 — 넛지 보상 루프: 인라인 quick-add → 프로필 영구 저장 → 추가 표시 */}
+      {nudgeModal === "persona" && (
+        <PersonaQuickCreateModal
+          activeBrandProfileId={nudgeBrandProfileId}
+          profiles={nudgeProfiles}
+          onSave={(entry) => {
+            savePersona(entry);
+            setPersonaId(entry.id);
+            setAddedTarget("persona");
+            setNudgeModal(null);
+          }}
+          onClose={() => setNudgeModal(null)}
+        />
+      )}
+      {nudgeModal === "product" && nudgeBrandProfileId && (
+        <ProductEditModal
+          brandProfileId={nudgeBrandProfileId}
+          onSave={async (entry, file) => {
+            await saveProduct(entry, file);
+            setProductId(entry.id);
+            setAddedTarget("product");
+            setNudgeModal(null);
+          }}
+          onClose={() => setNudgeModal(null)}
+        />
       )}
     </div>
   );

@@ -9,6 +9,19 @@ import { Card } from "@shared/ui/Card";
 import { Skeleton } from "@shared/ui/Skeleton";
 import { cn } from "@shared/lib/cn";
 import { findHook, type CopyHook } from "@entities/creative/options";
+import type { CreativeAttribution } from "@/lib/gemini-creative";
+import type { ProfileNudge } from "@entities/creative/profile-nudge";
+
+// ADR-052 — "전달한 재료(injected)" 칩 라벨.
+const INJECTED_LABEL: Record<CreativeAttribution["injected"][number], string> = {
+  tone: "톤",
+  brandVoice: "브랜드 보이스",
+  customerVoice: "고객의 말",
+  imageGuide: "이미지 가이드",
+  persona: "페르소나",
+  product: "제품",
+  copyReferences: "카피 문체",
+};
 
 interface Props {
   generating: boolean;
@@ -29,6 +42,16 @@ interface Props {
   goLibrary: () => void;
   /** ADR-040 — phase 1(카피) → phase 2(이미지) 전환. */
   onGoImage: () => void;
+  /** ADR-052 — 이 카피에 전달/반영된 브랜드 신호. */
+  attribution: CreativeAttribution | null;
+  /** ADR-052 — 빈 필드 보상 넛지(빈 필드 없으면 null). */
+  nudge: ProfileNudge | null;
+  onNudgeAdd: () => void;
+  /** 넛지로 무언가 추가됐을 때의 라벨 — 있으면 "추가하고 다시 생성" 노출. */
+  addedLabel: string | null;
+  onRegenerate: () => void;
+  /** A-lite before/after — 재생성 시 이전 안 1줄 + 변경 라벨. */
+  beforeAfter: { before: string; label: string } | null;
 }
 
 export default function ResultPanel(p: Props) {
@@ -62,6 +85,61 @@ export default function ResultPanel(p: Props) {
         </div>
       ) : (
         <>
+          {/* ADR-052 — A-lite before/after: 재생성 직전 안 1줄 + 변경 라벨 */}
+          {p.beforeAfter && (
+            <div className="flex items-start gap-2.5 px-[14px] py-3 rounded-xl bg-[var(--w-status-positive-soft)] border border-[var(--w-status-positive-line)]" style={{ marginBottom: 18 }}>
+              <Icon name="check" size={15} className="text-[var(--w-status-positive)] mt-0.5 shrink-0" />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div className="font-semibold text-[12.5px] leading-[1.4] text-[var(--w-fg-strong)]">
+                  {p.beforeAfter.label} 반영해 다시 만들었어요
+                </div>
+                <p className="m-0 mt-1 font-medium text-[12px] leading-[1.5] text-[var(--w-fg-neutral)] truncate">
+                  이전 안: {p.beforeAfter.before} <span className="text-[var(--w-fg-alternative)]">({p.beforeAfter.label} 미반영)</span>
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* ADR-052 — 귀인 패널: 반영 ✓ (검증) / AI에 전달함 (주입) */}
+          {p.attribution && (p.attribution.reflected.length > 0 || p.attribution.injected.length > 0) && (
+            <div className="flex flex-col gap-2 px-[14px] py-3 rounded-xl border border-[var(--w-line-alternative)] bg-[var(--w-bg-alternative)]" style={{ marginBottom: 18 }}>
+              <span className="font-semibold text-[12px] leading-none text-[var(--w-fg-neutral)]">이 카피에 쓰인 브랜드 정보</span>
+              <div className="flex flex-wrap gap-1.5">
+                {p.attribution.reflected.includes("proofPoints") && (
+                  <span title="브랜드 근거 자료의 수치를 실제로 인용했어요 (ADR-031)" className="inline-flex items-center gap-1 px-2.5 py-[3px] rounded-full bg-[var(--w-status-positive-soft)] text-[var(--w-green-700)] font-semibold text-[11.5px] leading-none">
+                    <Icon name="check" size={11} /> 근거 자료 반영 ✓
+                  </span>
+                )}
+                {p.attribution.injected.map((key) => (
+                  <span key={key} title="AI에 전달한 재료예요. 출력 반영 여부는 검증하지 않아요." className="inline-flex items-center px-2.5 py-[3px] rounded-full border border-[var(--w-line-normal)] text-[var(--w-fg-normal)] font-medium text-[11.5px] leading-none">
+                    {INJECTED_LABEL[key]} 전달함
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ADR-052 — 보상 넛지 / 추가 후 재생성 CTA */}
+          {p.addedLabel ? (
+            <div className="flex items-center gap-2.5 px-[14px] py-3 rounded-xl bg-[var(--w-primary-soft)] border border-[var(--w-primary-normal)]" style={{ marginBottom: 18 }}>
+              <Icon name="sparkles" size={15} className="text-[var(--w-primary-press)] shrink-0" />
+              <p className="m-0 font-medium text-[12.5px] leading-[1.5] text-[var(--w-fg-strong)]" style={{ flex: 1 }}>
+                {p.addedLabel} 추가됨 — 다시 생성하면 카피에 반영돼요.
+              </p>
+              <Button variant="primary" size="sm" type="button" onClick={p.onRegenerate}>
+                <Icon name="sparkles" size={12} /> 추가하고 다시 생성
+              </Button>
+            </div>
+          ) : p.nudge ? (
+            <div className="flex items-center gap-2.5 px-[14px] py-3 rounded-xl bg-[var(--w-accent-violet-soft)] border border-[var(--w-line-alternative)]" style={{ marginBottom: 18 }}>
+              <Icon name="sparkles" size={15} className="text-[var(--w-accent-violet)] mt-0.5 shrink-0" />
+              <p className="m-0 font-medium text-[12.5px] leading-[1.5] text-[var(--w-fg-normal)]" style={{ flex: 1 }}>
+                {p.nudge.reason}
+              </p>
+              <Button variant="secondary" size="sm" type="button" onClick={p.onNudgeAdd}>추가하기</Button>
+            </div>
+          ) : null}
+
           <div className="flex flex-col gap-2" style={{ marginBottom: 18 }}>
             <label className="font-semibold text-[15px] leading-[1.3] tracking-[-0.008em] text-[var(--w-fg-strong)] flex items-center gap-1.5">헤드라인 — 1개 선택</label>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>

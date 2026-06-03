@@ -10,6 +10,8 @@ import InputForm from "./InputForm";
 import ResultPanel from "./ResultPanel";
 import ImagePhase from "./ImagePhase";
 import type { CopyHook } from "@entities/creative/options";
+import type { CreativeAttribution } from "@/lib/gemini-creative";
+import type { ProfileNudge } from "@entities/creative/profile-nudge";
 interface Props {
   brand: string;
   setBrand: (v: string) => void;
@@ -49,6 +51,15 @@ interface Props {
   setImageDataUrl: (v: string | null) => void;
   finalImageDataUrl: string | null;
   setFinalImageDataUrl: (v: string | null) => void;
+  /** ADR-052 — 보상 루프 + 귀인 + 브랜드 override. */
+  customBrand: boolean;
+  setCustomBrand: (v: boolean) => void;
+  attribution: CreativeAttribution | null;
+  nudge: ProfileNudge | null;
+  onNudgeAdd: () => void;
+  addedLabel: string | null;
+  onRegenerate: () => void;
+  beforeAfter: { before: string; label: string } | null;
 }
 
 export default function CreativeStep(p: Props) {
@@ -89,6 +100,8 @@ export default function CreativeStep(p: Props) {
         setSelectedCopyRefIds={p.setSelectedCopyRefIds}
         hooks={p.hooks}
         setHooks={p.setHooks}
+        customBrand={p.customBrand}
+        setCustomBrand={p.setCustomBrand}
       />
       <ResultPanel
         generating={p.generating}
@@ -108,6 +121,12 @@ export default function CreativeStep(p: Props) {
         saved={p.saved}
         goLibrary={p.goLibrary}
         onGoImage={() => setPhase("image")}
+        attribution={p.attribution}
+        nudge={p.nudge}
+        onNudgeAdd={p.onNudgeAdd}
+        addedLabel={p.addedLabel}
+        onRegenerate={p.onRegenerate}
+        beforeAfter={p.beforeAfter}
       />
     </div>
   );

@@ -15,9 +15,8 @@ export async function POST(req: NextRequest) {
       if (!brand || !tone) {
         throw new ValidationError('필수 필드가 누락됐어요.')
       }
-      if (!target && !persona) {
-        throw new ValidationError('타겟 또는 페르소나 중 하나는 필요해요.')
-      }
+      // ADR-052 generate-first — 타겟·페르소나는 생성 후 넛지로 채운다. 없어도 생성 허용
+      // (오디언스 없는 일반 카피 = 페르소나 넛지가 개선해 보일 "이전 안").
       if (!outcome || !VALID_OUTCOMES.has(outcome)) {
         throw new ValidationError('원하는 결과(outcome)를 선택해주세요.')
       }

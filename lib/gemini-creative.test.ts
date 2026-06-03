@@ -100,6 +100,15 @@ describe("buildCreativePrompt — 카피 훅 주입 (ADR-029)", () => {
   });
 });
 
+describe("buildCreativePrompt — 부제(subtitles) 지시 (ADR-058)", () => {
+  it("부제 작성 지시와 subtitles JSON 스키마가 프롬프트에 포함된다", () => {
+    const prompt = buildCreativePrompt({ ...BASE, target: "20대" });
+    expect(prompt).toContain("보조 표제(부제)");
+    expect(prompt).toContain('"subtitles":');
+    expect(prompt).toContain("7~16자");
+  });
+});
+
 describe("parseImageConcepts — Image Concept 3개 검증 (ADR-040)", () => {
   const valid = JSON.stringify({
     concepts: [

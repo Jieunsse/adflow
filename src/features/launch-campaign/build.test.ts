@@ -8,6 +8,7 @@ import { buildLaunchParams, buildLaunchedCampaign, launchSuccessMessage, planBro
 const baseCreative: CreativeState = {
   tone: "pro",
   headline: "테스트 헤드라인",
+  subtitle: "",
   cta: "learn",
   image: "img2",
   primaryText: "본문 카피",
@@ -19,6 +20,7 @@ const baseCreative: CreativeState = {
   objective: "OUTCOME_TRAFFIC",
   headlineCandidates: null,
   primaryTextCandidates: null,
+  subtitleCandidates: null,
   previousOutcome: null,
   overlayHeadlines: null,
 };

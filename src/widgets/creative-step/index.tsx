@@ -28,6 +28,9 @@ interface Props {
   generating: boolean;
   generated: boolean;
   headlines: string[] | null;
+  subtitles: string[] | null;
+  subtitle: string;
+  setSubtitle: (v: string) => void;
   headlineIdx: number;
   onSelectHeadline: (i: number) => void;
   hooks: CopyHook[];
@@ -107,6 +110,9 @@ export default function CreativeStep(p: Props) {
         generating={p.generating}
         generated={p.generated}
         headlines={p.headlines}
+        subtitles={p.subtitles}
+        subtitle={p.subtitle}
+        setSubtitle={p.setSubtitle}
         headlineIdx={p.headlineIdx}
         onSelectHeadline={p.onSelectHeadline}
         primaryTexts={p.primaryTexts}

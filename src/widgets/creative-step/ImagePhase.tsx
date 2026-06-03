@@ -54,6 +54,9 @@ export default function ImagePhase({
           <Badge kind="neutral">선택한 카피</Badge>
         </div>
         <div className="font-[600] text-[14.5px] leading-[1.4] text-[var(--w-fg-strong)]">{state.headline}</div>
+        {state.subtitle?.trim() && (
+          <div className="font-medium text-[12.5px] leading-[1.4] text-[var(--w-fg-neutral)] -mt-1">{state.subtitle}</div>
+        )}
         {state.primaryText && (
           <>
             <div className={cn("font-medium text-[13px] leading-[1.55] text-[var(--w-fg-normal)] whitespace-pre-wrap", !copyExpanded && "line-clamp-2")}>
@@ -107,6 +110,7 @@ export default function ImagePhase({
         <TextOverlayEditor
           baseImageUrl={imageDataUrl}
           headlineSuggestion={state.headline}
+          subtitleSuggestion={state.subtitle || undefined}
           overlayHeadlines={state.overlayHeadlines ?? undefined}
           onClose={() => setEditing(false)}
           onSave={(final) => setFinalImageDataUrl(final)}

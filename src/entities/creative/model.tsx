@@ -12,6 +12,8 @@ const INITIAL_HEADLINE = "피부가 먼저 느끼는 차이, 그린루틴";
 export type CreativeState = {
   tone: string;
   headline: string;
+  // 헤드라인과 짝을 이루는 보조 표제 — 이미지 오버레이 자동 시드용(ADR-058 정합).
+  subtitle: string;
   cta: CtaId;
   image: ImageId;
   primaryText: string;
@@ -27,6 +29,8 @@ export type CreativeState = {
   headlineCandidates: string[] | null;
   // Gemini 가 만든 primaryText 후보 3개 — STEP 02 카피문구 A/B 시험의 B안 풀로 사용.
   primaryTextCandidates: string[] | null;
+  // 헤드라인 후보와 짝 인덱스로 묶인 부제 후보 3개. headline 선택 시 같은 인덱스 subtitle 동반 선택.
+  subtitleCandidates: string[] | null;
   // PRD-objective-aware-launch §5.2 — outcome 변경 시 직전 outcome 을 stash.
   // STEP 01 카피 stale 배너에서 사용. 새 카피 생성 시 또는 원위치 복귀 시 null 로 clear.
   previousOutcome: OutcomeChip | null;
@@ -37,6 +41,7 @@ export type CreativeState = {
 export type CreativeAction =
   | { type: "SET_TONE"; tone: string }
   | { type: "SET_HEADLINE"; headline: string }
+  | { type: "SET_SUBTITLE"; subtitle: string }
   | { type: "SET_IMAGE"; image: ImageId }
   | { type: "SET_PRIMARY_TEXT"; primaryText: string }
   | { type: "SET_GENERATED_IMAGES"; images: [string, string, string] }
@@ -48,6 +53,7 @@ export type CreativeAction =
   | { type: "SET_OUTCOME_HINT"; hint: string }
   | { type: "SET_HEADLINE_CANDIDATES"; candidates: string[] | null }
   | { type: "SET_PRIMARY_TEXT_CANDIDATES"; candidates: string[] | null }
+  | { type: "SET_SUBTITLE_CANDIDATES"; candidates: string[] | null }
   | { type: "SET_OVERLAY_HEADLINES"; headlines: string[] | null }
   | { type: "CLEAR_PREVIOUS_OUTCOME" }
   | { type: "RESET" };
@@ -56,6 +62,7 @@ export type CreativeAction =
 export const INITIAL_CREATIVE_STATE: CreativeState = {
   tone: "pro",
   headline: INITIAL_HEADLINE,
+  subtitle: "",
   cta: "sample",
   image: "img2",
   primaryText: "",
@@ -67,6 +74,7 @@ export const INITIAL_CREATIVE_STATE: CreativeState = {
   objective: null,
   headlineCandidates: null,
   primaryTextCandidates: null,
+  subtitleCandidates: null,
   previousOutcome: null,
   overlayHeadlines: null,
 };
@@ -76,6 +84,7 @@ function reducer(state: CreativeState, action: CreativeAction): CreativeState {
   switch (action.type) {
     case "SET_TONE":             return { ...state, tone: action.tone };
     case "SET_HEADLINE":         return { ...state, headline: action.headline };
+    case "SET_SUBTITLE":         return { ...state, subtitle: action.subtitle };
     case "SET_IMAGE":            return { ...state, image: action.image };
     case "SET_PRIMARY_TEXT":     return { ...state, primaryText: action.primaryText };
     case "SET_GENERATED_IMAGES": return { ...state, generatedImages: action.images };
@@ -94,6 +103,7 @@ function reducer(state: CreativeState, action: CreativeAction): CreativeState {
     // 새 카피 생성 = stale 해제 — SET_HEADLINE_CANDIDATES 시점에 previousOutcome 자동 clear.
     case "SET_HEADLINE_CANDIDATES": return { ...state, headlineCandidates: action.candidates, previousOutcome: null };
     case "SET_PRIMARY_TEXT_CANDIDATES": return { ...state, primaryTextCandidates: action.candidates };
+    case "SET_SUBTITLE_CANDIDATES": return { ...state, subtitleCandidates: action.candidates };
     case "SET_OVERLAY_HEADLINES": return { ...state, overlayHeadlines: action.headlines };
     case "CLEAR_PREVIOUS_OUTCOME": return { ...state, previousOutcome: null };
     case "RESET":                return INITIAL_STATE;

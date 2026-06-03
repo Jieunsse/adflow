@@ -27,6 +27,11 @@ interface Props {
   generating: boolean;
   generated: boolean;
   headlines: string[] | null;
+  /** 헤드라인 후보와 짝 인덱스로 묶인 부제 후보 — 표시는 짝지어, 데이터는 후보 배열 유지(ADR-039 정합). */
+  subtitles: string[] | null;
+  /** 선택된 부제 (인라인 편집 대상). */
+  subtitle: string;
+  setSubtitle: (v: string) => void;
   headlineIdx: number;
   onSelectHeadline: (i: number) => void;
   primaryTexts: [string, string, string] | null;
@@ -168,10 +173,25 @@ export default function ResultPanel(p: Props) {
                   <div style={{ flex: 1 }}>
                     <div className="font-[600] text-[11px] leading-none text-[var(--w-fg-neutral)] tracking-[0.04em] uppercase">VER 0{i + 1}</div>
                     <div className="font-[600] text-[14.5px] leading-[1.45] text-[var(--w-fg-strong)] mt-1">{h}</div>
+                    {p.subtitles?.[i]?.trim() && (
+                      <div className="font-medium text-[12.5px] leading-[1.4] text-[var(--w-fg-neutral)] mt-0.5">{p.subtitles[i]}</div>
+                    )}
                   </div>
                 </div>
               ))}
             </div>
+            {p.subtitles && (
+              <div className="flex flex-col gap-1.5 mt-1">
+                <label className="font-semibold text-[12px] leading-none text-[var(--w-fg-neutral)]">부제 — 이미지에 함께 얹혀요</label>
+                <input
+                  type="text"
+                  value={p.subtitle}
+                  onChange={(e) => p.setSubtitle(e.target.value)}
+                  placeholder="헤드라인을 받쳐주는 짧은 한 마디"
+                  className="w-full px-3 py-2 border border-[var(--w-line-normal)] rounded-lg bg-[var(--w-bg-elevated)] font-medium text-[13px] leading-[1.5] text-[var(--w-fg-strong)] outline-none transition-[border-color,box-shadow] duration-[120ms] placeholder:text-[var(--w-fg-alternative)] focus:border-[var(--w-primary-normal)] focus:shadow-[0_0_0_4px_var(--w-focus-ring)]"
+                />
+              </div>
+            )}
           </div>
           <div className="flex flex-col gap-2" style={{ marginBottom: 18 }}>
             <label className="font-semibold text-[15px] leading-[1.3] tracking-[-0.008em] text-[var(--w-fg-strong)] flex items-center gap-1.5">{p.primaryTexts ? "기본 텍스트 — 1개 선택" : "기본 텍스트"}</label>

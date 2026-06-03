@@ -97,13 +97,18 @@ export const TEMPLATES: Record<TemplateId, { label: string; band: Band; blocks: 
   },
 };
 
-// 템플릿 → Block[]. 주표제(첫 블록)에 headlineSuggestion 자동 주입(없으면 placeholder).
-export function pickTemplate(t: TemplateId, headline?: string): Block[] {
+// 템플릿 → Block[]. 주표제(첫 블록)=headline, 보조(둘째 블록)=subtitle 자동 주입(없으면 placeholder).
+export function pickTemplate(t: TemplateId, headline?: string, subtitle?: string): Block[] {
   const tpl = TEMPLATES[t];
   return tpl.blocks.map((base, i) => ({
     id: `t${t}-${i}`,
     ...base,
-    text: i === 0 ? (headline?.trim() || "여기에 표제를 입력하세요") : "부가 문구",
+    text:
+      i === 0
+        ? headline?.trim() || "여기에 표제를 입력하세요"
+        : i === 1
+          ? subtitle?.trim() || "부가 문구"
+          : "부가 문구",
   }));
 }
 
@@ -241,11 +246,14 @@ function normalizeText(raw: string): string {
 export default function TextOverlayEditor({
   baseImageUrl,
   headlineSuggestion,
+  subtitleSuggestion,
   onClose,
   onSave,
 }: {
   baseImageUrl: string;
   headlineSuggestion?: string;
+  // 선택된 카피의 부제 — 헤드라인과 함께 자동 시드(ADR-058, 이 케이스에 한해 ADR-056 ① pull-only supersede).
+  subtitleSuggestion?: string;
   // 표제 추천 풀 — 계약 보존(ADR-058). 현 UX(V1)에서 칩 표면은 미노출.
   overlayHeadlines?: string[];
   onClose: () => void;
@@ -349,11 +357,27 @@ export default function TextOverlayEditor({
 
   const applyTemplate = (t: TemplateId) => {
     setEditingId(null);
-    const next = pickTemplate(t, headlineSuggestion).map((b) => ({ ...b, id: `b${idRef.current++}` }));
+    const next = pickTemplate(t, headlineSuggestion, subtitleSuggestion).map((b) => ({ ...b, id: `b${idRef.current++}` }));
     setBlocks(next);
     setBand(TEMPLATES[t].band);
     setSelectedId(next[0]?.id ?? null);
   };
+
+  // ADR-058 — 헤드라인+부제 자동 시드. 마운트 시 1회, 헤드라인이 있으면 "상단 중앙"(밴드+위계 2:1) 으로 배치.
+  // ADR-056 ① pull-only 를 이 진입 케이스에 한해 supersede(부제까지 짝으로 시드된 카피가 있을 때만).
+  const seededRef = useRef(false);
+  useEffect(() => {
+    if (seededRef.current) return;
+    seededRef.current = true;
+    if (!headlineSuggestion?.trim()) return;
+    setBand(TEMPLATES.B.band);
+    const seeded = pickTemplate("B", headlineSuggestion, subtitleSuggestion)
+      .filter((b) => b.text.trim() && b.text !== "부가 문구") // 빈 부제는 블록 생략
+      .map((b) => ({ ...b, id: `b${idRef.current++}` }));
+    setBlocks(seeded);
+    setSelectedId(seeded[0]?.id ?? null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const pullHeadline = () => {
     if (!headlineSuggestion?.trim()) return;

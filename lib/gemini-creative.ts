@@ -88,6 +88,8 @@ export interface CreativeAttribution {
 
 export interface GenerateCreativeResult {
   headlines: [string, string, string];
+  // 헤드라인[i] 와 짝을 이루는 짧은 보조 표제(이미지 오버레이 시드용, ADR-058 정합). 7~16자.
+  subtitles: [string, string, string];
   primaryTexts: [string, string, string];
   targeting: ExtractedTargeting;
   /** 각 primaryText 변형에 적용된 카피 훅 (배지 표시용). */
@@ -232,9 +234,14 @@ export function buildCreativePrompt(p: GenerateCreativeParams): string {
 원하는 결과: ${outcomeDef.outcomeLabel} (Meta ${outcomeDef.metaObjective})
 카피 방향: ${outcomeDef.copyTone}${variationLine}${hookLines}${hintLine}${policyLines}${prohibitedDirectLine}${proofPointLines}${copyRefLines}
 
+또한 각 헤드라인과 짝을 이루는 짧은 보조 표제(부제)를 1개씩 작성하세요:
+- 부제[i] 는 헤드라인[i] 를 받쳐주는 한 호흡짜리 보조 문구(7~16자 한국어). 헤드라인이 약속이면 부제는 근거·디테일·맥락 한 마디.
+- 군더더기·문장부호 최소. **헤드라인·본문에 없는 수치(%·만·점·배 등)를 새로 지어내지 마세요.**
+
 다음 JSON 형식으로 응답하세요:
 {
   "headlines": ["헤드라인1 (25자 이내)", "헤드라인2 (25자 이내)", "헤드라인3 (25자 이내)"],
+  "subtitles": ["부제1 (7~16자, 헤드라인1 짝)", "부제2 (헤드라인2 짝)", "부제3 (헤드라인3 짝)"],
   "primaryTexts": [
     "본문1 — ${h0.label} 훅 (150~200자, 공감→문제→해결→증거→CTA 구조)",
     "본문2 — ${h1.label} 훅 (150~200자)",
@@ -404,6 +411,7 @@ export const geminiCreative = {
 
       let parsed: {
         headlines: string[];
+        subtitles?: unknown;
         primaryTexts: string[];
         targeting?: unknown;
       };
@@ -428,12 +436,23 @@ export const geminiCreative = {
         throw new Error("AI 응답 형식이 올바르지 않아요. 다시 시도해주세요.");
       }
 
+      const headlines: [string, string, string] = [
+        stripHanja(parsed.headlines[0]),
+        stripHanja(parsed.headlines[1]),
+        stripHanja(parsed.headlines[2]),
+      ];
+      const rawSubtitles = Array.isArray(parsed.subtitles) ? parsed.subtitles : [];
+      const subtitles = [0, 1, 2].map((i) => {
+        const s = typeof rawSubtitles[i] === "string" ? stripHanja(rawSubtitles[i] as string).trim() : "";
+        if (!s) return "";
+        // ADR-031 — 부제는 짝 헤드라인+본문에 없는 수치를 못 만든다. 위반 시 부제만 비움.
+        const source = `${headlines[i]} ${typeof parsed.primaryTexts[i] === "string" ? parsed.primaryTexts[i] : ""}`;
+        return filterOverlayHeadlines([s], source).length ? s : "";
+      }) as [string, string, string];
+
       return {
-        headlines: [
-          stripHanja(parsed.headlines[0]),
-          stripHanja(parsed.headlines[1]),
-          stripHanja(parsed.headlines[2]),
-        ],
+        headlines,
+        subtitles,
         primaryTexts: [
           ensureEmoji(stripHanja(parsed.primaryTexts[0])),
           ensureEmoji(stripHanja(parsed.primaryTexts[1])),

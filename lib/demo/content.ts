@@ -54,8 +54,15 @@ export const DEMO_CTA = "SHOP_NOW";
 // 위 DEMO_HEADLINES / DEMO_PRIMARY_TEXTS 를 GenerateCreativeResult shape 로 묶음.
 const DEMO_HOOKS: [CopyHook, CopyHook, CopyHook] = ["benefit", "rush", "trust"];
 
+export const DEMO_SUBTITLES: [string, string, string] = [
+  "비건 수분 한 겹",
+  "민감 피부도 부담 없이",
+  "재구매율 절반 이상",
+];
+
 export const DEMO_CREATIVE_RESULT: GenerateCreativeResult = {
   headlines: [DEMO_HEADLINES[0], DEMO_HEADLINES[1], DEMO_HEADLINES[2]],
+  subtitles: DEMO_SUBTITLES,
   primaryTexts: [DEMO_PRIMARY_TEXTS[0].text, DEMO_PRIMARY_TEXTS[1].text, DEMO_PRIMARY_TEXTS[2].text],
   targeting: { ageMin: 20, ageMax: 40, genders: [] },
   hooks: DEMO_HOOKS,

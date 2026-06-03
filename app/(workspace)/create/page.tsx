@@ -160,6 +160,7 @@ function CreateFlow() {
   // 카피 훅 (ADR-029) — outcome 추천 풀이 기본값. 디테일 유저가 InputForm 에서 교체 가능.
   const [hooks, setHooks] = useState<CopyHook[]>([]);
   const [displayedHeadlines, setDisplayedHeadlines] = useState<string[] | null>(null);
+  const [displayedSubtitles, setDisplayedSubtitles] = useState<string[] | null>(null);
   const [headlineIdx, setHeadlineIdx] = useState(0);
   const [displayedPrimaryTexts, setDisplayedPrimaryTexts] = useState<[string, string, string] | null>(null);
   const [displayedHooks, setDisplayedHooks] = useState<[CopyHook, CopyHook, CopyHook] | null>(null);
@@ -305,6 +306,7 @@ function CreateFlow() {
       {
         onSuccess: (data) => {
           setDisplayedHeadlines(data.headlines);
+          setDisplayedSubtitles(data.subtitles);
           setHeadlineIdx(0);
           setDisplayedPrimaryTexts(data.primaryTexts);
           setDisplayedHooks(data.hooks);
@@ -326,9 +328,11 @@ function CreateFlow() {
           );
           setPrimaryTextIdx(0);
           creative.dispatch({ type: "SET_HEADLINE", headline: data.headlines[0] });
+          creative.dispatch({ type: "SET_SUBTITLE", subtitle: data.subtitles[0] });
           // PRD §5.4.2 (5) — STEP 02 디테일 A/B 시험 B안 풀로 사용. 재생성 시 후보 교체 → DetailKnobs 의 sync useEffect 가 B안 reset.
           creative.dispatch({ type: "SET_HEADLINE_CANDIDATES", candidates: data.headlines });
           creative.dispatch({ type: "SET_PRIMARY_TEXT_CANDIDATES", candidates: data.primaryTexts });
+          creative.dispatch({ type: "SET_SUBTITLE_CANDIDATES", candidates: data.subtitles });
           creative.dispatch({ type: "SET_PRIMARY_TEXT", primaryText: data.primaryTexts[0] });
           // ADR-022 — AI 추천 위에 페르소나 명시 필드만 override. 비운 필드는 AI 추천 유지.
           const merged = mergePersonaTargeting(data.targeting, personaEntry);
@@ -369,6 +373,8 @@ function CreateFlow() {
   const handleSelectHeadline = (i: number) => {
     setHeadlineIdx(i);
     if (displayedHeadlines) creative.dispatch({ type: "SET_HEADLINE", headline: displayedHeadlines[i] });
+    // 짝 인덱스 부제 동반 선택 — "고를 땐 묶고, 시험할 땐 쪼갠다".
+    if (displayedSubtitles) creative.dispatch({ type: "SET_SUBTITLE", subtitle: displayedSubtitles[i] ?? "" });
   };
 
   const handleSelectPrimaryText = (i: number) => {
@@ -514,6 +520,9 @@ function CreateFlow() {
               displayedHooks={displayedHooks}
               proofPointsCited={proofPointsCited}
               headlines={displayedHeadlines}
+              subtitles={displayedSubtitles}
+              subtitle={creative.state.subtitle}
+              setSubtitle={(v: string) => creative.dispatch({ type: "SET_SUBTITLE", subtitle: v })}
               headlineIdx={headlineIdx}
               onSelectHeadline={handleSelectHeadline}
               primaryTexts={displayedPrimaryTexts}

@@ -444,69 +444,73 @@ export default function AiImageBlock({
         AI 이미지 생성 <Badge kind="neutral">실험</Badge>
       </label>
 
-      <div
-        className="inline-flex gap-0.5 p-[3px] bg-[var(--w-bg-alternative)] rounded-[10px]"
-        role="tablist"
-        aria-label="AI 이미지 생성 방식"
-        style={{ marginBottom: 10 }}
-      >
-        <button
-          type="button"
-          className={cn(
-            "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] font-semibold text-[12.5px] leading-none transition-[background,color] duration-[120ms] cursor-pointer",
-            mode === "concept"
-              ? "bg-[var(--w-bg-elevated)] text-[var(--w-fg-strong)] shadow-sm"
-              : "text-[var(--w-fg-neutral)] hover:text-[var(--w-fg-strong)]",
-          )}
-          onClick={() => setMode("concept")}
-          role="tab"
-          aria-selected={mode === "concept"}
+      {/* 탭 + 제품칩 — 켜짐일 땐 한 줄(칩은 tablist 바깥 형제로 ARIA 경계 보존), 꺼짐/미첨부는 탭만 한 줄 + 배너 풀폭 */}
+      <div className="flex items-center gap-2 flex-wrap" style={{ marginBottom: packageRef && packageRefOn ? 12 : 10 }}>
+        <div
+          className="inline-flex gap-0.5 p-[3px] bg-[var(--w-bg-alternative)] rounded-[10px] flex-none"
+          role="tablist"
+          aria-label="AI 이미지 생성 방식"
         >
-          <Icon name="sparkles" size={13} /> 카피 기반 3컨셉
-        </button>
-        <button
-          type="button"
-          className={cn(
-            "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] font-semibold text-[12.5px] leading-none transition-[background,color] duration-[120ms] cursor-pointer",
-            mode === "brief"
-              ? "bg-[var(--w-bg-elevated)] text-[var(--w-fg-strong)] shadow-sm"
-              : "text-[var(--w-fg-neutral)] hover:text-[var(--w-fg-strong)]",
-          )}
-          onClick={() => setMode("brief")}
-          role="tab"
-          aria-selected={mode === "brief"}
-        >
-          <Icon name="doc" size={13} /> 기획안·자료로 생성
-        </button>
+          <button
+            type="button"
+            className={cn(
+              "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] font-semibold text-[12.5px] leading-none transition-[background,color] duration-[120ms] cursor-pointer",
+              mode === "concept"
+                ? "bg-[var(--w-bg-elevated)] text-[var(--w-fg-strong)] shadow-sm"
+                : "text-[var(--w-fg-neutral)] hover:text-[var(--w-fg-strong)]",
+            )}
+            onClick={() => setMode("concept")}
+            role="tab"
+            aria-selected={mode === "concept"}
+          >
+            <Icon name="sparkles" size={13} /> 카피 기반 3컨셉
+          </button>
+          <button
+            type="button"
+            className={cn(
+              "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] font-semibold text-[12.5px] leading-none transition-[background,color] duration-[120ms] cursor-pointer",
+              mode === "brief"
+                ? "bg-[var(--w-bg-elevated)] text-[var(--w-fg-strong)] shadow-sm"
+                : "text-[var(--w-fg-neutral)] hover:text-[var(--w-fg-strong)]",
+            )}
+            onClick={() => setMode("brief")}
+            role="tab"
+            aria-selected={mode === "brief"}
+          >
+            <Icon name="doc" size={13} /> 기획안·자료로 생성
+          </button>
+        </div>
+
+        {/* 켜짐: 차분한 인라인 칩(안 건드리는 기본 설정이라 위계 하향) — tablist 형제로 우측 정렬 */}
+        {packageRef && packageRefOn && (
+          <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg border border-[var(--w-line-normal)] bg-[var(--w-bg-elevated)] flex-none" style={{ marginLeft: "auto" }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={packageRef.preview}
+              alt="제품 레퍼런스"
+              onClick={() => setZoomedSrc(packageRef.preview)}
+              style={{ width: 28, height: 28, objectFit: "cover", borderRadius: 6, border: "1px solid var(--w-line-normal)", cursor: "zoom-in", flex: "none" }}
+            />
+            <span className="flex items-center gap-1 font-semibold text-[12px] leading-none text-[var(--w-fg-strong)]" title="제품 원본(라벨·로고)은 그대로 두고 배경만 컨셉별로 만들어요">
+              <span style={{ width: 7, height: 7, borderRadius: 999, background: "var(--w-primary-normal)", flex: "none" }} aria-hidden="true" />
+              제품 원본 유지 중
+            </span>
+            <Icon name="info" size={13} className="text-[var(--w-fg-alternative)]" />
+            <div className="flex items-center gap-1.5">
+              <label className="inline-flex items-center gap-[5px] font-semibold leading-none whitespace-nowrap h-7 px-2.5 text-[12px] rounded-md text-[var(--w-fg-neutral)] hover:text-[var(--w-fg-strong)] hover:bg-[var(--w-bg-neutral)] cursor-pointer transition-[background,color] duration-[120ms]">
+                <Icon name="upload" size={12} /> 교체
+                <input type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => handleReplacePackageRef(e.target.files)} />
+              </label>
+              <button type="button" onClick={() => setPackageRefOn(false)} className="font-semibold leading-none whitespace-nowrap h-7 px-2.5 text-[12px] rounded-md text-[var(--w-fg-neutral)] hover:text-[var(--w-fg-strong)] hover:bg-[var(--w-bg-neutral)] cursor-pointer transition-[background,color] duration-[120ms]">
+                끄기
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Package Reference — 두 탭 공통. 켜짐=인라인 칩(평상시) / 꺼짐=경고 배너 / 미첨부=첨부 유도 */}
-      {packageRef && packageRefOn ? (
-        // 켜짐: 한 줄 칩으로 축소 (안 건드리는 기본 설정이라 위계 하향)
-        <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg border border-[var(--w-line-normal)] bg-[var(--w-bg-elevated)]" style={{ marginBottom: 12 }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={packageRef.preview}
-            alt="제품 레퍼런스"
-            onClick={() => setZoomedSrc(packageRef.preview)}
-            style={{ width: 28, height: 28, objectFit: "cover", borderRadius: 6, border: "1px solid var(--w-line-normal)", cursor: "zoom-in", flex: "none" }}
-          />
-          <span className="flex items-center gap-1 font-semibold text-[12px] leading-none text-[var(--w-fg-strong)]" title="제품 원본(라벨·로고)은 그대로 두고 배경만 컨셉별로 만들어요">
-            <span style={{ width: 7, height: 7, borderRadius: 999, background: "var(--w-primary-normal)", flex: "none" }} aria-hidden="true" />
-            제품 원본 유지 중
-          </span>
-          <Icon name="info" size={13} className="text-[var(--w-fg-alternative)]" />
-          <div style={{ marginLeft: "auto" }} className="flex items-center gap-1.5">
-            <label className="inline-flex items-center gap-[5px] font-semibold leading-none whitespace-nowrap h-7 px-2.5 text-[12px] rounded-md text-[var(--w-fg-neutral)] hover:text-[var(--w-fg-strong)] hover:bg-[var(--w-bg-neutral)] cursor-pointer transition-[background,color] duration-[120ms]">
-              <Icon name="upload" size={12} /> 교체
-              <input type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => handleReplacePackageRef(e.target.files)} />
-            </label>
-            <button type="button" onClick={() => setPackageRefOn(false)} className="font-semibold leading-none whitespace-nowrap h-7 px-2.5 text-[12px] rounded-md text-[var(--w-fg-neutral)] hover:text-[var(--w-fg-strong)] hover:bg-[var(--w-bg-neutral)] cursor-pointer transition-[background,color] duration-[120ms]">
-              끄기
-            </button>
-          </div>
-        </div>
-      ) : packageRef && !packageRefOn ? (
+      {/* Package Reference — 조치 필요 상태만 풀폭 배너로 (주의 무게 보존) */}
+      {packageRef && !packageRefOn ? (
         // 꺼짐: 위험 상태라 눈에 띄게
         <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-[var(--w-warn-line)] bg-[var(--w-warn-soft)]" style={{ marginBottom: 12 }}>
           <Icon name="warn" size={16} className="text-[var(--w-warn-normal)] flex-none" />
@@ -522,7 +526,7 @@ export default function AiImageBlock({
             켜기
           </Button>
         </div>
-      ) : (
+      ) : !packageRef ? (
         // 미첨부: 첨부 유도
         <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-[var(--w-line-normal)] bg-[var(--w-bg-elevated)]" style={{ marginBottom: 12 }}>
           <div style={{ flex: 1 }}>
@@ -534,7 +538,7 @@ export default function AiImageBlock({
             <input type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => handleReplacePackageRef(e.target.files)} />
           </label>
         </div>
-      )}
+      ) : null}
 
       {mode === "concept" ? (
         <>

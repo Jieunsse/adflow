@@ -4,6 +4,7 @@
 // 이미지 컨셉·생성에 집중. "← 카피 수정"으로 phase 1 복귀. 최상위 Stepper(STEP 02=집행) 불변.
 
 import { useState } from "react";
+import { cn } from "@shared/lib/cn";
 import Icon from "@shared/ui/Icon";
 import { Badge } from "@shared/ui/primitives";
 import { Button } from "@shared/ui/Button";
@@ -31,6 +32,7 @@ export default function ImagePhase({
 }) {
   const { state } = useCreativeDraft();
   const [editing, setEditing] = useState(false);
+  const [copyExpanded, setCopyExpanded] = useState(false);
 
   return (
     <Card variant="lg">
@@ -53,7 +55,20 @@ export default function ImagePhase({
         </div>
         <div className="font-[600] text-[14.5px] leading-[1.4] text-[var(--w-fg-strong)]">{state.headline}</div>
         {state.primaryText && (
-          <div className="font-medium text-[13px] leading-[1.55] text-[var(--w-fg-normal)] whitespace-pre-wrap">{state.primaryText}</div>
+          <>
+            <div className={cn("font-medium text-[13px] leading-[1.55] text-[var(--w-fg-normal)] whitespace-pre-wrap", !copyExpanded && "line-clamp-2")}>
+              {state.primaryText}
+            </div>
+            <button
+              type="button"
+              aria-expanded={copyExpanded}
+              onClick={() => setCopyExpanded((v) => !v)}
+              className="self-start inline-flex items-center gap-1 font-semibold text-[11.5px] leading-none text-[var(--w-fg-neutral)] hover:text-[var(--w-fg-strong)] cursor-pointer transition-[color] duration-[120ms]"
+            >
+              <Icon name="chev-down" size={12} style={{ transform: copyExpanded ? "none" : "rotate(-90deg)", transition: "transform 120ms" }} />
+              {copyExpanded ? "본문 접기" : "본문 전체"}
+            </button>
+          </>
         )}
       </div>
 
@@ -91,6 +106,7 @@ export default function ImagePhase({
       {editing && imageDataUrl && (
         <TextOverlayEditor
           baseImageUrl={imageDataUrl}
+          headlineSuggestion={state.headline}
           onClose={() => setEditing(false)}
           onSave={(final) => setFinalImageDataUrl(final)}
         />

@@ -298,6 +298,8 @@ export interface ImageConcept {
 
 export interface SuggestImageConceptsResult {
   concepts: ImageConcept[]; // 3개, 다축 분기
+  // ADR-056 후속 — 헤드라인을 7~12자 이미지 표제로 rephrase 한 2~3안. 텍스트 편집 표제 칩에서 소비.
+  overlayHeadlines: string[];
 }
 
 const IMAGE_CONCEPTS_TEMPLATE = (p: SuggestImageConceptsParams) =>
@@ -334,13 +336,31 @@ ${
   · label 에 환경·앵글이 드러나게 지으세요 (예: "야외 · 와이드 · 골든아워", "스튜디오 · 클로즈업 · 파스텔", "실내 · 탑다운 · 그린").
 - **모든 컷은 제품이 실제 표면·공간 안에 놓인 연출 사진이어야 합니다.** 배경 없이 떠 있는 컷아웃/누끼 느낌은 금지 — "solid/plain white background", "no background", "no shadow", "no distracting elements" 처럼 배경·그림자를 없애는 표현을 쓰지 말고, 항상 받침면·조명·은은한 그림자/반사가 있는 장면으로 묘사하세요. (스튜디오 컷도 미니멀하되 비어있지 않게.)
 
+또한, 위 헤드라인을 이미지 위에 얹을 짧은 표제(overlay headline)로 2~3개 다시 써주세요:
+- 각 표제는 7~12자 한국어, 한 호흡에 읽히는 강한 한 마디. 군더더기·문장부호 최소.
+- **헤드라인에 없는 수치(%·만·점·배 등 성과·통계 숫자)를 새로 지어내지 마세요.** 원문 헤드라인·본문에 있는 숫자만 쓰고, 없으면 숫자 없이 쓰세요.
+
 다음 JSON 형식으로만 응답해주세요. 다른 텍스트는 절대 포함하지 마세요:
-{"concepts": [{"label": "...", "prompt": "..."}, {"label": "...", "prompt": "..."}, {"label": "...", "prompt": "..."}]}
+{"concepts": [{"label": "...", "prompt": "..."}, {"label": "...", "prompt": "..."}, {"label": "...", "prompt": "..."}], "overlayHeadlines": ["...", "...", "..."]}
 `.trim();
 
-// AI 응답 텍스트 → 검증된 Concept 3개. label·prompt 둘 다 있는 것만 채택, 3개 미만이면 throw.
-export function parseImageConcepts(text: string): SuggestImageConceptsResult {
-  let parsed: { concepts?: unknown };
+// 표제 ADR-031 가드 — source(헤드라인+본문)에 없는 성과 수치 토큰을 포함한 표제는 탈락.
+// 원문 토큰 집합의 부분집합인 표제만 통과. (source 에 수치가 없으면 수치 든 표제는 전부 탈락.)
+export function filterOverlayHeadlines(raw: string[], source: string): string[] {
+  const allowed = new Set(proofNumericTokens([source]));
+  return raw.filter((h) => {
+    const norm = h.replace(/\s+/g, "");
+    return (norm.match(PROOF_NUM_RE) ?? [])
+      .map((m) => m.replace(/\s+/g, ""))
+      .filter((t) => /\d/.test(t) && (t.length >= 2 || /\D/.test(t)))
+      .every((tok) => allowed.has(tok));
+  });
+}
+
+// AI 응답 텍스트 → 검증된 Concept 3개 + 표제 안. label·prompt 둘 다 있는 것만 채택, 3개 미만이면 throw.
+// source = 표제 수치 인용검사용 원문(헤드라인+본문).
+export function parseImageConcepts(text: string, source = ""): SuggestImageConceptsResult {
+  let parsed: { concepts?: unknown; overlayHeadlines?: unknown };
   try {
     parsed = JSON.parse(text);
   } catch {
@@ -359,7 +379,11 @@ export function parseImageConcepts(text: string): SuggestImageConceptsResult {
   if (concepts.length < 3) {
     throw new Error("AI 응답 형식이 올바르지 않아요. 다시 시도해주세요.");
   }
-  return { concepts: concepts.slice(0, 3) };
+  const rawHeadlines = (Array.isArray(parsed.overlayHeadlines) ? parsed.overlayHeadlines : [])
+    .filter((h): h is string => typeof h === "string" && !!h.trim())
+    .map((h) => stripHanja(h).trim());
+  const overlayHeadlines = filterOverlayHeadlines(rawHeadlines, source).slice(0, 3);
+  return { concepts: concepts.slice(0, 3), overlayHeadlines };
 }
 
 export const geminiCreative = {
@@ -456,15 +480,20 @@ export const geminiCreative = {
     params: SuggestImageConceptsParams,
   ): Promise<SuggestImageConceptsResult> {
     const prompt = IMAGE_CONCEPTS_TEMPLATE(params);
+    const source = `${params.headline} ${params.primaryText}`;
     const runOnce = async () =>
       parseImageConcepts(
         await generateGeminiText(prompt, {
           systemInstruction: AD_COPYWRITER_SYSTEM_PROMPT,
           json: true,
         }),
+        source,
       );
     try {
-      return await runOnce();
+      let result = await runOnce();
+      // ADR-031 — 표제가 수치 가드로 전부 탈락하면(근거 없는 수치 추정) 1회만 재생성.
+      if (result.overlayHeadlines.length === 0) result = await runOnce();
+      return result;
     } catch {
       // JSON 파싱/형식 실패 시 1회만 재시도.
       return await runOnce();

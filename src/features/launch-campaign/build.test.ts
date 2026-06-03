@@ -20,6 +20,7 @@ const baseCreative: CreativeState = {
   headlineCandidates: null,
   primaryTextCandidates: null,
   previousOutcome: null,
+  overlayHeadlines: null,
 };
 
 const baseLaunch: LaunchState = {

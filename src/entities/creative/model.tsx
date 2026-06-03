@@ -30,6 +30,8 @@ export type CreativeState = {
   // PRD-objective-aware-launch §5.2 — outcome 변경 시 직전 outcome 을 stash.
   // STEP 01 카피 stale 배너에서 사용. 새 카피 생성 시 또는 원위치 복귀 시 null 로 clear.
   previousOutcome: OutcomeChip | null;
+  // suggest-image-concepts 가 rephrase 한 이미지 표제 안 — 텍스트 편집 표제 칩에서 소비.
+  overlayHeadlines: string[] | null;
 };
 
 export type CreativeAction =
@@ -46,6 +48,7 @@ export type CreativeAction =
   | { type: "SET_OUTCOME_HINT"; hint: string }
   | { type: "SET_HEADLINE_CANDIDATES"; candidates: string[] | null }
   | { type: "SET_PRIMARY_TEXT_CANDIDATES"; candidates: string[] | null }
+  | { type: "SET_OVERLAY_HEADLINES"; headlines: string[] | null }
   | { type: "CLEAR_PREVIOUS_OUTCOME" }
   | { type: "RESET" };
 
@@ -65,6 +68,7 @@ export const INITIAL_CREATIVE_STATE: CreativeState = {
   headlineCandidates: null,
   primaryTextCandidates: null,
   previousOutcome: null,
+  overlayHeadlines: null,
 };
 const INITIAL_STATE = INITIAL_CREATIVE_STATE;
 
@@ -90,6 +94,7 @@ function reducer(state: CreativeState, action: CreativeAction): CreativeState {
     // 새 카피 생성 = stale 해제 — SET_HEADLINE_CANDIDATES 시점에 previousOutcome 자동 clear.
     case "SET_HEADLINE_CANDIDATES": return { ...state, headlineCandidates: action.candidates, previousOutcome: null };
     case "SET_PRIMARY_TEXT_CANDIDATES": return { ...state, primaryTextCandidates: action.candidates };
+    case "SET_OVERLAY_HEADLINES": return { ...state, overlayHeadlines: action.headlines };
     case "CLEAR_PREVIOUS_OUTCOME": return { ...state, previousOutcome: null };
     case "RESET":                return INITIAL_STATE;
     default:                     return state;

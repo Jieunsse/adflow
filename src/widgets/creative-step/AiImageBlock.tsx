@@ -194,6 +194,7 @@ export default function AiImageBlock({
         onSuccess: (data) => {
           const fresh = data.concepts.slice(0, 3);
           setConcepts(fresh);
+          dispatch({ type: "SET_OVERLAY_HEADLINES", headlines: data.overlayHeadlines?.length ? data.overlayHeadlines : null });
           runConcepts(fresh); // 제안 직후 바로 3컷 생성 — 보고 나서 유저가 바꾸는 흐름
         },
         onError: () => showToast("컨셉 제안에 실패했어요, 다시 시도해주세요"),

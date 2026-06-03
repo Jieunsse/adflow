@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildCreativePrompt, parseImageConcepts } from "./gemini-creative";
+import { buildCreativePrompt, parseImageConcepts, filterOverlayHeadlines } from "./gemini-creative";
 import type { GenerateCreativeParams } from "./gemini-creative";
 
 const BASE: GenerateCreativeParams = {
@@ -151,5 +151,57 @@ describe("parseImageConcepts — Image Concept 3개 검증 (ADR-040)", () => {
       ],
     });
     expect(parseImageConcepts(text).concepts[0].label).toBe("스튜디오");
+  });
+
+  it("overlayHeadlines 를 최대 3개까지 파싱한다", () => {
+    const text = JSON.stringify({
+      concepts: [
+        { label: "1", prompt: "p1" },
+        { label: "2", prompt: "p2" },
+        { label: "3", prompt: "p3" },
+      ],
+      overlayHeadlines: ["피부가 먼저", "오늘부터 달라져요", "지금 시작", "넷째는 잘림"],
+    });
+    expect(parseImageConcepts(text).overlayHeadlines).toEqual([
+      "피부가 먼저",
+      "오늘부터 달라져요",
+      "지금 시작",
+    ]);
+  });
+
+  it("overlayHeadlines 누락 시 빈 배열", () => {
+    const text = JSON.stringify({
+      concepts: [
+        { label: "1", prompt: "p1" },
+        { label: "2", prompt: "p2" },
+        { label: "3", prompt: "p3" },
+      ],
+    });
+    expect(parseImageConcepts(text).overlayHeadlines).toEqual([]);
+  });
+});
+
+describe("filterOverlayHeadlines — ADR-031 표제 수치 가드", () => {
+  it("source 에 없는 수치를 든 표제는 탈락한다", () => {
+    const out = filterOverlayHeadlines(
+      ["재구매율 73%", "피부가 먼저"],
+      "오늘부터 달라지는 피부",
+    );
+    expect(out).toEqual(["피부가 먼저"]);
+  });
+
+  it("source 에 있는 수치를 인용한 표제는 통과한다", () => {
+    const out = filterOverlayHeadlines(
+      ["재구매율 73%", "지금 시작"],
+      "재구매율 73% 검증된 그린루틴",
+    );
+    expect(out).toEqual(["재구매율 73%", "지금 시작"]);
+  });
+
+  it("수치 없는 표제는 항상 통과한다", () => {
+    expect(filterOverlayHeadlines(["피부가 먼저", "오늘부터"], "숫자 없는 원문")).toEqual([
+      "피부가 먼저",
+      "오늘부터",
+    ]);
   });
 });

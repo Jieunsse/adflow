@@ -107,6 +107,7 @@ export default function ImagePhase({
         <TextOverlayEditor
           baseImageUrl={imageDataUrl}
           headlineSuggestion={state.headline}
+          overlayHeadlines={state.overlayHeadlines ?? undefined}
           onClose={() => setEditing(false)}
           onSave={(final) => setFinalImageDataUrl(final)}
         />

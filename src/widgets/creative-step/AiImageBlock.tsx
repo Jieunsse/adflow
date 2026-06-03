@@ -83,6 +83,7 @@ export default function AiImageBlock({
   const [zoomedSrc, setZoomedSrc] = useState<string | null>(null);
   const [pendingSlots, setPendingSlots] = useState<number[]>([]);
   const [rerollingSlots, setRerollingSlots] = useState<number[]>([]);
+  const [promptEditSlots, setPromptEditSlots] = useState<number[]>([]);
   const suggest = useApiMutation<SuggestImageConceptsParams, SuggestImageConceptsResult>("/api/suggest-image-concepts");
   const rerollOne = useApiMutation<SuggestImageConceptsParams, SuggestImageConceptsResult>("/api/suggest-image-concepts");
 
@@ -190,7 +191,11 @@ export default function AiImageBlock({
         stageProduct: stagingActive,
       },
       {
-        onSuccess: (data) => setConcepts(data.concepts.slice(0, 3)),
+        onSuccess: (data) => {
+          const fresh = data.concepts.slice(0, 3);
+          setConcepts(fresh);
+          runConcepts(fresh); // 제안 직후 바로 3컷 생성 — 보고 나서 유저가 바꾸는 흐름
+        },
         onError: () => showToast("컨셉 제안에 실패했어요, 다시 시도해주세요"),
       },
     );
@@ -234,14 +239,17 @@ export default function AiImageBlock({
     runGenerate([i], [{ prompt: concepts[i]?.prompt ?? "" }], stagingActive);
   };
 
-  const generateAllConcepts = () => {
-    const targets = [0, 1, 2].filter(conceptRenderable);
+  // 주어진 컨셉 배열로 렌더 가능한 슬롯을 모두 생성. setConcepts 직후 stale state 를 피하려 인자로 받는다.
+  const runConcepts = (cs: ImageConcept[]) => {
+    const targets = [0, 1, 2].filter((i) => !!cs[i]?.prompt.trim() || (packageRefOn && !!packageRef));
     if (targets.length === 0) {
       showToast("AI 컨셉을 먼저 제안받거나 프롬프트를 입력해주세요");
       return;
     }
-    runGenerate(targets, targets.map((i) => ({ prompt: concepts[i]?.prompt ?? "" })), stagingActive);
+    runGenerate(targets, targets.map((i) => ({ prompt: cs[i]?.prompt ?? "" })), stagingActive);
   };
+
+  const generateAllConcepts = () => runConcepts(concepts);
 
   const handleRemoveImage = (slotIdx: number) => {
     if (!allSlots) return;
@@ -372,40 +380,52 @@ export default function AiImageBlock({
       return <Skeleton style={{ aspectRatio: "1 / 1", borderRadius: 8 }} />;
     }
     if (src) {
+      const selected = selectedIdx === i;
       return (
-        <div style={{ position: "relative" }}>
+        <div className="group" style={{ position: "relative" }}>
           <button
             type="button"
-            aria-pressed={selectedIdx === i}
+            aria-pressed={selected}
+            aria-label={`이미지 ${i + 1} 최종 선택`}
             onClick={() => setImageDataUrl(src)}
-            style={{ padding: 0, border: selectedIdx === i ? "2px solid var(--w-primary-normal)" : "1px solid var(--w-line-normal)", borderRadius: 8, overflow: "hidden", cursor: "pointer", background: "none", lineHeight: 0, width: "100%", display: "block" }}
+            style={{ padding: 0, border: selected ? "2px solid var(--w-primary-normal)" : "1px solid var(--w-line-normal)", borderRadius: 8, overflow: "hidden", cursor: "pointer", background: "none", lineHeight: 0, width: "100%", display: "block" }}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={src} alt={`생성 이미지 ${i + 1}`} style={{ width: "100%", display: "block", aspectRatio: "1 / 1", objectFit: "cover" }} />
           </button>
-          <button
-            type="button"
-            aria-label={`생성 이미지 ${i + 1} 크게 보기`}
-            title="크게 보기"
-            onClick={() => setZoomedSrc(src)}
-            style={{ position: "absolute", top: 6, right: 6, width: 28, height: 28, borderRadius: 6, border: "1px solid var(--w-line-normal)", background: "rgba(255,255,255,0.94)", color: "var(--w-fg-normal)", display: "grid", placeItems: "center", cursor: "zoom-in", padding: 0, boxShadow: "0 1px 3px rgba(0,0,0,0.18)" }}
+          {/* 선택 affordance — 항상 노출(라디오). 클릭 영역은 이미지 표면 */}
+          <span
+            aria-hidden="true"
+            style={{ position: "absolute", top: 8, left: 8, width: 22, height: 22, borderRadius: 999, display: "grid", placeItems: "center", background: selected ? "var(--w-primary-normal)" : "rgba(255,255,255,0.94)", border: selected ? "none" : "1.5px solid var(--w-line-normal)", color: "#fff", boxShadow: "0 1px 3px rgba(0,0,0,0.2)", pointerEvents: "none" }}
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <circle cx="11" cy="11" r="7" />
-              <path d="m21 21-4.3-4.3" />
-              <path d="M11 8v6M8 11h6" />
-            </svg>
-          </button>
-          <button
-            type="button"
-            aria-label={`생성 이미지 ${i + 1} 삭제`}
-            title="삭제"
-            onClick={() => handleRemoveImage(i)}
-            style={{ position: "absolute", top: 6, left: 6, width: 28, height: 28, borderRadius: 6, border: "1px solid var(--w-line-normal)", background: "rgba(255,255,255,0.94)", color: "var(--w-fg-normal)", display: "grid", placeItems: "center", cursor: "pointer", padding: 0, boxShadow: "0 1px 3px rgba(0,0,0,0.18)" }}
-          >
-            <Icon name="x" size={13} />
-          </button>
-          {selectedIdx === i && (
+            {selected && <Icon name="check" size={13} />}
+          </span>
+          {/* 보조 액션 — hover 시에만(선택 표면과 분리, 데스크탑 전용) */}
+          <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-150" style={{ position: "absolute", top: 6, right: 6, display: "flex", gap: 4 }}>
+            <button
+              type="button"
+              aria-label={`생성 이미지 ${i + 1} 크게 보기`}
+              title="크게 보기"
+              onClick={() => setZoomedSrc(src)}
+              style={{ width: 28, height: 28, borderRadius: 6, border: "1px solid var(--w-line-normal)", background: "rgba(255,255,255,0.94)", color: "var(--w-fg-normal)", display: "grid", placeItems: "center", cursor: "zoom-in", padding: 0, boxShadow: "0 1px 3px rgba(0,0,0,0.18)" }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <circle cx="11" cy="11" r="7" />
+                <path d="m21 21-4.3-4.3" />
+                <path d="M11 8v6M8 11h6" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              aria-label={`생성 이미지 ${i + 1} 비우기`}
+              title="비우기"
+              onClick={() => handleRemoveImage(i)}
+              style={{ width: 28, height: 28, borderRadius: 6, border: "1px solid var(--w-line-normal)", background: "rgba(255,255,255,0.94)", color: "var(--w-fg-normal)", display: "grid", placeItems: "center", cursor: "pointer", padding: 0, boxShadow: "0 1px 3px rgba(0,0,0,0.18)" }}
+            >
+              <Icon name="x" size={13} />
+            </button>
+          </div>
+          {selected && (
             <span style={{ position: "absolute", bottom: 6, left: 6, padding: "2px 7px", borderRadius: 6, background: "var(--w-primary-normal)", color: "#fff", font: "600 10.5px/1 var(--w-font-sans)" }}>
               최종 선택
             </span>
@@ -462,60 +482,79 @@ export default function AiImageBlock({
         </button>
       </div>
 
-      {/* Package Reference — 두 탭 공통 */}
-      <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-[var(--w-line-normal)] bg-[var(--w-bg-elevated)]" style={{ marginBottom: 12 }}>
-        {packageRef ? (
-          <>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={packageRef.preview}
-              alt="제품 레퍼런스"
-              onClick={() => setZoomedSrc(packageRef.preview)}
-              style={{ width: 44, height: 44, objectFit: "cover", borderRadius: 8, border: "1px solid var(--w-line-normal)", cursor: "zoom-in", flex: "none", opacity: packageRefOn ? 1 : 0.4 }}
-            />
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div className="font-semibold text-[12.5px] leading-tight text-[var(--w-fg-strong)]">제품 레퍼런스 {packageRefOn ? "적용 중" : "꺼짐"}</div>
-              <div className="font-medium text-[11.5px] leading-snug text-[var(--w-fg-neutral)] mt-0.5">제품 원본(라벨·로고)은 그대로 두고 배경만 컨셉별로 만들어요</div>
-            </div>
-            <Button variant="ghost" size="sm" type="button" onClick={() => setPackageRefOn((v) => !v)} className="border border-[var(--w-line-normal)]">
-              {packageRefOn ? "끄기" : "켜기"}
-            </Button>
-            <label className={cn("inline-flex items-center justify-center gap-[5px] border font-semibold leading-none whitespace-nowrap h-8 px-3 text-[12.5px] rounded-lg", "bg-transparent border-[var(--w-line-normal)] text-[var(--w-fg-strong)] hover:bg-[var(--w-bg-neutral)] cursor-pointer transition-[background] duration-[120ms]")}>
-              <Icon name="upload" size={13} /> 교체
+      {/* Package Reference — 두 탭 공통. 켜짐=인라인 칩(평상시) / 꺼짐=경고 배너 / 미첨부=첨부 유도 */}
+      {packageRef && packageRefOn ? (
+        // 켜짐: 한 줄 칩으로 축소 (안 건드리는 기본 설정이라 위계 하향)
+        <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg border border-[var(--w-line-normal)] bg-[var(--w-bg-elevated)]" style={{ marginBottom: 12 }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={packageRef.preview}
+            alt="제품 레퍼런스"
+            onClick={() => setZoomedSrc(packageRef.preview)}
+            style={{ width: 28, height: 28, objectFit: "cover", borderRadius: 6, border: "1px solid var(--w-line-normal)", cursor: "zoom-in", flex: "none" }}
+          />
+          <span className="flex items-center gap-1 font-semibold text-[12px] leading-none text-[var(--w-fg-strong)]" title="제품 원본(라벨·로고)은 그대로 두고 배경만 컨셉별로 만들어요">
+            <span style={{ width: 7, height: 7, borderRadius: 999, background: "var(--w-primary-normal)", flex: "none" }} aria-hidden="true" />
+            제품 원본 유지 중
+          </span>
+          <Icon name="info" size={13} className="text-[var(--w-fg-alternative)]" />
+          <div style={{ marginLeft: "auto" }} className="flex items-center gap-1.5">
+            <label className="inline-flex items-center gap-[5px] font-semibold leading-none whitespace-nowrap h-7 px-2.5 text-[12px] rounded-md text-[var(--w-fg-neutral)] hover:text-[var(--w-fg-strong)] hover:bg-[var(--w-bg-neutral)] cursor-pointer transition-[background,color] duration-[120ms]">
+              <Icon name="upload" size={12} /> 교체
               <input type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => handleReplacePackageRef(e.target.files)} />
             </label>
-          </>
-        ) : (
-          <>
-            <div style={{ flex: 1 }}>
-              <div className="font-semibold text-[12.5px] leading-tight text-[var(--w-fg-strong)]">제품 레퍼런스 (선택)</div>
-              <div className="font-medium text-[11.5px] leading-snug text-[var(--w-fg-neutral)] mt-0.5">제품 사진을 올리면 원본 그대로 두고 배경 연출만 생성해요</div>
-            </div>
-            <label className={cn("inline-flex items-center justify-center gap-[5px] border font-semibold leading-none whitespace-nowrap h-8 px-3 text-[12.5px] rounded-lg", "bg-transparent border-[var(--w-line-normal)] text-[var(--w-fg-strong)] hover:bg-[var(--w-bg-neutral)] cursor-pointer transition-[background] duration-[120ms]")}>
-              <Icon name="upload" size={13} /> 제품 사진 첨부
-              <input type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => handleReplacePackageRef(e.target.files)} />
-            </label>
-          </>
-        )}
-      </div>
+            <button type="button" onClick={() => setPackageRefOn(false)} className="font-semibold leading-none whitespace-nowrap h-7 px-2.5 text-[12px] rounded-md text-[var(--w-fg-neutral)] hover:text-[var(--w-fg-strong)] hover:bg-[var(--w-bg-neutral)] cursor-pointer transition-[background,color] duration-[120ms]">
+              끄기
+            </button>
+          </div>
+        </div>
+      ) : packageRef && !packageRefOn ? (
+        // 꺼짐: 위험 상태라 눈에 띄게
+        <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-[var(--w-warn-line)] bg-[var(--w-warn-soft)]" style={{ marginBottom: 12 }}>
+          <Icon name="warn" size={16} className="text-[var(--w-warn-normal)] flex-none" />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div className="font-semibold text-[12.5px] leading-tight text-[var(--w-fg-strong)]">제품 레퍼런스 꺼짐</div>
+            <div className="font-medium text-[11.5px] leading-snug text-[var(--w-fg-neutral)] mt-0.5">제품이 AI 로 재해석돼요 — 라벨·로고가 그대로 유지되지 않아요</div>
+          </div>
+          <label className={cn("inline-flex items-center justify-center gap-[5px] border font-semibold leading-none whitespace-nowrap h-8 px-3 text-[12.5px] rounded-lg", "bg-transparent border-[var(--w-line-normal)] text-[var(--w-fg-strong)] hover:bg-[var(--w-bg-neutral)] cursor-pointer transition-[background] duration-[120ms]")}>
+            <Icon name="upload" size={13} /> 교체
+            <input type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => handleReplacePackageRef(e.target.files)} />
+          </label>
+          <Button variant="secondary" size="sm" type="button" onClick={() => setPackageRefOn(true)}>
+            켜기
+          </Button>
+        </div>
+      ) : (
+        // 미첨부: 첨부 유도
+        <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-[var(--w-line-normal)] bg-[var(--w-bg-elevated)]" style={{ marginBottom: 12 }}>
+          <div style={{ flex: 1 }}>
+            <div className="font-semibold text-[12.5px] leading-tight text-[var(--w-fg-strong)]">제품 레퍼런스 (선택)</div>
+            <div className="font-medium text-[11.5px] leading-snug text-[var(--w-fg-neutral)] mt-0.5">제품 사진을 올리면 원본 그대로 두고 배경 연출만 생성해요</div>
+          </div>
+          <label className={cn("inline-flex items-center justify-center gap-[5px] border font-semibold leading-none whitespace-nowrap h-8 px-3 text-[12.5px] rounded-lg", "bg-transparent border-[var(--w-line-normal)] text-[var(--w-fg-strong)] hover:bg-[var(--w-bg-neutral)] cursor-pointer transition-[background] duration-[120ms]")}>
+            <Icon name="upload" size={13} /> 제품 사진 첨부
+            <input type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => handleReplacePackageRef(e.target.files)} />
+          </label>
+        </div>
+      )}
 
       {mode === "concept" ? (
         <>
           <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginBottom: 12 }}>
             <Button
-              variant="ghost"
+              variant="primary"
               size="sm"
-              disabled={suggest.isPending || !state.primaryText}
+              disabled={suggest.isPending || pendingSlots.length > 0 || !state.primaryText}
               onClick={handleSuggestConcepts}
-              className="border border-[var(--w-line-normal)]"
             >
-              <Icon name="sparkles" size={13} /> {suggest.isPending ? "컨셉 제안 중…" : "AI 컨셉 제안받기"}
+              <Icon name="sparkles" size={13} /> {suggest.isPending ? "컨셉 제안 중…" : pendingSlots.length > 0 ? "생성 중…" : "AI 컨셉으로 3컷 만들기"}
             </Button>
             <Button
-              variant="secondary"
+              variant="ghost"
               size="sm"
               disabled={pendingSlots.length > 0 || ![0, 1, 2].some(conceptRenderable)}
               onClick={generateAllConcepts}
+              className="border border-[var(--w-line-normal)]"
               style={{ marginLeft: "auto" }}
             >
               {pendingSlots.length > 0 ? "생성 중…" : "3컷 모두 생성"}
@@ -523,34 +562,49 @@ export default function AiImageBlock({
           </div>
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 10 }}>
-            {[0, 1, 2].map((i) => (
+            {[0, 1, 2].map((i) => {
+              const editing = promptEditSlots.includes(i);
+              return (
               <div key={`concept-${i}`} className="flex flex-col gap-2 p-2.5 rounded-xl border border-[var(--w-line-normal)] bg-[var(--w-bg-elevated)]">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex-1 min-w-0 font-[600] text-[11px] leading-tight text-[var(--w-fg-neutral)] tracking-[0.03em] uppercase">
-                    {concepts[i]?.label?.trim() || `컨셉 ${i + 1}`}
-                  </div>
-                  <button
-                    type="button"
-                    aria-label={`컨셉 ${i + 1} 프롬프트만 다시 제안`}
-                    title="이 컨셉 프롬프트만 다시 제안"
-                    disabled={rerollingSlots.includes(i) || !state.primaryText}
-                    onClick={() => handleRerollConcept(i)}
-                    className="flex-none grid place-items-center w-6 h-6 rounded-md border border-[var(--w-line-normal)] text-[var(--w-fg-neutral)] hover:text-[var(--w-fg-strong)] hover:bg-[var(--w-bg-neutral)] disabled:opacity-40 disabled:cursor-not-allowed transition-[background,color] duration-[120ms]"
-                  >
-                    <Icon name="refresh" size={12} spin={rerollingSlots.includes(i)} />
-                  </button>
+                {/* 의사결정 단위 = 한국어 label (영어 prompt 는 아래 접힘) */}
+                <div className="font-[600] text-[11px] leading-tight text-[var(--w-fg-neutral)] tracking-[0.03em] uppercase">
+                  {concepts[i]?.label?.trim() || `컨셉 ${i + 1}`}
                 </div>
-                <textarea
-                  className="w-full px-2.5 py-2 border border-[var(--w-line-normal)] rounded-lg bg-[var(--w-bg-elevated)] font-medium text-[12px] leading-[1.5] text-[var(--w-fg-strong)] outline-none focus:border-[var(--w-primary-normal)] resize-y"
-                  aria-label={`컨셉 ${i + 1} 프롬프트`}
-                  placeholder="AI 컨셉을 제안받거나 직접 입력하세요 (영어 권장)"
-                  rows={3}
-                  value={concepts[i]?.prompt ?? ""}
-                  onChange={(e) =>
-                    setConcepts((prev) => prev.map((c, idx) => (idx === i ? { ...c, prompt: e.target.value } : c)))
-                  }
-                />
                 {slotImage(i)}
+                {/* 프롬프트 편집 — 고급 보조 정보라 디폴트 접힘 (ADR-040 편집 보존) */}
+                <button
+                  type="button"
+                  aria-expanded={editing}
+                  onClick={() =>
+                    setPromptEditSlots((prev) => (editing ? prev.filter((s) => s !== i) : [...prev, i]))
+                  }
+                  className="self-start inline-flex items-center gap-1 font-semibold text-[11.5px] leading-none text-[var(--w-fg-neutral)] hover:text-[var(--w-fg-strong)] cursor-pointer transition-[color] duration-[120ms]"
+                >
+                  <Icon name="chev-down" size={12} style={{ transform: editing ? "none" : "rotate(-90deg)", transition: "transform 120ms" }} />
+                  프롬프트 편집
+                </button>
+                {editing && (
+                  <>
+                    <textarea
+                      className="w-full px-2.5 py-2 border border-[var(--w-line-normal)] rounded-lg bg-[var(--w-bg-elevated)] font-medium text-[12px] leading-[1.5] text-[var(--w-fg-strong)] outline-none focus:border-[var(--w-primary-normal)] resize-y"
+                      aria-label={`컨셉 ${i + 1} 프롬프트`}
+                      placeholder="AI 컨셉을 제안받거나 직접 입력하세요 (영어 권장)"
+                      rows={3}
+                      value={concepts[i]?.prompt ?? ""}
+                      onChange={(e) =>
+                        setConcepts((prev) => prev.map((c, idx) => (idx === i ? { ...c, prompt: e.target.value } : c)))
+                      }
+                    />
+                    <button
+                      type="button"
+                      disabled={rerollingSlots.includes(i) || !state.primaryText}
+                      onClick={() => handleRerollConcept(i)}
+                      className="self-start inline-flex items-center gap-1 font-semibold text-[11.5px] leading-none text-[var(--w-fg-neutral)] hover:text-[var(--w-fg-strong)] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-[color] duration-[120ms]"
+                    >
+                      <Icon name="refresh" size={11} spin={rerollingSlots.includes(i)} /> 컨셉 다시 제안
+                    </button>
+                  </>
+                )}
                 <Button
                   variant="ghost"
                   size="sm"
@@ -570,7 +624,8 @@ export default function AiImageBlock({
                   )}
                 </Button>
               </div>
-            ))}
+              );
+            })}
           </div>
         </>
       ) : (
@@ -610,11 +665,17 @@ export default function AiImageBlock({
         </div>
       )}
 
-      {filledCount > 0 && (
-        <p style={{ font: "500 12px/1.5 var(--w-font-sans)", color: "var(--w-fg-normal)", margin: "10px 0 0" }}>
-          마음에 드는 1장을 골라주세요 (최종 광고 이미지). AI가 만든 이미지예요 — 정책·저작권·초상권은 직접 확인해주세요.
-        </p>
-      )}
+      {filledCount > 0 &&
+        (selectedIdx >= 0 ? (
+          <p className="flex items-center gap-1.5" style={{ font: "600 12.5px/1.4 var(--w-font-sans)", color: "var(--w-primary-normal)", margin: "12px 0 0" }}>
+            <Icon name="check-circle" size={14} />
+            {(concepts[selectedIdx]?.label?.trim() || `컨셉 ${selectedIdx + 1}`)} 선택됨 — 이 이미지로 광고를 만들어요
+          </p>
+        ) : (
+          <p style={{ font: "500 12.5px/1.4 var(--w-font-sans)", color: "var(--w-fg-neutral)", margin: "12px 0 0" }}>
+            마음에 드는 1장을 클릭해 최종 광고 이미지로 골라주세요
+          </p>
+        ))}
 
       {zoomedSrc && (
         <div

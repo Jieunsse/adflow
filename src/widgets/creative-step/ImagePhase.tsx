@@ -59,25 +59,33 @@ export default function ImagePhase({
 
       <AiImageBlock productId={productId} imageDataUrl={imageDataUrl} setImageDataUrl={setImageDataUrl} />
 
-      <div className="flex items-center gap-3" style={{ paddingTop: 16, borderTop: "1px solid var(--w-line-alternative)" }}>
-        {finalImageDataUrl && (
-          <div className="flex items-center gap-2 mr-auto">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={finalImageDataUrl} alt="텍스트 적용된 최종 이미지" style={{ width: 40, height: 40, borderRadius: 8, objectFit: "cover", border: "1px solid var(--w-line-normal)" }} />
-            <span className="text-[12px] font-semibold text-[var(--w-fg-neutral)]">텍스트 적용됨</span>
+      <div style={{ paddingTop: 16, borderTop: "1px solid var(--w-line-alternative)" }}>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 mr-auto min-h-[40px]">
+            {!imageDataUrl ? (
+              <span className="text-[12.5px] font-medium text-[var(--w-fg-neutral)]">이미지 1장을 선택하면 진행할 수 있어요</span>
+            ) : finalImageDataUrl ? (
+              <>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={finalImageDataUrl} alt="텍스트 적용된 최종 이미지" style={{ width: 40, height: 40, borderRadius: 8, objectFit: "cover", border: "1px solid var(--w-line-normal)" }} />
+                <span className="text-[12px] font-semibold text-[var(--w-fg-neutral)]">텍스트 적용됨</span>
+              </>
+            ) : null}
           </div>
-        )}
-        <Button
-          variant="ghost"
-          type="button"
-          disabled={!imageDataUrl}
-          onClick={() => setEditing(true)}
-          className="border border-[var(--w-line-normal)]"
-          style={finalImageDataUrl ? undefined : { marginLeft: "auto" }}
-        >
-          <Icon name="edit" size={14} /> 텍스트 편집
-        </Button>
-        <Button variant="primary" type="button" onClick={onNext}>다음: 광고 집행 <Icon name="arrow-right" size={14} /></Button>
+          <Button
+            variant="ghost"
+            type="button"
+            disabled={!imageDataUrl}
+            onClick={() => setEditing(true)}
+            className="border border-[var(--w-line-normal)]"
+          >
+            <Icon name="edit" size={14} /> 텍스트 편집
+          </Button>
+          <Button variant="primary" type="button" disabled={!imageDataUrl} onClick={onNext}>다음: 광고 집행 <Icon name="arrow-right" size={14} /></Button>
+        </div>
+        <p className="text-[11.5px] font-medium text-[var(--w-fg-alternative)] mt-2 mb-0">
+          AI가 만든 이미지예요 — 정책·저작권·초상권은 직접 확인해주세요.
+        </p>
       </div>
 
       {editing && imageDataUrl && (

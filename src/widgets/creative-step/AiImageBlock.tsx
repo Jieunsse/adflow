@@ -249,8 +249,6 @@ export default function AiImageBlock({
     runGenerate(targets, targets.map((i) => ({ prompt: cs[i]?.prompt ?? "" })), stagingActive);
   };
 
-  const generateAllConcepts = () => runConcepts(concepts);
-
   const handleRemoveImage = (slotIdx: number) => {
     if (!allSlots) return;
     if (imageDataUrl === allSlots[slotIdx]) setImageDataUrl(null);
@@ -540,26 +538,32 @@ export default function AiImageBlock({
 
       {mode === "concept" ? (
         <>
-          <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginBottom: 12 }}>
+          {concepts.some((c) => !!c.prompt.trim()) || allSlots !== null ? (
+            // 채워진 상태: 각 카드에 '다시 생성'이 있으니 전체 재제안은 보조 액션으로 강등 (우측 ghost)
+            <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 10 }}>
+              <button
+                type="button"
+                disabled={suggest.isPending || pendingSlots.length > 0 || !state.primaryText}
+                onClick={handleSuggestConcepts}
+                className="inline-flex items-center gap-1 font-semibold text-[11.5px] leading-none text-[var(--w-fg-neutral)] hover:text-[var(--w-fg-strong)] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-[color] duration-[120ms]"
+              >
+                <Icon name="refresh" size={12} spin={suggest.isPending} />
+                {suggest.isPending ? "컨셉 제안 중…" : pendingSlots.length > 0 ? "생성 중…" : "전체 다시 제안"}
+              </button>
+            </div>
+          ) : (
+            // 빈 상태: 3컷을 만들어내는 메인 CTA → full-width
             <Button
               variant="primary"
               size="sm"
               disabled={suggest.isPending || pendingSlots.length > 0 || !state.primaryText}
               onClick={handleSuggestConcepts}
+              className="w-full"
+              style={{ marginBottom: 12 }}
             >
-              <Icon name="sparkles" size={13} /> {suggest.isPending ? "컨셉 제안 중…" : pendingSlots.length > 0 ? "생성 중…" : "AI 컨셉으로 3컷 만들기"}
+              {suggest.isPending ? "컨셉 제안 중…" : pendingSlots.length > 0 ? "생성 중…" : "AI 컨셉으로 3컷 만들기"}
             </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              disabled={pendingSlots.length > 0 || ![0, 1, 2].some(conceptRenderable)}
-              onClick={generateAllConcepts}
-              className="border border-[var(--w-line-normal)]"
-              style={{ marginLeft: "auto" }}
-            >
-              {pendingSlots.length > 0 ? "생성 중…" : "3컷 모두 생성"}
-            </Button>
-          </div>
+          )}
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 10 }}>
             {[0, 1, 2].map((i) => {

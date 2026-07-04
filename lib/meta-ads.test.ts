@@ -1,5 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { metaAds, type CreateCampaignParams, type CampaignSummary } from "./meta-ads";
+import { metaAds, mapSplitTestError, type CreateCampaignParams, type CampaignSummary } from "./meta-ads";
+import { MetaApiError } from "./meta-ads-graph";
+import { AuthError } from "./route-handler";
 
 // 회귀 안전망 — metaAds.createCampaign 의 internal seam (deriveLaunchPlan + 4 body builder) 을
 // 외부 인터페이스 + global.fetch stub 으로 검증. internal 함수는 export 하지 않음 (skill 정렬).
@@ -685,5 +687,28 @@ describe("metaAds.listCampaigns — issues_info 매핑", () => {
       ],
     });
     expect(c.issueReason?.summary).toBe("첫째 이슈");
+  });
+});
+
+// ADR-053 — split test 게재 거절 한국어 매핑. 우선순위 ① 알려진 코드 ② error_user_msg ③ 제네릭.
+describe("mapSplitTestError", () => {
+  it("알려진 subcode(1487390, 예산 미달) → 우리 한국어", () => {
+    const out = mapSplitTestError(new MetaApiError("raw", 100, 1487390, "Meta 원문"));
+    expect(out.message).toContain("예산이 부족");
+  });
+
+  it("알 수 없는 코드 + error_user_msg 있으면 그대로 통과", () => {
+    const out = mapSplitTestError(new MetaApiError("raw", 100, 99999, "기간이 너무 짧아요"));
+    expect(out.message).toBe("기간이 너무 짧아요");
+  });
+
+  it("MetaApiError 아니거나 user_msg 없으면 제네릭 폴백", () => {
+    expect(mapSplitTestError(new Error("그냥 에러")).message).toContain("Meta 가 A/B 게재를 거절");
+    expect(mapSplitTestError(new MetaApiError("raw", 100, undefined)).message).toContain("Meta 가 A/B 게재를 거절");
+  });
+
+  it("AuthError(인증 만료)는 매핑하지 않고 그대로 통과", () => {
+    const auth = new AuthError("로그인 다시");
+    expect(mapSplitTestError(auth)).toBe(auth);
   });
 });

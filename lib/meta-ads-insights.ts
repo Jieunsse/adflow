@@ -1,6 +1,7 @@
 // Server-side only — read/reporting operations. Do not import from client components.
 
 import type { Insights, AdInsightsRow } from '@entities/insights/types'
+import type { AccountDailyPoint } from '@entities/insights/account-trend'
 import type { Billing, FundingSource, BusinessInfo, AccountStatusCode } from '@entities/billing/types'
 import type { ObjectivePhase1Id } from '@entities/creative/options'
 import { graphFetch } from './meta-ads-graph'
@@ -44,6 +45,10 @@ export interface CampaignSummary {
   // ADR-030 — 가짜 성과 의심 판정용. actions[] 에서 추출. action 부재 시 undefined(= 픽셀 미측정 → 판정 안 함).
   linkClick?: number
   landingPageView?: number
+  // ADR-057 — 전환 가치(읽기 경로). 전환 캠페인+Pixel 보유 시에만 채워짐(미측정 시 undefined → ROAS 게이트).
+  purchaseCount?: number
+  purchaseValue?: number
+  roas?: number
   issueReason: CampaignIssueReason | null  // /approvals 에서 노출. status='issue' 일 때만 채워지는 경향 (Meta 가 review 단계에서도 줄 수 있음)
   // PRD-ab-testing.md §4.4 — mock 시연 캠페인의 A/B 시드. live API 매핑은 채우지 않음.
   abTestEnabled?: boolean
@@ -141,7 +146,7 @@ interface RawCampaign {
     }
     ads?: { data?: Array<{ id: string }> }
   }> }
-  insights?: { data?: Array<{ impressions?: string; clicks?: string; ctr?: string; spend?: string; actions?: Array<{ action_type?: string; value?: string }> }> }
+  insights?: { data?: Array<{ impressions?: string; clicks?: string; ctr?: string; spend?: string; actions?: Array<{ action_type?: string; value?: string }>; action_values?: Array<{ action_type?: string; value?: string }>; purchase_roas?: Array<{ action_type?: string; value?: string }> }> }
   issues_info?: RawIssueInfo[]
 }
 
@@ -149,7 +154,7 @@ const CAMPAIGN_FIELDS = (period: InsightsPeriod) => [
   'id', 'name', 'effective_status', 'objective', 'start_time', 'stop_time', 'daily_budget',
   'issues_info',
   'adsets.limit(1){id,daily_budget,bid_strategy,bid_amount,targeting{age_min,age_max,genders,geo_locations,publisher_platforms,facebook_positions,instagram_positions},ads.limit(1){id}}',
-  `insights.date_preset(${presetFor(period)}){impressions,clicks,ctr,spend,actions}`,
+  `insights.date_preset(${presetFor(period)}){impressions,clicks,ctr,spend,actions,action_values,purchase_roas}`,
 ].join(',')
 
 function pickIssueReason(issues: RawIssueInfo[] | undefined): CampaignIssueReason | null {
@@ -203,6 +208,18 @@ function mapRawCampaign(c: RawCampaign): CampaignSummary {
   }
   const linkClick = actionVal('link_click')
   const landingPageView = actionVal('landing_page_view')
+  // ADR-057 — 전환 가치(읽기 경로). 전환 캠페인+Pixel 보유 시에만 옴. 없으면 undefined → ROAS 게이트.
+  const pickValue = (rows: Array<{ action_type?: string; value?: string }> | undefined): number | undefined => {
+    const f = rows?.find((a) => a.action_type === 'purchase' || a.action_type === 'omni_purchase')
+    return f ? Number(f.value ?? 0) : undefined
+  }
+  const purchaseCount = actionVal('purchase') ?? actionVal('omni_purchase')
+  const purchaseValueRaw = pickValue(ins?.action_values)
+  const purchaseValue = purchaseValueRaw != null ? Math.round(purchaseValueRaw) : undefined
+  const roasRaw = pickValue(ins?.purchase_roas)
+  const roas = roasRaw != null
+    ? Math.round(roasRaw * 100) / 100
+    : purchaseValue != null && spend > 0 ? Math.round((purchaseValue / spend) * 100) / 100 : undefined
   const dailyBudgetRaw = c.daily_budget ?? adset?.daily_budget
   const obj = c.objective ?? ''
   const tgt = adset?.targeting
@@ -235,6 +252,7 @@ function mapRawCampaign(c: RawCampaign): CampaignSummary {
     dailyBudget: dailyBudgetRaw != null && Number.isFinite(Number(dailyBudgetRaw)) ? Math.round(Number(dailyBudgetRaw)) : null,
     impressions, clicks, ctr, spend,
     linkClick, landingPageView,
+    purchaseCount, purchaseValue, roas,
     issueReason: pickIssueReason(c.issues_info),
     ageMin: tgt?.age_min,
     ageMax: tgt?.age_max,
@@ -466,6 +484,37 @@ export const metaAdsInsights = {
     return (data.data ?? []).map(toAdSnapshot).filter((a): a is AdSnapshot => a !== null)
   },
 
+  // ADR-059 — 계정 횡단 일별 합산(듀얼추세 입력). level=account + time_increment=1 단일 콜로
+  // Meta 가 캠페인 합산을 직접 내려준다(per-campaign N+1 불필요). 라우트가 staleTime 으로 캐시.
+  async getAccountDailyTrend(token: string, accountId: string, period: InsightsPeriod = '30d'): Promise<AccountDailyPoint[]> {
+    const preset = presetFor(period)
+    const extract = (rows: Array<{ action_type?: string; value?: string }> | undefined, type: string): number => {
+      const f = rows?.find((a) => a.action_type === type)
+      return f ? Number(f.value ?? 0) : 0
+    }
+    const data = await graphFetch<{
+      data: Array<{
+        date_start: string
+        spend?: string
+        impressions?: string
+        clicks?: string
+        actions?: Array<{ action_type?: string; value?: string }>
+        action_values?: Array<{ action_type?: string; value?: string }>
+      }>
+    }>(
+      `/${accountId}/insights?level=account&time_increment=1&date_preset=${preset}` +
+        `&fields=spend,impressions,clicks,actions,action_values&access_token=${token}`
+    )
+    return (data.data ?? []).map((d) => ({
+      date: d.date_start,
+      spend: Math.round(parseFloat(d.spend ?? '0')),
+      impressions: Math.round(Number(d.impressions ?? 0)),
+      clicks: Math.round(Number(d.clicks ?? 0)),
+      landingPageView: Math.round(extract(d.actions, 'landing_page_view')),
+      purchaseValue: Math.round(extract(d.action_values, 'purchase') + extract(d.action_values, 'omni_purchase')),
+    }))
+  },
+
   async listCampaigns(token: string, accountId: string, period: InsightsPeriod = 'all'): Promise<CampaignSummary[]> {
     const fields = encodeURIComponent(CAMPAIGN_FIELDS(period))
     const data = await graphFetch<{ data: RawCampaign[] }>(
@@ -486,7 +535,8 @@ export const metaAdsInsights = {
     campaignId: string,
     token: string,
     period?: InsightsPeriod,
-    objective?: MetaObjectiveParam,
+    // ADR-057 — 읽기 경로는 OUTCOME_SALES 도 허용(전환 가치 회수). 생성용 MetaObjectiveParam(sales 제외)은 불변.
+    objective?: MetaObjectiveParam | 'OUTCOME_SALES',
     goalId?: ObjectivePhase1Id,
     adIds?: [string, string],
   ): Promise<Insights> {
@@ -512,6 +562,8 @@ export const metaAdsInsights = {
         case 'OUTCOME_AWARENESS':  return 'impressions,reach,frequency,cpm,spend'
         case 'OUTCOME_ENGAGEMENT': return 'impressions,spend,actions'
         case 'OUTCOME_LEADS':      return 'impressions,reach,frequency,cpm,spend,actions'
+        // ADR-057 — 전환 가치(읽기 경로). sales 생성은 여전히 제외(CONTEXT 94), 회수만.
+        case 'OUTCOME_SALES':      return 'impressions,clicks,ctr,spend,actions,action_values,purchase_roas'
         case 'OUTCOME_TRAFFIC':
         default:                   return 'impressions,clicks,ctr,spend'
       }
@@ -527,6 +579,8 @@ export const metaAdsInsights = {
         frequency?: string
         cpm?: string
         actions?: Array<{ action_type?: string; value?: string }>
+        action_values?: Array<{ action_type?: string; value?: string }>
+        purchase_roas?: Array<{ action_type?: string; value?: string }>
       }>
     }>(
       `/${campaignId}/insights` +
@@ -602,6 +656,21 @@ export const metaAdsInsights = {
     // 도달·빈도·CPM 은 인지도뿐 아니라 페이지팔로우/메시지/전화 goal 에서도 KPI.
     const needsReachStats = objective === 'OUTCOME_AWARENESS' || isPageLikesGoal || isMessagesGoal || isCallGoal
 
+    // ADR-057 — 전환 가치(읽기 경로). 전환 캠페인에서만. 미측정 시 undefined → ROAS 게이트.
+    const isSalesObjective = objective === 'OUTCOME_SALES'
+    const sumActionTyped = (rows: (d: { action_values?: Array<{ action_type?: string; value?: string }>; purchase_roas?: Array<{ action_type?: string; value?: string }> }) => Array<{ action_type?: string; value?: string }> | undefined) =>
+      data.data.reduce((s, d) => {
+        const f = rows(d)?.find((a) => a.action_type === 'purchase' || a.action_type === 'omni_purchase')
+        return s + (f ? Number(f.value ?? 0) : 0)
+      }, 0)
+    const purchaseCountTotal = isSalesObjective ? sumAction('purchase') + sumAction('omni_purchase') : 0
+    const purchaseValueTotal = isSalesObjective ? sumActionTyped((d) => d.action_values) : 0
+    const purchaseValueRound = Math.round(purchaseValueTotal)
+    const salesSpend = Math.round(totals.spend)
+    const roasTotal = isSalesObjective && salesSpend > 0
+      ? Math.round((purchaseValueRound / salesSpend) * 100) / 100
+      : 0
+
     // PRD-ab-testing.md §7.2 — adIds 있으면 level=ad 추가 호출로 광고별 row 두 개.
     let ads: [AdInsightsRow, AdInsightsRow] | undefined
     if (adIds) {
@@ -651,6 +720,11 @@ export const metaAdsInsights = {
       ...(isPageLikesGoal ? { pageLikeNew: pageLikeNewTotal } : {}),
       ...(isMessagesGoal ? { messagingConversationsStarted: messagingConversationsStartedTotal } : {}),
       ...(isCallGoal ? { callConfirm: callConfirmTotal } : {}),
+      ...(isSalesObjective && purchaseValueRound > 0 ? {
+        purchaseCount: purchaseCountTotal,
+        purchaseValue: purchaseValueRound,
+        roas: roasTotal,
+      } : {}),
       daily,
       ...(ads ? { ads } : {}),
     }

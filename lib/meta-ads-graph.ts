@@ -13,6 +13,7 @@ export class MetaApiError extends Error {
     message: string,
     readonly code: number,
     readonly subcode: number | undefined,
+    readonly userMessage?: string,
   ) {
     super(message)
     this.name = 'MetaApiError'
@@ -41,6 +42,7 @@ export async function graphFetch<T extends object>(path: string, init: RequestIn
       `Meta API 오류 (${e.code}): ${e.message}${detail ? ` — ${detail}` : ''}`,
       e.code,
       e.error_subcode,
+      e.error_user_msg,
     )
   }
   return json as T

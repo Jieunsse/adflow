@@ -2,6 +2,25 @@
 
 import { OBJECTIVES_PHASE1, type ObjectivePhase1Id } from '@entities/creative/options'
 import { graphFetch, MetaApiError } from './meta-ads-graph'
+import { AuthError } from './route-handler'
+
+// ADR-053 — split test 게재 거절을 한국어로 정직하게 번역. 사전 capability 게이트 대신
+// 마지막 ad_studies 호출이 터지는 지점에서만 사람 말로 바꾼다. 우선순위:
+// ① 알려진 split-test 코드/subcode → 우리 한국어 ② Meta error_user_msg 그대로 ③ 제네릭 폴백.
+// 인증 만료(AuthError)는 재로그인 경로 보존을 위해 그대로 통과.
+export function mapSplitTestError(err: unknown): Error {
+  if (err instanceof AuthError) return err
+  if (err instanceof MetaApiError) {
+    // ① 알려진 게재 규칙 거절 — 셀당 최소 예산 미달 (Meta subcode 1487390)
+    if (err.subcode === 1487390) {
+      return new Error('A/B 게재 예산이 부족해요. 안(셀)마다 따로 예산이 들어가니, 일 예산을 더 올려주세요.')
+    }
+    // ② Meta 가 준 사람 말이 있으면 그대로
+    if (err.userMessage) return new Error(err.userMessage)
+  }
+  // ③ 제네릭 폴백
+  return new Error('Meta 가 A/B 게재를 거절했어요. 보통 예산·기간·목표 조건 때문이에요.')
+}
 
 // PRD §13 — leads_call goal 추가로 OUTCOME_LEADS 도 합법 objective.
 // 단 leads_form (Phase 2 Instant Form) 은 페이지 ToS · Lead Form 빌더 필요해서 별도 트랙.
@@ -474,7 +493,7 @@ export const metaAdsCampaign = {
       } catch {
         // 정리 실패는 의도적으로 swallow — 원래 에러를 다시 던짐.
       }
-      throw err
+      throw mapSplitTestError(err)
     }
   },
 

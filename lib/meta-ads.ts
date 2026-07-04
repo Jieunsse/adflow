@@ -21,7 +21,7 @@ export type {
   CampaignSummary,
 } from './meta-ads-insights'
 
-export { VALID_OBJECTIVES } from './meta-ads-campaign'
+export { VALID_OBJECTIVES, mapSplitTestError } from './meta-ads-campaign'
 
 import { metaAdsCampaign } from './meta-ads-campaign'
 import { metaAdsInsights } from './meta-ads-insights'

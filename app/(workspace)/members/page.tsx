@@ -9,7 +9,7 @@ import { Card } from "@shared/ui/Card";
 import { cn } from "@shared/lib/cn";
 import { MOCK_MEMBERS, type Member, type MemberStatus, type Role } from "@/lib/mock-members";
 
-const WORKSPACE = { name: "애드플로우 마케팅팀", initial: "애", gradient: "linear-gradient(135deg,#0066ff,#6541f2)" };
+const WORKSPACE = { name: "그린루틴 마케팅팀", initial: "그", gradient: "linear-gradient(135deg,#0066ff,#6541f2)" };
 
 const ROLE_DEF: Record<Role, { label: string; desc: string }> = {
   owner: { label: "팀장", desc: "모든 권한" },
@@ -361,7 +361,7 @@ function InvitedMenu({ onResend, onCancel }: { onResend: () => void; onCancel: (
 }
 
 function InviteModal({ onClose, onSend }: { onClose: () => void; onSend: (emails: string[], role: Role) => void }) {
-  const [emails, setEmails] = useState<string[]>(["partner@cold.kr"]);
+  const [emails, setEmails] = useState<string[]>(["partner@greenroutine.co"]);
   const [draft, setDraft] = useState("");
   const [role, setRole] = useState<Role>("launcher");
 

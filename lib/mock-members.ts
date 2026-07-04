@@ -16,14 +16,14 @@ export interface Member {
 }
 
 export const MOCK_MEMBERS: Member[] = [
-  { id: 'u1', name: 'Jayden Ock', email: 'jieunsse@gmail.com', role: 'owner', status: 'active', joined: '2025-05-11', lastActive: '방금 전', avatarBg: '#ff7a59' },
-  { id: 'u2', name: '박서윤', email: 'seoyoon@cold.kr', role: 'launcher', status: 'active', joined: '2024-12-03', lastActive: '12분 전', avatarBg: '#0066ff' },
-  { id: 'u3', name: '이도현', email: 'dohyun@cold.kr', role: 'launcher', status: 'active', joined: '2025-01-20', lastActive: '1시간 전', avatarBg: '#008a2e' },
-  { id: 'u4', name: '정민서', email: 'minseo@cold.kr', role: 'launcher', status: 'active', joined: '2025-02-08', lastActive: '어제', avatarBg: '#c2185b' },
-  { id: 'u5', name: '김하늘', email: 'haneul@cold.kr', role: 'reviewer', status: 'active', joined: '2025-03-15', lastActive: '어제', avatarBg: '#6541f2' },
-  { id: 'u6', name: '오현우', email: 'hyunwoo@cold.kr', role: 'reviewer', status: 'active', joined: '2025-04-02', lastActive: '3일 전', avatarBg: '#9c5800' },
-  { id: 'i1', name: null, email: 'newbie@cold.kr', role: 'launcher', status: 'invited', joined: null, lastActive: null, avatarBg: null },
-  { id: 'i2', name: null, email: 'intern@cold.kr', role: 'reviewer', status: 'invited', joined: null, lastActive: null, avatarBg: null },
+  { id: 'u1', name: '둘러보기 사용자', email: 'demo@greenroutine.co', role: 'owner', status: 'active', joined: '2025-05-11', lastActive: '방금 전', avatarBg: '#ff7a59' },
+  { id: 'u2', name: '박서윤', email: 'seoyoon@greenroutine.co', role: 'launcher', status: 'active', joined: '2024-12-03', lastActive: '12분 전', avatarBg: '#0066ff' },
+  { id: 'u3', name: '이도현', email: 'dohyun@greenroutine.co', role: 'launcher', status: 'active', joined: '2025-01-20', lastActive: '1시간 전', avatarBg: '#008a2e' },
+  { id: 'u4', name: '정민서', email: 'minseo@greenroutine.co', role: 'launcher', status: 'active', joined: '2025-02-08', lastActive: '어제', avatarBg: '#c2185b' },
+  { id: 'u5', name: '김하늘', email: 'haneul@greenroutine.co', role: 'reviewer', status: 'active', joined: '2025-03-15', lastActive: '어제', avatarBg: '#6541f2' },
+  { id: 'u6', name: '오현우', email: 'hyunwoo@greenroutine.co', role: 'reviewer', status: 'active', joined: '2025-04-02', lastActive: '3일 전', avatarBg: '#9c5800' },
+  { id: 'i1', name: null, email: 'newbie@greenroutine.co', role: 'launcher', status: 'invited', joined: null, lastActive: null, avatarBg: null },
+  { id: 'i2', name: null, email: 'intern@greenroutine.co', role: 'reviewer', status: 'invited', joined: null, lastActive: null, avatarBg: null },
 ]
 
 export function getMember(id: string): Member | null {

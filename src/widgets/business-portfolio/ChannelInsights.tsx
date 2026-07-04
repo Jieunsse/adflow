@@ -10,6 +10,11 @@ import { cn } from "@shared/lib/cn";
 import { type Suggestion } from "@entities/insights/optimization";
 import AiDraftModal from "@features/channel-suggestion-action/AiDraftModal";
 import { IgPostPreview } from "@shared/ui/IgPostPreview";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+} from "@shared/ui/Dialog";
 
 export type ChannelKpi = { label: string; value: string; suffix?: string };
 
@@ -391,15 +396,13 @@ export default function ChannelInsights({
         </Card>
       </div>
 
-      {selectedPost && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
-          onClick={() => setSelectedPost(null)}
-        >
-          <div
-            className="w-[360px] max-h-[calc(100vh-48px)] overflow-y-auto rounded-[20px]"
-            onClick={(e) => e.stopPropagation()}
-          >
+      <Dialog
+        open={!!selectedPost}
+        onOpenChange={(o) => !o && setSelectedPost(null)}
+      >
+        <DialogContent style={{ width: 360, padding: 0, overflow: "hidden" }}>
+          <DialogTitle className="sr-only">게시물 미리보기</DialogTitle>
+          {selectedPost && (
             <IgPostPreview
               imageUrl={selectedPost.mediaUrl}
               caption={selectedPost.caption}
@@ -414,9 +417,9 @@ export default function ChannelInsights({
                   : undefined
               }
             />
-          </div>
-        </div>
-      )}
+          )}
+        </DialogContent>
+      </Dialog>
 
       {draftFor && (
         <AiDraftModal

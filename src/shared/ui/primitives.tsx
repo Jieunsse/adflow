@@ -20,9 +20,9 @@ const BADGE_BASE =
 const BADGE_VARIANT: Record<BadgeKind, string> = {
   neutral: "bg-[var(--w-bg-alternative)] text-[var(--w-fg-neutral)]",
   accent: "bg-[var(--w-primary-soft)] text-[var(--w-primary-press)]",
-  success: "bg-[rgba(0,191,64,0.10)] text-[#008a2e]",
-  warn: "bg-[rgba(255,146,0,0.10)] text-[#b06700] border-[rgba(255,146,0,0.35)]",
-  neg: "bg-[rgba(255,66,66,0.10)] text-[#c52d2d]",
+  success: "bg-[var(--w-status-positive-soft)] text-[var(--w-status-positive)]",
+  warn: "bg-[var(--w-status-cautionary-soft)] text-[var(--w-status-cautionary)] border-[var(--w-status-cautionary-line)]",
+  neg: "bg-[var(--w-status-negative-soft)] text-[var(--w-status-negative)]",
   violet: "bg-[var(--w-accent-violet-soft)] text-[var(--w-accent-violet)]",
   inverse: "bg-[var(--w-fg-strong)] text-[var(--w-bg-elevated)]",
 };
@@ -156,7 +156,7 @@ export function KpiCard({
           <span
             className={cn(
               "font-semibold text-xs leading-none inline-flex items-center gap-1",
-              down ? "text-[#c52d2d]" : "text-[#008a2e]",
+              down ? "text-[var(--w-status-negative)]" : "text-[var(--w-status-positive)]",
             )}
           >
             <Icon name={down ? "trend-down" : "trend-up"} size={14} /> {delta}

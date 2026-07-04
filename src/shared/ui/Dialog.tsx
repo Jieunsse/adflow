@@ -11,6 +11,7 @@ import { cn } from "@shared/lib/cn";
 export const Dialog = DialogPrimitive.Root;
 export const DialogTitle = DialogPrimitive.Title;
 export const DialogDescription = DialogPrimitive.Description;
+export const DialogClose = DialogPrimitive.Close;
 
 // ponytail: 단일 셸 가정 — .adflow 첫 매치. 멀티 셸 생기면 trigger 기준 ancestor 탐색으로 승급.
 function adflowContainer(): HTMLElement | undefined {

@@ -8,6 +8,7 @@ import { useState } from "react";
 import Icon from "@shared/ui/Icon";
 import { Button } from "@shared/ui/Button";
 import { cn } from "@shared/lib/cn";
+import { Dialog, DialogContent, DialogTitle } from "@shared/ui/Dialog";
 import type { ValidationIssue } from "@features/launch-validation";
 
 type Props = {
@@ -45,14 +46,9 @@ export default function PreLaunchSafetyModal({ issues, onClose, onConfirm }: Pro
   };
 
   return (
-    <div
-      className="fixed inset-0 z-[100] bg-[rgba(15,17,21,0.45)] dark:bg-[rgba(0,0,0,0.6)] grid place-items-center p-10 animate-[fadeIn_120ms_ease]"
-      onClick={onClose}
-    >
-      <div
-        className="bg-[var(--w-bg-elevated)] border border-[var(--w-line-alternative)] rounded-2xl shadow-[0_30px_80px_rgba(0,0,0,0.20)] max-w-[90vw] max-h-[90vh] overflow-auto animate-[popIn_140ms_ease] w-[520px] flex flex-col"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      <DialogContent style={{ width: 520 }} className="flex flex-col p-0">
+        <DialogTitle className="sr-only">게재 전 안전 확인</DialogTitle>
         <div className="p-[26px_26px_12px]">
           <div
             className={cn(
@@ -110,8 +106,8 @@ export default function PreLaunchSafetyModal({ issues, onClose, onConfirm }: Pro
             <Icon name="megaphone" size={14} /> 광고 게재 진행
           </Button>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 

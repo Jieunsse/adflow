@@ -5,10 +5,10 @@ export type CardVariant = "default" | "lg" | "quiet";
 
 const VARIANT: Record<CardVariant, string> = {
   default:
-    "bg-[var(--w-bg-elevated)] border border-[var(--w-line-normal)] rounded-2xl py-[22px] px-6 dark:shadow-[var(--w-shadow-card)]",
+    "bg-[var(--w-bg-elevated)] border border-[var(--w-line-normal)] rounded-xl py-[22px] px-6 dark:shadow-[var(--w-shadow-card)]",
   lg: "bg-[var(--w-bg-elevated)] border border-[var(--w-line-normal)] rounded-[20px] py-7 px-[30px] dark:shadow-[var(--w-shadow-card)]",
   quiet:
-    "bg-[var(--w-bg-elevated)] border border-[var(--w-line-alternative)] rounded-2xl py-[22px] px-6",
+    "bg-[var(--w-bg-elevated)] border border-[var(--w-line-alternative)] rounded-xl py-[22px] px-6",
 };
 
 export interface CardProps extends HTMLAttributes<HTMLDivElement> {

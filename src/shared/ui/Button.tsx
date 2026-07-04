@@ -11,7 +11,7 @@ export type ButtonVariant =
 export type ButtonSize = "sm" | "md" | "lg";
 
 const BASE =
-  "inline-flex items-center justify-center gap-1.5 border font-semibold leading-none tracking-[-0.002em] cursor-pointer transition-[background,border-color,color,box-shadow] duration-[120ms] whitespace-nowrap disabled:cursor-not-allowed";
+  "inline-flex items-center justify-center gap-1.5 border font-semibold leading-none tracking-[-0.002em] cursor-pointer transition-[background,border-color,color,box-shadow,transform] duration-[120ms] whitespace-nowrap disabled:cursor-not-allowed active:scale-[0.97]";
 
 const SIZE: Record<ButtonSize, string> = {
   sm: "h-8 px-3 text-[12.5px] rounded-lg gap-[5px]",
@@ -32,7 +32,7 @@ const VARIANT: Record<ButtonVariant, string> = {
     "hover:bg-[var(--w-bg-neutral)] disabled:opacity-50",
   danger:
     "bg-[var(--w-status-negative)] text-white border-[var(--w-status-negative)] " +
-    "hover:bg-[#d63838] hover:border-[#d63838]",
+    "hover:bg-[#cf3a3f] hover:border-[#cf3a3f]",
   inverse:
     "bg-[var(--w-fg-strong)] text-[var(--w-bg-elevated)] border-transparent " +
     "hover:bg-[var(--w-neutral-700)] disabled:opacity-50",

@@ -29,7 +29,6 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
     items: [
       { href: "/dashboard", label: "대시보드", icon: "grid" },
       { href: "/create", label: "광고 만들기", icon: "sparkles", chip: "AI" },
-      { href: "/flo", label: "플로", icon: "megaphone", chip: "AI" },
     ],
   },
   {
@@ -99,7 +98,9 @@ function countClass(variant: "warn" | "primary" | undefined, active: boolean) {
     "text-[#b06700] bg-[rgba(255,146,0,0.14)] dark:text-[#ffb24d] dark:bg-[rgba(255,146,0,0.18)]":
       variant === "warn",
     "text-[var(--w-primary-press)] bg-[rgba(0,102,255,0.10)]":
-      variant === "primary" || active,
+      variant === "primary",
+    "text-[var(--w-fg-strong)] bg-[var(--w-bg-neutral)]":
+      active && variant !== "primary" && variant !== "warn",
     "text-[var(--w-fg-alternative)] bg-[var(--w-bg-alternative)]":
       variant !== "warn" && variant !== "primary" && !active,
   });
@@ -114,8 +115,8 @@ function linkClass(active: boolean, isSub = false, isParent = false) {
     isSub ? "h-[34px] pl-9 pr-3 text-[12.5px]" : "h-[38px] px-3 text-[13.5px]",
     active
       ? isParent
-        ? "bg-transparent text-[var(--w-primary-press)] hover:bg-[var(--w-bg-neutral)]"
-        : "bg-[var(--w-primary-soft)] text-[var(--w-primary-press)]"
+        ? "bg-transparent text-[var(--w-fg-strong)] hover:bg-[var(--w-bg-neutral)]"
+        : "bg-[var(--w-bg-neutral)] text-[var(--w-fg-strong)]"
       : isSub
         ? "bg-transparent text-[var(--w-fg-neutral)] hover:bg-[var(--w-bg-neutral)] hover:text-[var(--w-fg-strong)]"
         : "bg-transparent text-[#121212] dark:text-[var(--w-fg-neutral)] hover:bg-[var(--w-bg-neutral)] hover:text-[var(--w-fg-strong)]"
@@ -324,13 +325,13 @@ export default function Sidebar() {
             type="button"
             onClick={() => setConsoleOn((v) => !v)}
             className="flex items-center gap-2.5 px-3 py-2.5 rounded-[10px] bg-[var(--w-bg-alternative)] border-none cursor-pointer text-left w-full"
-            title="발표자 콘솔(빨리감기 바) 표시 전환"
+            title="시간경과 콘솔(빨리감기 바) 표시 전환"
           >
             <span className="grid place-items-center w-7 h-7 rounded-lg bg-[var(--w-bg-elevated)] text-[var(--w-fg-neutral)] shrink-0">
               <Icon name="play" size={14} />
             </span>
             <span className="flex-1 min-w-0">
-              <span className="block font-semibold text-[12.5px] leading-[1.3] text-[var(--w-fg-strong)]">발표자 콘솔</span>
+              <span className="block font-semibold text-[12.5px] leading-[1.3] text-[var(--w-fg-strong)]">시간경과 콘솔</span>
               <span className="block font-medium text-[11px] leading-[1.3] text-[var(--w-fg-neutral)]">
                 빨리감기 바 {consoleOn ? "표시" : "숨김"}
               </span>

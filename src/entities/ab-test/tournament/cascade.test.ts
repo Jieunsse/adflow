@@ -40,7 +40,7 @@ function ampleTournament(): Tournament {
     champion: { headline: "칙칙한 피부에 비타민 한 방울", primaryText: "식물성 비타민 앰플." },
     championCtr: 1.7,
     championConfirmed: true,
-    envelope: { totalBudget: 1500000 },
+    envelope: { totalBudget: 1500000, stopOnDefendStreak: 99 }, // ADR-061 — winner-handling 쇼케이스 시드: 수렴 끔(seed.ts 정합)
     axisCursor: 0,
     rounds: [],
     spentBudget: 0,

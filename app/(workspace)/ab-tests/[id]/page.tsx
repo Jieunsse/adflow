@@ -12,6 +12,7 @@ import Icon from "@shared/ui/Icon";
 import { Button } from "@shared/ui/Button";
 import { Card } from "@shared/ui/Card";
 import { Chip } from "@shared/ui/Chip";
+import { Callout } from "@shared/ui/Callout";
 import { IgPostPreview } from "@shared/ui/IgPostPreview";
 import { useToast } from "@shared/ui/Toast";
 import {
@@ -209,6 +210,13 @@ export default function AbTournamentDetailPage() {
           </p>
         </div>
       </div>
+
+      {/* ADR-053 — 게재 실패로 자동 진행이 멈춘 토너먼트. cron 이 한국어 사유를 lastError 에 저장한다. */}
+      {t.lastError && (
+        <Callout tone="negative" icon="warn" title="자동 진행이 멈췄어요">
+          <span className="font-medium text-[13px] leading-[1.5] text-[var(--w-status-negative)]">{t.lastError}</span>
+        </Callout>
+      )}
 
       {/* 현황 스트립 */}
       {t.rounds.length > 0 && (
@@ -789,20 +797,37 @@ function WinnerHandlingPanel({ t, onPromote, onRefill, onArchive }: {
 
 /* ─── done ──────────────────────────────────────────────── */
 
+// ADR-061 — 종결 사유별 done 카드 sub-state. 색만이 아니라 아이콘+헤드라인 병행(a11y, ADR-049).
+const DONE_REASON: Record<NonNullable<Tournament["completionReason"]>, { icon: string; title: string }> = {
+  converged: { icon: "🎯", title: "이기는 광고를 찾았어요 — 토너먼트를 멈췄어요" },
+  "budget-exhausted": { icon: "💰", title: "예산을 다 써서 토너먼트가 끝났어요" },
+  "cap-reached": { icon: "⛔", title: "누적 상한까지 써서 토너먼트가 끝났어요" },
+};
+
 function DonePanel({ t, onCreate }: { t: Tournament; onCreate: () => void }) {
   const spec = tourMetricSpec(t.objective);
   const startCtr = t.rounds[0]?.verdict?.ctrA ?? t.championCtr;
   const lift = startCtr > 0 ? (primaryDelta(spec, t.championCtr, startCtr) / startCtr) * 100 : 0;
+  const meta = DONE_REASON[t.completionReason ?? "budget-exhausted"];
+  const env = t.envelope ?? {};
+  const ceiling = env.autoRefill?.hardCap ?? env.totalBudget ?? 0;
+  const remaining = Math.max(0, ceiling - t.spentBudget);
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-start gap-3 py-4 px-5 rounded-xl" style={{ background: "var(--w-primary-soft)", border: "1px solid var(--w-primary-weak)" }}>
-        <span className="text-[22px] leading-none">🏆</span>
+        <span className="text-[22px] leading-none" aria-hidden>{meta.icon}</span>
         <div>
-          <div className="font-bold text-[15px] leading-[1.3] text-[var(--w-primary-press)]">토너먼트 완료 — 최종 챔피언이 정해졌어요</div>
+          <div className="font-bold text-[15px] leading-[1.3] text-[var(--w-primary-press)]">{meta.title}</div>
           <div className="font-medium text-[12.5px] leading-[1.5] text-[var(--w-fg-neutral)] mt-1">
             {t.rounds.filter((r) => r.status === "settled").length}개 라운드 진행 · 최종 {spec.rateLabel} {formatPrimary(spec, t.championCtr)}
             {lift > 0.5 && <span className="text-[var(--w-status-positive)] font-semibold"> · 출발 대비 +{lift.toFixed(0)}%</span>}
           </div>
+          {/* ADR-061 — ②수렴 멈춤은 절대 평가("충분히 좋아요") 금지. 사실(남은 예산·시작 대비 변화량)만 표기. */}
+          {t.completionReason === "converged" && (
+            <div className="font-medium text-[12.5px] leading-[1.5] text-[var(--w-fg-neutral)] mt-1.5">
+              남은 예산 {krw(remaining)} · 시작 대비 {spec.rateLabel} {formatPrimary(spec, startCtr)} → {formatPrimary(spec, t.championCtr)}
+            </div>
+          )}
         </div>
       </div>
       <Button variant="primary" type="button" onClick={onCreate} className="w-fit">

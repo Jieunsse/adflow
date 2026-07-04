@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import type { TourVariant } from "@entities/ab-test/tournament/engine";
 import {
   STARTING_CTR,
+  buildEnvelope,
   buildTournamentRequest,
   buildDemoSetup,
   buildChallengerVariant,
@@ -23,6 +24,8 @@ const baseForm: SetupFormState = {
   tone: "warm",
   objective: "traffic",
   totalBudget: 600000,
+  autoRefill: false,
+  hardCap: 1800000,
   dailyBudget: 30000,
   chAxis: "headline",
   challenger: { headline: "", primary: "", image: "" },
@@ -80,6 +83,24 @@ describe("buildTournamentRequest", () => {
     expect(r.ageMax).toBe(65);
     expect(r.goalId).toBe("traffic");
     expect(r.mode).toBe("auto");
+  });
+});
+
+describe("buildEnvelope (ADR-061)", () => {
+  it("autoRefill OFF → totalBudget 만, autoRefill 미설정", () => {
+    const env = buildEnvelope(baseForm);
+    expect(env.totalBudget).toBe(600000);
+    expect(env.autoRefill).toBeUndefined();
+  });
+
+  it("autoRefill ON & hardCap > 총예산 → addBudget=총예산·hardCap 실림", () => {
+    const env = buildEnvelope({ ...baseForm, autoRefill: true, hardCap: 1800000 });
+    expect(env.autoRefill).toEqual({ addBudget: 600000, hardCap: 1800000 });
+  });
+
+  it("autoRefill ON 이지만 hardCap ≤ 총예산 → 무의미하므로 미설정", () => {
+    const env = buildEnvelope({ ...baseForm, autoRefill: true, hardCap: 600000 });
+    expect(env.autoRefill).toBeUndefined();
   });
 });
 

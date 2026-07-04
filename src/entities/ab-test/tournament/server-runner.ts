@@ -11,6 +11,9 @@ import {
   initialChampion,
   judgeRoundKpis,
   isEnvelopeExhausted,
+  hasConverged,
+  canAutoRefill,
+  endCompletionReason,
   newTournamentId,
   roundCampaignId,
   MIN_ROUND_DAYS,
@@ -18,6 +21,7 @@ import {
   type TourVariant,
   type TourRound,
   type TournamentDelivery,
+  type TourEnvelope,
   type SettleResult,
 } from "./engine";
 import {
@@ -61,7 +65,7 @@ export type ServerTournamentSetup = {
   productDescription?: string;
   tone: string;
   objective: string;
-  envelope?: { totalBudget?: number; targetDate?: string }; // ADR-054 — 총예산·(선택)목표일
+  envelope?: TourEnvelope; // ADR-054/061 — 총예산·(선택)목표일·자동충전
   dailyBudget: number;
   startingCtr: number;
   // 출발 챔피언 출처 (ADR-038 결정 7). existing = 실 캠페인 카피+실 CTR 즉시 확정, ai = Gemini 부트스트랩.
@@ -210,6 +214,7 @@ export function createServerRunner(deps: {
     const t = await store.get(id);
     if (!t) return;
     t.status = "completed";
+    t.completionReason = endCompletionReason(t); // ADR-061
     t.pendingChallenger = undefined;
     await store.upsert(t);
   }
@@ -250,7 +255,13 @@ export function createServerRunner(deps: {
     t.axisCursor += 1;
     t.spentBudget += t.dailyBudget * MIN_ROUND_DAYS; // 실 게재 라운드당 최소 기간만큼 봉투 차감(보수적)
 
-    const exhausted = isEnvelopeExhausted(t); // ADR-054 — auto 는 자동 완료 X, winner-handling 으로 사람 대기
+    // ADR-061 — 챔피언 N회 연속 방어 = 수렴. 결산 직후 자동 완료(deriveBeat 무변경).
+    if (hasConverged(t)) {
+      t.status = "completed";
+      t.completionReason = "converged";
+    }
+
+    const exhausted = t.status === "completed" || isEnvelopeExhausted(t); // ADR-054 — auto 는 자동 완료 X, winner-handling 으로 사람 대기
     await store.upsert(t);
 
     return {
@@ -263,18 +274,37 @@ export function createServerRunner(deps: {
   }
 
   // auto 무인 체인 (ADR-054) — 봉투 미소진이면 다음 챌린저 자동 생성·게재. 금칙어 구조 차단·정체 자동 돌파라 정지 없음.
-  // cron 이 pollAndSettle → autoAdvance 순으로 호출. 챌린저 생성/게재 실패는 swallow(다음 폴에 재시도).
+  // cron 이 pollAndSettle → autoAdvance 순으로 호출. 챌린저 생성 실패는 일시적(swallow·재시도),
+  // 게재 실패는 split test 규칙 거절이라 사전 탐지 불가 → lastError 에 한국어로 박고 자동 진행 중단(ADR-053).
   async function autoAdvance(id: string): Promise<void> {
     const t = await store.get(id);
     if (!t || t.status === "completed") return;
+    if (t.lastError) return; // ADR-053 — 게재 실패로 멈춘 토너먼트는 사람이 손볼 때까지 자동 진행 안 함 (자동충전보다 먼저)
     if (!t.championConfirmed) return;
     if (t.rounds.some((r) => r.status === "running")) return;
+    // ADR-061 — 봉투 소진 시 autoRefill opt-in & hardCap 미만이면 자동 충전. hardCap 도달이면 미충전 → winner-handling.
+    if (isEnvelopeExhausted(t) && canAutoRefill(t)) {
+      const env = t.envelope!;
+      t.envelope = { ...env, totalBudget: (env.totalBudget ?? t.spentBudget) + env.autoRefill!.addBudget };
+      await store.upsert(t);
+    }
     if (isEnvelopeExhausted(t)) return;
     try {
       if (!t.pendingChallenger) await proposeChallenger(id);
-      await launchRound(id);
     } catch {
-      // 무인 체인만 건너뛴다.
+      // 챌린저 생성(Gemini) 실패는 일시적 — 다음 폴에 재시도.
+      return;
+    }
+    try {
+      await launchRound(id);
+    } catch (e) {
+      // ADR-053 — Meta 가 split test 게재를 거절(예산·기간·목표). createSplitTestStudy 가 mapSplitTestError 로
+      // 이미 한국어 Error 를 던진다. 저장 후 다음 폴부터 skip — 조용히 방치되지 않게 상세 배너로 surface.
+      const fresh = await store.get(id);
+      if (fresh) {
+        fresh.lastError = e instanceof Error ? e.message : String(e);
+        await store.upsert(fresh);
+      }
     }
   }
 

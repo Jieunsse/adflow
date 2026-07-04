@@ -74,7 +74,13 @@ export type TourRound = {
 
 // ADR-054 — 완전 무인화: manual-n 폐기, auto 단일. mode 필드는 Supabase 컬럼(NOT NULL)이라 유지하되 값은 항상 auto.
 export type TourMode = "auto";
-export type TourEnvelope = { totalBudget?: number; targetDate?: string };
+// ADR-061 — autoRefill(opt-in·기본 OFF): 봉투 소진 시 hardCap 까지 addBudget 자동 충전. stopOnDefendStreak: 챔피언 N회 연속 방어 시 수렴 정지(미지정=DEFAULT_DEFEND_STREAK).
+export type TourEnvelope = {
+  totalBudget?: number;
+  targetDate?: string;
+  autoRefill?: { addBudget: number; hardCap: number };
+  stopOnDefendStreak?: number;
+};
 
 // 실 게재 자격증명 + 게재 스펙 (ADR-038 결정 3). 데모는 undefined — cron 폴러가 세션 없이 라운드를
 // 게재·폴링하려면 유저 long-lived 토큰·계정·페이지와 타겟/링크/CTA 를 토너먼트에 박아둬야 한다.
@@ -120,8 +126,10 @@ export type Tournament = {
   rounds: TourRound[];
   spentBudget: number; // 자동 봉투 누적
   status: "running" | "completed";
+  completionReason?: "converged" | "budget-exhausted" | "cap-reached"; // ADR-061 — done 카드 sub-state. completed 종결 경로별 사유.
   createdAt: string;
   delivery?: TournamentDelivery; // 실 게재 봉투 (ADR-038). 데모는 undefined — 시뮬 경로
+  lastError?: string; // ADR-053 — cron 라운드 게재 실패의 한국어 메시지. 있으면 자동 진행 중단 + 상세 배너
 };
 
 /* ─── 엔진 (순수 함수) ───────────────────────────────────────── */
@@ -331,6 +339,41 @@ export function isEnvelopeExhausted(t: Tournament): boolean {
     if (simDays >= budgetDays) return true;
   }
   return false;
+}
+
+/* ─── ADR-061 자동충전 + 수렴 정지 ──────────────────────────── */
+
+// 챔피언 N회 연속 방어 = 수렴 정지 기본 횟수. 자동충전이 예산을 채워줘 "봉투 먼저 터짐"이 사라지므로 신뢰(N=2)를 택함.
+export const DEFAULT_DEFEND_STREAK = 2;
+
+// 결산된 라운드를 역순으로 훑어 챔피언(A) 연속 방어 횟수. insufficient(미결산)는 카운트하지 않고 건너뛴다(0 회수).
+export function championDefendStreak(t: Tournament): number {
+  let streak = 0;
+  for (let i = t.rounds.length - 1; i >= 0; i--) {
+    const r = t.rounds[i];
+    if (r.status !== "settled" || r.verdict?.state === "insufficient") continue;
+    if (r.rawWinner === "A") streak += 1;
+    else break;
+  }
+  return streak;
+}
+
+// 수렴 정지 판정 — 챔피언 방어 streak 이 임계(envelope.stopOnDefendStreak ?? DEFAULT_DEFEND_STREAK) 이상.
+export function hasConverged(t: Tournament): boolean {
+  const n = t.envelope?.stopOnDefendStreak ?? DEFAULT_DEFEND_STREAK;
+  return championDefendStreak(t) >= n;
+}
+
+// 자동충전 가능 여부 — autoRefill opt-in & 누적 지출이 hardCap 미만(닿으면 winner-handling 으로 사람에게 재-surface).
+export function canAutoRefill(t: Tournament): boolean {
+  const ar = t.envelope?.autoRefill;
+  return !!ar && t.spentBudget < ar.hardCap;
+}
+
+// 사람이 종료 결정 시 사유 — autoRefill 켜고 hardCap 까지 쓴 종결은 "상한도달", 그 외 봉투소진은 "예산소진".
+export function endCompletionReason(t: Tournament): "cap-reached" | "budget-exhausted" {
+  const ar = t.envelope?.autoRefill;
+  return ar && t.spentBudget >= ar.hardCap ? "cap-reached" : "budget-exhausted";
 }
 
 /* ─── ADR-054 무인 루프 비트 — 예산(winner-handling)만 사람 ──────────────── */

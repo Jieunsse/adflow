@@ -2,8 +2,17 @@
 // 위저드가 들고 있던 책임(실/데모 요청 페이로드 직조·챌린저 변형·풀 선택·통과 게이트)을 분리.
 // widget = "언제" / 여기 = "어떻게". 단위 테스트 surface = 본 파일의 인터페이스.
 
-import type { TourAxis, TourVariant } from "@entities/ab-test/tournament/engine";
+import type { TourAxis, TourVariant, TourEnvelope } from "@entities/ab-test/tournament/engine";
 import type { TournamentSetup } from "@entities/ab-test/tournament/runner";
+
+// ADR-061 — 봉투 빌더. autoRefill ON 이면 hardCap 까지 충전 단위(=총예산 1봉투)로 자동 충전. ②수렴은 엔진 기본값이라 안 물음.
+export function buildEnvelope(f: SetupFormState): TourEnvelope {
+  const env: TourEnvelope = { totalBudget: f.totalBudget };
+  if (f.autoRefill && f.hardCap > f.totalBudget) {
+    env.autoRefill = { addBudget: f.totalBudget, hardCap: f.hardCap };
+  }
+  return env;
+}
 
 // AI 부트스트랩 시 출발 챔피언 CTR 기준선(%) — existing 은 광고 실제 CTR 사용.
 export const STARTING_CTR = 1.8;
@@ -25,6 +34,8 @@ export type SetupFormState = {
   tone: string;
   objective: string;
   totalBudget: number; // ADR-054 — 토너먼트 총예산(봉투). 소진 시 winner-handling 으로 사람 결정
+  autoRefill: boolean; // ADR-061 — 봉투 소진 시 hardCap 까지 자동 충전(opt-in·기본 OFF)
+  hardCap: number; // ADR-061 — autoRefill 누적 상한액
   dailyBudget: number;
   chAxis: TourAxis;
   challenger: ChallengerInputs;
@@ -46,7 +57,7 @@ export type TournamentRequestBody = {
   tone: string;
   objective: string;
   mode: "auto";
-  envelope: { totalBudget: number };
+  envelope: TourEnvelope;
   dailyBudget: number;
   startingCtr: number;
   championSource: "ai" | "existing";
@@ -77,7 +88,7 @@ export function buildTournamentRequest(f: SetupFormState, brandProfileId: string
     tone: f.tone,
     objective: f.objective,
     mode: "auto",
-    envelope: { totalBudget: f.totalBudget },
+    envelope: buildEnvelope(f),
     dailyBudget: f.dailyBudget,
     startingCtr: fromExisting ? f.selected!.ctr : STARTING_CTR,
     championSource: fromExisting ? "existing" : "ai",
@@ -103,7 +114,7 @@ export function buildDemoSetup(f: SetupFormState): TournamentSetup {
     productDescription: f.description.trim(),
     tone: f.tone,
     objective: f.objective,
-    envelope: { totalBudget: f.totalBudget },
+    envelope: buildEnvelope(f),
     dailyBudget: f.dailyBudget,
     startingCtr: fromExisting ? f.selected!.ctr : STARTING_CTR,
     championSource: fromExisting ? "existing" : "ai",

@@ -35,7 +35,8 @@ export async function GET(req: NextRequest) {
   try {
     const runner = getRealTournamentRunner();
     const all = await supabaseTournamentStore.list();
-    const active = all.filter((t) => t.status === "running" && t.delivery);
+    // ADR-053 — 게재 실패(lastError)로 멈춘 토너먼트는 자동 진행 대상에서 제외(상세 배너가 사람에게 알림).
+    const active = all.filter((t) => t.status === "running" && t.delivery && !t.lastError);
     scanned = active.length;
 
     for (const t of active) {

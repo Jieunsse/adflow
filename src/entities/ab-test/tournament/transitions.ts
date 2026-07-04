@@ -7,6 +7,8 @@ import {
   deriveAxis,
   settleRound,
   isEnvelopeExhausted,
+  hasConverged,
+  canAutoRefill,
   roundCampaignId,
   type Tournament,
   type TourRound,
@@ -86,7 +88,13 @@ export function applySettle(t: Tournament, days = 0): { t: Tournament; result: R
   t.axisCursor += 1;
   t.spentBudget += t.dailyBudget * r.fastForwardDays;
 
-  const exhausted = isEnvelopeExhausted(t); // ADR-054 — auto 는 winner-handling 으로 사람 대기(자동 완료 X)
+  // ADR-061 — 챔피언 N회 연속 방어 = 수렴. deriveBeat 는 그대로 두고 결산 직후 자동 완료(미결정 분기 아님).
+  if (hasConverged(t)) {
+    t.status = "completed";
+    t.completionReason = "converged";
+  }
+
+  const exhausted = t.status === "completed" || isEnvelopeExhausted(t); // ADR-054 — auto 는 winner-handling 으로 사람 대기(자동 완료 X)
 
   return {
     t,
@@ -111,6 +119,11 @@ export function applyAutoAdvance(t: Tournament, gen: CreativeGen, ledger: Hypoth
   if (t.status === "completed") return { t };
   if (!t.championConfirmed) return { t };
   if (t.rounds.some((r) => r.status === "running")) return { t };
+  // ADR-061 — 봉투 소진 시 autoRefill opt-in & hardCap 미만이면 자동 충전 후 재평가. hardCap 도달이면 미충전 → winner-handling.
+  if (isEnvelopeExhausted(t) && canAutoRefill(t)) {
+    const env = t.envelope!;
+    t.envelope = { ...env, totalBudget: (env.totalBudget ?? t.spentBudget) + env.autoRefill!.addBudget };
+  }
   if (isEnvelopeExhausted(t)) return { t };
   if (!t.pendingChallenger) {
     const index = t.rounds.length + 1;

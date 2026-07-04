@@ -5,6 +5,11 @@ import {
   buildChallenger,
   nextAxis,
   isEnvelopeExhausted,
+  championDefendStreak,
+  hasConverged,
+  canAutoRefill,
+  endCompletionReason,
+  DEFAULT_DEFEND_STREAK,
   type Tournament,
   type TourRound,
   type TourVariant,
@@ -190,5 +195,62 @@ describe("isEnvelopeExhausted (자원 봉투 정지)", () => {
     const far = tour({ mode: "auto", envelope: { targetDate: "2026-06-30" }, rounds: [settledRound(7)] });
     expect(isEnvelopeExhausted(near)).toBe(true);
     expect(isEnvelopeExhausted(far)).toBe(false);
+  });
+});
+
+// ADR-061 — 챔피언 방어 streak / 수렴 정지 / 자동충전 가드.
+function defended(winner: "A" | "B", state: "winner" | "inconclusive" | "insufficient" = "inconclusive"): TourRound {
+  return { ...settledRound(7), rawWinner: winner, verdict: { state, ctrA: 1.8, ctrB: 1.7, confidence: 0.5 } };
+}
+
+describe("championDefendStreak (수렴 카운트)", () => {
+  it("끝에서부터 챔피언(A) 연속 방어만 센다 — B 승격에서 멈춘다", () => {
+    expect(championDefendStreak(tour({ rounds: [defended("B"), defended("A"), defended("A")] }))).toBe(2);
+  });
+
+  it("마지막이 챌린저(B) 승격이면 0", () => {
+    expect(championDefendStreak(tour({ rounds: [defended("A"), defended("B")] }))).toBe(0);
+  });
+
+  it("insufficient(미결산) 라운드는 카운트하지 않고 건너뛴다", () => {
+    const t = tour({ rounds: [defended("A"), defended("A", "insufficient"), defended("A")] });
+    expect(championDefendStreak(t)).toBe(2);
+  });
+
+  it("아직 running 인 라운드는 무시한다", () => {
+    const t = tour({ rounds: [defended("A"), { ...round({ fastForwardDays: 0 }), index: 2 }] });
+    expect(championDefendStreak(t)).toBe(1);
+  });
+});
+
+describe("hasConverged (수렴 정지)", () => {
+  it(`기본 N=${DEFAULT_DEFEND_STREAK} — ${DEFAULT_DEFEND_STREAK}회 연속 방어면 수렴`, () => {
+    expect(hasConverged(tour({ rounds: [defended("A")] }))).toBe(false);
+    expect(hasConverged(tour({ rounds: [defended("A"), defended("A")] }))).toBe(true);
+  });
+
+  it("envelope.stopOnDefendStreak override 를 따른다", () => {
+    const env = { stopOnDefendStreak: 3 };
+    expect(hasConverged(tour({ envelope: env, rounds: [defended("A"), defended("A")] }))).toBe(false);
+    expect(hasConverged(tour({ envelope: env, rounds: [defended("A"), defended("A"), defended("A")] }))).toBe(true);
+  });
+});
+
+describe("canAutoRefill / endCompletionReason (ADR-061 가드)", () => {
+  it("autoRefill 미설정이면 충전 불가", () => {
+    expect(canAutoRefill(tour({ spentBudget: 100000 }))).toBe(false);
+  });
+
+  it("hardCap 미만이면 충전 가능, 도달하면 불가(→ winner-handling)", () => {
+    const env = { totalBudget: 300000, autoRefill: { addBudget: 300000, hardCap: 900000 } };
+    expect(canAutoRefill(tour({ envelope: env, spentBudget: 600000 }))).toBe(true);
+    expect(canAutoRefill(tour({ envelope: env, spentBudget: 900000 }))).toBe(false);
+  });
+
+  it("종료 사유: autoRefill + hardCap 도달=cap-reached, 그 외=budget-exhausted", () => {
+    const env = { totalBudget: 300000, autoRefill: { addBudget: 300000, hardCap: 900000 } };
+    expect(endCompletionReason(tour({ envelope: env, spentBudget: 900000 }))).toBe("cap-reached");
+    expect(endCompletionReason(tour({ envelope: env, spentBudget: 600000 }))).toBe("budget-exhausted");
+    expect(endCompletionReason(tour({ spentBudget: 300000 }))).toBe("budget-exhausted");
   });
 });

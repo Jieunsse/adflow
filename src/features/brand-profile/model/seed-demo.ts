@@ -11,6 +11,7 @@ const DEMO_PROFILE: BrandProfileEntry = {
   name: "그린루틴 — 비건 스킨케어",
   isDefault: true,
   tone: "친근하고 감성적으로",
+  marginRate: 0.3,
   brandDescription:
     "20~35세 여성을 위한 비건 스킨케어 브랜드 '그린루틴'. 대표 제품은 수분 크림과 토너로, 화학 첨가물 없이 식물성 성분만 사용해요. 민감성 피부도 안심하고 쓸 수 있는 게 강점이에요.",
   brandVoice: "친근하고 솔직하게. 과장 없이 담백하게. 고객과 대화하듯 말해요.",
@@ -285,7 +286,7 @@ const PRODUCTS_KEY_PREFIX = "adflow:products:";
 const MATERIALS_KEY_PREFIX = "adflow:ref-materials:";
 const SEED_VERSION_KEY = "adflow:brand-profiles:seed-version";
 // 데모 프로필 스키마가 바뀌면 이 값을 올린다 — 옛 localStorage 의 데모 항목이 한 번 새 시드로 교체된다 (browse/store.ts 패턴).
-const SEED_VERSION = "2026-06-02-ample";
+const SEED_VERSION = "2026-06-04-margin";
 
 export function seedDemoIfEmpty(): void {
   if (typeof window === "undefined") return;

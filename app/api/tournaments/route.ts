@@ -7,7 +7,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { withRouteHandler, ValidationError } from "@/lib/route-handler";
 import { getRealTournamentRunner, supabaseTournamentStore, ownerKeyFrom } from "@entities/ab-test/tournament/real";
-import { MIN_ROUND_DAYS, type TournamentDelivery } from "@entities/ab-test/tournament/engine";
+import { MIN_ROUND_DAYS, type TournamentDelivery, type TourEnvelope } from "@entities/ab-test/tournament/engine";
 import type { ServerTournamentSetup } from "@entities/ab-test/tournament/server-runner";
 
 export const dynamic = "force-dynamic";
@@ -53,7 +53,7 @@ interface CreateBody {
   productDescription?: string;
   tone: string;
   objective: string;
-  envelope?: { totalBudget?: number; targetDate?: string }; // ADR-054 — 총예산·(선택)목표일
+  envelope?: TourEnvelope; // ADR-054/061 — 총예산·(선택)목표일·자동충전
   dailyBudget: number;
   startingCtr: number;
   championSource?: "ai" | "existing";

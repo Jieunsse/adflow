@@ -14,6 +14,7 @@ import {
   resetTournaments,
   listTournaments,
   settleRound,
+  hasConverged,
   seededUnit,
   deriveAxis,
   roundCampaignId,
@@ -58,7 +59,7 @@ const SETTLE_FF = 7; // 결산 라운드 누적 빨리감기 일수
 const LIVE_FF = 4; // 진행 중 라운드 — 성과는 보이되 결산 전
 
 // settleActiveRound 의 승격 로직을 시뮬레이션 — 라운드를 결산하며 챔피언/CTR/지출을 누적한다.
-function build(spec: SeedSpec): Tournament {
+export function build(spec: SeedSpec): Tournament {
   let champion = spec.startChampion;
   let championCtr = spec.startCtr;
   let axisCursor = 0;
@@ -98,7 +99,7 @@ function build(spec: SeedSpec): Tournament {
     spentBudget += DAILY_BUDGET * round.fastForwardDays;
   });
 
-  return {
+  const tournament: Tournament = {
     id: spec.id,
     // ADR-050 — 데모 Ledger 키를 /create 데모 브랜드 프로필(seed-demo.ts DEMO_PROFILE_ID)과 일치시켜
     // 토너먼트 학습이 /create 카피 훅 편향으로 흐르게 한다. 옛 "browse_demo" 시드는 아래 stale 정리가 재시드.
@@ -120,11 +121,19 @@ function build(spec: SeedSpec): Tournament {
     status: spec.finalStatus,
     createdAt: spec.createdAt,
   };
+
+  // ADR-061 — 챔피언 N회 연속 방어로 끝난 시드는 transitions.settle 와 동일하게 수렴 종결로 굳힌다
+  // (시드 build 는 결산만 시뮬할 뿐 종결 판정을 안 거치므로, completed+converged done 카드를 직접 세팅).
+  if (spec.finalStatus === "completed" && hasConverged(tournament)) {
+    tournament.completionReason = "converged";
+  }
+
+  return tournament;
 }
 
 // 고정 시드 7종 (ADR-054) — 완료 2 / 진행 3 / 결정 대기 1(winner-handling=예산) + 캐스케이드 1.
 // 옛 anomaly·champion-review 시드는 정상 무인 진행으로 전환했다(금칙어·정체·AI 챔피언은 더는 멈추지 않음).
-const SPECS: SeedSpec[] = [
+export const SPECS: SeedSpec[] = [
   // ── 완료 ① 수분 크림 (4라운드, 최대 lift 후보) ──
   {
     id: "browse_demo_tourn_moisture_cream",
@@ -277,6 +286,31 @@ const SPECS: SeedSpec[] = [
     championConfirmed: true,
     runningLast: true,
   },
+  // ── 완료 ③ 수렴 종결 (ADR-061) — 챔피언 2연속 방어로 봉투 소진 전 수렴 정지 ──
+  // rawWinner 시퀀스 B,A,A: R1 챌린저 승격(championCtr 상승) → R2·R3 챔피언 방어 2연속 → hasConverged(N=2)
+  // → completed + completionReason="converged". totalBudget 200만 > 3R 지출 105만이라 수렴 시점에 예산이 남아
+  // done 카드 🎯수렴 sub-state 의 "남은 예산 ₩95만 · 시작 대비 CTR 변화량"이 의미 있게 렌더된다.
+  {
+    id: "browse_demo_tourn_converged",
+    createdAt: "2026-05-30T09:30:00+09:00",
+    productName: "탄력 비건 아이크림",
+    tone: "warm",
+    objective: "traffic",
+    startCtr: 1.70,
+    startChampion: {
+      headline: "지친 눈가에 탄력 한 겹",
+      primaryText: "식물성 탄력 성분을 담은 비건 아이크림. 눈가에 부드럽게 발려 매일의 케어를 가볍게 마무리해요.",
+      imageUrl: "/demo/library/cream.jpg",
+    },
+    mutations: [
+      { field: "headline", value: "푸석한 눈가, 탄력 있게 채워요", outcome: "win" },
+      { field: "primaryText", value: "무향·무색소로 자극은 줄이고 탄력은 그대로. 민감한 눈가를 위한 비건 아이크림이에요.", outcome: "hold" },
+      { field: "headline", value: "민감한 눈가를 위한 비건 아이크림", outcome: "hold" },
+    ],
+    finalStatus: "completed",
+    championConfirmed: true,
+    envelope: { totalBudget: 2000000 }, // 3R 누적 지출 105만 < 200만 → 수렴 시점 약 95만 잔여
+  },
   // ── 가설 캐스케이드 쇼케이스 (ADR-044) — auto·봉투 보유·라운드 0 ──
   // 콘솔 시간 1회 advance 가 봉투 소진(winner-handling)까지 전체 루프를 돈다. 라운드는 가설 생성기가
   // Ledger 를 읽어 만든다(시드에 박지 않음): trust 입증 → rush 반증(이후 회피) → 미결 다수 → 5R 후 소진.
@@ -295,7 +329,9 @@ const SPECS: SeedSpec[] = [
     mutations: [],
     finalStatus: "running",
     championConfirmed: true,
-    envelope: { totalBudget: 1500000 }, // 5R(라운드당 35만) 후 소진 → winner-handling
+    // ADR-061 — 이 시드는 ADR-054 봉투 소진(winner-handling) 캐스케이드 쇼케이스용. 방어 시퀀스가 B,A,A,A,A 라
+    // 기본 N=2 면 R3 에서 수렴 종결돼 winner-handling 시연이 사라진다. stopOnDefendStreak 를 올려 수렴을 끈다(실/신규는 N=2).
+    envelope: { totalBudget: 1500000, stopOnDefendStreak: 99 }, // 5R(라운드당 35만) 후 소진 → winner-handling
   },
 ];
 

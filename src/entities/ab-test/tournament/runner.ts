@@ -11,6 +11,8 @@ import {
   newTournamentId,
   initialChampion,
   isEnvelopeExhausted,
+  canAutoRefill,
+  endCompletionReason,
   type Tournament,
   type TourVariant,
   type TourRound,
@@ -162,6 +164,7 @@ export function endTournament(id: string): void {
   const t = getTournament(id);
   if (!t) return;
   t.status = "completed";
+  t.completionReason = endCompletionReason(t); // ADR-061
   t.pendingChallenger = undefined;
   upsertTournament(t);
 }
@@ -185,7 +188,8 @@ export async function autoAdvanceTournament(id: string): Promise<void> {
   if (!t || t.status === "completed") return;
   if (!t.championConfirmed) return; // 출발 챔피언 게이트 (existing 1회 확인)
   if (t.rounds.some((r) => r.status === "running")) return; // 이미 라이브
-  if (isEnvelopeExhausted(t)) return; // 봉투 소진 — winner-handling 사람 대기
+  if (isEnvelopeExhausted(t) && canAutoRefill(t)) refillEnvelope(id, t.envelope!.autoRefill!.addBudget); // ADR-061
+  if (isEnvelopeExhausted(getTournament(id) ?? t)) return; // 봉투 소진(충전 후 재평가) — winner-handling 사람 대기
   try {
     if (!t.pendingChallenger) await proposeChallenger(id); // 사람이 손본 챌린저가 있으면 그대로, 없으면 Gemini 생성
     launchRound(id); // pending → 라운드 게재

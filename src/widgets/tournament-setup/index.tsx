@@ -111,6 +111,8 @@ export default function TournamentSetup({ real = false }: { real?: boolean }) {
   const [tone, setTone] = useState<Tone>("warm");
   const [objective, setObjective] = useState("traffic");
   const [totalBudget, setTotalBudget] = useState(600000);
+  const [autoRefill, setAutoRefill] = useState(false);
+  const [hardCap, setHardCap] = useState(1800000);
   const [dailyBudget, setDailyBudget] = useState(30000);
   const [step, setStep] = useState<WizardStep>("method");
   const [championMode, setChampionMode] = useState<ChampionMode>("existing");
@@ -209,6 +211,8 @@ export default function TournamentSetup({ real = false }: { real?: boolean }) {
     tone,
     objective,
     totalBudget,
+    autoRefill,
+    hardCap,
     dailyBudget,
     chAxis,
     challenger: { headline: chHeadline, primary: chPrimary, image: chImage },
@@ -529,6 +533,29 @@ export default function TournamentSetup({ real = false }: { real?: boolean }) {
                 <Field label="일 예산">
                   <BudgetInput value={dailyBudget} onChange={setDailyBudget} />
                 </Field>
+              </div>
+
+              {/* ADR-061 — 자동충전(opt-in). 이기는 광고를 찾으면(②수렴) 자동으로 멈추므로 ②는 숫자를 묻지 않는다. */}
+              <div className="flex flex-col gap-3 pt-1">
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={autoRefill}
+                    onChange={(e) => setAutoRefill(e.target.checked)}
+                    className="mt-0.5 size-4 accent-[var(--w-primary-normal)] cursor-pointer"
+                  />
+                  <span className="flex flex-col gap-0.5">
+                    <span className="font-semibold text-[13.5px] leading-[1.4] text-[var(--w-fg-strong)]">예산 자동충전</span>
+                    <span className="font-medium text-[12px] leading-[1.5] text-[var(--w-fg-neutral)]">
+                      예산을 다 써도 멈추지 않고 누적 상한까지 자동으로 충전해요. 이기는 광고를 찾으면 자동으로 멈춰요.
+                    </span>
+                  </span>
+                </label>
+                {autoRefill && (
+                  <Field label="누적 상한" hint="여기까지 쓰면 더 충전하지 않고 위너 처리를 물어봐요">
+                    <BudgetInput value={hardCap} onChange={setHardCap} />
+                  </Field>
+                )}
               </div>
             </SectionCard>
 

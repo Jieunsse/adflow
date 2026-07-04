@@ -44,24 +44,40 @@ export function buildBrowseInsights(camp: BrowseCampaign, quality: BrowseQuality
   }
 
   const qf = QUALITY_FACTOR[quality];
+  const isSales = (camp.objective as string) === "OUTCOME_SALES";
   const daily: InsightsDailyRow[] = Array.from({ length: days }, (_, i) => {
     const m = budgetMultiplier(camp, i);
     const impressions = Math.round(camp.baseDailyImpressions * m * seededVariance(camp.id + "i", i));
     const clicks = Math.round(camp.baseDailyClicks * m * qf.clicks * seededVariance(camp.id + "c", i));
     const spend = Math.round(camp.baseDailySpend * m * qf.spend * seededVariance(camp.id + "s", i));
     const ctr = impressions ? (clicks / impressions) * 100 : 0;
-    return { date: isoDate(camp.startDate, i), clicks, ctr, spend, impressions };
+    // ADR-059 데모 — 추세/퍼널 도착 단을 채운다(트래픽=도착 측정 가정). 결정적 ~62%.
+    const landingPageView = Math.round(clicks * 0.62 * seededVariance(camp.id + "l", i));
+    // 전환 캠페인이면 일별 매출도 채움(듀얼추세 매출축). 비전환은 매출 필드 없음(정직).
+    const purchaseValue = isSales ? Math.round(spend * 3.4 * (quality === "good" ? 1 : 0.55) * seededVariance(camp.id + "v", i)) : undefined;
+    const purchaseCount = isSales ? Math.round(clicks * 0.07 * seededVariance(camp.id + "p", i)) : undefined;
+    return { date: isoDate(camp.startDate, i), clicks, ctr, spend, impressions, landingPageView, purchaseValue, purchaseCount };
   });
 
   const impressions = daily.reduce((s, d) => s + (d.impressions ?? 0), 0);
   const clicks = daily.reduce((s, d) => s + d.clicks, 0);
   const spend = daily.reduce((s, d) => s + d.spend, 0);
   const ctr = impressions ? (clicks / impressions) * 100 : 0;
+  const landingPageView = daily.reduce((s, d) => s + (d.landingPageView ?? 0), 0);
 
   // 인지도 룰(빈도·CPM)과 준비도 헤드라인이 빈손이 되지 않도록 파생 지표도 채운다.
   const frequency = 1.3;
   const reach = Math.round(impressions / frequency);
   const cpm = impressions ? (spend / impressions) * 1000 : 0;
 
-  return { impressions, clicks, ctr, spend, reach, frequency, cpm, daily };
+  // ADR-057 데모 — 전환 캠페인이면 매출 합성(데모≠실값, daily 합산). 트래픽·인지도는 전환 미측정 = 매출 필드 없음(정직).
+  const sales = isSales && spend > 0
+    ? (() => {
+        const purchaseValue = daily.reduce((s, d) => s + (d.purchaseValue ?? 0), 0);
+        const purchaseCount = daily.reduce((s, d) => s + (d.purchaseCount ?? 0), 0);
+        return { purchaseCount, purchaseValue, roas: Math.round((purchaseValue / spend) * 100) / 100 };
+      })()
+    : {};
+
+  return { impressions, clicks, ctr, spend, reach, frequency, cpm, landingPageView, ...sales, daily };
 }

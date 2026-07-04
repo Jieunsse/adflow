@@ -1,17 +1,20 @@
-// Combo chart — bars (e.g. clicks) + line (e.g. CTR), Wanted-DS colored.
-// Ported from the design bundle. Used by /create step 03 and /campaigns/[id].
+// Combo chart — bars (좌축) + line (우축), Wanted-DS colored.
+// ADR-059 — clicks/ctrs 박힌 계약을 bars/line + 축 라벨로 일반화.
+// 좌축 막대 = 지출/클릭 등, 우축 라인 = CTR/매출/도착 등. lineFormat 으로 우축 눈금 표기.
 import { fmt } from "@shared/lib/format";
 
 export default function DualChart({
   labels,
-  clicks,
-  ctrs,
+  bars,
+  line,
+  lineFormat = (v) => v.toFixed(1),
 }: {
   labels: string[];
-  clicks: number[];
-  ctrs: number[];
+  bars: number[];
+  line: number[];
+  lineFormat?: (v: number) => string;
 }) {
-  if (clicks.length === 0) return null;
+  if (bars.length === 0) return null;
   const w = 800,
     h = 260,
     padL = 44,
@@ -20,14 +23,14 @@ export default function DualChart({
     padB = 28;
   const innerW = w - padL - padR;
   const innerH = h - padT - padB;
-  const maxClicks = Math.max(...clicks, 1) * 1.15;
-  const maxCtr = Math.max(...ctrs, 0.1) * 1.2;
-  const barW = (innerW / clicks.length) * 0.55;
-  const stepX = innerW / clicks.length;
+  const maxBar = Math.max(...bars, 1) * 1.15;
+  const maxLine = Math.max(...line, 0.1) * 1.2;
+  const barW = (innerW / bars.length) * 0.55;
+  const stepX = innerW / bars.length;
 
-  const linePts = ctrs.map((v, i) => {
+  const linePts = line.map((v, i) => {
     const x = padL + stepX * i + stepX / 2;
-    const y = padT + innerH - (v / maxCtr) * innerH;
+    const y = padT + innerH - (v / maxLine) * innerH;
     return [x, y] as const;
   });
   const lineD = linePts
@@ -51,9 +54,9 @@ export default function DualChart({
           />
         );
       })}
-      {clicks.map((v, i) => {
+      {bars.map((v, i) => {
         const x = padL + stepX * i + (stepX - barW) / 2;
-        const bh = (v / maxClicks) * innerH;
+        const bh = (v / maxBar) * innerH;
         const y = padT + innerH - bh;
         return (
           <rect
@@ -110,7 +113,7 @@ export default function DualChart({
             textAnchor="end"
             style={{ fontFamily: "var(--w-font-mono)" }}
           >
-            {fmt(Math.round(maxClicks * t))}
+            {fmt(Math.round(maxBar * t))}
           </text>
         );
       })}
@@ -126,7 +129,7 @@ export default function DualChart({
             textAnchor="start"
             style={{ fontFamily: "var(--w-font-mono)" }}
           >
-            {(maxCtr * t).toFixed(1)}%
+            {lineFormat(maxLine * t)}
           </text>
         );
       })}

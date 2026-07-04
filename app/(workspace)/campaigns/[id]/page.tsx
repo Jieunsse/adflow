@@ -14,7 +14,7 @@ import { fmt, fmtKRW, shortDate, campaignDateInfo, campaignRunDays, campaignGrad
 import { useApiMutation } from "@shared/lib/api/useApiMutation";
 import { useToast } from "@shared/ui/Toast";
 import ConfirmModal from "@shared/ui/ConfirmModal";
-import { suggestOptimizations, assessAutomationReadiness, type Suggestion, type AutomationReadiness } from "@entities/insights/optimization";
+import { suggestOptimizations, assessAutomationReadiness, deriveVerdict, type Suggestion, type AutomationReadiness, type Verdict } from "@entities/insights/optimization";
 import { isFakePerformance, type FakePerformanceEvidence } from "@entities/insights/fake-performance";
 import { abVariantLabel, type AbTestAxis } from "@entities/campaign/model";
 import { loadLaunchedCampaign } from "@entities/campaign/launched-storage";
@@ -26,6 +26,7 @@ import type { BrowseCampaign, AutomationPolicy, AutoPilotAction } from "@entitie
 import PresenterFastForwardBar from "@widgets/presenter-fast-forward";
 import { judgeAbTest, rowToKpi } from "@entities/insights/ab-verdict";
 import { getMockCampaignAdIds, seedMockAdRows } from "@/lib/mock-campaigns";
+import { DEMO_AD_IMAGES } from "@/lib/demo/mock-images";
 import AbTestResultCard from "@widgets/performance-step/AbTestResultCard";
 import type { CampaignSummary, InsightsPeriod } from "@/lib/meta-ads";
 import type { AdInsightsRow } from "@entities/insights/types";
@@ -391,6 +392,8 @@ function DetailBody({
   const suggestions: Suggestion[] = fakePerf.fake && fakePerf.evidence
     ? [fakePerfSuggestion(fakePerf.evidence), ...baseSuggestions.filter((s) => s.kind !== "increase-budget")]
     : baseSuggestions;
+  // ADR-048 — 평결은 위 suggestions[] 의 1순위를 승격한 요약 레이어(새 계산 0). 활성 캠페인에만 — paused/issue 는 자체 배너가 결론.
+  const verdict = !isPaused && !isIssue ? deriveVerdict(suggestions) : null;
   // Browse Mode 성과 나쁨 탭 — 지표 자체가 부진하므로 데이터 충분성과 무관하게 자동화 보류로 고정.
   const readiness = lowPerformance
     ? { ready: false as const, reason: `노출 ${data.impressions.toLocaleString("ko-KR")}회 · 클릭 ${data.clicks.toLocaleString("ko-KR")}회 · CTR ${data.ctr.toFixed(2)}% — 클릭과 CTR이 낮아 자동 판단을 맡기기엔 성과가 아쉬워요.` }
@@ -398,6 +401,15 @@ function DetailBody({
 
   return (
     <>
+      {verdict && (
+        <VerdictBanner
+          verdict={verdict}
+          busy={busy}
+          adSetId={c.adSetId ?? undefined}
+          onPause={() => onApply({ action: "pause" }, "광고를 일시정지했어요")}
+          onIncreaseBudget={(to) => onApply({ adSetId: c.adSetId ?? undefined, action: "set-daily-budget", dailyBudget: to }, `일일예산을 ${fmtKRW(to)}로 올렸어요`)}
+        />
+      )}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 14, marginBottom: 16 }}>
         <KpiCard label="총 노출수" value={fmt(data.impressions)} trend={data.daily.map((x) => (x.ctr > 0 ? Math.round((x.clicks / x.ctr) * 100) : 0))} />
         <KpiCard label="총 클릭수" value={fmt(data.clicks)} trend={clicks} />
@@ -419,7 +431,7 @@ function DetailBody({
           <span className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)]">Meta 광고 관리자에서 사유를 확인하고 조치해 주세요.</span>
         </Callout>
       ) : (
-        <Card style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: 24, alignItems: "flex-start" }}>
+        <Card id="opt-suggestions" style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: 24, alignItems: "flex-start", scrollMarginTop: 20 }}>
           <div>
             <h3 className="font-bold text-[17px] leading-[1.3] tracking-[-0.012em] text-[var(--w-fg-strong)] m-0">최적화 제안</h3>
             <p className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)] mt-1">제안은 직접 확인 후 적용해요. 자동으로 바뀌지 않아요.</p>
@@ -463,7 +475,7 @@ function DetailBody({
             <ChartLegend color="var(--w-accent-violet)" label="CTR" type="line" />
           </div>
         </div>
-        <DualChart labels={labels} clicks={clicks} ctrs={ctrs} />
+        <DualChart labels={labels} bars={clicks} line={ctrs} lineFormat={(v) => `${v.toFixed(1)}%`} />
       </Card>
 
       <Card style={{ marginTop: 16, padding: 0, overflow: "hidden" }}>
@@ -500,6 +512,41 @@ function DetailBody({
         <div style={{ padding: "12px 22px 18px" }}><span className="font-medium text-[12px] leading-[1.5] text-[var(--w-fg-alternative)]">Meta 인사이트 기준 · 데이터는 몇 시간 단위로 갱신돼요</span></div>
       </Card>
     </>
+  );
+}
+
+// ADR-048 — 캠페인 평결 배너. 성과 탭 최상단 한 줄 신호등 결론. deriveVerdict 가 승격한 1순위를 요약하고,
+// 액션 버튼은 기존 onPause/onIncreaseBudget 을 그대로 재사용(새 실행 경로 0). 상세 근거는 아래 "최적화 제안" 목록으로 잇는다.
+const VERDICT_UI: Record<Verdict["status"], { tone: "positive" | "negative" | "cautionary"; icon: "warn" | "trend-up" | "check-circle" | "clock"; signal: string }> = {
+  collecting: { tone: "cautionary", icon: "clock", signal: "🟡 데이터 모으는 중" },
+  trap: { tone: "negative", icon: "warn", signal: "🔴 함정 의심" },
+  poor: { tone: "negative", icon: "warn", signal: "🔴 점검 필요" },
+  cruising: { tone: "positive", icon: "trend-up", signal: "🟢 호조" },
+  stable: { tone: "positive", icon: "check-circle", signal: "🟢 안정적" },
+};
+
+function VerdictBanner({
+  verdict, busy, adSetId, onPause, onIncreaseBudget,
+}: {
+  verdict: Verdict; busy: boolean; adSetId?: string;
+  onPause: () => void; onIncreaseBudget: (toDailyBudget: number) => void;
+}) {
+  const ui = VERDICT_UI[verdict.status];
+  const top = verdict.top;
+  const action =
+    verdict.status === "poor" && top.kind === "pause"
+      ? <Button variant="secondary" size="sm" type="button" disabled={busy} onClick={onPause}>{busy ? "처리 중…" : "광고 일시정지"}</Button>
+      : verdict.status === "cruising" && top.kind === "increase-budget"
+        ? <Button variant="secondary" size="sm" type="button" disabled={busy || !adSetId} onClick={() => onIncreaseBudget(top.toDailyBudget)}>{busy ? "처리 중…" : `${fmtKRW(top.toDailyBudget)}로 올리기`}</Button>
+        : null;
+  return (
+    <Callout
+      tone={ui.tone}
+      icon={ui.icon}
+      title={<span className="flex items-center gap-2"><span className="font-bold text-[12px] leading-none">{ui.signal}</span><span>{verdict.headline}</span></span>}
+      style={{ marginBottom: 16 }}
+      actions={<>{action}<a href="#opt-suggestions" className={buttonVariants({ variant: "ghost", size: "sm" })}>↓ 근거 보기</a></>}
+    />
   );
 }
 
@@ -990,7 +1037,7 @@ function CampaignConfigurationTab({ c, isLoading, campaignId, onRefetch, isAbCam
         ) : (
         <div style={{ display: "flex", gap: 20, alignItems: "flex-start" }}>
           <div style={{ width: 112, height: 112, borderRadius: 12, background: campaignGradient(campaignId), flex: "0 0 auto", overflow: "hidden" }}>
-            {c.imageUrl && <img src={c.imageUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
+            <img src={c.imageUrl || DEMO_AD_IMAGES[campaignId.length % DEMO_AD_IMAGES.length]} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
           </div>
           <div style={{ flex: 1, display: "grid", gridTemplateColumns: "auto 1fr", gap: "12px 24px", alignItems: "start" }}>
             <ConfigRow label="헤드라인" value={c.headline} />

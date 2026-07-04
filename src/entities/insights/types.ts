@@ -27,6 +27,10 @@ export type InsightsDailyRow = {
   pageLikeNew?: number;
   messagingConversationsStarted?: number;
   callConfirm?: number;
+  // ADR-057 — 전환 가치(읽기 경로). actions[].purchase / action_values[].purchase / purchase_roas.
+  purchaseCount?: number;
+  purchaseValue?: number;
+  roas?: number;
 };
 
 export type Insights = {
@@ -47,6 +51,10 @@ export type Insights = {
   pageLikeNew?: number;
   messagingConversationsStarted?: number;
   callConfirm?: number;
+  // ADR-057 — 전환 가치(읽기 경로). 전환 캠페인에서만 채워짐(미측정 시 undefined → 게이트).
+  purchaseCount?: number;
+  purchaseValue?: number;
+  roas?: number;
   daily: InsightsDailyRow[];
   // PRD-ab-testing.md §7.2 — A/B 시험 시 광고별 row 두 개. adIds 가 있을 때만 채워짐.
   ads?: [AdInsightsRow, AdInsightsRow];

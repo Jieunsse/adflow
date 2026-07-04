@@ -31,6 +31,12 @@ export function browseCampaignToSummary(camp: BrowseCampaign): CampaignSummary {
     clicks: ins.clicks,
     ctr: Math.round(ins.ctr * 100) / 100,
     spend: ins.spend,
+    // ADR-059 — 퍼널 게이트용. 도착(트래픽 측정)·전환(sales) 노출. link_click ≈ clicks 근사.
+    linkClick: ins.clicks,
+    landingPageView: ins.landingPageView,
+    purchaseCount: ins.purchaseCount,
+    purchaseValue: ins.purchaseValue,
+    roas: ins.roas,
     issueReason: null,
     imageUrl: camp.imageUrl,
     primaryText: camp.primaryText,

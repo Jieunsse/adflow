@@ -239,6 +239,39 @@ export type Suggestion =
       action?: SuggestionAction;
     };
 
+// 데이터 수집 중 안내 note 의 제목 — suggestOptimizations(생성) 와 deriveVerdict(collecting 판정) 의 단일 출처.
+export const DATA_GATHERING_TITLES = {
+  newGoal: "데이터를 모으는 중이에요",
+  dataGap: "데이터를 조금 더 모아보세요",
+} as const;
+const DATA_GATHERING_TITLE_SET: ReadonlySet<string> = new Set(Object.values(DATA_GATHERING_TITLES));
+
+// ADR-048 — 캠페인 평결. 성과 탭 최상단 한 줄 신호등 결론. 저자=룰(결정적·무료·즉시), Flo(Claude) 아님.
+export type VerdictStatus = "collecting" | "trap" | "poor" | "cruising" | "stable";
+export type Verdict = {
+  status: VerdictStatus;
+  headline: string;  // 1순위 Suggestion.title 그대로 (새 카피 0줄)
+  top: Suggestion;   // 1순위 제안 — 배너 액션 버튼(pause/increase-budget)을 기존 콜백에 잇기 위함
+};
+
+// 새 숫자 계산 없음. 이미 우선순위대로 병합·정렬된 suggestions[] 의 1순위를 평결로 승격한다.
+// fake-performance > 호조: 배열 순서가 이미 그 우선순위(page.tsx 가 fake 감지 시 증액 제안을 숨기고 점검을 앞세움)라
+// 1순위 kind/severity 만 읽으면 충돌이 자동 해소된다. collecting(데이터부족)만 제목으로 선판정.
+export function deriveVerdict(suggestions: Suggestion[]): Verdict | null {
+  const top = suggestions[0];
+  if (!top) return null; // 엔진은 항상 ≥1 제안을 반환하므로 이론상 도달 안 함 — 방어적 null
+  const status: VerdictStatus = DATA_GATHERING_TITLE_SET.has(top.title)
+    ? "collecting"
+    : top.kind === "fake-performance"
+      ? "trap"
+      : top.kind === "pause" || top.severity === "warn"
+        ? "poor"
+        : top.kind === "increase-budget"
+          ? "cruising"
+          : "stable";
+  return { status, headline: top.title, top };
+}
+
 import {
   MIN_DAYS as AUTOMATION_MIN_DAYS,
   GOOD_CTR_PCT,
@@ -291,7 +324,7 @@ export function suggestOptimizations(
     out.push({
       kind: "note",
       severity: "info",
-      title: "데이터를 모으는 중이에요",
+      title: DATA_GATHERING_TITLES.newGoal,
       detail: [
         `이 광고 목표(${goalId})의 자동 최적화 룰은 다음 업데이트에서 추가돼요.`,
         `우선은 KPI 카드의 추세와 일일 표를 보고 직접 조정해주세요.`,
@@ -306,7 +339,7 @@ export function suggestOptimizations(
     out.push({
       kind: "note",
       severity: "info",
-      title: "데이터를 조금 더 모아보세요",
+      title: DATA_GATHERING_TITLES.dataGap,
       detail: [
         `아직 성과를 판단하기엔 일러요 — 부족: ${dataGaps.join(" / ")}.`,
         `조금 더 쌓이면 예산·소재 조정을 제안해드릴게요.`,

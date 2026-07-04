@@ -40,7 +40,7 @@ export default function DailyTrend({ data, labels, clicks, ctrs, exampleMode }: 
             <ChartLegend color="var(--w-accent-violet)" label="CTR" type="line" />
           </div>
         </div>
-        <DualChart labels={labels} clicks={clicks} ctrs={ctrs} />
+        <DualChart labels={labels} bars={clicks} line={ctrs} lineFormat={(v) => `${v.toFixed(1)}%`} />
       </Card>
 
       <Card className="p-0 overflow-hidden">

@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect } from "react";
 import Icon from "@shared/ui/Icon";
 import { cn } from "@shared/lib/cn";
+import { Dialog, DialogContent, DialogTitle } from "@shared/ui/Dialog";
 import type { BrandProfileEntry } from "../model/useBrandProfileStorage";
 
 interface Props {
@@ -13,22 +13,13 @@ interface Props {
 }
 
 export default function BrandProfilePickerModal({ profiles, activeId, onSelect, onClose }: Props) {
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
-
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
-    >
-      <div className="relative w-full max-w-[440px] bg-[var(--w-bg-elevated)] rounded-2xl shadow-[0_8px_40px_rgba(0,0,0,0.18)] flex flex-col p-6 gap-4">
+    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      <DialogContent style={{ width: 440 }} className="flex flex-col p-6 gap-4">
         <div className="flex items-center justify-between">
-          <h2 className="m-0 font-bold text-[17px] leading-[1.3] tracking-[-0.014em] text-[var(--w-fg-strong)]">
+          <DialogTitle className="m-0 font-bold text-[17px] leading-[1.3] tracking-[-0.014em] text-[var(--w-fg-strong)]">
             브랜드 프로필 선택
-          </h2>
+          </DialogTitle>
           <button type="button" onClick={onClose} className="p-1 text-[var(--w-fg-neutral)] hover:text-[var(--w-fg-strong)]">
             <Icon name="x" size={18} />
           </button>
@@ -75,7 +66,7 @@ export default function BrandProfilePickerModal({ profiles, activeId, onSelect, 
           <Icon name="plus" size={14} />
           새 프로필 추가
         </a>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

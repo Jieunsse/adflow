@@ -35,6 +35,8 @@ export interface BrandProfile {
   copyReferences?: CopyReference[];
   /** 근거 자료 (ADR-031) — 카피에 성과·사회적 증거 수치를 넣을 수 있는 유일한 출처. */
   proofPoints?: string[];
+  /** 브랜드 전역 단일 평균 마진율 (ADR-060) — 0~1. 공헌이익·BEP ROAS 산술의 유일한 입력. */
+  marginRate?: number;
 }
 
 export interface BrandProfileEntry extends BrandProfile {

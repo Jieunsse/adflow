@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button } from "@shared/ui/Button";
 import Icon from "@shared/ui/Icon";
 import { cn } from "@shared/lib/cn";
+import { Dialog, DialogContent, DialogTitle } from "@shared/ui/Dialog";
 import type { PersonaEntry } from "../model/usePersonasStorage";
 
 const INPUT_CLS =
@@ -95,12 +96,6 @@ export default function PersonaEditModal({ brandProfileId, persona, onSave, onCl
   const [interests, setInterests] = useState<string[]>(persona?.interests ?? []);
   const [customerDescription, setCustomerDescription] = useState(persona?.customerDescription ?? "");
 
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
-
   const handleSave = () => {
     if (!name.trim()) return;
     onSave({
@@ -124,15 +119,13 @@ export default function PersonaEditModal({ brandProfileId, persona, onSave, onCl
   ];
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
-    >
-      <div className="relative w-full max-w-[520px] max-h-[90vh] overflow-y-auto bg-[var(--w-bg-elevated)] rounded-2xl shadow-[0_8px_40px_rgba(0,0,0,0.18)] flex flex-col gap-5 p-6">
+    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      <DialogContent style={{ width: 520 }}>
+        <div className="flex flex-col gap-5 p-6">
         <div className="flex items-center justify-between">
-          <h2 className="m-0 font-bold text-[18px] leading-[1.3] tracking-[-0.016em] text-[var(--w-fg-strong)]">
+          <DialogTitle className="m-0 font-bold text-[18px] leading-[1.3] tracking-[-0.016em] text-[var(--w-fg-strong)]">
             {persona ? "페르소나 편집" : "페르소나 추가"}
-          </h2>
+          </DialogTitle>
           <button type="button" onClick={onClose} className="p-1 text-[var(--w-fg-neutral)] hover:text-[var(--w-fg-strong)]">
             <Icon name="x" size={18} />
           </button>
@@ -266,7 +259,8 @@ export default function PersonaEditModal({ brandProfileId, persona, onSave, onCl
             {persona ? "저장" : "추가"}
           </Button>
         </div>
-      </div>
-    </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }

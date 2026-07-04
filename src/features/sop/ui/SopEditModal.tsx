@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import Icon from "@shared/ui/Icon";
 import { Button } from "@shared/ui/Button";
 import { cn } from "@shared/lib/cn";
+import { Dialog, DialogContent, DialogTitle } from "@shared/ui/Dialog";
 import {
   isSectionFilled,
   type CtaRestrictionsData,
@@ -37,23 +38,9 @@ export default function SopEditModal({
   const accent = SECTION_ACCENT[type];
   const iconName = SECTION_ICON[type] as IconName;
 
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
-
   return (
-    <div
-      className="fixed inset-0 z-[100] bg-[rgba(15,17,21,0.45)] dark:bg-[rgba(0,0,0,0.6)] grid place-items-center p-10 animate-[fadeIn_120ms_ease]"
-      onClick={onClose}
-    >
-      <div
-        className="bg-[var(--w-bg-elevated)] border border-[var(--w-line-alternative)] rounded-2xl shadow-[0_30px_80px_rgba(0,0,0,0.20)] max-w-[92vw] max-h-[88vh] overflow-auto animate-[popIn_140ms_ease] w-[520px] flex flex-col"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      <DialogContent style={{ width: 520 }}>
         <div className="px-6 pt-6 pb-4 flex items-center gap-3 border-b border-[var(--w-line-alternative)]">
           <div
             className="w-10 h-10 rounded-xl flex items-center justify-center"
@@ -62,9 +49,9 @@ export default function SopEditModal({
             <Icon name={iconName} size={18} />
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="m-0 font-bold text-[17px] leading-[1.3] text-[var(--w-fg-strong)] tracking-[-0.008em]">
+            <DialogTitle className="m-0 font-bold text-[17px] leading-[1.3] text-[var(--w-fg-strong)] tracking-[-0.008em]">
               {SOP_SECTION_LABEL[type]}
-            </h3>
+            </DialogTitle>
             <div className="font-medium text-[12px] text-[var(--w-fg-neutral)] mt-0.5">
               {section ? "기존 값을 수정해요" : "이 가드레일을 새로 정의해요"}
             </div>
@@ -72,8 +59,8 @@ export default function SopEditModal({
         </div>
 
         <FormBody type={type} section={section} onSave={onSave} onClear={onClear} onClose={onClose} />
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 

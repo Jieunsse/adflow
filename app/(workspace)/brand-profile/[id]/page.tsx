@@ -21,6 +21,7 @@ import StatTile from "@features/brand-profile/ui/StatTile";
 import LearningSection from "@features/brand-profile/ui/LearningSection";
 import { SegControl } from "@shared/ui/SegControl";
 import { readLedger } from "@entities/ab-test/tournament/ledger";
+import { seedDemoLedger } from "@features/brand-profile/model/seed-ledger";
 import type { Hypothesis } from "@entities/ab-test/tournament/tournament";
 
 type ProfileTab = "identity" | "policy" | "audience" | "learning";
@@ -42,6 +43,7 @@ export default function BrandProfileViewPage() {
   );
   const [ledger, setLedger] = useState<Hypothesis[]>([]);
   useEffect(() => {
+    seedDemoLedger(id);
     setLedger(readLedger(id));
   }, [id]);
 

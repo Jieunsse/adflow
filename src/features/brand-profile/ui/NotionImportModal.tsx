@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Button } from "@shared/ui/Button";
 import Icon from "@shared/ui/Icon";
 import { cn } from "@shared/lib/cn";
+import { Dialog, DialogContent, DialogTitle } from "@shared/ui/Dialog";
 import type { SopSection } from "@features/sop/model/useSopStorage";
 
 // ADR-043 — 노션 자원 선택 + AI 가져오기 모달. Brand Profile 신규·편집 화면에서 호출.
@@ -116,14 +117,11 @@ export default function NotionImportModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onMouseDown={onClose}>
-      <div
-        className="relative w-full max-w-[520px] max-h-[90vh] overflow-y-auto bg-[var(--w-bg-elevated)] rounded-2xl shadow-[0_8px_40px_rgba(0,0,0,0.18)] flex flex-col gap-5 p-6"
-        onMouseDown={(e) => e.stopPropagation()}
-      >
+    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      <DialogContent style={{ width: 520 }}>
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h2 className="m-0 font-bold text-[18px] leading-[1.3] tracking-[-0.016em] text-[var(--w-fg-strong)]">노션에서 가져오기</h2>
+            <DialogTitle className="m-0 font-bold text-[18px] leading-[1.3] tracking-[-0.016em] text-[var(--w-fg-strong)]">노션에서 가져오기</DialogTitle>
             <p className="m-0 mt-1.5 font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)]">
               가져올 페이지·데이터베이스를 선택하면 AI가 브랜드 프로필의 빈 칸을 채워줘요.
             </p>
@@ -199,7 +197,7 @@ export default function NotionImportModal({
             </div>
           </div>
         )}
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

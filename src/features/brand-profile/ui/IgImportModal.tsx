@@ -6,6 +6,7 @@ import { Button } from "@shared/ui/Button";
 import Icon from "@shared/ui/Icon";
 import { IgPostPreview } from "@shared/ui/IgPostPreview";
 import { cn } from "@shared/lib/cn";
+import { Dialog, DialogContent, DialogTitle } from "@shared/ui/Dialog";
 
 interface MediaItem {
   id: string;
@@ -68,14 +69,14 @@ export default function IgImportModal({ onImport, onClose }: Props) {
   const previewed = items.find((m) => m.id === previewId) ?? null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.4)" }}>
-      <div className="bg-[var(--w-bg-elevated)] rounded-2xl shadow-[0_8px_40px_rgba(0,0,0,0.18)] w-full max-w-[800px] flex flex-col max-h-[80vh]">
+    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      <DialogContent style={{ width: 800 }} className="flex flex-col max-h-[80vh] p-0">
         {/* Header */}
         <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-[var(--w-line-normal)] shrink-0">
           <div>
-            <h2 className="m-0 font-bold text-[17px] leading-[1.3] tracking-[-0.012em] text-[var(--w-fg-strong)]">
+            <DialogTitle className="m-0 font-bold text-[17px] leading-[1.3] tracking-[-0.012em] text-[var(--w-fg-strong)]">
               IG 게시글에서 가져오기
-            </h2>
+            </DialogTitle>
             <p className="m-0 mt-1 font-medium text-[12.5px] text-[var(--w-fg-neutral)]">
               가져올 게시글을 선택하세요
             </p>
@@ -171,7 +172,7 @@ export default function IgImportModal({ onImport, onClose }: Props) {
             </Button>
           </div>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

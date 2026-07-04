@@ -91,8 +91,8 @@ export const TEMPLATES: Record<TemplateId, { label: string; band: Band; blocks: 
   E: {
     label: "좌하단", band: "bottom",
     blocks: [
-      TITLE_BASE({ align: "left", xPct: 6, yPct: 78, fontPct: 9.5 }),
-      TITLE_BASE({ align: "left", xPct: 6, yPct: 89, fontPct: 4.5, weight: 400 }),
+      TITLE_BASE({ align: "left", xPct: 6, yPct: 80, fontPct: 6.5 }),
+      TITLE_BASE({ align: "left", xPct: 6, yPct: 89, fontPct: 4, weight: 400 }),
     ],
   },
 };
@@ -363,15 +363,15 @@ export default function TextOverlayEditor({
     setSelectedId(next[0]?.id ?? null);
   };
 
-  // ADR-058 — 헤드라인+부제 자동 시드. 마운트 시 1회, 헤드라인이 있으면 "상단 중앙"(밴드+위계 2:1) 으로 배치.
+  // ADR-058 — 헤드라인+부제 자동 시드. 마운트 시 1회, 헤드라인이 있으면 "좌하단"(밴드+위계 2:1) 으로 배치.
   // ADR-056 ① pull-only 를 이 진입 케이스에 한해 supersede(부제까지 짝으로 시드된 카피가 있을 때만).
   const seededRef = useRef(false);
   useEffect(() => {
     if (seededRef.current) return;
     seededRef.current = true;
     if (!headlineSuggestion?.trim()) return;
-    setBand(TEMPLATES.B.band);
-    const seeded = pickTemplate("B", headlineSuggestion, subtitleSuggestion)
+    setBand(TEMPLATES.E.band);
+    const seeded = pickTemplate("E", headlineSuggestion, subtitleSuggestion)
       .filter((b) => b.text.trim() && b.text !== "부가 문구") // 빈 부제는 블록 생략
       .map((b) => ({ ...b, id: `b${idRef.current++}` }));
     setBlocks(seeded);

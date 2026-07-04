@@ -12,6 +12,7 @@ import { Badge } from "@shared/ui/primitives";
 import { Button } from "@shared/ui/Button";
 import { Card } from "@shared/ui/Card";
 import { Select } from "@shared/ui/Select";
+import { Dialog, DialogContent, DialogTitle } from "@shared/ui/Dialog";
 import { cn } from "@shared/lib/cn";
 import { OBJECTIVES_PHASE1, TONES, COPY_HOOKS, findHook, type CopyHook } from "@entities/creative/options";
 import SelectedGoalCard from "@entities/creative/ui/SelectedGoalCard";
@@ -546,9 +547,9 @@ export default function InputForm(p: Props) {
       </Card>
 
       {/* 브랜드 프로필 미설정 모달 */}
-      {showNoBrandProfileModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="w-full max-w-[400px] mx-4 rounded-2xl bg-[var(--w-bg-elevated)] shadow-[0_8px_32px_rgba(0,0,0,0.18)] p-7 flex flex-col gap-5">
+      <Dialog open={showNoBrandProfileModal} onOpenChange={(o) => !o && setShowNoBrandProfileModal(false)}>
+        <DialogContent style={{ width: 400 }}>
+          <div className="flex flex-col gap-5 p-7">
             <div className="flex flex-col gap-2">
               <div
                 className="w-10 h-10 rounded-xl flex items-center justify-center"
@@ -556,9 +557,9 @@ export default function InputForm(p: Props) {
               >
                 <Icon name="sparkles" size={20} />
               </div>
-              <h3 className="m-0 font-bold text-[17px] leading-[1.3] tracking-[-0.012em] text-[var(--w-fg-strong)]">
+              <DialogTitle className="m-0 font-bold text-[17px] leading-[1.3] tracking-[-0.012em] text-[var(--w-fg-strong)]">
                 브랜드 프로필을 먼저 만들어 두세요
-              </h3>
+              </DialogTitle>
               <p className="m-0 font-medium text-[13.5px] leading-[1.6] text-[var(--w-fg-neutral)]">
                 브랜드 설명·타겟·고객 언어를 한 번 등록해두면
                 <br />
@@ -589,8 +590,8 @@ export default function InputForm(p: Props) {
               </Button>
             </div>
           </div>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
 
       {showProfilePicker && (
         <BrandProfilePickerModal

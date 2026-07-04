@@ -1,16 +1,14 @@
 "use client";
 
-// ADR-040 — 소재 만들기 phase 2 본체. 두 탭:
-//  · 기본(concept): 카피 기반 Image Concept 3개(다축 분기) 카드 — 슬롯별 prompt 편집·개별 재생성.
-//  · 보조(brief): 연출컷·자료 기반 외주 기획안. variants[] 통일 계약(동일 prompt 3복제)으로 흡수.
+// ADR-040 — 소재 만들기 phase 2 본체. "고를 땐(설정) 묶고, 결과는 따로":
+//  · GenSetupCard: 방식 2택(concept/brief) + 종속 슬롯(제품 레퍼런스 / 참고 자료). 생성 CTA 없음.
+//  · 진입/결과: 빈상태=히어로(CTA 소유) / GEN=쉬머+스피너 / B=3컷 그리드(1장 선택·비선택 dim).
 // Package Reference: 선택 Product imageUrl 자동 + 수동 교체. 전 variant 공통 referenceImages 로 합류.
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Icon from "@shared/ui/Icon";
-import { Badge } from "@shared/ui/primitives";
 import { Button } from "@shared/ui/Button";
 import { Skeleton } from "@shared/ui/Skeleton";
-import { cn } from "@shared/lib/cn";
 import { useApiMutation } from "@shared/lib/api/useApiMutation";
 import type { ImageVariant, ReferenceImage } from "@/lib/gemini-image";
 import { fetchImageStream } from "@features/generate-image/image-stream";
@@ -27,6 +25,8 @@ import { readActiveBrandProfileEntry } from "@features/brand-profile/model/useBr
 import { useReferenceMaterials, type ReferenceMaterial } from "@shared/lib/referenceMaterials";
 import type { ProductEntry } from "@shared/lib/products";
 import BriefForm, { type AspectId } from "./BriefForm";
+import GenSetupCard from "./GenSetupCard";
+import ImageEntryHero from "./ImageEntryHero";
 
 const MAX_REF_MB = 3;
 
@@ -71,15 +71,18 @@ const EMPTY_CONCEPTS: ImageConcept[] = [
 export default function AiImageBlock({
   productId,
   imageDataUrl,
+  finalImageDataUrl,
   setImageDataUrl,
 }: {
   productId: string | null;
   imageDataUrl: string | null;
+  finalImageDataUrl: string | null;
   setImageDataUrl: (v: string | null) => void;
 }) {
   const { state, dispatch } = useCreativeDraft();
   const showToast = useToast();
   const [mode, setMode] = useState<AiImageMode>("concept");
+  const briefHeadingRef = useRef<HTMLHeadingElement>(null);
   const [zoomedSrc, setZoomedSrc] = useState<string | null>(null);
   const [pendingSlots, setPendingSlots] = useState<number[]>([]);
   const [rerollingSlots, setRerollingSlots] = useState<number[]>([]);
@@ -376,21 +379,39 @@ export default function AiImageBlock({
   const slotImage = (i: number) => {
     const src = allSlots?.[i] ?? "";
     if (pendingSlots.includes(i)) {
-      return <Skeleton style={{ aspectRatio: "1 / 1", borderRadius: 8 }} />;
+      // GEN — 쉬머(Skeleton) 위에 스피너·라벨·진행 인디케이터(빈 화면 금지)
+      return (
+        <div style={{ position: "relative", aspectRatio: "1 / 1", borderRadius: 8, overflow: "hidden" }}>
+          <Skeleton className="absolute inset-0 !rounded-none" />
+          <div className="absolute inset-0 grid place-items-center">
+            <div className="flex flex-col items-center gap-2.5">
+              <div className="rounded-full border-[2.6px] border-[var(--w-accent-violet-soft)] border-t-[var(--w-accent-violet)] animate-[spin_0.85s_linear_infinite]" style={{ width: 26, height: 26 }} />
+              <div className="font-semibold text-[12.5px] leading-none text-[var(--w-fg-strong)] whitespace-nowrap">
+                {concepts[i]?.label?.trim() || `컨셉 ${i + 1}`} 만드는 중…
+              </div>
+              <div className="h-1 rounded-full overflow-hidden bg-[var(--w-line-neutral)]" style={{ width: "64%" }}>
+                <div className="h-full rounded-full animate-pulse" style={{ width: "60%", background: "linear-gradient(90deg, var(--w-primary-normal), var(--w-accent-violet))" }} />
+              </div>
+            </div>
+          </div>
+        </div>
+      );
     }
     if (src) {
       const selected = selectedIdx === i;
+      const dim = selectedIdx >= 0 && !selected;
+      const displaySrc = selected && finalImageDataUrl ? finalImageDataUrl : src;
       return (
-        <div className="group" style={{ position: "relative" }}>
+        <div className="group" style={{ position: "relative", opacity: dim ? 0.78 : 1, transition: "opacity 160ms ease" }}>
           <button
             type="button"
             aria-pressed={selected}
             aria-label={`이미지 ${i + 1} 최종 선택`}
             onClick={() => setImageDataUrl(src)}
-            style={{ padding: 0, border: selected ? "2px solid var(--w-primary-normal)" : "1px solid var(--w-line-normal)", borderRadius: 8, overflow: "hidden", cursor: "pointer", background: "none", lineHeight: 0, width: "100%", display: "block" }}
+            style={{ padding: 0, border: selected ? "2px solid var(--w-primary-normal)" : "1px solid var(--w-line-normal)", borderRadius: 8, overflow: "hidden", cursor: "pointer", background: "none", lineHeight: 0, width: "100%", display: "block", boxShadow: selected ? "0 0 0 4px rgba(0,102,255,0.16)" : "none" }}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={src} alt={`생성 이미지 ${i + 1}`} style={{ width: "100%", display: "block", aspectRatio: "1 / 1", objectFit: "cover" }} />
+            <img src={displaySrc} alt={`생성 이미지 ${i + 1}`} style={{ width: "100%", display: "block", aspectRatio: "1 / 1", objectFit: "cover" }} />
           </button>
           {/* 선택 affordance — 항상 노출(라디오). 클릭 영역은 이미지 표면 */}
           <span
@@ -405,7 +426,7 @@ export default function AiImageBlock({
               type="button"
               aria-label={`생성 이미지 ${i + 1} 크게 보기`}
               title="크게 보기"
-              onClick={() => setZoomedSrc(src)}
+              onClick={() => setZoomedSrc(displaySrc)}
               style={{ width: 28, height: 28, borderRadius: 6, border: "1px solid var(--w-line-normal)", background: "rgba(255,255,255,0.94)", color: "var(--w-fg-normal)", display: "grid", placeItems: "center", cursor: "zoom-in", padding: 0, boxShadow: "0 1px 3px rgba(0,0,0,0.18)" }}
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -439,249 +460,280 @@ export default function AiImageBlock({
     );
   };
 
-  return (
-    <div className="flex flex-col gap-2" style={{ marginBottom: 18, paddingTop: 4 }}>
-      <label className="font-semibold text-[15px] leading-[1.3] tracking-[-0.008em] text-[var(--w-fg-strong)] flex items-center gap-1.5">
-        AI 이미지 생성 <Badge kind="neutral">실험</Badge>
-      </label>
-
-      {/* 탭 + 제품칩 — 켜짐일 땐 한 줄(칩은 tablist 바깥 형제로 ARIA 경계 보존), 꺼짐/미첨부는 탭만 한 줄 + 배너 풀폭 */}
-      <div className="flex items-center gap-2 flex-wrap" style={{ marginBottom: packageRef && packageRefOn ? 12 : 10 }}>
-        <div
-          className="inline-flex gap-0.5 p-[3px] bg-[var(--w-bg-alternative)] rounded-[10px] flex-none"
-          role="tablist"
-          aria-label="AI 이미지 생성 방식"
-        >
-          <button
-            type="button"
-            className={cn(
-              "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] font-semibold text-[12.5px] leading-none transition-[background,color] duration-[120ms] cursor-pointer",
-              mode === "concept"
-                ? "bg-[var(--w-bg-elevated)] text-[var(--w-fg-strong)] shadow-sm"
-                : "text-[var(--w-fg-neutral)] hover:text-[var(--w-fg-strong)]",
-            )}
-            onClick={() => setMode("concept")}
-            role="tab"
-            aria-selected={mode === "concept"}
-          >
-            <Icon name="sparkles" size={13} /> 카피 기반 3컨셉
-          </button>
-          <button
-            type="button"
-            className={cn(
-              "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] font-semibold text-[12.5px] leading-none transition-[background,color] duration-[120ms] cursor-pointer",
-              mode === "brief"
-                ? "bg-[var(--w-bg-elevated)] text-[var(--w-fg-strong)] shadow-sm"
-                : "text-[var(--w-fg-neutral)] hover:text-[var(--w-fg-strong)]",
-            )}
-            onClick={() => setMode("brief")}
-            role="tab"
-            aria-selected={mode === "brief"}
-          >
-            <Icon name="doc" size={13} /> 기획안·자료로 생성
-          </button>
-        </div>
-
-        {/* 켜짐: 차분한 인라인 칩(안 건드리는 기본 설정이라 위계 하향) — tablist 형제로 우측 정렬 */}
-        {packageRef && packageRefOn && (
-          <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg border border-[var(--w-line-normal)] bg-[var(--w-bg-elevated)] flex-none" style={{ marginLeft: "auto" }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={packageRef.preview}
-              alt="제품 레퍼런스"
-              onClick={() => setZoomedSrc(packageRef.preview)}
-              style={{ width: 28, height: 28, objectFit: "cover", borderRadius: 6, border: "1px solid var(--w-line-normal)", cursor: "zoom-in", flex: "none" }}
-            />
-            <span className="flex items-center gap-1 font-semibold text-[12px] leading-none text-[var(--w-fg-strong)]" title="제품 원본(라벨·로고)은 그대로 두고 배경만 컨셉별로 만들어요">
-              <span style={{ width: 7, height: 7, borderRadius: 999, background: "var(--w-primary-normal)", flex: "none" }} aria-hidden="true" />
-              제품 원본 유지 중
+  // ── 종속 슬롯: 참조할 제품(concept) — packageRef 3상태 보존(켜짐/꺼짐/미첨부) ──
+  const productSlot = (
+    <div className="py-3">
+      <span className="block w-overline text-[var(--w-fg-alternative)] mb-2.5">참조할 제품</span>
+      {packageRef && packageRefOn ? (
+        <div className="flex items-start gap-3.5">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={packageRef.preview}
+            alt={productMeta?.name ?? "제품 사진"}
+            title="클릭하면 크게 볼 수 있어요"
+            onClick={() => setZoomedSrc(packageRef.preview)}
+            style={{ width: 72, height: 72, objectFit: "cover", borderRadius: 12, border: "1px solid var(--w-line-normal)", cursor: "zoom-in", flex: "none" }}
+          />
+          <div className="flex-1 min-w-0 flex flex-col items-start">
+            <span className="inline-flex items-center gap-1.5 px-[7px] py-[2px] rounded-md font-semibold text-[11px] leading-none text-[var(--w-fg-strong)]" style={{ background: "var(--w-status-positive-soft)" }}>
+              <span style={{ width: 5, height: 5, borderRadius: 999, background: "var(--w-status-positive)", flex: "none" }} aria-hidden="true" />
+              원본 유지 중
             </span>
-            <Icon name="info" size={13} className="text-[var(--w-fg-alternative)]" />
-            <div className="flex items-center gap-1.5">
-              <label className="inline-flex items-center gap-[5px] font-semibold leading-none whitespace-nowrap h-7 px-2.5 text-[12px] rounded-md text-[var(--w-fg-neutral)] hover:text-[var(--w-fg-strong)] hover:bg-[var(--w-bg-neutral)] cursor-pointer transition-[background,color] duration-[120ms]">
-                <Icon name="upload" size={12} /> 교체
+            <div className="w-label truncate w-full mt-1.5" title={productMeta?.name}>{productMeta?.name ?? "선택한 제품"}</div>
+            <div className="flex items-center gap-1.5 w-caption mt-1">
+              라벨·로고 그대로, 배경만 AI가 만들어요
+              <span className="inline-grid place-items-center text-[var(--w-fg-alternative)]" title="제품 원본(라벨·로고)은 그대로 두고 배경만 컨셉별로 만들어요">
+                <Icon name="info" size={13} />
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5 mt-2.5">
+              <label className="inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[12.5px] leading-none px-3 py-2 rounded-lg border border-[var(--w-line-normal)] bg-[var(--w-bg-elevated)] text-[var(--w-primary-press)] hover:bg-[var(--w-primary-soft)] hover:border-[var(--w-primary-normal)] cursor-pointer transition-[background,border-color] duration-[120ms]">
+                <Icon name="upload" size={13} /> 다른 사진 올리기
                 <input type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => handleReplacePackageRef(e.target.files)} />
               </label>
-              <button type="button" onClick={() => setPackageRefOn(false)} className="font-semibold leading-none whitespace-nowrap h-7 px-2.5 text-[12px] rounded-md text-[var(--w-fg-neutral)] hover:text-[var(--w-fg-strong)] hover:bg-[var(--w-bg-neutral)] cursor-pointer transition-[background,color] duration-[120ms]">
+              <button type="button" onClick={() => setPackageRefOn(false)} className="font-semibold text-[12.5px] leading-none px-3 py-2 rounded-lg text-[var(--w-fg-neutral)] hover:text-[var(--w-fg-strong)] hover:bg-[var(--w-bg-neutral)] cursor-pointer transition-[background,color] duration-[120ms]">
                 끄기
               </button>
             </div>
           </div>
-        )}
-      </div>
-
-      {/* Package Reference — 조치 필요 상태만 풀폭 배너로 (주의 무게 보존) */}
-      {packageRef && !packageRefOn ? (
-        // 꺼짐: 위험 상태라 눈에 띄게
-        <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-[var(--w-warn-line)] bg-[var(--w-warn-soft)]" style={{ marginBottom: 12 }}>
-          <Icon name="warn" size={16} className="text-[var(--w-warn-normal)] flex-none" />
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div className="font-semibold text-[12.5px] leading-tight text-[var(--w-fg-strong)]">제품 레퍼런스 꺼짐</div>
-            <div className="font-medium text-[11.5px] leading-snug text-[var(--w-fg-neutral)] mt-0.5">제품이 AI 로 재해석돼요 — 라벨·로고가 그대로 유지되지 않아요</div>
+        </div>
+      ) : packageRef && !packageRefOn ? (
+        <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-[var(--w-status-cautionary-line)] bg-[var(--w-status-cautionary-soft)]">
+          <Icon name="warn" size={16} className="text-[var(--w-status-cautionary)] flex-none" />
+          <div className="min-w-0" style={{ flex: 1 }}>
+            <div className="flex items-center gap-1.5 min-w-0">
+              <span className="w-label truncate" title={productMeta?.name}>{productMeta?.name ?? "선택한 제품"}</span>
+              <span className="inline-flex items-center gap-1.5 px-[7px] py-[2px] rounded-md font-semibold text-[11px] leading-none text-[var(--w-fg-strong)] flex-none" style={{ background: "var(--w-status-cautionary-soft)" }}>
+                <span style={{ width: 5, height: 5, borderRadius: 999, background: "var(--w-status-cautionary)", flex: "none" }} aria-hidden="true" />
+                AI 재해석됨
+              </span>
+            </div>
+            <div className="w-caption mt-0.5">라벨·로고 유지 안 됨 — 배경과 함께 재생성</div>
           </div>
-          <label className={cn("inline-flex items-center justify-center gap-[5px] border font-semibold leading-none whitespace-nowrap h-8 px-3 text-[12.5px] rounded-lg", "bg-transparent border-[var(--w-line-normal)] text-[var(--w-fg-strong)] hover:bg-[var(--w-bg-neutral)] cursor-pointer transition-[background] duration-[120ms]")}>
-            <Icon name="upload" size={13} /> 교체
+          <label className="inline-flex items-center justify-center gap-1.5 border font-semibold leading-none whitespace-nowrap h-8 px-3 text-[12.5px] rounded-lg bg-transparent border-[var(--w-line-normal)] text-[var(--w-fg-strong)] hover:bg-[var(--w-bg-neutral)] cursor-pointer transition-[background] duration-[120ms]">
+            <Icon name="upload" size={13} /> 사진 바꾸기
             <input type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => handleReplacePackageRef(e.target.files)} />
           </label>
           <Button variant="secondary" size="sm" type="button" onClick={() => setPackageRefOn(true)}>
             켜기
           </Button>
         </div>
-      ) : !packageRef ? (
-        // 미첨부: 첨부 유도
-        <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-[var(--w-line-normal)] bg-[var(--w-bg-elevated)]" style={{ marginBottom: 12 }}>
-          <div style={{ flex: 1 }}>
-            <div className="font-semibold text-[12.5px] leading-tight text-[var(--w-fg-strong)]">제품 레퍼런스 (선택)</div>
-            <div className="font-medium text-[11.5px] leading-snug text-[var(--w-fg-neutral)] mt-0.5">제품 사진을 올리면 원본 그대로 두고 배경 연출만 생성해요</div>
+      ) : (
+        <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-dashed border-[var(--w-line-normal)] bg-[var(--w-bg-alternative)]">
+          <div className="min-w-0" style={{ flex: 1 }}>
+            <div className="w-label truncate" title={productMeta?.name}>{productMeta?.name ? `${productMeta.name} · 사진 없음` : "제품 레퍼런스 (선택)"}</div>
+            <div className="w-caption mt-0.5">{productMeta?.name ? "사진을 올리면 이 제품 원본을 그대로 둬요" : "제품 사진을 올리면 원본 그대로 두고 배경 연출만 생성해요"}</div>
           </div>
-          <label className={cn("inline-flex items-center justify-center gap-[5px] border font-semibold leading-none whitespace-nowrap h-8 px-3 text-[12.5px] rounded-lg", "bg-transparent border-[var(--w-line-normal)] text-[var(--w-fg-strong)] hover:bg-[var(--w-bg-neutral)] cursor-pointer transition-[background] duration-[120ms]")}>
+          <label className="inline-flex items-center justify-center gap-1.5 border font-semibold leading-none whitespace-nowrap h-8 px-3 text-[12.5px] rounded-lg bg-transparent border-[var(--w-line-normal)] text-[var(--w-fg-strong)] hover:bg-[var(--w-bg-neutral)] cursor-pointer transition-[background] duration-[120ms]">
             <Icon name="upload" size={13} /> 제품 사진 첨부
             <input type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => handleReplacePackageRef(e.target.files)} />
           </label>
         </div>
-      ) : null}
+      )}
+    </div>
+  );
 
-      {mode === "concept" ? (
+  // ── 종속 슬롯: 참고 자료(brief) — 기존 BriefForm 기능 그대로 ──
+  const docSlot = (
+    <div className="py-3">
+      <BriefForm
+        state={state}
+        scenes={scenes}
+        logo={logo}
+        aspect={aspect}
+        briefNotes={briefNotes}
+        generating={pendingSlots.length > 0}
+        warehouseMaterials={warehouseMaterials}
+        selectedMaterials={selectedMaterials}
+        onAddScenes={handleAddScenes}
+        onRemoveScene={(i) => setScenes((prev) => prev.filter((_, idx) => idx !== i))}
+        onClearScenes={() => setScenes([])}
+        onSetLogo={handleSetLogo}
+        onRemoveLogo={() => setLogo(null)}
+        onAspectChange={setAspect}
+        onNotesChange={setBriefNotes}
+        onGenerate={handleGenerateFromBrief}
+        onZoom={setZoomedSrc}
+        onToggleMaterial={(m) =>
+          setSelectedMaterials((prev) =>
+            prev.find((x) => x.id === m.id) ? prev.filter((x) => x.id !== m.id) : [...prev, m],
+          )
+        }
+        onUploadMaterial={handleUploadMaterial}
+      />
+    </div>
+  );
+
+  // 진입/결과 표면: concept 모드에서 한 번도 생성·제안 안 했으면 빈상태(히어로).
+  const conceptUntouched = !concepts.some((c) => !!c.prompt.trim()) && allSlots === null && pendingSlots.length === 0;
+  const showGrid = mode === "concept" ? !conceptUntouched : allSlots !== null || pendingSlots.length > 0;
+  const briefEntry = mode === "brief" && !showGrid;
+
+  useEffect(() => {
+    if (briefEntry) briefHeadingRef.current?.focus();
+  }, [briefEntry]);
+
+  const backToConceptLink = (
+    <button
+      type="button"
+      onClick={() => setMode("concept")}
+      className="inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[12.5px] leading-none text-[var(--w-fg-neutral)] hover:text-[var(--w-fg-strong)] cursor-pointer transition-[color] duration-[120ms]"
+    >
+      <Icon name="sparkles" size={13} /> AI 컨셉으로
+    </button>
+  );
+
+  return (
+    <div className="flex flex-col gap-4" style={{ marginBottom: 18, paddingTop: 4 }}>
+      {/* 임시로 숨김 — "어떻게 만들까요?" 카드
+      <GenSetupCard mode={mode} onModeChange={setMode} productSlot={productSlot} docSlot={docSlot} /> */}
+
+      {/* 진입/결과 — 빈상태 히어로(concept) / GEN·B 3컷 그리드 */}
+      {mode === "concept" && conceptUntouched && (
+        <ImageEntryHero
+          generating={suggest.isPending || pendingSlots.length > 0}
+          disabled={!state.primaryText}
+          onGenerate={handleSuggestConcepts}
+          onDoc={() => setMode("brief")}
+        />
+      )}
+
+      {mode === "concept" && !conceptUntouched && (
         <>
-          {concepts.some((c) => !!c.prompt.trim()) || allSlots !== null ? (
-            // 채워진 상태: 각 카드에 '다시 생성'이 있으니 전체 재제안은 보조 액션으로 강등 (우측 ghost)
-            <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 10 }}>
-              <button
-                type="button"
-                disabled={suggest.isPending || pendingSlots.length > 0 || !state.primaryText}
-                onClick={handleSuggestConcepts}
-                className="inline-flex items-center gap-1 font-semibold text-[11.5px] leading-none text-[var(--w-fg-neutral)] hover:text-[var(--w-fg-strong)] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-[color] duration-[120ms]"
-              >
-                <Icon name="refresh" size={12} spin={suggest.isPending} />
-                {suggest.isPending ? "컨셉 제안 중…" : pendingSlots.length > 0 ? "생성 중…" : "전체 다시 제안"}
-              </button>
-            </div>
-          ) : (
-            // 빈 상태: 3컷을 만들어내는 메인 CTA → full-width
-            <Button
-              variant="primary"
-              size="sm"
+          {/* 전체 재제안 — 카드별 '다시 생성'이 있으니 조용한 ghost 보조로 강등 */}
+          <div style={{ display: "flex", justifyContent: "flex-end" }}>
+            <button
+              type="button"
               disabled={suggest.isPending || pendingSlots.length > 0 || !state.primaryText}
               onClick={handleSuggestConcepts}
-              className="w-full"
-              style={{ marginBottom: 12 }}
+              className="inline-flex items-center gap-1 font-semibold text-[11.5px] leading-none text-[var(--w-fg-neutral)] hover:text-[var(--w-fg-strong)] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-[color] duration-[120ms]"
             >
-              {suggest.isPending ? "컨셉 제안 중…" : pendingSlots.length > 0 ? "생성 중…" : "AI 컨셉으로 3컷 만들기"}
-            </Button>
-          )}
+              <Icon name="refresh" size={12} spin={suggest.isPending} />
+              {suggest.isPending ? "컨셉 제안 중…" : pendingSlots.length > 0 ? "생성 중…" : "전체 다시 제안"}
+            </button>
+          </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 10 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 16 }}>
             {[0, 1, 2].map((i) => {
               const editing = promptEditSlots.includes(i);
               return (
-              <div key={`concept-${i}`} className="flex flex-col gap-2 p-2.5 rounded-xl border border-[var(--w-line-normal)] bg-[var(--w-bg-elevated)]">
-                {/* 의사결정 단위 = 한국어 label (영어 prompt 는 아래 접힘) */}
-                <div className="font-[600] text-[11px] leading-tight text-[var(--w-fg-neutral)] tracking-[0.03em] uppercase">
-                  {concepts[i]?.label?.trim() || `컨셉 ${i + 1}`}
+                <div key={`concept-${i}`} className="flex flex-col bg-[var(--w-bg-elevated)] border-[1.5px] border-[var(--w-line-normal)] rounded-2xl overflow-hidden">
+                  <div style={{ position: "relative" }}>
+                    {slotImage(i)}
+                    <span className="absolute right-3 bottom-3 z-[3] inline-flex items-center gap-[7px] whitespace-nowrap px-2.5 py-1.5 rounded-full text-white font-semibold text-[12px] leading-none" style={{ background: "rgba(23,23,25,0.62)", backdropFilter: "blur(6px)", pointerEvents: "none" }}>
+                      <b className="font-bold">{concepts[i]?.label?.trim() || `컨셉 ${i + 1}`}</b>
+                    </span>
+                  </div>
+                  <div className="flex flex-col gap-2.5 px-3.5 pt-3 pb-3.5">
+                    <div className="flex items-center justify-between gap-2">
+                      <button
+                        type="button"
+                        aria-expanded={editing}
+                        onClick={() =>
+                          setPromptEditSlots((prev) => (editing ? prev.filter((s) => s !== i) : [...prev, i]))
+                        }
+                        className="inline-flex items-center gap-1.5 font-medium text-[12px] leading-none text-[var(--w-fg-neutral)] hover:text-[var(--w-fg-strong)] cursor-pointer transition-[color] duration-[120ms]"
+                      >
+                        <Icon name="chev-down" size={12} style={{ transform: editing ? "none" : "rotate(-90deg)", transition: "transform 120ms" }} />
+                        프롬프트 편집
+                      </button>
+                      <button
+                        type="button"
+                        disabled={pendingSlots.includes(i) || !conceptRenderable(i)}
+                        onClick={() => generateConceptSlot(i)}
+                        className="inline-flex items-center gap-1.5 whitespace-nowrap border border-[var(--w-line-normal)] bg-[var(--w-bg-elevated)] rounded-lg px-2.5 py-1.5 font-semibold text-[12px] leading-none text-[var(--w-fg-neutral)] hover:bg-[var(--w-bg-neutral)] hover:text-[var(--w-fg-strong)] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-[background,color] duration-[120ms]"
+                      >
+                        {pendingSlots.includes(i) ? (
+                          "생성 중…"
+                        ) : allSlots?.[i] ? (
+                          <>
+                            <Icon name="refresh" size={13} /> 다시 생성
+                          </>
+                        ) : (
+                          "이 컷 생성"
+                        )}
+                      </button>
+                    </div>
+                    {editing && (
+                      <div className="bg-[var(--w-bg-alternative)] border border-[var(--w-line-alternative)] rounded-[10px] px-3 py-2.5">
+                        <textarea
+                          className="w-full border-none bg-transparent resize-y font-medium text-[11.5px] leading-[1.55] text-[var(--w-fg-neutral)] outline-none"
+                          style={{ fontFamily: "var(--w-font-mono)", minHeight: 56 }}
+                          aria-label={`컨셉 ${i + 1} 프롬프트`}
+                          placeholder="AI 컨셉을 제안받거나 직접 입력하세요 (영어 권장)"
+                          value={concepts[i]?.prompt ?? ""}
+                          onChange={(e) =>
+                            setConcepts((prev) => prev.map((c, idx) => (idx === i ? { ...c, prompt: e.target.value } : c)))
+                          }
+                        />
+                        <button
+                          type="button"
+                          disabled={rerollingSlots.includes(i) || !state.primaryText}
+                          onClick={() => handleRerollConcept(i)}
+                          className="mt-1.5 inline-flex items-center gap-1 font-semibold text-[11.5px] leading-none text-[var(--w-fg-neutral)] hover:text-[var(--w-fg-strong)] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-[color] duration-[120ms]"
+                        >
+                          <Icon name="refresh" size={11} spin={rerollingSlots.includes(i)} /> 컨셉 다시 제안
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
-                {slotImage(i)}
-                {/* 프롬프트 편집 — 고급 보조 정보라 디폴트 접힘 (ADR-040 편집 보존) */}
-                <button
-                  type="button"
-                  aria-expanded={editing}
-                  onClick={() =>
-                    setPromptEditSlots((prev) => (editing ? prev.filter((s) => s !== i) : [...prev, i]))
-                  }
-                  className="self-start inline-flex items-center gap-1 font-semibold text-[11.5px] leading-none text-[var(--w-fg-neutral)] hover:text-[var(--w-fg-strong)] cursor-pointer transition-[color] duration-[120ms]"
-                >
-                  <Icon name="chev-down" size={12} style={{ transform: editing ? "none" : "rotate(-90deg)", transition: "transform 120ms" }} />
-                  프롬프트 편집
-                </button>
-                {editing && (
-                  <>
-                    <textarea
-                      className="w-full px-2.5 py-2 border border-[var(--w-line-normal)] rounded-lg bg-[var(--w-bg-elevated)] font-medium text-[12px] leading-[1.5] text-[var(--w-fg-strong)] outline-none focus:border-[var(--w-primary-normal)] resize-y"
-                      aria-label={`컨셉 ${i + 1} 프롬프트`}
-                      placeholder="AI 컨셉을 제안받거나 직접 입력하세요 (영어 권장)"
-                      rows={3}
-                      value={concepts[i]?.prompt ?? ""}
-                      onChange={(e) =>
-                        setConcepts((prev) => prev.map((c, idx) => (idx === i ? { ...c, prompt: e.target.value } : c)))
-                      }
-                    />
-                    <button
-                      type="button"
-                      disabled={rerollingSlots.includes(i) || !state.primaryText}
-                      onClick={() => handleRerollConcept(i)}
-                      className="self-start inline-flex items-center gap-1 font-semibold text-[11.5px] leading-none text-[var(--w-fg-neutral)] hover:text-[var(--w-fg-strong)] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-[color] duration-[120ms]"
-                    >
-                      <Icon name="refresh" size={11} spin={rerollingSlots.includes(i)} /> 컨셉 다시 제안
-                    </button>
-                  </>
-                )}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  type="button"
-                  disabled={pendingSlots.includes(i) || !conceptRenderable(i)}
-                  onClick={() => generateConceptSlot(i)}
-                  className="border border-[var(--w-line-normal)] w-full"
-                >
-                  {pendingSlots.includes(i) ? (
-                    "생성 중…"
-                  ) : allSlots?.[i] ? (
-                    <>
-                      <Icon name="refresh" size={13} /> 다시 생성
-                    </>
-                  ) : (
-                    "이 컷 생성"
-                  )}
-                </Button>
-              </div>
               );
             })}
           </div>
         </>
-      ) : (
-        <BriefForm
-          state={state}
-          scenes={scenes}
-          logo={logo}
-          aspect={aspect}
-          briefNotes={briefNotes}
-          generating={pendingSlots.length > 0}
-          warehouseMaterials={warehouseMaterials}
-          selectedMaterials={selectedMaterials}
-          onAddScenes={handleAddScenes}
-          onRemoveScene={(i) => setScenes((prev) => prev.filter((_, idx) => idx !== i))}
-          onClearScenes={() => setScenes([])}
-          onSetLogo={handleSetLogo}
-          onRemoveLogo={() => setLogo(null)}
-          onAspectChange={setAspect}
-          onNotesChange={setBriefNotes}
-          onGenerate={handleGenerateFromBrief}
-          onZoom={setZoomedSrc}
-          onToggleMaterial={(m) =>
-            setSelectedMaterials((prev) =>
-              prev.find((x) => x.id === m.id) ? prev.filter((x) => x.id !== m.id) : [...prev, m],
-            )
-          }
-          onUploadMaterial={handleUploadMaterial}
-        />
       )}
 
-      {/* brief 모드의 생성 결과 슬롯 (concept 모드는 카드에 인라인) */}
-      {mode === "brief" && (allSlots !== null || pendingSlots.length > 0) && (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8, marginTop: 12 }}>
-          {[0, 1, 2].map((i) => (
-            <div key={`brief-slot-${i}`}>{slotImage(i)}</div>
-          ))}
+      {/* brief 입력 단계 — 생성 전 BriefForm 표면(고아였던 docSlot 배선) */}
+      {briefEntry && (
+        <div className="rounded-[20px] border border-[var(--w-line-normal)] bg-[var(--w-bg-elevated)] px-6 py-5">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <span className="inline-flex items-center gap-[7px] whitespace-nowrap font-semibold text-[11px] leading-none tracking-[0.06em] uppercase text-[var(--w-accent-violet)]">
+                <Icon name="doc" size={13} /> 기획안·자료로 만들기
+              </span>
+              <h3 ref={briefHeadingRef} tabIndex={-1} className="font-bold text-[18px] leading-[1.35] tracking-[-0.016em] text-[var(--w-fg-strong)] mt-2 outline-none">
+                가진 자료를 올리면 그대로 반영해 3컷을 만들어요
+              </h3>
+              <p className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)] mt-1.5">
+                연출컷·로고·참고 자료를 한 덩어리로 AI에 전달해요.
+              </p>
+            </div>
+            {backToConceptLink}
+          </div>
+          {docSlot}
         </div>
+      )}
+
+      {/* brief 모드의 생성 결과 그리드 (설정 카드 슬롯의 생성 버튼이 트리거) */}
+      {mode === "brief" && showGrid && (
+        <>
+          <div className="flex items-center justify-between gap-3">
+            <span className="w-overline text-[var(--w-fg-alternative)]">기획안으로 만든 3컷</span>
+            {backToConceptLink}
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 16 }}>
+            {[0, 1, 2].map((i) => (
+              <div key={`brief-slot-${i}`}>{slotImage(i)}</div>
+            ))}
+          </div>
+          <details className="rounded-2xl border border-[var(--w-line-normal)] bg-[var(--w-bg-elevated)] px-4 py-1">
+            <summary className="py-2.5 font-semibold text-[12.5px] leading-none text-[var(--w-fg-neutral)] hover:text-[var(--w-fg-strong)] cursor-pointer select-none">
+              기획안 수정하고 다시 생성해요
+            </summary>
+            {docSlot}
+          </details>
+        </>
       )}
 
       {filledCount > 0 &&
         (selectedIdx >= 0 ? (
-          <p className="flex items-center gap-1.5" style={{ font: "600 12.5px/1.4 var(--w-font-sans)", color: "var(--w-primary-normal)", margin: "12px 0 0" }}>
+          <p className="flex items-center gap-1.5" style={{ font: "600 12.5px/1.4 var(--w-font-sans)", color: "var(--w-primary-normal)", margin: 0 }}>
             <Icon name="check-circle" size={14} />
             {(concepts[selectedIdx]?.label?.trim() || `컨셉 ${selectedIdx + 1}`)} 선택됨 — 이 이미지로 광고를 만들어요
           </p>
         ) : (
-          <p style={{ font: "500 12.5px/1.4 var(--w-font-sans)", color: "var(--w-fg-neutral)", margin: "12px 0 0" }}>
+          <p style={{ font: "500 12.5px/1.4 var(--w-font-sans)", color: "var(--w-fg-neutral)", margin: 0 }}>
             마음에 드는 1장을 클릭해 최종 광고 이미지로 골라주세요
           </p>
         ))}

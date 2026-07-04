@@ -194,7 +194,7 @@ export default function ResultPanel(p: Props) {
             )}
           </div>
           <div className="flex flex-col gap-2" style={{ marginBottom: 18 }}>
-            <label className="font-semibold text-[15px] leading-[1.3] tracking-[-0.008em] text-[var(--w-fg-strong)] flex items-center gap-1.5">{p.primaryTexts ? "기본 텍스트 — 1개 선택" : "기본 텍스트"}</label>
+            <label className="font-semibold text-[15px] leading-[1.3] tracking-[-0.008em] text-[var(--w-fg-strong)] flex items-center gap-1.5">{p.primaryTexts ? "기본 카피문구 — 1개 선택" : "기본 카피문구"}</label>
             {p.primaryTexts && (
               <p className="font-medium text-[12px] leading-[1.5] text-[var(--w-fg-neutral)] m-0 -mt-1">
                 본문 3개는 서로 다른 설득 방식으로 썼어요. 마음에 드는 걸 고르세요.

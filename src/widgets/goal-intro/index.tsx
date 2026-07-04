@@ -38,29 +38,29 @@ interface CategoryCardProps {
 const GOAL_CATEGORIES = [
   {
     id: "visit",
-    label: "방문 유도",
-    desc: "관심 있는 사람을 웹사이트·페이지로 보내 다음 행동을 유도해요",
+    label: "방문 늘리기",
+    desc: "웹사이트·페이지로 사람들을 보내 행동을 이끌어요",
     iconName: "globe" as const,
     goalIds: ["traffic", "traffic_page_visit"] as ObjectiveId[],
   },
   {
     id: "engage",
     label: "참여 늘리기",
-    desc: "좋아요·댓글·메시지로 고객과의 접점을 넓혀요",
+    desc: "좋아요·댓글·메시지로 고객과 가까워져요",
     iconName: "heart" as const,
     goalIds: ["engagement", "engagement_page_likes", "engagement_messages"] as ObjectiveId[],
   },
   {
     id: "awareness",
     label: "브랜드 알리기",
-    desc: "최대한 많은 사람에게 노출해 처음 만나는 고객에게 각인시켜요",
+    desc: "더 많은 사람에게 노출해 브랜드를 각인시켜요",
     iconName: "megaphone" as const,
     goalIds: ["awareness"] as ObjectiveId[],
   },
   {
     id: "action",
-    label: "행동 유도",
-    desc: "전화 문의·콘텐츠 홍보로 즉각적인 반응을 이끌어요",
+    label: "문의·홍보하기",
+    desc: "전화 문의를 받거나 게시물을 더 퍼뜨려요",
     iconName: "phone" as const,
     goalIds: ["leads_call", "boost_post"] as ObjectiveId[],
   },
@@ -336,7 +336,7 @@ export default function GoalIntro({ onNext }: Props) {
         <Badge kind="neutral">필수</Badge>
       </div>
       <p className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)] mt-1 mb-0" style={{ marginBottom: 24 }}>
-        목표 유형을 먼저 고르면 세부 목표를 안내해 드려요.
+        목표 유형을 고르면 세부 목표를 보여드려요.
       </p>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>

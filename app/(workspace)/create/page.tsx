@@ -452,7 +452,7 @@ function CreateFlow() {
             {showIntro ? "광고 목표를 골라주세요" : TITLES[step]}
           </h1>
           <p className="font-medium text-[14px] leading-[1.5] tracking-[0.004em] text-[var(--w-fg-neutral)] mt-1.5 mb-0">
-            {showIntro ? "어떤 광고를 만들지 먼저 결정해주세요. 카피·캠페인 설정이 자동으로 맞춰져요." : SUBS[step]}
+            {showIntro ? "목표에 맞춰 AI 카피와 캠페인 설정이 자동으로 준비돼요." : SUBS[step]}
           </p>
         </div>
         <div>

@@ -62,6 +62,8 @@ export type LaunchParams = {
   skipAdCreation?: boolean;
   // 캠페인 이름에 포함할 브랜드명 (Brand Profile 이름 또는 자유텍스트 앞 20자)
   brandName?: string;
+  // ADR-062 — 선택한 맞춤 타겟 id. targeting.custom_audiences 로 배선.
+  customAudienceId?: string;
 };
 
 // A/B 모드면 adIds 두 개. 단일 광고면 기존 adId. STEP 03 인사이트 분기에서 adIds 존재로 A/B 판정.
@@ -93,7 +95,8 @@ export type LaunchState = {
 
   bidStrategy: BidStrategy;
   bidAmount: number | null;
-  lookalikeEnabled: boolean;
+  // ADR-062 — 선택한 맞춤 타겟 id. 없으면 미배선(Advantage+ audience 등 기존 targeting 그대로).
+  customAudienceId: string | null;
   placements: Placements;
   autoPauseGuardrailEnabled: boolean;
   autoRelaunchEnabled: boolean;
@@ -129,7 +132,7 @@ export type LaunchAction =
   | { type: "SET_PLATFORMS"; platforms: AdPlatform }
   | { type: "SET_BID_STRATEGY"; strategy: BidStrategy }
   | { type: "SET_BID_AMOUNT"; amount: number | null }
-  | { type: "SET_LOOKALIKE_ENABLED"; enabled: boolean }
+  | { type: "SET_CUSTOM_AUDIENCE"; value: string | null }
   | { type: "SET_PLACEMENTS"; placements: Placements }
   | { type: "SET_AUTO_PAUSE_GUARDRAIL"; enabled: boolean }
   | { type: "SET_AUTO_RELAUNCH_ENABLED"; enabled: boolean }
@@ -163,12 +166,14 @@ function isoDate(offsetDays = 0): string {
 }
 
 // PRD-ab-testing.md §8.2 — 진행 중 작업 감지(`launchState !== INITIAL_LAUNCH_STATE`) 에 사용.
+// PRD-create-flow-redesign §3.3 — 모드 선택 UI 폐기. mode 필드는 buildLaunchParams·서버 payload 호환용으로만 존속,
+// 항상 "detailed" 로 시작해 A/B·입찰·배치 분기가 죽지 않게 한다.
 export const INITIAL_LAUNCH_STATE: LaunchState = {
-  mode: "simple",
+  mode: "detailed",
   platforms: "both",
   bidStrategy: "LOWEST_COST_WITHOUT_CAP",
   bidAmount: null,
-  lookalikeEnabled: false,
+  customAudienceId: null,
   placements: { mode: "auto" },
   autoPauseGuardrailEnabled: false,
   autoRelaunchEnabled: false,
@@ -210,7 +215,7 @@ function reducer(state: LaunchState, action: LaunchAction): LaunchState {
     case "SET_PLATFORMS":            return { ...state, platforms: action.platforms };
     case "SET_BID_STRATEGY":         return { ...state, bidStrategy: action.strategy };
     case "SET_BID_AMOUNT":           return { ...state, bidAmount: action.amount };
-    case "SET_LOOKALIKE_ENABLED":    return { ...state, lookalikeEnabled: action.enabled };
+    case "SET_CUSTOM_AUDIENCE":      return { ...state, customAudienceId: action.value };
     case "SET_PLACEMENTS":           return { ...state, placements: action.placements };
     case "SET_AUTO_PAUSE_GUARDRAIL": return { ...state, autoPauseGuardrailEnabled: action.enabled };
     case "SET_AUTO_RELAUNCH_ENABLED": return { ...state, autoRelaunchEnabled: action.enabled };

@@ -96,6 +96,20 @@ function reasonLineFor(
   return undefined;
 }
 
+// ADR-064 — 리포트 "손볼 캠페인" 리스트용. 계정 hero 로 압축되기 전, 캠페인별 판정을 그대로 노출.
+// 단일 축 상하위 랭킹(ADR-057 함정) 대신 이 판정(trap/poor)만 필터해 쓴다.
+export type CampaignVerdictEntry = { campaign: AccountVerdictCampaign; status: VerdictStatus; headline: string };
+
+export function deriveCampaignVerdicts(campaigns: AccountVerdictCampaign[]): CampaignVerdictEntry[] {
+  return campaigns
+    .filter((c) => c.status === "live")
+    .map((c) => {
+      const v = campaignVerdictStatus(c);
+      return v ? { campaign: c, status: v.status, headline: v.top.title } : null;
+    })
+    .filter((x): x is CampaignVerdictEntry => x !== null);
+}
+
 export function deriveAccountVerdict(campaigns: AccountVerdictCampaign[]): AccountVerdict {
   const live = campaigns.filter((c) => c.status === "live");
   if (live.length === 0) {

@@ -95,7 +95,7 @@ describe("synthAccountDaily", () => {
     expect(synthAccountDaily(camps, "2026-06-03", 14)).toEqual(synthAccountDaily(camps, "2026-06-03", 14));
   });
 
-  it("diverge — 지출은 우상향, 도착은 우하향(함정 서사)", () => {
+  it("favorable — 지출·도착 모두 우상향(도착이 더 가파름, 호조 서사)", () => {
     const out = synthAccountDaily(camps, "2026-06-03", 14, true);
     const half = Math.floor(out.length / 2);
     const spendEarly = out.slice(0, half).reduce((s, d) => s + d.spend, 0);
@@ -103,10 +103,10 @@ describe("synthAccountDaily", () => {
     const landEarly = out.slice(0, half).reduce((s, d) => s + d.landingPageView, 0);
     const landLate = out.slice(half).reduce((s, d) => s + d.landingPageView, 0);
     expect(spendLate).toBeGreaterThan(spendEarly);
-    expect(landLate).toBeLessThan(landEarly);
+    expect(landLate).toBeGreaterThan(landEarly);
   });
 
-  it("diverge=false 는 균등(기본) — totals 보존 동일", () => {
+  it("favorable=false 는 균등(기본) — totals 보존 동일", () => {
     expect(synthAccountDaily(camps, "2026-06-03", 14, false)).toEqual(synthAccountDaily(camps, "2026-06-03", 14));
   });
 });

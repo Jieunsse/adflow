@@ -6,16 +6,19 @@ export function calcDaysBetween(startISO: string, endISO: string, fallback = 7):
 }
 
 /**
- * Magic numbers (600/300) are KRW-based CPM assumptions — rough placeholder.
+ * CPM_HIGH/CPM_LOW are KRW-based CPM assumptions — rough placeholder.
  * A future pass will calibrate against the account's historical CPM and industry benchmarks.
  */
+const CPM_HIGH = 8000;
+const CPM_LOW = 3000;
+
 export function estimateImpressionRange(
   dailyBudgetKRW: number,
   days: number,
 ): { min: number; max: number } {
   const totalBudget = dailyBudgetKRW * days;
   return {
-    min: Math.round(totalBudget / 600 / 100) * 100,
-    max: Math.round(totalBudget / 300 / 100) * 100,
+    min: Math.round((totalBudget / CPM_HIGH) * 1000 / 100) * 100,
+    max: Math.round((totalBudget / CPM_LOW) * 1000 / 100) * 100,
   };
 }

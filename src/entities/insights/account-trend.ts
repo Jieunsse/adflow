@@ -61,9 +61,9 @@ function lastNDates(today: string, n: number): string[] {
   return out;
 }
 
-// ADR-059 amendment §4 — 둘러보기 발산(함정) 서사. 지출은 우상향 드리프트, 도착/성과는 평평/하락하게
+// ADR-059 amendment §4 — 둘러보기 호조(수렴) 서사. 지출·도착/성과 모두 우상향 드리프트로
 // 가중치를 메트릭별로 분리한다(기본 off=균등, 실유저 경로 무관). "예시" 배지 전제(ADR-033).
-export function synthAccountDaily(campaigns: SummaryLike[], today: string, windowDays = 14, diverge = false): AccountDailyPoint[] {
+export function synthAccountDaily(campaigns: SummaryLike[], today: string, windowDays = 14, favorable = false): AccountDailyPoint[] {
   const dates = lastNDates(today, windowDays);
   const points: AccountDailyPoint[] = dates.map((date) => ({
     date,
@@ -73,10 +73,10 @@ export function synthAccountDaily(campaigns: SummaryLike[], today: string, windo
     landingPageView: 0,
     purchaseValue: 0,
   }));
-  // 발산: 막대(지출)는 증가 램프, 라인(도착/매출)은 감소 램프 → 결정적 변량 위에 단조 드리프트.
+  // 호조: 막대(지출)·라인(도착/매출) 둘 다 증가 램프(성과가 지출보다 더 가파르게) → 효율 개선 서사.
   const n = dates.length;
-  const spendDrift = (i: number) => (diverge && n > 1 ? 0.65 + (0.7 * i) / (n - 1) : 1); // 0.65 → 1.35
-  const perfDrift = (i: number) => (diverge && n > 1 ? 1.35 - (0.85 * i) / (n - 1) : 1); // 1.35 → 0.50
+  const spendDrift = (i: number) => (favorable && n > 1 ? 0.85 + (0.3 * i) / (n - 1) : 1); // 0.85 → 1.15
+  const perfDrift = (i: number) => (favorable && n > 1 ? 0.65 + (0.9 * i) / (n - 1) : 1); // 0.65 → 1.55
   for (const c of campaigns) {
     const spendW = dates.map((_, i) => seededVariance(c.id + "w", i) * spendDrift(i));
     const perfW = dates.map((_, i) => seededVariance(c.id + "w", i) * perfDrift(i));

@@ -117,7 +117,7 @@ export default function GenSetupCard({
       </div>
 
       <div className="relative z-[1] flex items-center justify-between gap-4 pt-4 border-t border-[var(--w-line-neutral)]">
-        <span className="font-medium text-[12.5px] leading-[1.4] text-[var(--w-fg-alternative)]">정사각형 1:1 · 3컷</span>
+        <span className="font-medium text-[13px] leading-[1.4] text-[var(--w-fg-alternative)]">정사각형 1:1 · 3컷</span>
       </div>
     </div>
   );

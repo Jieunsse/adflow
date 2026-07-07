@@ -613,7 +613,7 @@ export default function TextOverlayEditor({
                       className="flex flex-col items-center gap-1 rounded-lg border border-[var(--w-line-normal)] bg-[var(--w-bg-elevated)] py-2 hover:border-[var(--w-primary-normal)] transition-colors duration-[120ms]"
                     >
                       <TemplatePicto id={t} />
-                      <span className="text-[10.5px] font-medium text-[var(--w-fg-neutral)] leading-none">{TEMPLATES[t].label}</span>
+                      <span className="text-[11px] font-medium text-[var(--w-fg-neutral)] leading-none">{TEMPLATES[t].label}</span>
                     </button>
                   ))}
                 </div>
@@ -626,7 +626,7 @@ export default function TextOverlayEditor({
                     className="flex items-center gap-1.5 w-full text-left rounded-xl border border-[var(--w-primary-normal)] bg-[var(--w-primary-soft)] px-3 py-2 hover:bg-[var(--w-primary-normal)] hover:text-white transition-colors duration-[120ms] group mt-3"
                   >
                     <Icon name="plus" size={14} />
-                    <span className="font-semibold text-[12.5px] text-[var(--w-primary-normal)] group-hover:text-white shrink-0">선택한 헤드라인 넣기</span>
+                    <span className="font-semibold text-[13px] text-[var(--w-primary-normal)] group-hover:text-white shrink-0">선택한 헤드라인 넣기</span>
                     <span className="text-[12px] text-[var(--w-fg-neutral)] group-hover:text-white/80 truncate">{headlineSuggestion.trim()}</span>
                   </button>
                 )}

@@ -3,9 +3,9 @@ import Icon from "@shared/ui/Icon";
 import { cn } from "@shared/lib/cn";
 
 const STEPS = [
-  { label: "01", title: "소재 만들기" },
-  { label: "02", title: "광고 집행" },
-  { label: "03", title: "마무리 점검" },
+  { label: "01", title: "브리프" },
+  { label: "02", title: "소재" },
+  { label: "03", title: "게재" },
 ];
 
 export default function Stepper({
@@ -49,13 +49,13 @@ export default function Stepper({
               </div>
               <div className="min-w-0">
                 <div className={cn(
-                  "font-medium text-[10.5px] leading-none tracking-[0.04em] uppercase",
+                  "font-medium text-[11px] leading-none tracking-[0.04em] uppercase",
                   on ? "text-[rgba(255,255,255,0.6)]" : "text-[var(--w-fg-neutral)]"
                 )}>
                   STEP {s.label}
                 </div>
                 <div className={cn(
-                  "font-semibold text-[13.5px] leading-[1.2] tracking-[-0.006em] mt-1",
+                  "font-semibold text-[14px] leading-[1.2] tracking-[-0.006em] mt-1",
                   on ? "text-white" : "text-[var(--w-fg-strong)]"
                 )}>
                   {s.title}

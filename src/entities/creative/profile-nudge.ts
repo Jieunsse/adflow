@@ -13,12 +13,12 @@ export interface ProfileNudge {
 
 // outcome 계열(metaObjective)별 빈 필드 채움 우선순위 — 노출형은 비주얼·타겟, 전환형은 근거·제품 우선.
 const NUDGE_PRIORITY: Record<MetaObjective, ProfileNudgeTarget[]> = {
-  OUTCOME_AWARENESS:     ["imageGuide", "persona", "brandVoice", "product", "proofPoints", "tone"],
+  OUTCOME_AWARENESS:     ["persona", "imageGuide", "brandVoice", "product", "proofPoints", "tone"],
   OUTCOME_ENGAGEMENT:    ["persona", "imageGuide", "brandVoice", "product", "proofPoints", "tone"],
-  OUTCOME_TRAFFIC:       ["proofPoints", "persona", "product", "brandVoice", "imageGuide", "tone"],
-  OUTCOME_LEADS:         ["proofPoints", "persona", "product", "brandVoice", "imageGuide", "tone"],
-  OUTCOME_SALES:         ["proofPoints", "product", "persona", "brandVoice", "imageGuide", "tone"],
-  OUTCOME_APP_PROMOTION: ["product", "proofPoints", "persona", "brandVoice", "imageGuide", "tone"],
+  OUTCOME_TRAFFIC:       ["proofPoints", "persona", "product", "imageGuide", "brandVoice", "tone"],
+  OUTCOME_LEADS:         ["proofPoints", "persona", "product", "imageGuide", "brandVoice", "tone"],
+  OUTCOME_SALES:         ["proofPoints", "product", "persona", "imageGuide", "brandVoice", "tone"],
+  OUTCOME_APP_PROMOTION: ["product", "proofPoints", "persona", "imageGuide", "brandVoice", "tone"],
 };
 
 // 빈 필드에 대한 사실 진술 — 과장·미검증 효과 약속 금지(ADR-052).

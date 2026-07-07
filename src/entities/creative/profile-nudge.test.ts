@@ -15,8 +15,8 @@ describe("selectProfileNudge — outcome 조건부 결정적 단일 넛지 (ADR-
     expect(selectProfileNudge("traffic", NONE)?.target).toBe("proofPoints");
   });
 
-  it("노출형(awareness) 전부 비면 이미지 가이드를 1순위로 권한다", () => {
-    expect(selectProfileNudge("awareness", NONE)?.target).toBe("imageGuide");
+  it("노출형(awareness) 전부 비면 페르소나를 1순위로 권한다", () => {
+    expect(selectProfileNudge("awareness", NONE)?.target).toBe("persona");
   });
 
   it("참여형(engagement) 전부 비면 페르소나를 1순위로 권한다", () => {

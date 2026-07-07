@@ -3,7 +3,7 @@
 // STEP 01 AI 생성 결과 카드 — 스켈레톤 / 빈 상태 / 헤드라인 피커·본문·CTA·이미지 생성.
 
 import Icon from "@shared/ui/Icon";
-import { Badge } from "@shared/ui/primitives";
+import { Chip } from "@shared/ui/Chip";
 import { Button } from "@shared/ui/Button";
 import { Card } from "@shared/ui/Card";
 import { Skeleton } from "@shared/ui/Skeleton";
@@ -45,8 +45,8 @@ interface Props {
   onSaveToLibrary: () => void;
   saved: boolean;
   goLibrary: () => void;
-  /** ADR-040 — phase 1(카피) → phase 2(이미지) 전환. */
-  onGoImage: () => void;
+  /** PRD-create-flow-redesign §3.2 — 생성 결과 없는 채 스튜디오 진입(프리필 경로 등) 시 "카피 생성하기" CTA. */
+  onGenerate: () => void;
   /** ADR-052 — 이 카피에 전달/반영된 브랜드 신호. */
   attribution: CreativeAttribution | null;
   /** ADR-052 — 빈 필드 보상 넛지(빈 필드 없으면 null). */
@@ -61,13 +61,13 @@ interface Props {
 
 export default function ResultPanel(p: Props) {
   return (
-    <Card variant="lg" style={{ position: "sticky", top: 20 }}>
+    <Card variant="lg">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h2 className="m-0 font-bold text-[17px] leading-[1.3] tracking-[-0.012em] text-[var(--w-fg-strong)]">AI 생성 결과</h2>
+          <h2 className="m-0 font-bold text-[17px] leading-[1.3] tracking-[-0.012em] text-[var(--w-fg-strong)]">① 카피</h2>
           <p className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)] mt-1 mb-0">헤드라인을 고르고, 본문을 다듬어 보세요.</p>
         </div>
-        <Badge kind="violet"><Icon name="sparkles" size={12} /> AI 생성</Badge>
+        <Chip variant="violet"><Icon name="sparkles" size={12} /> AI 생성</Chip>
       </div>
       <hr className="h-px bg-[var(--w-line-neutral)] my-[18px] border-0" />
 
@@ -85,8 +85,11 @@ export default function ResultPanel(p: Props) {
           <div style={{ width: 56, height: 56, borderRadius: "50%", background: "var(--w-accent-violet-soft)", color: "var(--w-accent-violet)", display: "grid", placeItems: "center", margin: "0 auto 14px" }}>
             <Icon name="sparkles" size={22} />
           </div>
-          <div style={{ font: "600 15px/1.4 var(--w-font-sans)", color: "var(--w-fg-strong)" }}>좌측 정보를 입력하고 생성 버튼을 눌러주세요</div>
+          <div style={{ font: "600 15px/1.4 var(--w-font-sans)", color: "var(--w-fg-strong)" }}>아직 만든 카피가 없어요</div>
           <p style={{ margin: "8px auto 0", maxWidth: 320, font: "500 13px/1.55 var(--w-font-sans)" }}>3–5초 내에 헤드라인 3개와 본문·타겟팅 제안을 받아볼 수 있어요.</p>
+          <Button variant="primary" type="button" onClick={p.onGenerate} style={{ marginTop: 16 }}>
+            <Icon name="sparkles" size={14} /> 카피 생성하기
+          </Button>
         </div>
       ) : (
         <>
@@ -95,7 +98,7 @@ export default function ResultPanel(p: Props) {
             <div className="flex items-start gap-2.5 px-[14px] py-3 rounded-xl bg-[var(--w-status-positive-soft)] border border-[var(--w-status-positive-line)]" style={{ marginBottom: 18 }}>
               <Icon name="check" size={15} className="text-[var(--w-status-positive)] mt-0.5 shrink-0" />
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div className="font-semibold text-[12.5px] leading-[1.4] text-[var(--w-fg-strong)]">
+                <div className="font-semibold text-[13px] leading-[1.4] text-[var(--w-fg-strong)]">
                   {p.beforeAfter.label} 반영해 다시 만들었어요
                 </div>
                 <p className="m-0 mt-1 font-medium text-[12px] leading-[1.5] text-[var(--w-fg-neutral)] truncate">
@@ -111,12 +114,12 @@ export default function ResultPanel(p: Props) {
               <span className="font-semibold text-[12px] leading-none text-[var(--w-fg-neutral)]">이 카피에 쓰인 브랜드 정보</span>
               <div className="flex flex-wrap gap-1.5">
                 {p.attribution.reflected.includes("proofPoints") && (
-                  <span title="브랜드 근거 자료의 수치를 실제로 인용했어요 (ADR-031)" className="inline-flex items-center gap-1 px-2.5 py-[3px] rounded-full bg-[var(--w-status-positive-soft)] text-[var(--w-green-700)] font-semibold text-[11.5px] leading-none">
+                  <span title="브랜드 근거 자료의 수치를 실제로 인용했어요 (ADR-031)" className="inline-flex items-center gap-1 px-2.5 py-[3px] rounded-full bg-[var(--w-status-positive-soft)] text-[var(--w-green-700)] font-semibold text-[12px] leading-none">
                     <Icon name="check" size={11} /> 근거 자료 반영 ✓
                   </span>
                 )}
                 {p.attribution.injected.map((key) => (
-                  <span key={key} title="AI에 전달한 재료예요. 출력 반영 여부는 검증하지 않아요." className="inline-flex items-center px-2.5 py-[3px] rounded-full border border-[var(--w-line-normal)] text-[var(--w-fg-normal)] font-medium text-[11.5px] leading-none">
+                  <span key={key} title="AI에 전달한 재료예요. 출력 반영 여부는 검증하지 않아요." className="inline-flex items-center px-2.5 py-[3px] rounded-full border border-[var(--w-line-normal)] text-[var(--w-fg-normal)] font-medium text-[12px] leading-none">
                     {INJECTED_LABEL[key]} 전달함
                   </span>
                 ))}
@@ -128,7 +131,7 @@ export default function ResultPanel(p: Props) {
           {p.addedLabel ? (
             <div className="flex items-center gap-2.5 px-[14px] py-3 rounded-xl bg-[var(--w-primary-soft)] border border-[var(--w-primary-normal)]" style={{ marginBottom: 18 }}>
               <Icon name="sparkles" size={15} className="text-[var(--w-primary-press)] shrink-0" />
-              <p className="m-0 font-medium text-[12.5px] leading-[1.5] text-[var(--w-fg-strong)]" style={{ flex: 1 }}>
+              <p className="m-0 font-medium text-[13px] leading-[1.5] text-[var(--w-fg-strong)]" style={{ flex: 1 }}>
                 {p.addedLabel} 추가됨 — 다시 생성하면 카피에 반영돼요.
               </p>
               <Button variant="primary" size="sm" type="button" onClick={p.onRegenerate}>
@@ -138,7 +141,7 @@ export default function ResultPanel(p: Props) {
           ) : p.nudge ? (
             <div className="flex items-center gap-2.5 px-[14px] py-3 rounded-xl bg-[var(--w-accent-violet-soft)] border border-[var(--w-line-alternative)]" style={{ marginBottom: 18 }}>
               <Icon name="sparkles" size={15} className="text-[var(--w-accent-violet)] mt-0.5 shrink-0" />
-              <p className="m-0 font-medium text-[12.5px] leading-[1.5] text-[var(--w-fg-normal)]" style={{ flex: 1 }}>
+              <p className="m-0 font-medium text-[13px] leading-[1.5] text-[var(--w-fg-normal)]" style={{ flex: 1 }}>
                 {p.nudge.reason}
               </p>
               <Button variant="secondary" size="sm" type="button" onClick={p.onNudgeAdd}>추가하기</Button>
@@ -172,9 +175,9 @@ export default function ResultPanel(p: Props) {
                   )} />
                   <div style={{ flex: 1 }}>
                     <div className="font-[600] text-[11px] leading-none text-[var(--w-fg-neutral)] tracking-[0.04em] uppercase">VER 0{i + 1}</div>
-                    <div className="font-[600] text-[14.5px] leading-[1.45] text-[var(--w-fg-strong)] mt-1">{h}</div>
+                    <div className="font-[600] text-[15px] leading-[1.45] text-[var(--w-fg-strong)] mt-1">{h}</div>
                     {p.subtitles?.[i]?.trim() && (
-                      <div className="font-medium text-[12.5px] leading-[1.4] text-[var(--w-fg-neutral)] mt-0.5">{p.subtitles[i]}</div>
+                      <div className="font-medium text-[13px] leading-[1.4] text-[var(--w-fg-neutral)] mt-0.5">{p.subtitles[i]}</div>
                     )}
                   </div>
                 </div>
@@ -234,16 +237,16 @@ export default function ResultPanel(p: Props) {
                         <div className="font-[600] text-[11px] leading-none text-[var(--w-fg-neutral)] tracking-[0.04em] uppercase">VER 0{i + 1}</div>
                         {p.displayedHooks?.[i] && (
                           <span title={findHook(p.displayedHooks[i]).uiDesc} className="inline-flex">
-                            <Badge kind="violet">{findHook(p.displayedHooks[i]).ko} 방식</Badge>
+                            <Chip variant="violet">{findHook(p.displayedHooks[i]).ko} 방식</Chip>
                           </span>
                         )}
                         {p.proofPointsCited?.[i] && (
                           <span title="브랜드 근거 자료의 수치를 인용했어요 (ADR-031)" className="inline-flex">
-                            <Badge kind="success">근거 ✓</Badge>
+                            <Chip variant="success">근거 ✓</Chip>
                           </span>
                         )}
                       </div>
-                      <div className="font-[600] text-[14.5px] leading-[1.45] text-[var(--w-fg-strong)] mt-1">{t}</div>
+                      <div className="font-[600] text-[15px] leading-[1.45] text-[var(--w-fg-strong)] mt-1">{t}</div>
                     </div>
                   </div>
                 ))}
@@ -279,7 +282,6 @@ export default function ResultPanel(p: Props) {
                   <Icon name="folder" size={14} /> 소재 라이브러리에 저장
                 </Button>
               )}
-              <Button variant="primary" type="button" onClick={p.onGoImage}>다음: 이미지 만들기 <Icon name="arrow-right" size={14} /></Button>
             </div>
           </div>
         </>

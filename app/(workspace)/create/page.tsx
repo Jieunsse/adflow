@@ -1,9 +1,9 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { Badge } from "@shared/ui/primitives";
+import { Chip } from "@shared/ui/Chip";
 import { Button } from "@shared/ui/Button";
 import { useSessionStorage } from "@shared/lib/storage/useSessionStorage";
 import { useApiMutation } from "@shared/lib/api/useApiMutation";
@@ -11,19 +11,30 @@ import type { GenerateCreativeParams, GenerateCreativeResult, CreativeAttributio
 import { INITIAL_CREATIVE_STATE, useCreativeDraft } from "@entities/creative/model";
 import { abVariantLabel, INITIAL_LAUNCH_STATE, useLaunchDraft, type AbTestAxis } from "@entities/campaign/model";
 import { loadLaunchedCampaign } from "@entities/campaign/launched-storage";
-import { judgeAbTest, rowToKpi } from "@entities/insights/ab-verdict";
+import { judgeAbTest, rowToKpi, type AdKpi } from "@entities/insights/ab-verdict";
+import type { AdInsightsRow } from "@entities/insights/types";
+import { tournamentClient } from "@entities/ab-test/tournament/client";
 import { getMockCampaign, getMockCampaignAdIds, seedMockAdRows } from "@/lib/mock-campaigns";
 import Icon from "@shared/ui/Icon";
 import { useToast } from "@shared/ui/Toast";
 import { useLibrary } from "@shared/lib/library";
-import { TONES, CTAS, OBJECTIVES_ALL, type CtaId, type CopyHook } from "@entities/creative/options";
+import ConfirmModal from "@shared/ui/ConfirmModal";
+import { TONES, CTAS, OBJECTIVES_ALL, COPY_HOOKS, type CtaId, type CopyHook, type OutcomeChip } from "@entities/creative/options";
 import { isBoost } from "@entities/creative/outcome-routing";
+import { nextStepAfterBrief, shouldTriggerGenerate, isBriefDone, isStudioDone } from "@entities/creative/brief-flow";
+import {
+  saveDraftToSession,
+  loadDraftFromSession,
+  clearDraftFromSession,
+  hydrateCreativeDraft,
+  hydrateLaunchDraft,
+  type CreateDraftSnapshot,
+} from "@entities/creative/draft-persistence";
+import { shrinkImageDataUrl } from "@shared/lib/shrink-image";
 import Stepper from "./_components/Stepper";
 import GoalIntro from "@widgets/goal-intro";
 import CreativeStep from "@widgets/creative-step";
 import LaunchStep from "@widgets/launch-step";
-import PostLaunchChecklist from "@widgets/post-launch-checklist";
-import { autoModeFromObjective } from "@features/switch-mode/objective-routing";
 import { readBrandProfile, readActiveBrandProfileEntry, useBrandProfileStorage } from "@features/brand-profile/model/useBrandProfileStorage";
 import { readPersonas, usePersonasStorage } from "@features/brand-profile/model/usePersonasStorage";
 import { mergePersonaTargeting } from "@features/brand-profile/model/mergePersonaTargeting";
@@ -43,11 +54,12 @@ const DEMO_BRAND = "예) 20대 여성을 위한 비건 스킨케어 브랜드 '�
 const DEMO_TARGET = "타겟의 직업·나이·관심사·라이프스타일을 적어주세요";
 const DEMO_OUTCOME_HINT = "신제품 홍보 및 신제품 특별할인";
 
-const TITLES = ["AI로 소재를 만들어 봐요", "어떻게 집행할지 정해 봐요", "마무리 점검을 해봐요"];
+// PRD-create-flow-redesign §3 — step: 0 브리프 · 1 소재 스튜디오 · 2 게재 계획(게재 완료 상태 포함).
+const TITLES = ["광고 목표를 골라주세요", "AI로 소재를 만들어 봐요", "게재 계획을 확인해주세요"];
 const SUBS = [
+  "목표에 맞춰 AI 카피와 캠페인 설정이 자동으로 준비돼요.",
   "제품과 타겟 정보를 알려주세요. Gemini가 카피·헤드라인·타겟팅을 제안해 드려요.",
-  "예산, 기간, 타겟을 확인하고 Meta에 광고를 집행하세요.",
-  "광고를 정상적으로 생성했어요. 결과를 받기 전에 최종적으로 점검해봐요.",
+  "AI가 채운 계획서예요. 확인하고 바로 Meta에 광고를 집행하세요.",
 ];
 
 function CreateFlow() {
@@ -58,91 +70,42 @@ function CreateFlow() {
   const launch = useLaunchDraft();
   const showToast = useToast();
   const library = useLibrary();
+  // generate-first(PRD-create-flow-redesign §3.1) — 브리프에서 이 outcome 으로 이미 생성했는지 추적.
+  const generatedForOutcomeRef = useRef<OutcomeChip | null>(null);
 
+  // PRD-create-flow-redesign §3 — 0 브리프 · 1 소재 스튜디오 · 2 게재 계획 · 3 게재 완료(과도기).
   const [step, setStep] = useState(0);
-  // PRD §13.10.6 — intro 진입 완료 여부. 카드 클릭만으로 자동 진입 안 함. "다음" 버튼 클릭 시 true.
-  const [introCompleted, setIntroCompleted] = useState(false);
 
   // PRD-ab-testing.md §3.3 / §8 — `?prefill=campaign:{id}` 진입 → 우세 안 자동 채움.
   const prefillRaw = searchParams.get("prefill");
   const prefillCampaignId = prefillRaw?.startsWith("campaign:") ? prefillRaw.slice("campaign:".length) : null;
+  // 토너먼트 승자 승격 — `?prefill=tournament:{id}` 진입 → 챔피언 크리에이티브 자동 채움.
+  const prefillTournamentId = prefillRaw?.startsWith("tournament:") ? prefillRaw.slice("tournament:".length) : null;
   const [prefillBanner, setPrefillBanner] = useState<string | null>(null);
   const [prefillHandled, setPrefillHandled] = useState(false);
-
-  useEffect(() => {
-    if (prefillHandled || !prefillCampaignId) return;
-    setPrefillHandled(true);
-
-    // PRD-ab-testing.md §8.2 v0.2 Q7 — 진행 중 작업 가드. reference equality 로 dispatch 발생 여부 판정.
-    const inProgress = creative.state !== INITIAL_CREATIVE_STATE || launch.state !== INITIAL_LAUNCH_STATE;
-    if (inProgress) {
-      const overwrite = window.confirm(
-        "작업 중인 캠페인이 있어요. 이전 캠페인의 우세 안으로 덮어쓸까요?\n\n[확인] 덮어쓰기\n[취소] 이전 캠페인은 다음에 (지금 작업 유지)",
-      );
-      if (!overwrite) {
-        router.replace("/create");
-        return;
-      }
-    }
-
-    // launched-storage(사용자 생성) → mock 시연 entry 순으로 A/B 정보 도출.
-    const launched = loadLaunchedCampaign(prefillCampaignId);
-    const mock = !launched ? getMockCampaign(prefillCampaignId) : null;
-
-    let axis: AbTestAxis | undefined;
-    let variantA: string | undefined;
-    let variantB: string | undefined;
-    let adIds: [string, string] | null = null;
-    let startDate: string | null = null;
-
-    if (launched?.abTestAxis && launched.abTestVariantA && launched.abTestVariantB && launched.adIds && launched.startDate) {
-      axis = launched.abTestAxis;
-      variantA = launched.abTestVariantA;
-      variantB = abVariantLabel(launched.abTestVariantB);
-      adIds = launched.adIds;
-      startDate = launched.startDate;
-    } else if (mock?.abTestEnabled && mock.abTestAxis && mock.abTestVariantA && mock.abTestVariantB && mock.startDate) {
-      axis = mock.abTestAxis;
-      variantA = mock.abTestVariantA;
-      variantB = mock.abTestVariantB;
-      adIds = getMockCampaignAdIds(prefillCampaignId);
-      startDate = mock.startDate;
-    }
-
-    router.replace("/create");
-    if (!axis || axis !== "headline" || !variantA || !variantB || !adIds || !startDate) return;
-
-    // PRD-ab-testing.md §8.2 4단계 — winner 'B' 면 variantB, 'A' 면 variantA. 그 외는 prefill 안 함.
-    const ads = seedMockAdRows(prefillCampaignId, startDate, adIds);
-    const verdict = judgeAbTest(rowToKpi(ads[0]), rowToKpi(ads[1]));
-    if (verdict.state !== "winner") return;
-    const winnerText = verdict.winner === "B" ? variantB : variantA;
-    const winnerLabel = verdict.winner === "B" ? "B안" : "A안";
-
-    creative.dispatch({ type: "RESET" });
-    launch.dispatch({ type: "RESET" });
-    creative.dispatch({ type: "SET_HEADLINE", headline: winnerText });
-    setIntroCompleted(true);
-    setStep(0);
-    setPrefillBanner(`이전 캠페인의 우세 안(${winnerLabel})을 기본으로 채웠어요. 이번엔 다른 축으로 A/B 해볼까요?`);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [prefillCampaignId, prefillHandled]);
+  const [tournamentPrefillHandled, setTournamentPrefillHandled] = useState(false);
+  // window.confirm 대체 — 진행 중 작업 덮어쓰기 확인을 ConfirmModal 로 처리(campaigns/[id] 패턴).
+  const [pendingPrefill, setPendingPrefill] = useState<{ kind: "campaign" | "tournament"; id: string } | null>(null);
 
   // ChannelInsights AI 제안 → /create 진입. outcome·outcomeHint prefill 후 intro 자동 통과.
   const channelInsightsFrom = searchParams.get("from") === "channel-insights";
   const channelInsightsOutcome = searchParams.get("outcome");
   const channelInsightsHint = searchParams.get("outcomeHint");
+  const channelInsightsIgMediaId = searchParams.get("igMediaId");
   const [channelInsightsHandled, setChannelInsightsHandled] = useState(false);
   useEffect(() => {
     if (channelInsightsHandled || !channelInsightsFrom) return;
     setChannelInsightsHandled(true);
     if (channelInsightsOutcome && OBJECTIVES_ALL.some((o) => o.id === channelInsightsOutcome)) {
       creative.dispatch({ type: "SET_OUTCOME", outcome: channelInsightsOutcome as (typeof OBJECTIVES_ALL)[number]["id"] });
-      setIntroCompleted(true);
-      setStep(channelInsightsOutcome === "boost_post" ? 1 : 0);
+      setStep(isBoost(channelInsightsOutcome as (typeof OBJECTIVES_ALL)[number]["id"]) ? 2 : 1);
     }
     if (channelInsightsHint) {
       creative.dispatch({ type: "SET_OUTCOME_HINT", hint: channelInsightsHint });
+    }
+    // boost_post 게시물 프리셀렉트 — router.replace 로 쿼리가 사라지기 전에 BoostPostFlow 가 읽을 자리에 보관.
+    if (channelInsightsIgMediaId) {
+      try { sessionStorage.setItem("adflow_boost_igmedia_preselect", channelInsightsIgMediaId); } catch { /* 무시 */ }
     }
     router.replace("/create");
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -177,7 +140,7 @@ function CreateFlow() {
   const [nudgeModal, setNudgeModal] = useState<"persona" | "product" | null>(null);
   const { activeId: nudgeBrandProfileId, profiles: nudgeProfiles } = useBrandProfileStorage(!!session?.browseMode);
   const { savePersona } = usePersonasStorage();
-  const { save: saveProduct } = useProducts(nudgeBrandProfileId ?? "");
+  const { products, save: saveProduct } = useProducts(nudgeBrandProfileId ?? "");
   const generateMutation = useApiMutation<GenerateCreativeParams, GenerateCreativeResult>('/api/generate-creative');
   const generating = generateMutation.isPending;
   const generated = displayedHeadlines !== null;
@@ -210,39 +173,273 @@ function CreateFlow() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, session?.browseMode]);
 
+  const loadedFromLibraryRef = useRef(false);
   useEffect(() => {
     let raw: string | null = null;
     try { raw = sessionStorage.getItem("adflow_loaded_creative"); } catch { /* sessionStorage 사용 불가 */ }
     if (!raw) return;
     try { sessionStorage.removeItem("adflow_loaded_creative"); } catch { /* 무시 */ }
-    let loaded: { headline?: string; primary?: string; ctaId?: string; tone?: string };
+    let loaded: { headline?: string; primary?: string; ctaId?: string; tone?: string; outcomeId?: string };
     try { loaded = JSON.parse(raw) as typeof loaded; } catch { return; }
     if (!loaded.headline) return;
+    loadedFromLibraryRef.current = true;
     setDisplayedHeadlines([loaded.headline]);
     setHeadlineIdx(0);
+    // outcome 을 함께 복원해 "이미 생성됨" 상태로 취급 — 목표 재선택·자동 재생성 덮어쓰기 방지.
+    const outcomeId = loaded.outcomeId && OBJECTIVES_ALL.some((o) => o.id === loaded.outcomeId)
+      ? (loaded.outcomeId as OutcomeChip)
+      : null;
+    if (outcomeId) {
+      creative.dispatch({ type: "SET_OUTCOME", outcome: outcomeId });
+      generatedForOutcomeRef.current = outcomeId;
+      setStep(nextStepAfterBrief(outcomeId));
+    }
     creative.dispatch({ type: "SET_HEADLINE", headline: loaded.headline });
     if (loaded.primary != null) creative.dispatch({ type: "SET_PRIMARY_TEXT", primaryText: loaded.primary });
-
+    if (loaded.ctaId && CTAS.some((c) => c.id === loaded.ctaId)) {
+      creative.dispatch({ type: "SET_CTA", cta: loaded.ctaId as CtaId });
+    }
     if (loaded.tone) creative.dispatch({ type: "SET_TONE", tone: loaded.tone });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // 학습 탭 CTA 계약 — `/create?hook=<CopyHook>` 진입 시 해당 훅을 InputForm 에 프리셀렉트.
+  // InputForm 의 편향 기본값 effect 가 마운트 시 덮어쓰므로, sessionStorage 로 전달해 InputForm 이 소비.
+  const hookParam = searchParams.get("hook");
+  const [hookHandled, setHookHandled] = useState(false);
+  useEffect(() => {
+    if (hookHandled || !hookParam) return;
+    setHookHandled(true);
+    if (COPY_HOOKS.some((h) => h.id === hookParam)) {
+      setHooks([hookParam as CopyHook]);
+      try { sessionStorage.setItem("adflow_hook_preselect", hookParam); } catch { /* 무시 */ }
+    }
+    router.replace("/create");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hookHandled, hookParam]);
+
+  // A/B 우세 안 prefill 본체 — ConfirmModal 확인 후에도 호출되도록 effect 밖으로 분리.
+  const applyCampaignPrefill = async (campaignId: string) => {
+    // launched-storage(사용자 생성) → mock 시연 entry 순으로 A/B 정보 도출.
+    const launchedEntry = loadLaunchedCampaign(campaignId);
+    const mock = !launchedEntry ? getMockCampaign(campaignId) : null;
+
+    let axis: AbTestAxis | undefined;
+    let variantA: string | undefined;
+    let variantB: string | undefined;
+    let adIds: [string, string] | null = null;
+    let startDate: string | null = null;
+    let objective: string | undefined;
+
+    if (launchedEntry?.abTestAxis && launchedEntry.abTestVariantA && launchedEntry.abTestVariantB && launchedEntry.adIds && launchedEntry.startDate) {
+      axis = launchedEntry.abTestAxis;
+      variantA = launchedEntry.abTestVariantA;
+      variantB = abVariantLabel(launchedEntry.abTestVariantB);
+      adIds = launchedEntry.adIds;
+      startDate = launchedEntry.startDate;
+      objective = launchedEntry.objective;
+    } else if (mock?.abTestEnabled && mock.abTestAxis && mock.abTestVariantA && mock.abTestVariantB && mock.startDate) {
+      axis = mock.abTestAxis;
+      variantA = mock.abTestVariantA;
+      variantB = mock.abTestVariantB;
+      adIds = getMockCampaignAdIds(campaignId);
+      startDate = mock.startDate;
+    }
+
+    router.replace("/create");
+    if (!axis || !variantA || !variantB || !adIds || !startDate) return;
+    if (axis === "image") {
+      setPrefillBanner("이미지 축 우세 안은 자동으로 채울 수 없어요. 소재 스튜디오에서 이미지를 새로 만들어 주세요.");
+      return;
+    }
+
+    // PRD-ab-testing.md §7.5 — 표시 경로(performance-step/campaigns[id])와 동일 계약: 서버 실측 ads 우선,
+    // fake adIds(mock_ad_...) 폴백일 때만 seedMockAdRows 합성. 진 안이 채워지는 걸 막기 위해 실측 우선.
+    const objectiveParam = objective ? `&objective=${objective}` : "";
+    let ads: [AdKpi, AdKpi] | null = null;
+    try {
+      const res = await fetch(`/api/insights/${campaignId}?period=all&adIds=${adIds[0]},${adIds[1]}${objectiveParam}`);
+      const data = res.ok ? ((await res.json()) as { ads?: [AdInsightsRow, AdInsightsRow] }) : null;
+      if (data?.ads) {
+        ads = [rowToKpi(data.ads[0]), rowToKpi(data.ads[1])];
+      }
+    } catch {
+      // fetch 실패 — 아래 fake adIds 폴백으로.
+    }
+    if (!ads) {
+      const isFakeAd = adIds.every((a) => a.startsWith("mock_ad_"));
+      if (!isFakeAd) return;
+      const seeded = seedMockAdRows(campaignId, startDate, adIds);
+      ads = [rowToKpi(seeded[0]), rowToKpi(seeded[1])];
+    }
+
+    // PRD-ab-testing.md §8.2 4단계 — winner 'B' 면 variantB, 'A' 면 variantA. 그 외는 prefill 안 함.
+    const verdict = judgeAbTest(ads[0], ads[1]);
+    if (verdict.state !== "winner") return;
+    const winnerText = verdict.winner === "B" ? variantB : variantA;
+    const winnerLabel = verdict.winner === "B" ? "B안" : "A안";
+
+    creative.dispatch({ type: "RESET" });
+    launch.dispatch({ type: "RESET" });
+    if (axis === "headline") {
+      creative.dispatch({ type: "SET_HEADLINE", headline: winnerText });
+      // "이미 생성됨" 취급 — 스튜디오 게이트 통과 + 재진입 시 자동 재생성으로 우세 안을 덮지 않게.
+      setDisplayedHeadlines([winnerText]);
+      setHeadlineIdx(0);
+      generatedForOutcomeRef.current = null;
+      setPrefillBanner(`이전 캠페인의 우세 안(${winnerLabel})을 기본으로 채웠어요. 이번엔 다른 축으로 A/B 해볼까요?`);
+    } else {
+      creative.dispatch({ type: "SET_PRIMARY_TEXT", primaryText: winnerText });
+      setPrefillBanner(`이전 캠페인의 우세 본문(${winnerLabel})을 기본으로 채웠어요. 헤드라인은 새로 생성해 주세요.`);
+    }
+    setStep(1);
+  };
+
+  const applyTournamentPrefill = (tournamentId: string) => {
+    tournamentClient(!!session?.browseMode)
+      .get(tournamentId)
+      .then((t) => {
+        router.replace("/create");
+        if (!t) return;
+        creative.dispatch({ type: "RESET" });
+        launch.dispatch({ type: "RESET" });
+        creative.dispatch({ type: "SET_HEADLINE", headline: t.champion.headline });
+        if (t.champion.primaryText) creative.dispatch({ type: "SET_PRIMARY_TEXT", primaryText: t.champion.primaryText });
+        const objectiveValid = OBJECTIVES_ALL.some((o) => o.id === t.objective);
+        if (objectiveValid) {
+          creative.dispatch({ type: "SET_OUTCOME", outcome: t.objective as (typeof OBJECTIVES_ALL)[number]["id"] });
+        }
+        // 챔피언 카피를 "이미 생성됨" 으로 취급 — isStudioDone 게이트 통과 + 자동 재생성 방지.
+        setDisplayedHeadlines([t.champion.headline]);
+        setHeadlineIdx(0);
+        generatedForOutcomeRef.current = objectiveValid ? (t.objective as OutcomeChip) : null;
+        if (t.champion.imageUrl) {
+          launch.dispatch({ type: "SET_IMAGE_DATA_URL", value: t.champion.imageUrl });
+        }
+        setStep(1);
+        setPrefillBanner("토너먼트 챔피언 광고를 기본으로 채웠어요.");
+      })
+      .catch(() => router.replace("/create"));
+  };
+
+  useEffect(() => {
+    if (prefillHandled || !prefillCampaignId) return;
+    setPrefillHandled(true);
+    // PRD-ab-testing.md §8.2 v0.2 Q7 — 진행 중 작업 가드. reference equality 로 dispatch 발생 여부 판정.
+    const inProgress = creative.state !== INITIAL_CREATIVE_STATE || launch.state !== INITIAL_LAUNCH_STATE;
+    if (inProgress) {
+      setPendingPrefill({ kind: "campaign", id: prefillCampaignId });
+      return;
+    }
+    void applyCampaignPrefill(prefillCampaignId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prefillCampaignId, prefillHandled]);
+
+  // 토너먼트 승자 승격 — `?prefill=tournament:{id}` 진입. WinnerHandlingPanel/DonePanel 이 챔피언 확정 후 push.
+  useEffect(() => {
+    if (tournamentPrefillHandled || !prefillTournamentId || status !== "authenticated") return;
+    setTournamentPrefillHandled(true);
+    const inProgress = creative.state !== INITIAL_CREATIVE_STATE || launch.state !== INITIAL_LAUNCH_STATE;
+    if (inProgress) {
+      setPendingPrefill({ kind: "tournament", id: prefillTournamentId });
+      return;
+    }
+    applyTournamentPrefill(prefillTournamentId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prefillTournamentId, tournamentPrefillHandled, status]);
+
+  // P0 초안 영속화 — 재진입 시 이어하기 배너. prefill·라이브러리 재활용 진입은 각자 흐름이 우선.
+  const [resumeDraft, setResumeDraft] = useState<CreateDraftSnapshot | null>(null);
+  useEffect(() => {
+    if (prefillRaw || channelInsightsFrom || hookParam || loadedFromLibraryRef.current) return;
+    const draft = loadDraftFromSession();
+    if (draft) setResumeDraft(draft);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleResumeDraft = () => {
+    if (!resumeDraft) return;
+    hydrateCreativeDraft(creative.dispatch, resumeDraft.creative);
+    hydrateLaunchDraft(launch.dispatch, resumeDraft.launch);
+    const s = resumeDraft.studio;
+    setDisplayedHeadlines(s.displayedHeadlines);
+    setDisplayedSubtitles(s.displayedSubtitles);
+    setHeadlineIdx(s.headlineIdx);
+    setDisplayedPrimaryTexts(s.displayedPrimaryTexts);
+    setDisplayedHooks(s.displayedHooks);
+    setProofPointsCited(s.proofPointsCited);
+    setPrimaryTextIdx(s.primaryTextIdx);
+    setHooks(s.hooks);
+    generatedForOutcomeRef.current = s.generatedForOutcome;
+    setStep(resumeDraft.step);
+    setResumeDraft(null);
+  };
+
+  const handleDiscardDraft = () => {
+    clearDraftFromSession();
+    setResumeDraft(null);
+  };
+
+  // 초안 미러링 — debounce 800ms. 이어하기 배너 응답 전에는 저장하지 않아 기존 초안을 지키고,
+  // 게재 완료 시 초안 삭제. 빈 상태(목표·생성물 없음)는 저장하지 않는다.
+  useEffect(() => {
+    if (resumeDraft) return;
+    if (launch.state.launchedCampaign) {
+      clearDraftFromSession();
+      return;
+    }
+    const meaningful = step > 0 || creative.state.outcome !== null || displayedHeadlines !== null;
+    if (!meaningful) return;
+    const timer = setTimeout(() => {
+      void (async () => {
+        const img = launch.state.imageDataUrl ? await shrinkImageDataUrl(launch.state.imageDataUrl) : null;
+        const finalImg = launch.state.finalImageDataUrl ? await shrinkImageDataUrl(launch.state.finalImageDataUrl) : null;
+        saveDraftToSession(
+          step,
+          creative.state,
+          { ...launch.state, imageDataUrl: img, finalImageDataUrl: finalImg },
+          {
+            displayedHeadlines,
+            displayedSubtitles,
+            headlineIdx,
+            displayedPrimaryTexts,
+            displayedHooks,
+            proofPointsCited,
+            primaryTextIdx,
+            hooks,
+            generatedForOutcome: generatedForOutcomeRef.current,
+          },
+        );
+      })();
+    }, 800);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    step,
+    creative.state,
+    launch.state,
+    displayedHeadlines,
+    displayedSubtitles,
+    headlineIdx,
+    displayedPrimaryTexts,
+    displayedHooks,
+    proofPointsCited,
+    primaryTextIdx,
+    hooks,
+    resumeDraft,
+  ]);
+
   // productId 변경 시 제품의 targetUrl → landingUrl 자동 프리필 (비어있을 때만)
   useEffect(() => {
     if (!productId) return;
-    const bpEntry = readActiveBrandProfileEntry();
-    if (!bpEntry) return;
-    try {
-      const all = JSON.parse(localStorage.getItem(`adflow:products:${bpEntry.id}`) ?? "[]") as Array<{ id: string; targetUrl?: string }>;
-      const product = all.find((pr) => pr.id === productId);
-      if (product?.targetUrl && !launch.state.landingUrl.trim()) {
-        launch.dispatch({ type: "SET_LANDING_URL", value: product.targetUrl });
-      }
-    } catch {}
+    const product = products.find((pr) => pr.id === productId);
+    if (product?.targetUrl && !launch.state.landingUrl.trim()) {
+      launch.dispatch({ type: "SET_LANDING_URL", value: product.targetUrl });
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [productId]);
+  }, [productId, products]);
 
-  const runGenerate = () => {
+  const runGenerate = (personaIdOverride?: string) => {
     if (!creative.state.outcome) {
       showToast("원하는 결과(outcome)를 먼저 골라주세요");
       return;
@@ -251,15 +448,9 @@ function CreateFlow() {
     const bp = readBrandProfile();
     const bpEntry = readActiveBrandProfileEntry();
     const isCustomBrandMode = customBrand;
-    const personaEntry = personaId ? readPersonas().find((pe) => pe.id === personaId) : undefined;
-    const productEntry = productId
-      ? (() => {
-          try {
-            const all = JSON.parse(localStorage.getItem(`adflow:products:${bpEntry?.id ?? ""}`) ?? "[]") as Array<{ id: string; name: string; description: string; price?: string; targetUrl?: string }>;
-            return all.find((pr) => pr.id === productId);
-          } catch { return undefined; }
-        })()
-      : undefined;
+    const effectivePersonaId = personaIdOverride ?? personaId;
+    const personaEntry = effectivePersonaId ? readPersonas().find((pe) => pe.id === effectivePersonaId) : undefined;
+    const productEntry = productId ? products.find((pr) => pr.id === productId) : undefined;
     const selectedCopyTexts = selectedCopyRefIds.length > 0
       ? (bpEntry?.copyReferences ?? [])
           .filter((r) => selectedCopyRefIds.includes(r.id))
@@ -270,16 +461,12 @@ function CreateFlow() {
       {
         brand: isCustomBrandMode ? (brand || bp.brandDescription || "") : (bp.brandDescription || brand),
         target: target || undefined,
-        tone: bp.tone ?? creative.state.tone,
+        tone: isCustomBrandMode ? creative.state.tone : (bp.tone ?? creative.state.tone),
         outcome: creative.state.outcome,
         hint: creative.state.outcomeHint,
         hooks: hooks.length === 3 ? hooks : undefined,
         brandProfile: isCustomBrandMode ? {
-          brandVoice: bp.brandVoice,
-          customerVoiceSummary: bp.customerVoiceSummary,
           policy: bpEntry?.policy,
-          copyReferences: selectedCopyTexts,
-          proofPoints: bp.proofPoints,
         } : {
           brandDescription: bp.brandDescription,
           brandVoice: bp.brandVoice,
@@ -349,10 +536,10 @@ function CreateFlow() {
   };
 
   // 새 생성(InputForm 버튼) — before/after·추가상태 초기화.
-  const handleGenerate = () => {
+  const handleGenerate = (personaIdOverride?: string) => {
     setBeforeAfter(null);
     setAddedTarget(null);
-    runGenerate();
+    runGenerate(personaIdOverride);
   };
 
   // ADR-052 — 넛지로 추가한 뒤 "추가하고 다시 생성". 현재 안을 이전 안으로 스냅샷.
@@ -407,6 +594,7 @@ function CreateFlow() {
   };
 
   const handleRestart = () => {
+    clearDraftFromSession();
     creative.dispatch({ type: "RESET" });
     launch.dispatch({ type: "RESET" });
     generateMutation.reset();
@@ -422,23 +610,20 @@ function CreateFlow() {
     setBeforeAfter(null);
     setCustomBrand(false);
     setStep(0);
-    setIntroCompleted(false);
   };
 
-  // PRD §13.10.6 — 광고 목표 변경 = intro 로 복귀. STEP 01·STEP 02 의 SelectedGoalCard 둘 다 사용.
+  // PRD-create-flow-redesign §3.4 — 광고 목표 변경 = 브리프(step 0) 복귀. 브리프·스튜디오의 SelectedGoalCard 둘 다 사용.
   const handleChangeOutcome = () => {
     creative.dispatch({ type: "SET_OUTCOME", outcome: null });
-    setIntroCompleted(false);
     setStep(0);
   };
 
-  const completed = [generated, !!launched, false];
-  // PRD-ab-testing.md §2.1 v0.2 Q4 — skipped + A/B 면 mock 시드된 결과 카드 까지 보여줘야 하므로 진입 허용.
-  // skipped 인데 A/B 도 아니면 KPI 가 0 이라 단순 예시 모드로 동작.
-  const stepValid: [boolean, boolean] = [true, true];
-
-  // PRD §13.10.6 — intro 완료 여부로 분기. 카드 클릭만으론 자동 진입 안 함, "다음" 버튼이 명시적 commit.
-  const showIntro = !introCompleted;
+  // 01→02 진입 게이트: 목표 존재. 02→03 진입 게이트: boost 면 항상, 아니면 헤드라인+이미지 존재.
+  const hasImage = !!(launch.state.finalImageDataUrl || launch.state.imageDataUrl);
+  const briefDone = isBriefDone(creative.state.outcome);
+  const studioDone = isStudioDone(creative.state.outcome, generated, hasImage);
+  const completed = [briefDone, studioDone, !!launched];
+  const stepValid: [boolean, boolean] = [briefDone, studioDone];
 
   // 둘러보기 모드 — 콘텐츠를 화면 세로 중앙에 배치 (빈 공간 있을 때만 중앙, 길면 위부터)
   const browseMode = !!session?.browseMode;
@@ -449,14 +634,14 @@ function CreateFlow() {
         <div>
           <span className="font-semibold text-[11px] leading-[1.45] tracking-[0.04em] uppercase text-[var(--w-fg-neutral)]">광고 만들기</span>
           <h1 className="m-0 font-bold text-[28px] leading-[1.25] tracking-[-0.024em] text-[var(--w-fg-strong)]" style={{ marginTop: 4 }}>
-            {showIntro ? "광고 목표를 골라주세요" : TITLES[step]}
+            {TITLES[step]}
           </h1>
           <p className="font-medium text-[14px] leading-[1.5] tracking-[0.004em] text-[var(--w-fg-neutral)] mt-1.5 mb-0">
-            {showIntro ? "목표에 맞춰 AI 카피와 캠페인 설정이 자동으로 준비돼요." : SUBS[step]}
+            {SUBS[step]}
           </p>
         </div>
         <div>
-          <Badge kind="violet" dot>DRAFT · {showIntro ? "00" : String(step + 1).padStart(2, "0")}</Badge>
+          <Chip variant="violet" dot>DRAFT · {String(step + 1).padStart(2, "0")}</Chip>
         </div>
       </div>
 
@@ -481,96 +666,153 @@ function CreateFlow() {
         </div>
       )}
 
-      {showIntro ? (
-        <GoalIntro onNext={() => {
-          setIntroCompleted(true);
-          setStep(isBoost(creative.state.outcome) ? 1 : 0);
-        }} />
-      ) : (
-        <>
-          <Stepper step={step} setStep={setStep} completed={completed} stepValid={stepValid} />
+      {resumeDraft && (
+        <div className="flex items-center gap-3 p-[14px] bg-[var(--w-primary-soft)] rounded-xl">
+          <Icon name="clock" size={16} />
+          <p style={{ flex: 1, font: "500 13px/1.5 var(--w-font-sans)", color: "var(--w-fg-strong)", margin: 0 }}>
+            작업하던 광고가 있어요. 이어서 만들까요?
+          </p>
+          <Button variant="primary" size="sm" type="button" onClick={handleResumeDraft}>
+            이어하기
+          </Button>
+          <Button variant="ghost" size="sm" type="button" onClick={handleDiscardDraft}>
+            새로 시작
+          </Button>
+        </div>
+      )}
 
-          {step === 0 && (
-            <CreativeStep
-              brand={brand}
-              setBrand={setBrand}
-              target={target}
-              setTarget={setTarget}
-              personaId={personaId}
-              setPersonaId={setPersonaId}
-              productId={productId}
-              setProductId={setProductId}
-              tone={creative.state.tone}
-              setTone={(id) => creative.dispatch({ type: "SET_TONE", tone: id })}
-              onChangeOutcome={handleChangeOutcome}
-              generating={generating}
-              generated={generated}
-              selectedCopyRefIds={selectedCopyRefIds}
-              setSelectedCopyRefIds={setSelectedCopyRefIds}
-              hooks={hooks}
-              setHooks={setHooks}
-              customBrand={customBrand}
-              setCustomBrand={setCustomBrand}
-              attribution={attribution}
-              nudge={nudge}
-              onNudgeAdd={handleNudgeAdd}
-              addedLabel={addedTarget ? NUDGE_LABEL[addedTarget] : null}
-              onRegenerate={handleRegenerate}
-              beforeAfter={beforeAfter}
-              displayedHooks={displayedHooks}
-              proofPointsCited={proofPointsCited}
-              headlines={displayedHeadlines}
-              subtitles={displayedSubtitles}
-              subtitle={creative.state.subtitle}
-              setSubtitle={(v: string) => creative.dispatch({ type: "SET_SUBTITLE", subtitle: v })}
-              headlineIdx={headlineIdx}
-              onSelectHeadline={handleSelectHeadline}
-              primaryTexts={displayedPrimaryTexts}
-              primaryTextIdx={primaryTextIdx}
-              onSelectPrimaryText={handleSelectPrimaryText}
-              primaryText={creative.state.primaryText}
-              setPrimaryText={(v: string) => creative.dispatch({ type: "SET_PRIMARY_TEXT", primaryText: v })}
-              elapsed={elapsed}
-              onGenerate={handleGenerate}
-              onSaveToLibrary={handleSaveToLibrary}
-              saved={!!savedId}
-              goLibrary={() => router.push("/library")}
-              onNext={() => {
-                const autoMode = autoModeFromObjective(creative.state.objective);
-                if (autoMode) launch.dispatch({ type: "SET_MODE", mode: autoMode });
-                if (personaId) {
-                  const pe = readPersonas().find((p) => p.id === personaId);
-                  if (pe) {
-                    // 생성을 안 했으면 AI 추천이 없으므로 기본값 baseline 위에 페르소나 override.
-                    // 생성했다면 onSuccess 에서 이미 merge 됐으니 그대로 둠.
-                    if (!creative.state.targeting) {
-                      const merged = mergePersonaTargeting({ ageMin: 18, ageMax: 65, genders: [] }, pe);
-                      creative.dispatch({ type: "SET_TARGETING", targeting: merged.targeting });
-                      creative.dispatch({ type: "SET_TARGETING_SOURCE", source: merged.source });
-                    }
-                    launch.dispatch({ type: "SET_PERSONA_LOCATION", value: pe.location ?? [] });
-                  }
+      <Stepper step={Math.min(step, 2)} setStep={setStep} completed={completed} stepValid={stepValid} />
+
+      {step === 0 && (
+        <GoalIntro
+          onNext={() => {
+            const next = nextStepAfterBrief(creative.state.outcome);
+            setStep(next);
+            if (next === 1 && shouldTriggerGenerate(!!displayedHeadlines, generatedForOutcomeRef.current, creative.state.outcome)) {
+              generatedForOutcomeRef.current = creative.state.outcome;
+              // generate-first가 스튜디오 진입 전에 발사 — 프로필 모드는 첫 생성부터 페르소나가 반영되게
+              // 활성 프로필의 기본(첫 번째) 페르소나를 auto-select. 유저가 이미 고른 페르소나는 유지.
+              // setPersonaId 는 다음 렌더에 반영되므로, runGenerate 에는 override 로 직접 전달.
+              let personaIdOverride: string | undefined;
+              if (!personaId && !customBrand) {
+                const bpEntry = readActiveBrandProfileEntry();
+                const first = bpEntry ? readPersonas().find((pe) => pe.brandProfileId === bpEntry.id) : undefined;
+                if (first) {
+                  setPersonaId(first.id);
+                  personaIdOverride = first.id;
                 }
-                setStep(1);
-              }}
-              imageDataUrl={launch.state.imageDataUrl}
-              setImageDataUrl={(v) => launch.dispatch({ type: "SET_IMAGE_DATA_URL", value: v })}
-              finalImageDataUrl={launch.state.finalImageDataUrl}
-              setFinalImageDataUrl={(v) => launch.dispatch({ type: "SET_FINAL_IMAGE_DATA_URL", value: v })}
-            />
-          )}
+              }
+              handleGenerate(personaIdOverride);
+            }
+          }}
+          brand={brand}
+          setBrand={setBrand}
+          target={target}
+          setTarget={setTarget}
+          productId={productId}
+          setProductId={setProductId}
+          customBrand={customBrand}
+          setCustomBrand={setCustomBrand}
+        />
+      )}
 
-          {step === 1 && (
-            <LaunchStep
-              onNext={() => setStep(2)}
-              goSettings={() => router.push("/setup")}
-              goCreative={handleChangeOutcome}
-              brandName={brand ? brand.slice(0, 20) : undefined}
-            />
-          )}
+      {step === 1 && (
+        <CreativeStep
+          outcome={creative.state.outcome}
+          personaId={personaId}
+          setPersonaId={setPersonaId}
+          productId={productId}
+          tone={creative.state.tone}
+          setTone={(id) => creative.dispatch({ type: "SET_TONE", tone: id })}
+          onChangeOutcome={handleChangeOutcome}
+          onBack={() => setStep(0)}
+          generating={generating}
+          generated={generated}
+          selectedCopyRefIds={selectedCopyRefIds}
+          setSelectedCopyRefIds={setSelectedCopyRefIds}
+          hooks={hooks}
+          setHooks={setHooks}
+          attribution={attribution}
+          nudge={nudge}
+          onNudgeAdd={handleNudgeAdd}
+          addedLabel={addedTarget ? NUDGE_LABEL[addedTarget] : null}
+          onRegenerate={handleRegenerate}
+          beforeAfter={beforeAfter}
+          displayedHooks={displayedHooks}
+          proofPointsCited={proofPointsCited}
+          headlines={displayedHeadlines}
+          subtitles={displayedSubtitles}
+          subtitle={creative.state.subtitle}
+          setSubtitle={(v: string) => creative.dispatch({ type: "SET_SUBTITLE", subtitle: v })}
+          headlineIdx={headlineIdx}
+          onSelectHeadline={handleSelectHeadline}
+          primaryTexts={displayedPrimaryTexts}
+          primaryTextIdx={primaryTextIdx}
+          onSelectPrimaryText={handleSelectPrimaryText}
+          primaryText={creative.state.primaryText}
+          setPrimaryText={(v: string) => creative.dispatch({ type: "SET_PRIMARY_TEXT", primaryText: v })}
+          elapsed={elapsed}
+          onGenerate={handleGenerate}
+          onSaveToLibrary={handleSaveToLibrary}
+          saved={!!savedId}
+          goLibrary={() => router.push("/library")}
+          onNext={() => {
+            if (personaId) {
+              const pe = readPersonas().find((p) => p.id === personaId);
+              if (pe) {
+                // 생성을 안 했으면 AI 추천이 없으므로 기본값 baseline 위에 페르소나 override.
+                // 생성했다면 onSuccess 에서 이미 merge 됐으니 그대로 둠.
+                if (!creative.state.targeting) {
+                  const merged = mergePersonaTargeting({ ageMin: 18, ageMax: 65, genders: [] }, pe);
+                  creative.dispatch({ type: "SET_TARGETING", targeting: merged.targeting });
+                  creative.dispatch({ type: "SET_TARGETING_SOURCE", source: merged.source });
+                }
+                launch.dispatch({ type: "SET_PERSONA_LOCATION", value: pe.location ?? [] });
+              }
+            }
+            setStep(2);
+          }}
+          imageDataUrl={launch.state.imageDataUrl}
+          setImageDataUrl={(v) => launch.dispatch({ type: "SET_IMAGE_DATA_URL", value: v })}
+          finalImageDataUrl={launch.state.finalImageDataUrl}
+          setFinalImageDataUrl={(v) => launch.dispatch({ type: "SET_FINAL_IMAGE_DATA_URL", value: v })}
+        />
+      )}
 
-          {step === 2 && <PostLaunchChecklist onRestart={handleRestart} />}
-        </>
+      {step === 2 && (
+        // onNext — BoostPostFlow 전용 레거시 prop. 게재 성공 시 launchedCampaign dispatch 로
+        // LaunchStep 이 즉시 완료 상태로 전환되므로(§3.3) 실제로 호출되지 않는다.
+        <LaunchStep
+          onNext={() => {}}
+          goSettings={() => router.push("/setup")}
+          goCreative={() => setStep(1)}
+          brandName={brand ? brand.slice(0, 20) : undefined}
+          onRestart={handleRestart}
+        />
+      )}
+
+      {pendingPrefill && (
+        <ConfirmModal
+          title="작업 중인 광고가 있어요"
+          desc={
+            pendingPrefill.kind === "campaign"
+              ? "이전 캠페인의 우세 안으로 덮어쓸까요? 지금 작업 내용은 사라져요."
+              : "토너먼트 챔피언 안으로 덮어쓸까요? 지금 작업 내용은 사라져요."
+          }
+          confirmLabel="덮어쓰기"
+          cancelLabel="지금 작업 유지"
+          tone="primary"
+          onConfirm={() => {
+            const pending = pendingPrefill;
+            setPendingPrefill(null);
+            if (pending.kind === "campaign") void applyCampaignPrefill(pending.id);
+            else applyTournamentPrefill(pending.id);
+          }}
+          onClose={() => {
+            setPendingPrefill(null);
+            router.replace("/create");
+          }}
+        />
       )}
 
       {/* ADR-052 — 넛지 보상 루프: 인라인 quick-add → 프로필 영구 저장 → 추가 표시 */}

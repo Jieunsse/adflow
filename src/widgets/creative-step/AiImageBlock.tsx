@@ -23,7 +23,7 @@ import { useToast } from "@shared/ui/Toast";
 import { buildBriefPrompt } from "@features/generate-image/brief-prompt";
 import { readActiveBrandProfileEntry } from "@features/brand-profile/model/useBrandProfileStorage";
 import { useReferenceMaterials, type ReferenceMaterial } from "@shared/lib/referenceMaterials";
-import type { ProductEntry } from "@shared/lib/products";
+import { useProducts } from "@shared/lib/products";
 import BriefForm, { type AspectId } from "./BriefForm";
 import GenSetupCard from "./GenSetupCard";
 import ImageEntryHero from "./ImageEntryHero";
@@ -106,6 +106,7 @@ export default function AiImageBlock({
   const [selectedMaterials, setSelectedMaterials] = useState<ReferenceMaterial[]>([]);
   const activeBrandProfileId = readActiveBrandProfileEntry()?.id ?? "";
   const { materials: warehouseMaterials, upload: uploadMaterial } = useReferenceMaterials(activeBrandProfileId);
+  const { products } = useProducts(activeBrandProfileId);
 
   // 선택된 Product 의 imageUrl → Package Reference 자동 제안. name·description → 컨셉 grounding.
   useEffect(() => {
@@ -113,13 +114,7 @@ export default function AiImageBlock({
       setProductMeta(null);
       return;
     }
-    let product: ProductEntry | undefined;
-    try {
-      const all = JSON.parse(localStorage.getItem(`adflow:products:${activeBrandProfileId}`) ?? "[]") as ProductEntry[];
-      product = all.find((pr) => pr.id === productId);
-    } catch {
-      product = undefined;
-    }
+    const product = products.find((pr) => pr.id === productId);
     setProductMeta(product ? { name: product.name, description: product.description } : null);
     const imageUrl = product?.imageUrl;
     if (!imageUrl) return;
@@ -133,7 +128,7 @@ export default function AiImageBlock({
     return () => {
       cancelled = true;
     };
-  }, [productId, activeBrandProfileId]);
+  }, [productId, activeBrandProfileId, products]);
 
   useEffect(() => {
     if (!zoomedSrc) return;
@@ -354,6 +349,7 @@ export default function AiImageBlock({
       aspect,
       notes: briefNotes,
       refMaterialNames: selectedMaterials.map((m) => m.name),
+      imageGuide: readActiveBrandProfileEntry()?.imageGuide,
     });
     const prompt = txtText ? `${p}\n\n${txtText}` : p;
     // brief 의 연출컷·자료는 전 variant 공통(variant 전용 ref)으로. 동일 prompt 3복제.
@@ -386,7 +382,7 @@ export default function AiImageBlock({
           <div className="absolute inset-0 grid place-items-center">
             <div className="flex flex-col items-center gap-2.5">
               <div className="rounded-full border-[2.6px] border-[var(--w-accent-violet-soft)] border-t-[var(--w-accent-violet)] animate-[spin_0.85s_linear_infinite]" style={{ width: 26, height: 26 }} />
-              <div className="font-semibold text-[12.5px] leading-none text-[var(--w-fg-strong)] whitespace-nowrap">
+              <div className="font-semibold text-[13px] leading-none text-[var(--w-fg-strong)] whitespace-nowrap">
                 {concepts[i]?.label?.trim() || `컨셉 ${i + 1}`} 만드는 중…
               </div>
               <div className="h-1 rounded-full overflow-hidden bg-[var(--w-line-neutral)]" style={{ width: "64%" }}>
@@ -487,11 +483,11 @@ export default function AiImageBlock({
               </span>
             </div>
             <div className="flex items-center gap-1.5 mt-2.5">
-              <label className="inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[12.5px] leading-none px-3 py-2 rounded-lg border border-[var(--w-line-normal)] bg-[var(--w-bg-elevated)] text-[var(--w-primary-press)] hover:bg-[var(--w-primary-soft)] hover:border-[var(--w-primary-normal)] cursor-pointer transition-[background,border-color] duration-[120ms]">
+              <label className="inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[13px] leading-none px-3 py-2 rounded-lg border border-[var(--w-line-normal)] bg-[var(--w-bg-elevated)] text-[var(--w-primary-press)] hover:bg-[var(--w-primary-soft)] hover:border-[var(--w-primary-normal)] cursor-pointer transition-[background,border-color] duration-[120ms]">
                 <Icon name="upload" size={13} /> 다른 사진 올리기
                 <input type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => handleReplacePackageRef(e.target.files)} />
               </label>
-              <button type="button" onClick={() => setPackageRefOn(false)} className="font-semibold text-[12.5px] leading-none px-3 py-2 rounded-lg text-[var(--w-fg-neutral)] hover:text-[var(--w-fg-strong)] hover:bg-[var(--w-bg-neutral)] cursor-pointer transition-[background,color] duration-[120ms]">
+              <button type="button" onClick={() => setPackageRefOn(false)} className="font-semibold text-[13px] leading-none px-3 py-2 rounded-lg text-[var(--w-fg-neutral)] hover:text-[var(--w-fg-strong)] hover:bg-[var(--w-bg-neutral)] cursor-pointer transition-[background,color] duration-[120ms]">
                 끄기
               </button>
             </div>
@@ -510,7 +506,7 @@ export default function AiImageBlock({
             </div>
             <div className="w-caption mt-0.5">라벨·로고 유지 안 됨 — 배경과 함께 재생성</div>
           </div>
-          <label className="inline-flex items-center justify-center gap-1.5 border font-semibold leading-none whitespace-nowrap h-8 px-3 text-[12.5px] rounded-lg bg-transparent border-[var(--w-line-normal)] text-[var(--w-fg-strong)] hover:bg-[var(--w-bg-neutral)] cursor-pointer transition-[background] duration-[120ms]">
+          <label className="inline-flex items-center justify-center gap-1.5 border font-semibold leading-none whitespace-nowrap h-8 px-3 text-[13px] rounded-lg bg-transparent border-[var(--w-line-normal)] text-[var(--w-fg-strong)] hover:bg-[var(--w-bg-neutral)] cursor-pointer transition-[background] duration-[120ms]">
             <Icon name="upload" size={13} /> 사진 바꾸기
             <input type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => handleReplacePackageRef(e.target.files)} />
           </label>
@@ -524,7 +520,7 @@ export default function AiImageBlock({
             <div className="w-label truncate" title={productMeta?.name}>{productMeta?.name ? `${productMeta.name} · 사진 없음` : "제품 레퍼런스 (선택)"}</div>
             <div className="w-caption mt-0.5">{productMeta?.name ? "사진을 올리면 이 제품 원본을 그대로 둬요" : "제품 사진을 올리면 원본 그대로 두고 배경 연출만 생성해요"}</div>
           </div>
-          <label className="inline-flex items-center justify-center gap-1.5 border font-semibold leading-none whitespace-nowrap h-8 px-3 text-[12.5px] rounded-lg bg-transparent border-[var(--w-line-normal)] text-[var(--w-fg-strong)] hover:bg-[var(--w-bg-neutral)] cursor-pointer transition-[background] duration-[120ms]">
+          <label className="inline-flex items-center justify-center gap-1.5 border font-semibold leading-none whitespace-nowrap h-8 px-3 text-[13px] rounded-lg bg-transparent border-[var(--w-line-normal)] text-[var(--w-fg-strong)] hover:bg-[var(--w-bg-neutral)] cursor-pointer transition-[background] duration-[120ms]">
             <Icon name="upload" size={13} /> 제품 사진 첨부
             <input type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => handleReplacePackageRef(e.target.files)} />
           </label>
@@ -577,7 +573,7 @@ export default function AiImageBlock({
     <button
       type="button"
       onClick={() => setMode("concept")}
-      className="inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[12.5px] leading-none text-[var(--w-fg-neutral)] hover:text-[var(--w-fg-strong)] cursor-pointer transition-[color] duration-[120ms]"
+      className="inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[13px] leading-none text-[var(--w-fg-neutral)] hover:text-[var(--w-fg-strong)] cursor-pointer transition-[color] duration-[120ms]"
     >
       <Icon name="sparkles" size={13} /> AI 컨셉으로
     </button>
@@ -606,7 +602,7 @@ export default function AiImageBlock({
               type="button"
               disabled={suggest.isPending || pendingSlots.length > 0 || !state.primaryText}
               onClick={handleSuggestConcepts}
-              className="inline-flex items-center gap-1 font-semibold text-[11.5px] leading-none text-[var(--w-fg-neutral)] hover:text-[var(--w-fg-strong)] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-[color] duration-[120ms]"
+              className="inline-flex items-center gap-1 font-semibold text-[12px] leading-none text-[var(--w-fg-neutral)] hover:text-[var(--w-fg-strong)] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-[color] duration-[120ms]"
             >
               <Icon name="refresh" size={12} spin={suggest.isPending} />
               {suggest.isPending ? "컨셉 제안 중…" : pendingSlots.length > 0 ? "생성 중…" : "전체 다시 제안"}
@@ -657,7 +653,7 @@ export default function AiImageBlock({
                     {editing && (
                       <div className="bg-[var(--w-bg-alternative)] border border-[var(--w-line-alternative)] rounded-[10px] px-3 py-2.5">
                         <textarea
-                          className="w-full border-none bg-transparent resize-y font-medium text-[11.5px] leading-[1.55] text-[var(--w-fg-neutral)] outline-none"
+                          className="w-full border-none bg-transparent resize-y font-medium text-[12px] leading-[1.55] text-[var(--w-fg-neutral)] outline-none"
                           style={{ fontFamily: "var(--w-font-mono)", minHeight: 56 }}
                           aria-label={`컨셉 ${i + 1} 프롬프트`}
                           placeholder="AI 컨셉을 제안받거나 직접 입력하세요 (영어 권장)"
@@ -670,7 +666,7 @@ export default function AiImageBlock({
                           type="button"
                           disabled={rerollingSlots.includes(i) || !state.primaryText}
                           onClick={() => handleRerollConcept(i)}
-                          className="mt-1.5 inline-flex items-center gap-1 font-semibold text-[11.5px] leading-none text-[var(--w-fg-neutral)] hover:text-[var(--w-fg-strong)] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-[color] duration-[120ms]"
+                          className="mt-1.5 inline-flex items-center gap-1 font-semibold text-[12px] leading-none text-[var(--w-fg-neutral)] hover:text-[var(--w-fg-strong)] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-[color] duration-[120ms]"
                         >
                           <Icon name="refresh" size={11} spin={rerollingSlots.includes(i)} /> 컨셉 다시 제안
                         </button>
@@ -718,7 +714,7 @@ export default function AiImageBlock({
             ))}
           </div>
           <details className="rounded-2xl border border-[var(--w-line-normal)] bg-[var(--w-bg-elevated)] px-4 py-1">
-            <summary className="py-2.5 font-semibold text-[12.5px] leading-none text-[var(--w-fg-neutral)] hover:text-[var(--w-fg-strong)] cursor-pointer select-none">
+            <summary className="py-2.5 font-semibold text-[13px] leading-none text-[var(--w-fg-neutral)] hover:text-[var(--w-fg-strong)] cursor-pointer select-none">
               기획안 수정하고 다시 생성해요
             </summary>
             {docSlot}

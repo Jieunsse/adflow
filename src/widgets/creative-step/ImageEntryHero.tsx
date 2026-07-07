@@ -32,17 +32,17 @@ export default function ImageEntryHero({
           <h3 className="font-extrabold text-[30px] leading-[1.28] tracking-[-0.026em] text-[var(--w-fg-strong)] mt-3.5 text-balance">
             카피에 어울리는 이미지,<br />AI가 3가지 컨셉으로 만들어 드려요
           </h3>
-          <p className="font-medium text-[14.5px] leading-[1.65] text-[var(--w-fg-neutral)] mt-3 max-w-[440px]">
+          <p className="font-medium text-[15px] leading-[1.65] text-[var(--w-fg-neutral)] mt-3 max-w-[440px]">
             서로 다른 분위기의 3컷을 한 번에 제안해 드려요. 마음에 드는 <b className="font-bold text-[var(--w-fg-strong)]">딱 1장</b>만 고르면 바로 광고에 쓸 수 있어요.
           </p>
           <div className="flex flex-wrap gap-[18px] mt-[22px] mb-[26px]">
-            <span className="flex items-center gap-2 font-medium text-[12.5px] leading-[1.3] text-[var(--w-fg-neutral)]">
+            <span className="flex items-center gap-2 font-medium text-[13px] leading-[1.3] text-[var(--w-fg-neutral)]">
               <span className="grid place-items-center text-[var(--w-primary-press)]"><Icon name="grid" size={15} /></span> 3컷 동시 생성
             </span>
-            <span className="flex items-center gap-2 font-medium text-[12.5px] leading-[1.3] text-[var(--w-fg-neutral)]">
+            <span className="flex items-center gap-2 font-medium text-[13px] leading-[1.3] text-[var(--w-fg-neutral)]">
               <span className="grid place-items-center text-[var(--w-primary-press)]"><Icon name="refresh" size={15} /></span> 약 15초 소요
             </span>
-            <span className="flex items-center gap-2 font-medium text-[12.5px] leading-[1.3] text-[var(--w-fg-neutral)]">
+            <span className="flex items-center gap-2 font-medium text-[13px] leading-[1.3] text-[var(--w-fg-neutral)]">
               <span className="grid place-items-center text-[var(--w-primary-press)]"><Icon name="image" size={15} /></span> 제품 원본 유지
             </span>
           </div>

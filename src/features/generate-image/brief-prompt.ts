@@ -12,6 +12,8 @@ export interface BriefPromptInput {
   notes: string;
   /** 선택된 참고 자료 파일명 목록 — 프롬프트에 명시적으로 언급 */
   refMaterialNames?: string[];
+  /** 활성 브랜드 프로필의 이미지 가이드 (스타일 탭) */
+  imageGuide?: string;
 }
 
 export function buildBriefPrompt(input: BriefPromptInput): string {
@@ -25,6 +27,7 @@ export function buildBriefPrompt(input: BriefPromptInput): string {
     input.primaryText ? `- 본문 카피: ${input.primaryText}` : null,
     `- 톤앤매너: ${toneLabel}`,
     outcomeDef ? `- 광고 목표: ${outcomeDef.outcomeLabel} — 카피 방향 "${outcomeDef.copyTone}"` : null,
+    input.imageGuide?.trim() ? `- 브랜드 이미지 가이드: ${input.imageGuide.trim()}` : null,
     "",
     "[전달 자료]",
     input.scenesCount > 0

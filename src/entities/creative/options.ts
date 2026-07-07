@@ -70,6 +70,7 @@ export const IMAGE_ART: Record<ImageId, string> = {
 //  - id              : ObjectiveId / OutcomeChip — STEP 01 칩 토글 키
 //  - label           : 칩/배지 라벨 (예: "페이지 팔로우")
 //  - outcomeLabel    : STEP 01 칩 큰 라벨 (마케터 의도 자연어, 예: "페이지 팔로워 늘리기")
+//  - outcomeDescription : STEP 01 세부 목표 카드 한 줄 설명 — 비슷한 목표 간 차이를 드러냄
 //  - iconName        : STEP 01 카드 아이콘 — @shared/ui/Icon 의 IconName
 //  - metaObjective   : Meta Campaign.objective enum
 //  - optimizationGoal: Meta AdSet.optimization_goal — goal 단위로 분기
@@ -90,6 +91,7 @@ export const OBJECTIVES_PHASE1 = [
     defaultLink: 'user_input' as const,
     label: '인지도',
     outcomeLabel: '인지도 넓히기',
+    outcomeDescription: '구매보다 먼저, 최대한 많은 사람에게 브랜드를 알려요',
     copyTone: '브랜드 약속·메모러블·짧고 강한 헤드라인, 첫 노출 인상 위주',
   },
   {
@@ -103,6 +105,7 @@ export const OBJECTIVES_PHASE1 = [
     defaultLink: 'user_input' as const,
     label: '웹사이트 방문',
     outcomeLabel: '사이트 방문 유도',
+    outcomeDescription: '웹사이트·쇼핑몰 등 외부 페이지로 방문을 보내요',
     copyTone: '클릭 유도·urgency·명확한 CTA 강조',
   },
   {
@@ -116,6 +119,7 @@ export const OBJECTIVES_PHASE1 = [
     defaultLink: 'page_url' as const,
     label: '페이지 방문',
     outcomeLabel: '페이지 둘러보게 하기',
+    outcomeDescription: 'Facebook 페이지로 데려와 게시물·정보를 둘러보게 해요',
     copyTone: '페이지 방문 유도·"확인해 보세요"·브랜드 호기심 자극',
   },
   {
@@ -129,6 +133,7 @@ export const OBJECTIVES_PHASE1 = [
     defaultLink: 'user_input' as const,
     label: '게시물 참여',
     outcomeLabel: '반응·댓글·공유 키우기',
+    outcomeDescription: '게시물에 좋아요·댓글·공유가 많이 달리게 해요',
     copyTone: '공감·질문 던지기·대화형, 댓글/공유를 유도',
   },
   {
@@ -142,6 +147,7 @@ export const OBJECTIVES_PHASE1 = [
     defaultLink: 'page_url' as const,
     label: '페이지 팔로우',
     outcomeLabel: '페이지 팔로워 늘리기',
+    outcomeDescription: '페이지를 좋아요·팔로우할 사람에게 보여줘요',
     copyTone: '팔로우 가치 강조·정기 콘텐츠 약속·커뮤니티 소속감',
   },
   {
@@ -155,6 +161,7 @@ export const OBJECTIVES_PHASE1 = [
     defaultLink: 'messenger' as const,
     label: '메시지 받기',
     outcomeLabel: '메시지 대화 시작하기',
+    outcomeDescription: '광고를 누르면 바로 메시지 대화가 시작돼요',
     copyTone: '1:1 대화 유도·"바로 답변 드려요"·문턱 낮은 질문 예시',
   },
   {
@@ -168,6 +175,7 @@ export const OBJECTIVES_PHASE1 = [
     defaultLink: 'page_url' as const,
     label: '전화 받기',
     outcomeLabel: '전화 문의 받기',
+    outcomeDescription: '전화 문의할 가능성이 높은 사람에게 보여줘요',
     copyTone: '전화 한 통의 가치 강조·"바로 연결됩니다"·통화 시간 안내',
   },
   {
@@ -181,6 +189,7 @@ export const OBJECTIVES_PHASE1 = [
     defaultLink: 'page_url' as const,
     label: '콘텐츠 홍보',
     outcomeLabel: '기존 게시물 홍보하기',
+    outcomeDescription: '이미 올린 게시물을 더 많은 사람에게 퍼뜨려요',
     copyTone: '게시물 참여 확대·자연스러운 노출·광고 느낌 최소화',
   },
 ] as const

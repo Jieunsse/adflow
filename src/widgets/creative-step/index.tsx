@@ -1,29 +1,26 @@
 "use client";
 
-// STEP 01 소재 작성 widget — ADR-001 §deepening ③.
-// 2칼럼 레이아웃 오케스트레이터. 왼쪽 InputForm + 오른쪽 ResultPanel.
+// PRD-create-flow-redesign §3.2 — 소재 스튜디오. copy/image phase 전환 폐기, 단일 화면.
+// 좌: 피드 프리뷰(sticky, 전 구간 시선 앵커) / 우: 섹션 스택(① 카피 ② 이미지 ③ 다시 만들기).
 // page.tsx 는 step 진행·세션스토리지 입력값·generate mutation 결과를 props 로 전달.
-// PRD §13.10 — outcome 선택은 intro 페이지가 담당. STEP 01 은 SelectedGoalCard 만 노출.
 
-import { useState } from "react";
+import { Button } from "@shared/ui/Button";
+import { isStudioDone } from "@entities/creative/brief-flow";
+import FeedPreview from "./FeedPreview";
 import InputForm from "./InputForm";
 import ResultPanel from "./ResultPanel";
 import ImagePhase from "./ImagePhase";
-import type { CopyHook } from "@entities/creative/options";
+import type { CopyHook, OutcomeChip } from "@entities/creative/options";
 import type { CreativeAttribution } from "@/lib/gemini-creative";
 import type { ProfileNudge } from "@entities/creative/profile-nudge";
 interface Props {
-  brand: string;
-  setBrand: (v: string) => void;
-  target: string;
-  setTarget: (v: string) => void;
+  outcome: OutcomeChip | null;
   personaId: string | null;
   setPersonaId: (id: string | null) => void;
   productId: string | null;
-  setProductId: (id: string | null) => void;
   tone: string;
   setTone: (id: string) => void;
-  /** SelectedGoalCard 의 "광고 목표 변경" → intro 복귀. page.tsx 가 outcome=null dispatch. */
+  /** SelectedGoalCard 의 "광고 목표 변경" → 브리프 복귀. page.tsx 가 outcome=null dispatch. */
   onChangeOutcome: () => void;
   generating: boolean;
   generated: boolean;
@@ -49,14 +46,13 @@ interface Props {
   onSaveToLibrary: () => void;
   saved: boolean;
   goLibrary: () => void;
+  onBack: () => void;
   onNext: () => void;
   imageDataUrl: string | null;
   setImageDataUrl: (v: string | null) => void;
   finalImageDataUrl: string | null;
   setFinalImageDataUrl: (v: string | null) => void;
-  /** ADR-052 — 보상 루프 + 귀인 + 브랜드 override. */
-  customBrand: boolean;
-  setCustomBrand: (v: boolean) => void;
+  /** ADR-052 — 보상 루프 + 귀인. */
   attribution: CreativeAttribution | null;
   nudge: ProfileNudge | null;
   onNudgeAdd: () => void;
@@ -66,74 +62,82 @@ interface Props {
 }
 
 export default function CreativeStep(p: Props) {
-  // ADR-040 — 소재 만들기 내부 2-phase. 최상위 Stepper(STEP 02=집행)와 독립.
-  const [phase, setPhase] = useState<"copy" | "image">("copy");
-
-  if (phase === "image") {
-    return (
-      <ImagePhase
-        productId={p.productId}
-        imageDataUrl={p.imageDataUrl}
-        setImageDataUrl={p.setImageDataUrl}
-        finalImageDataUrl={p.finalImageDataUrl}
-        setFinalImageDataUrl={p.setFinalImageDataUrl}
-        onBackToCopy={() => setPhase("copy")}
-        onNext={p.onNext}
-      />
-    );
-  }
+  const hasImage = !!(p.finalImageDataUrl || p.imageDataUrl);
+  const studioDone = isStudioDone(p.outcome, p.generated, hasImage);
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, alignItems: "flex-start" }}>
-      <InputForm
-        brand={p.brand}
-        setBrand={p.setBrand}
-        target={p.target}
-        setTarget={p.setTarget}
-        personaId={p.personaId}
-        setPersonaId={p.setPersonaId}
-        productId={p.productId}
-        setProductId={p.setProductId}
-        tone={p.tone}
-        setTone={p.setTone}
-        onChangeOutcome={p.onChangeOutcome}
-        generating={p.generating}
-        onGenerate={p.onGenerate}
-        selectedCopyRefIds={p.selectedCopyRefIds}
-        setSelectedCopyRefIds={p.setSelectedCopyRefIds}
-        hooks={p.hooks}
-        setHooks={p.setHooks}
-        customBrand={p.customBrand}
-        setCustomBrand={p.setCustomBrand}
-      />
-      <ResultPanel
-        generating={p.generating}
-        generated={p.generated}
-        headlines={p.headlines}
-        subtitles={p.subtitles}
-        subtitle={p.subtitle}
-        setSubtitle={p.setSubtitle}
-        headlineIdx={p.headlineIdx}
-        onSelectHeadline={p.onSelectHeadline}
-        primaryTexts={p.primaryTexts}
-        primaryTextIdx={p.primaryTextIdx}
-        onSelectPrimaryText={p.onSelectPrimaryText}
-        displayedHooks={p.displayedHooks}
-        proofPointsCited={p.proofPointsCited}
-        primaryText={p.primaryText}
-        setPrimaryText={p.setPrimaryText}
-        elapsed={p.elapsed}
-        onSaveToLibrary={p.onSaveToLibrary}
-        saved={p.saved}
-        goLibrary={p.goLibrary}
-        onGoImage={() => setPhase("image")}
-        attribution={p.attribution}
-        nudge={p.nudge}
-        onNudgeAdd={p.onNudgeAdd}
-        addedLabel={p.addedLabel}
-        onRegenerate={p.onRegenerate}
-        beforeAfter={p.beforeAfter}
-      />
+    <div style={{ display: "grid", gridTemplateColumns: "1fr 1.35fr", gap: 20, alignItems: "flex-start" }}>
+      <FeedPreview />
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        <ResultPanel
+          generating={p.generating}
+          generated={p.generated}
+          headlines={p.headlines}
+          subtitles={p.subtitles}
+          subtitle={p.subtitle}
+          setSubtitle={p.setSubtitle}
+          headlineIdx={p.headlineIdx}
+          onSelectHeadline={p.onSelectHeadline}
+          primaryTexts={p.primaryTexts}
+          primaryTextIdx={p.primaryTextIdx}
+          onSelectPrimaryText={p.onSelectPrimaryText}
+          displayedHooks={p.displayedHooks}
+          proofPointsCited={p.proofPointsCited}
+          primaryText={p.primaryText}
+          setPrimaryText={p.setPrimaryText}
+          elapsed={p.elapsed}
+          onSaveToLibrary={p.onSaveToLibrary}
+          saved={p.saved}
+          goLibrary={p.goLibrary}
+          attribution={p.attribution}
+          nudge={p.nudge}
+          onNudgeAdd={p.onNudgeAdd}
+          addedLabel={p.addedLabel}
+          onRegenerate={p.onRegenerate}
+          beforeAfter={p.beforeAfter}
+          onGenerate={p.onGenerate}
+        />
+
+        <ImagePhase
+          productId={p.productId}
+          imageDataUrl={p.imageDataUrl}
+          setImageDataUrl={p.setImageDataUrl}
+          finalImageDataUrl={p.finalImageDataUrl}
+          setFinalImageDataUrl={p.setFinalImageDataUrl}
+        />
+
+        <InputForm
+          personaId={p.personaId}
+          setPersonaId={p.setPersonaId}
+          productId={p.productId}
+          tone={p.tone}
+          setTone={p.setTone}
+          onChangeOutcome={p.onChangeOutcome}
+          generating={p.generating}
+          onGenerate={p.onGenerate}
+          selectedCopyRefIds={p.selectedCopyRefIds}
+          setSelectedCopyRefIds={p.setSelectedCopyRefIds}
+          hooks={p.hooks}
+          setHooks={p.setHooks}
+        />
+
+        <div className="flex items-center justify-between gap-3">
+          <Button variant="ghost" type="button" onClick={p.onBack}>
+            ← 브리프
+          </Button>
+          <div className="flex flex-col items-end gap-1">
+            {!studioDone && (
+              <span className="font-medium text-[12px] leading-[1.4] text-[var(--w-fg-neutral)]">
+                이미지를 만들면 게재로 넘어갈 수 있어요
+              </span>
+            )}
+            <Button variant="primary" type="button" onClick={p.onNext} disabled={!studioDone}>
+              게재 설정으로 →
+            </Button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

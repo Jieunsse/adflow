@@ -7,9 +7,12 @@ export default withAuth(
     const { pathname } = req.nextUrl
     const token = req.nextauth.token
 
-    // 1) Meta 자격증명 미설정 → /install 마법사로
+    // 둘러보기 모드 — 셋업 미완료라도 앱 진입 허용
+    const isBrowseMode = token?.browseMode === true
+
+    // 1) Meta 자격증명 미설정 → /install 마법사로 (둘러보기 모드는 예외 — Meta 연동 없이도 데모 체험 가능해야 함)
     const creds = await credentialsCache.get()
-    if (!creds) {
+    if (!creds && !isBrowseMode) {
       const url = req.nextUrl.clone()
       url.pathname = "/install"
       url.search = ""
@@ -18,8 +21,7 @@ export default withAuth(
 
     // 광고 계정 + 페이스북 페이지 둘 다 선택돼야 셋업 완료
     const isSetUp = !!token?.adAccountId && !!token?.pageId
-    // 둘러보기 모드 — 셋업 미완료라도 앱 진입 허용
-    const canEnter = isSetUp || token?.browseMode === true
+    const canEnter = isSetUp || isBrowseMode
 
     // /api/setup 은 셋업 미완료 상태에서도 허용 (setup 페이지에서 호출)
     if (pathname.startsWith("/api/setup")) return NextResponse.next()

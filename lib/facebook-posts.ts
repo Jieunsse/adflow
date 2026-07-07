@@ -33,8 +33,8 @@ export type FbPostCommentsResult = {
 export const FB_PAGE_POSTS_MOCK: FbPagePost[] = [
   {
     id: "mock-post-1",
-    message: "이번 주말 한정 프로모션 시작! 매장에서 최대 30% 할인을 만나보세요 ✨",
-    fullPicture: "https://picsum.photos/seed/fbm1/640/640",
+    message: "이번 주말, 비건 수분 크림 리필 기획전을 열어요. 식물성 성분만 담아 민감한 피부도 편안하게 🌿",
+    fullPicture: "/demo/library/cream.jpg",
     permalinkUrl: "https://facebook.com/mock/1",
     createdTime: "2026-05-23T09:00:00Z",
     reactionsCount: 218,
@@ -42,8 +42,8 @@ export const FB_PAGE_POSTS_MOCK: FbPagePost[] = [
   },
   {
     id: "mock-post-2",
-    message: "오프라인 매장 라이브 — 신제품 첫 공개를 함께해 주신 분들께 감사드려요.",
-    fullPicture: "https://picsum.photos/seed/fbm2/640/640",
+    message: "무향·무색소 비건 토너 라이브 — 첫 공개를 함께해 주신 분들께 감사드려요.",
+    fullPicture: "/demo/library/toner.jpg",
     permalinkUrl: "https://facebook.com/mock/2",
     createdTime: "2026-05-20T11:30:00Z",
     reactionsCount: 412,
@@ -51,8 +51,8 @@ export const FB_PAGE_POSTS_MOCK: FbPagePost[] = [
   },
   {
     id: "mock-post-3",
-    message: "고객 후기 모음 (5월) — 진심을 담은 후기를 보내주신 모든 분들께 감사드립니다.",
-    fullPicture: "https://picsum.photos/seed/fbm3/640/640",
+    message: "고객 후기 모음 (5월) — 식물성 세럼을 다시 찾아주신 분들의 진심 어린 후기예요. 감사합니다.",
+    fullPicture: "/demo/library/serum.jpg",
     permalinkUrl: "https://facebook.com/mock/3",
     createdTime: "2026-05-15T14:00:00Z",
     reactionsCount: 167,
@@ -60,8 +60,8 @@ export const FB_PAGE_POSTS_MOCK: FbPagePost[] = [
   },
   {
     id: "mock-post-4",
-    message: "브랜드 스토리 — 창업 비하인드 영상이 공개됐어요.",
-    fullPicture: "https://picsum.photos/seed/fbm4/640/640",
+    message: "브랜드 스토리 — 우리가 비건 스킨케어를 시작한 이유, 그 비하인드를 공개했어요.",
+    fullPicture: "/demo/library/pack.jpg",
     permalinkUrl: "https://facebook.com/mock/4",
     createdTime: "2026-05-10T10:00:00Z",
     reactionsCount: 298,
@@ -69,8 +69,8 @@ export const FB_PAGE_POSTS_MOCK: FbPagePost[] = [
   },
   {
     id: "mock-post-5",
-    message: "팔로워 Q&A 라이브 다시보기 안내.",
-    fullPicture: "https://picsum.photos/seed/fbm5/640/640",
+    message: "팔로워 Q&A 라이브 다시보기 — 민감성 피부 케어 질문에 답해드렸어요.",
+    fullPicture: "/demo/library/pad.jpg",
     permalinkUrl: "https://facebook.com/mock/5",
     createdTime: "2026-05-04T13:00:00Z",
     reactionsCount: 184,
@@ -79,9 +79,9 @@ export const FB_PAGE_POSTS_MOCK: FbPagePost[] = [
 ]
 
 export const FB_COMMENTS_MOCK: FbComment[] = [
-  { id: "mock-cm-1", fromName: "김민지", message: "정말 기대돼요! 매장 위치가 어디인가요?", createdTime: "2026-05-23T10:12:00Z", likeCount: 4 },
-  { id: "mock-cm-2", fromName: "박서준", message: "지난 시즌에 산 제품 너무 만족합니다 👍", createdTime: "2026-05-23T11:42:00Z", likeCount: 12 },
-  { id: "mock-cm-3", fromName: "이수아", message: "온라인에서도 같은 할인이 적용되나요?", createdTime: "2026-05-23T13:05:00Z", likeCount: 2 },
+  { id: "mock-cm-1", fromName: "김민지", message: "수분 크림 진짜 순하고 좋아요! 리필도 나오나요?", createdTime: "2026-05-23T10:12:00Z", likeCount: 4 },
+  { id: "mock-cm-2", fromName: "박서준", message: "비건인데 발림성 만족합니다 👍", createdTime: "2026-05-23T11:42:00Z", likeCount: 12 },
+  { id: "mock-cm-3", fromName: "이수아", message: "무향이라 아침에 쓰기 부담 없네요. 온라인도 같은 혜택인가요?", createdTime: "2026-05-23T13:05:00Z", likeCount: 2 },
 ]
 
 async function getPageToken(pageId: string, userToken: string): Promise<string | null> {

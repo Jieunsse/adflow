@@ -21,6 +21,7 @@ function fmtK(n: number): string {
 
 function FacebookInsightsFlow() {
   const { data: session } = useSession();
+  const browseMode = !!session?.browseMode;
   const router = useRouter();
   const searchParams = useSearchParams();
   const pageParam = searchParams.get("page") ?? undefined;
@@ -118,7 +119,7 @@ function FacebookInsightsFlow() {
 
       {!isLoading && !isError && (
         <>
-          {!session?.pageId && (
+          {!session?.pageId && !browseMode && (
             <Card className="flex items-center justify-between gap-4">
               <div>
                 <div style={{ font: "700 15px/1.3 var(--w-font-sans)", color: "var(--w-fg-strong)" }}>Meta 계정이 아직 연결되지 않았어요</div>
@@ -133,9 +134,9 @@ function FacebookInsightsFlow() {
               kpis={kpis}
               posts={posts}
               accountHandle={fbData.pageName}
-              isMock={fbData.mock}
+              isMock={fbData.mock && !browseMode}
               scenario={scenario}
-              onScenarioChange={data?.mock ? setScenario : undefined}
+              onScenarioChange={data?.mock && !browseMode ? setScenario : undefined}
               suggestions={suggestions}
             />
           )}

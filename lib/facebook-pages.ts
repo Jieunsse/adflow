@@ -7,9 +7,9 @@ export type FbManagedPage = {
 }
 
 export const FB_PAGES_MOCK: FbManagedPage[] = [
-  { id: "mock-page-a", name: "Brand A", pictureUrl: "https://picsum.photos/seed/fbpa/64/64" },
-  { id: "mock-page-b", name: "Brand A — Sub", pictureUrl: "https://picsum.photos/seed/fbpb/64/64" },
-  { id: "mock-page-c", name: "Pop-up Store", pictureUrl: "https://picsum.photos/seed/fbpc/64/64" },
+  { id: "mock-page-a", name: "그린루틴", pictureUrl: "/demo/greenroutine-avatar.svg" },
+  { id: "mock-page-b", name: "그린루틴 — 비건 스킨케어", pictureUrl: "/demo/greenroutine-avatar.svg" },
+  { id: "mock-page-c", name: "그린루틴 팝업스토어", pictureUrl: "/demo/greenroutine-avatar.svg" },
 ]
 
 export type FbManagedPagesResult = {

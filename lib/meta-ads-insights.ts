@@ -486,8 +486,14 @@ export const metaAdsInsights = {
 
   // ADR-059 — 계정 횡단 일별 합산(듀얼추세 입력). level=account + time_increment=1 단일 콜로
   // Meta 가 캠페인 합산을 직접 내려준다(per-campaign N+1 불필요). 라우트가 staleTime 으로 캐시.
-  async getAccountDailyTrend(token: string, accountId: string, period: InsightsPeriod = '30d'): Promise<AccountDailyPoint[]> {
-    const preset = presetFor(period)
+  // days = 회수할 일수(오늘 포함). date_preset 표준값(7d/14d/30d 등)에 없는 임의 창(예: 60일 델타 비교용)이
+  // 필요해 time_range{since,until} 로 직접 계산한다.
+  async getAccountDailyTrend(token: string, accountId: string, days = 30): Promise<AccountDailyPoint[]> {
+    const until = new Date()
+    const since = new Date(until)
+    since.setUTCDate(since.getUTCDate() - (days - 1))
+    const toDateStr = (d: Date) => d.toISOString().slice(0, 10)
+    const timeRange = encodeURIComponent(JSON.stringify({ since: toDateStr(since), until: toDateStr(until) }))
     const extract = (rows: Array<{ action_type?: string; value?: string }> | undefined, type: string): number => {
       const f = rows?.find((a) => a.action_type === type)
       return f ? Number(f.value ?? 0) : 0
@@ -502,7 +508,7 @@ export const metaAdsInsights = {
         action_values?: Array<{ action_type?: string; value?: string }>
       }>
     }>(
-      `/${accountId}/insights?level=account&time_increment=1&date_preset=${preset}` +
+      `/${accountId}/insights?level=account&time_increment=1&time_range=${timeRange}` +
         `&fields=spend,impressions,clicks,actions,action_values&access_token=${token}`
     )
     return (data.data ?? []).map((d) => ({

@@ -6,6 +6,10 @@ const IG_GRAPH = "https://graph.instagram.com"
 const FB_GRAPH = "https://graph.facebook.com/v20.0"
 
 export async function GET(req: NextRequest) {
+  if (process.env.NODE_ENV !== "development") {
+    return NextResponse.json({ error: "Not Found" }, { status: 404 })
+  }
+
   const session = await getServerSession(authOptions)
   const token = session?.igAccessToken
   const igUserId = session?.igUserId

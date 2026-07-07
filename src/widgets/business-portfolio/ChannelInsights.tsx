@@ -286,7 +286,7 @@ export default function ChannelInsights({
               <div className="font-semibold text-[14px] leading-[1.4] text-[var(--w-fg-strong)]">
                 {channelLabel} 계정이 연결되지 않아 예시 데이터를 보여드려요
               </div>
-              <div className="font-medium text-[12.5px] leading-[1.5] text-[var(--w-fg-neutral)] mt-[3px]">
+              <div className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)] mt-[3px]">
                 {mockHelp}
               </div>
             </div>
@@ -297,7 +297,7 @@ export default function ChannelInsights({
                 type="button"
                 onClick={() => onScenarioChange("good")}
                 className={cn(
-                  "border-none px-3.5 py-2 rounded-lg font-semibold text-[12.5px] leading-none cursor-pointer transition-[background,color] duration-[120ms]",
+                  "border-none px-3.5 py-2 rounded-lg font-semibold text-[13px] leading-none cursor-pointer transition-[background,color] duration-[120ms]",
                   scenario === "good"
                     ? "bg-[var(--w-bg-elevated)] text-[var(--w-fg-strong)] shadow-[0_1px_2px_rgba(23,23,23,0.08)]"
                     : "bg-transparent text-[var(--w-fg-neutral)]",
@@ -309,7 +309,7 @@ export default function ChannelInsights({
                 type="button"
                 onClick={() => onScenarioChange("poor")}
                 className={cn(
-                  "border-none px-3.5 py-2 rounded-lg font-semibold text-[12.5px] leading-none cursor-pointer transition-[background,color] duration-[120ms]",
+                  "border-none px-3.5 py-2 rounded-lg font-semibold text-[13px] leading-none cursor-pointer transition-[background,color] duration-[120ms]",
                   scenario === "poor"
                     ? "bg-[var(--w-bg-elevated)] text-[var(--w-fg-strong)] shadow-[0_1px_2px_rgba(23,23,23,0.08)]"
                     : "bg-transparent text-[var(--w-fg-neutral)]",
@@ -354,8 +354,8 @@ export default function ChannelInsights({
             )}
           </div>
           {posts.length === 0 ? (
-            <div className="py-5 px-3.5 text-[var(--w-fg-neutral)] font-medium text-[12.5px] leading-[1.55]">
-              <div className="font-semibold text-[13.5px] leading-[1.4] text-[var(--w-fg-strong)] mb-1.5">
+            <div className="py-5 px-3.5 text-[var(--w-fg-neutral)] font-medium text-[13px] leading-[1.55]">
+              <div className="font-semibold text-[14px] leading-[1.4] text-[var(--w-fg-strong)] mb-1.5">
                 최근 게시물을 가져오지 못했어요
               </div>
               {channel === "instagram"

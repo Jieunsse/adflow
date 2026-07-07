@@ -57,12 +57,12 @@ function PostCard({ post, pageId }: { post: FbPagePostsResult["posts"][number]; 
       )}
       <div className="flex flex-col gap-2.5 px-4 pt-1 pb-4">
         {post.message && (
-          <p className="m-0 text-[13.5px] leading-[1.5] text-[var(--w-fg-normal)]" style={{ display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+          <p className="m-0 text-[14px] leading-[1.5] text-[var(--w-fg-normal)]" style={{ display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
             {post.message}
           </p>
         )}
         <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3 text-[12.5px] text-[var(--w-fg-neutral)] font-medium">
+          <div className="flex items-center gap-3 text-[13px] text-[var(--w-fg-neutral)] font-medium">
             <span className="inline-flex items-center gap-1">
               <Icon name="heart" size={14} />
               {fmtK(post.reactionsCount)}
@@ -72,13 +72,13 @@ function PostCard({ post, pageId }: { post: FbPagePostsResult["posts"][number]; 
               {fmtK(post.commentsCount)}
             </span>
           </div>
-          <span className="text-[11.5px] text-[var(--w-fg-alternative)]">{fmtRel(post.createdTime)}</span>
+          <span className="text-[12px] text-[var(--w-fg-alternative)]">{fmtRel(post.createdTime)}</span>
         </div>
         <div className="flex items-center justify-between gap-2 pt-1 border-t border-[var(--w-line-soft)]">
           <button
             type="button"
             onClick={() => setOpen((v) => !v)}
-            className="inline-flex items-center gap-1 text-[12.5px] font-medium text-[var(--w-fg-neutral)] hover:text-[var(--w-fg-strong)] transition-colors"
+            className="inline-flex items-center gap-1 text-[13px] font-medium text-[var(--w-fg-neutral)] hover:text-[var(--w-fg-strong)] transition-colors"
           >
             댓글 {fmtK(post.commentsCount)}개
             <Icon name="chev-down" size={12} style={{ transform: open ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 180ms ease" }} />
@@ -97,15 +97,15 @@ function PostCard({ post, pageId }: { post: FbPagePostsResult["posts"][number]; 
         </div>
         {open && (
           <div className="flex flex-col gap-2 pt-1">
-            {isLoading && <div className="text-[12.5px] text-[var(--w-fg-neutral)] py-2">댓글 불러오는 중…</div>}
+            {isLoading && <div className="text-[13px] text-[var(--w-fg-neutral)] py-2">댓글 불러오는 중…</div>}
             {isError && (
               <div className="flex items-center justify-between gap-2 py-2">
-                <span className="text-[12.5px] text-[var(--w-fg-neutral)]">댓글을 불러오지 못했어요</span>
+                <span className="text-[13px] text-[var(--w-fg-neutral)]">댓글을 불러오지 못했어요</span>
                 <Button size="sm" variant="ghost" type="button" onClick={() => refetch()}>다시</Button>
               </div>
             )}
             {data && data.comments.length === 0 && (
-              <div className="text-[12.5px] text-[var(--w-fg-alternative)] py-2">아직 댓글이 없어요</div>
+              <div className="text-[13px] text-[var(--w-fg-alternative)] py-2">아직 댓글이 없어요</div>
             )}
             {data && data.comments.map((c) => (
               <div key={c.id} className="flex items-start gap-2.5 py-1.5">
@@ -116,10 +116,10 @@ function PostCard({ post, pageId }: { post: FbPagePostsResult["posts"][number]; 
                 )}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-baseline gap-2">
-                    <span className="font-semibold text-[12.5px] text-[var(--w-fg-strong)] truncate">{c.fromName ?? "익명"}</span>
+                    <span className="font-semibold text-[13px] text-[var(--w-fg-strong)] truncate">{c.fromName ?? "익명"}</span>
                     <span className="text-[11px] text-[var(--w-fg-alternative)] flex-shrink-0">{fmtRel(c.createdTime)}</span>
                   </div>
-                  <p className="m-0 text-[12.5px] leading-[1.5] text-[var(--w-fg-normal)] break-words">{c.message}</p>
+                  <p className="m-0 text-[13px] leading-[1.5] text-[var(--w-fg-normal)] break-words">{c.message}</p>
                   {c.likeCount > 0 && (
                     <span className="inline-flex items-center gap-1 text-[11px] text-[var(--w-fg-alternative)] mt-0.5">
                       <Icon name="heart" size={11} />
@@ -192,7 +192,7 @@ function FacebookPostsFlow() {
           <Icon name="info" size={16} style={{ color: "var(--w-fg-neutral)", marginTop: 2 }} />
           <div className="flex flex-col gap-0.5">
             <div className="font-semibold text-[13px] text-[var(--w-fg-strong)]">샘플 데이터를 보고 있어요</div>
-            <div className="text-[12.5px] text-[var(--w-fg-neutral)]">계정 연결 후 실제 페이지 게시물이 표시돼요.</div>
+            <div className="text-[13px] text-[var(--w-fg-neutral)]">계정 연결 후 실제 페이지 게시물이 표시돼요.</div>
           </div>
         </Card>
       )}

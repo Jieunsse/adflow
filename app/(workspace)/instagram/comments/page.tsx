@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
 import Icon from "@shared/ui/Icon";
@@ -39,9 +40,11 @@ function formatDate(iso: string): string {
   return d.toLocaleDateString("ko-KR", { month: "short", day: "numeric" });
 }
 
-export default function CommentsPage() {
+function CommentsFlow() {
   const showToast = useToast();
   const { data: session } = useSession();
+  const searchParams = useSearchParams();
+  const mediaParam = searchParams.get("media");
 
   const [media, setMedia] = useState<MediaItem[]>([]);
   const [mediaLoading, setMediaLoading] = useState(true);
@@ -91,7 +94,9 @@ export default function CommentsPage() {
         const data = (await res.json()) as MediaResp;
         if (data.ok) {
           setMedia(data.items);
-          if (data.items.length > 0) setSelectedId(data.items[0].id);
+          const preset = mediaParam ? data.items.find((m) => m.id === mediaParam) : null;
+          if (preset) setSelectedId(preset.id);
+          else if (data.items.length > 0) setSelectedId(data.items[0].id);
         } else {
           setMediaErr(data.error);
         }
@@ -296,19 +301,19 @@ export default function CommentsPage() {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex h-[calc(100vh-240px)] min-h-[480px] overflow-hidden rounded-xl border border-[var(--w-line-normal)]">
       {/* 좌: 게시물 목록 (1) */}
       <aside className="flex-1 min-w-0 border-r border-[var(--w-line-normal)] flex flex-col bg-[var(--w-bg-elevated)] overflow-hidden">
         <div className="px-4 py-4 border-b border-[var(--w-line-alternative)]">
-          <h1 className="font-bold text-[15px] text-[var(--w-fg-strong)] leading-none">댓글 관리</h1>
+          <h2 className="m-0 font-bold text-[15px] text-[var(--w-fg-strong)] leading-none">게시물</h2>
         </div>
         <div className="flex-1 overflow-y-auto">
           {mediaLoading ? (
-            <div className="text-[12.5px] text-[var(--w-fg-alternative)] py-10 text-center">불러오는 중…</div>
+            <div className="text-[13px] text-[var(--w-fg-alternative)] py-10 text-center">불러오는 중…</div>
           ) : mediaErr ? (
-            <div className="text-[12.5px] text-[var(--w-fg-alternative)] py-10 text-center leading-[1.5]">{mediaErr}</div>
+            <div className="text-[13px] text-[var(--w-fg-alternative)] py-10 text-center leading-[1.5]">{mediaErr}</div>
           ) : media.length === 0 ? (
-            <div className="text-[12.5px] text-[var(--w-fg-alternative)] py-10 text-center">게시물이 없어요.</div>
+            <div className="text-[13px] text-[var(--w-fg-alternative)] py-10 text-center">게시물이 없어요.</div>
           ) : (
             <ul>
               {media.map((item) => (
@@ -369,7 +374,7 @@ export default function CommentsPage() {
                 <button
                   type="button"
                   onClick={() => loadComments(selectedMedia.id)}
-                  className="text-[11.5px] font-semibold text-[var(--w-fg-neutral)] hover:text-[var(--w-fg-strong)] flex items-center gap-1 shrink-0"
+                  className="text-[12px] font-semibold text-[var(--w-fg-neutral)] hover:text-[var(--w-fg-strong)] flex items-center gap-1 shrink-0"
                   disabled={commentsLoading}
                 >
                   <Icon name="refresh" size={11} spin={commentsLoading} />
@@ -379,11 +384,11 @@ export default function CommentsPage() {
               {/* 댓글 목록 */}
               <div ref={commentsPanelRef} className="flex-1 overflow-y-auto px-5 py-4">
                 {commentsLoading ? (
-                  <div className="text-[12.5px] text-[var(--w-fg-alternative)] py-10 text-center">댓글 불러오는 중…</div>
+                  <div className="text-[13px] text-[var(--w-fg-alternative)] py-10 text-center">댓글 불러오는 중…</div>
                 ) : commentsErr ? (
-                  <div className="text-[12.5px] text-[var(--w-status-negative)] py-10 text-center leading-[1.5]">{commentsErr}</div>
+                  <div className="text-[13px] text-[var(--w-status-negative)] py-10 text-center leading-[1.5]">{commentsErr}</div>
                 ) : comments.length === 0 ? (
-                  <div className="text-[12.5px] text-[var(--w-fg-alternative)] py-10 text-center">아직 댓글이 없어요.</div>
+                  <div className="text-[13px] text-[var(--w-fg-alternative)] py-10 text-center">아직 댓글이 없어요.</div>
                 ) : (
                   <ul className="flex flex-col gap-2">
                     {commentsDevFallback && (
@@ -436,7 +441,7 @@ export default function CommentsPage() {
                   <button
                     type="submit"
                     disabled={!newComment.trim() || newSubmitting}
-                    className="shrink-0 h-9 px-4 rounded-[10px] bg-[var(--w-primary-normal)] text-white font-semibold text-[12.5px] disabled:opacity-40 hover:bg-[var(--w-primary-press)] transition-colors"
+                    className="shrink-0 h-9 px-4 rounded-[10px] bg-[var(--w-primary-normal)] text-white font-semibold text-[13px] disabled:opacity-40 hover:bg-[var(--w-primary-press)] transition-colors"
                   >
                     {newSubmitting ? "게시 중…" : "게시"}
                   </button>
@@ -454,7 +459,7 @@ export default function CommentsPage() {
             </div>
           ) : (
             <>
-              <div className="text-[10.5px] font-semibold tracking-wide uppercase text-[var(--w-fg-alternative)] mb-2 w-full">
+              <div className="text-[11px] font-semibold tracking-wide uppercase text-[var(--w-fg-alternative)] mb-2 w-full">
                 미리보기
               </div>
               <IgPostPreview
@@ -515,6 +520,14 @@ export default function CommentsPage() {
   );
 }
 
+export default function CommentsPage() {
+  return (
+    <Suspense fallback={null}>
+      <CommentsFlow />
+    </Suspense>
+  );
+}
+
 function CommentRow({
   comment,
   replies,
@@ -551,7 +564,7 @@ function CommentRow({
       <div className="flex gap-2.5 items-start">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-semibold text-[12.5px] text-[var(--w-fg-strong)]">@{comment.username}</span>
+            <span className="font-semibold text-[13px] text-[var(--w-fg-strong)]">@{comment.username}</span>
             <span className="text-[11px] text-[var(--w-fg-alternative)]">{formatDate(comment.timestamp)}</span>
             {comment.likeCount > 0 && (
               <span className="text-[11px] text-[var(--w-fg-alternative)] inline-flex items-center gap-0.5">
@@ -559,7 +572,7 @@ function CommentRow({
               </span>
             )}
             {comment.hidden && (
-              <span className="text-[10.5px] font-semibold px-2 py-0.5 rounded-full bg-[var(--w-bg-neutral)] text-[var(--w-fg-alternative)]">
+              <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[var(--w-bg-neutral)] text-[var(--w-fg-alternative)]">
                 숨김
               </span>
             )}
@@ -571,7 +584,7 @@ function CommentRow({
             <button
               type="button"
               onClick={() => { setShowReplyInput((v) => !v); }}
-              className="text-[11.5px] font-semibold text-[var(--w-primary-normal)]"
+              className="text-[12px] font-semibold text-[var(--w-primary-normal)]"
             >
               답글
             </button>
@@ -579,7 +592,7 @@ function CommentRow({
               <button
                 type="button"
                 onClick={onToggleReplies}
-                className="text-[11.5px] font-semibold text-[var(--w-fg-neutral)] hover:text-[var(--w-fg-strong)] flex items-center gap-1"
+                className="text-[12px] font-semibold text-[var(--w-fg-neutral)] hover:text-[var(--w-fg-strong)] flex items-center gap-1"
               >
                 {repliesLoading ? (
                   <Icon name="spinner" size={11} spin />
@@ -593,14 +606,14 @@ function CommentRow({
             <button
               type="button"
               onClick={onHide}
-              className="text-[11.5px] font-semibold text-[var(--w-fg-neutral)] hover:text-[var(--w-fg-strong)]"
+              className="text-[12px] font-semibold text-[var(--w-fg-neutral)] hover:text-[var(--w-fg-strong)]"
             >
               {comment.hidden ? "보이기" : "숨기기"}
             </button>
             <button
               type="button"
               onClick={onDelete}
-              className="text-[11.5px] font-semibold text-[var(--w-status-negative)]"
+              className="text-[12px] font-semibold text-[var(--w-status-negative)]"
             >
               삭제
             </button>
@@ -614,9 +627,9 @@ function CommentRow({
             <li key={r.id} className={`flex flex-col gap-0.5 ${r.hidden ? "opacity-50" : ""}`}>
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="font-semibold text-[12px] text-[var(--w-fg-strong)]">@{r.username}</span>
-                <span className="text-[10.5px] text-[var(--w-fg-alternative)]">{formatDate(r.timestamp)}</span>
+                <span className="text-[11px] text-[var(--w-fg-alternative)]">{formatDate(r.timestamp)}</span>
                 {r.likeCount > 0 && (
-                  <span className="text-[10.5px] text-[var(--w-fg-alternative)] inline-flex items-center gap-0.5">
+                  <span className="text-[11px] text-[var(--w-fg-alternative)] inline-flex items-center gap-0.5">
                     <Icon name="heart" size={9} />{r.likeCount}
                   </span>
                 )}
@@ -626,7 +639,7 @@ function CommentRow({
                   </span>
                 )}
               </div>
-              <p className="text-[12.5px] text-[var(--w-fg-strong)] leading-[1.45] break-words whitespace-pre-wrap">
+              <p className="text-[13px] text-[var(--w-fg-strong)] leading-[1.45] break-words whitespace-pre-wrap">
                 {r.text}
               </p>
               <div className="flex items-center gap-3 mt-1">
@@ -658,7 +671,7 @@ function CommentRow({
             onChange={(e) => onReplyDraft(e.target.value)}
             placeholder={`@${comment.username} 에게 답글…`}
             maxLength={2200}
-            className="flex-1 px-3 py-2 rounded-[8px] border border-[var(--w-line-normal)] bg-[var(--w-bg-elevated)] text-[12.5px] text-[var(--w-fg-strong)] outline-none ring-0 focus:outline-none focus:ring-0 focus:border-[var(--w-primary-normal)]"
+            className="flex-1 px-3 py-2 rounded-[8px] border border-[var(--w-line-normal)] bg-[var(--w-bg-elevated)] text-[13px] text-[var(--w-fg-strong)] outline-none ring-0 focus:outline-none focus:ring-0 focus:border-[var(--w-primary-normal)]"
             disabled={replySubmitting}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); onReplySubmit(); }

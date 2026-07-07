@@ -2,8 +2,11 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, useRef, useEffect, type KeyboardEvent } from "react";
+import Link from "next/link";
+import { useSession } from "next-auth/react";
 import Icon from "@shared/ui/Icon";
 import { Card } from "@shared/ui/Card";
+import { Button, buttonVariants } from "@shared/ui/Button";
 import { cn } from "@shared/lib/cn";
 import type {
   IgInbox,
@@ -438,6 +441,7 @@ function ThreadView({
 }
 
 export default function Messages() {
+  const { data: session } = useSession();
   const [selected, setSelected] = useState<string | null>(null);
   const inboxQ = useQuery({
     queryKey: ["ig-conversations"],
@@ -513,9 +517,21 @@ export default function Messages() {
   }
 
   if (inboxQ.isError || !inboxQ.data) {
+    if (!session?.pageId) {
+      return (
+        <Card className="flex items-center justify-between gap-4">
+          <div>
+            <div style={{ font: "700 15px/1.3 var(--w-font-sans)", color: "var(--w-fg-strong)" }}>Meta 계정이 아직 연결되지 않았어요</div>
+            <div style={{ font: "500 12.5px/1.5 var(--w-font-sans)", color: "var(--w-fg-neutral)", marginTop: 4 }}>Facebook 페이지와 Instagram 비즈니스 계정을 연결하면 메시지함을 볼 수 있어요.</div>
+          </div>
+          <Link href="/connect" className={buttonVariants({ variant: "primary", size: "sm" })}>계정 연결하러 가기</Link>
+        </Card>
+      );
+    }
     return (
       <Card className="flex flex-col items-center gap-3 py-10 px-5 text-center text-[var(--w-fg-neutral)]">
-        메시지함을 불러오지 못했어요.
+        <span style={{ font: "500 13px/1.4 var(--w-font-sans)" }}>메시지함을 불러오지 못했어요.</span>
+        <Button variant="primary" size="sm" type="button" onClick={() => inboxQ.refetch()}>다시 시도</Button>
       </Card>
     );
   }

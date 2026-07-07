@@ -70,6 +70,7 @@ type CampaignRequestBody = {
   skipAdCreation?: boolean
   location?: string[]
   brandName?: string
+  customAudienceId?: string
 }
 
 const VALID_AB_AXES: ReadonlySet<AbTestAxisParam> = new Set(['headline', 'primary_text', 'image'])
@@ -243,6 +244,7 @@ export const POST = withMetaSession(['adAccount', 'page'], async (req: NextReque
         skipAdCreation,
         phoneNumber,
         brandName: typeof brandName === 'string' ? brandName.slice(0, 20) : undefined,
+        customAudienceId: typeof body.customAudienceId === 'string' ? body.customAudienceId : undefined,
       }
       const extraLocation = Array.isArray(location) && location.length > 0
         ? location.map(String)

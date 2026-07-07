@@ -4,6 +4,8 @@ import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { Card } from "@shared/ui/Card";
 import Icon from "@shared/ui/Icon";
+import { useCreators } from "@entities/creator/store";
+import { findCreatorByHandle } from "@entities/creator/match";
 import type {
   BrandedContentItem,
   BrandedContentResponse,
@@ -50,7 +52,7 @@ export default function Partnerships() {
         <button
           type="button"
           onClick={() => refetch()}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[var(--w-line-normal)] bg-[var(--w-bg-elevated)] text-[var(--w-fg-strong)] font-semibold text-[12.5px] leading-none cursor-pointer"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[var(--w-line-normal)] bg-[var(--w-bg-elevated)] text-[var(--w-fg-strong)] font-semibold text-[13px] leading-none cursor-pointer"
         >
           <Icon name="refresh" size={13} /> 다시 시도
         </button>
@@ -67,7 +69,7 @@ export default function Partnerships() {
         <div className="font-semibold text-[14px] leading-[1.4] text-[var(--w-fg-strong)]">
           파트너십 콘텐츠가 없어요
         </div>
-        <p className="font-medium text-[12.5px] leading-[1.55] text-[var(--w-fg-normal)] m-0">
+        <p className="font-medium text-[13px] leading-[1.55] text-[var(--w-fg-normal)] m-0">
           크리에이터가 게시물에 우리 비즈니스 계정을 파트너로 태그하면 여기에
           표시돼요.
         </p>
@@ -140,6 +142,8 @@ export default function Partnerships() {
 
 function PartnershipCard({ item }: { item: BrandedContentItem }) {
   const eligible = item.isEligibleForBrandedContent;
+  const { list: creators } = useCreators();
+  const matchedCreator = findCreatorByHandle(creators, item.creatorUsername);
 
   return (
     <Card style={{ display: "flex", gap: 14, padding: "16px 18px" }}>
@@ -173,6 +177,18 @@ function PartnershipCard({ item }: { item: BrandedContentItem }) {
           >
             @{item.creatorUsername}
           </span>
+          {matchedCreator && (
+            <Link
+              href={`/creators/${matchedCreator.id}`}
+              className="no-underline"
+              style={{
+                font: "600 11.5px/1 var(--w-font-sans)",
+                color: "var(--w-fg-alternative)",
+              }}
+            >
+              장부에서 보기
+            </Link>
+          )}
           <span
             style={{
               font: "500 11.5px/1 var(--w-font-sans)",
@@ -242,7 +258,7 @@ function PartnershipCard({ item }: { item: BrandedContentItem }) {
           {eligible ? (
             <Link
               href={`/create?outcome=boost_post&igMediaId=${item.id}`}
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[var(--w-accent-violet)] font-semibold text-[12.5px] leading-none no-underline"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[var(--w-accent-violet)] font-semibold text-[13px] leading-none no-underline"
               style={{ color: "#fff" }}
             >
               광고집행
@@ -252,7 +268,7 @@ function PartnershipCard({ item }: { item: BrandedContentItem }) {
               <button
                 type="button"
                 disabled
-                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg font-semibold text-[12.5px] leading-none"
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg font-semibold text-[13px] leading-none"
                 style={{
                   background: "var(--w-bg-alternative)",
                   color: "var(--w-fg-neutral)",

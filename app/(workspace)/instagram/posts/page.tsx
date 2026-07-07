@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
@@ -9,9 +10,7 @@ import Icon from "@shared/ui/Icon";
 import { Button } from "@shared/ui/Button";
 import { Card } from "@shared/ui/Card";
 import { useToast } from "@shared/ui/Toast";
-import ConfirmModal from "@shared/ui/ConfirmModal";
 import { IgPostPreview } from "@shared/ui/IgPostPreview";
-import type { IgComment } from "@/lib/instagram-comments";
 import { readProfiles, readActiveBrandProfileEntry } from "@features/brand-profile/model/useBrandProfileStorage";
 import type { BrandProfileEntry } from "@features/brand-profile/model/useBrandProfileStorage";
 import { readPersonas } from "@features/brand-profile/model/usePersonasStorage";
@@ -36,12 +35,6 @@ type RecentResp =
   | { ok: true; items: RecentItem[] }
   | { ok: false; error: string };
 
-type CommentsResp =
-  | { ok: true; items: IgComment[]; mock?: boolean }
-  | { ok: false; error: string };
-
-type DeleteCommentResp = { ok: true; mock?: boolean } | { ok: false; error: string };
-
 type UploadResp = { ok: true; url: string } | { ok: false; error: string };
 
 function isHttpUrl(s: string): boolean {
@@ -64,14 +57,7 @@ function PostsFlow() {
   const [recent, setRecent] = useState<RecentItem[]>([]);
   const [recentErr, setRecentErr] = useState<string | null>(null);
   const [recentLoading, setRecentLoading] = useState(true);
-  const [openMediaId, setOpenMediaId] = useState<string | null>(null);
-  const [commentsByMedia, setCommentsByMedia] = useState<Record<string, IgComment[]>>({});
-  const [commentsLoading, setCommentsLoading] = useState<Record<string, boolean>>({});
-  const [commentsErr, setCommentsErr] = useState<Record<string, string | null>>({});
-  const [commentsMock, setCommentsMock] = useState<Record<string, boolean>>({});
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
-  const [pendingDelete, setPendingDelete] = useState<{ mediaId: string; comment: IgComment } | null>(null);
-  const [deleting, setDeleting] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [previewBroken, setPreviewBroken] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -137,57 +123,6 @@ function PostsFlow() {
     setPreviewBroken(false);
   }, [imageUrl]);
 
-  const loadComments = useCallback(async (mediaId: string) => {
-    setCommentsLoading((s) => ({ ...s, [mediaId]: true }));
-    setCommentsErr((s) => ({ ...s, [mediaId]: null }));
-    try {
-      const res = await fetch(`/api/instagram/comments?mediaId=${encodeURIComponent(mediaId)}`, { cache: "no-store" });
-      const data = (await res.json()) as CommentsResp;
-      if (data.ok) {
-        setCommentsByMedia((s) => ({ ...s, [mediaId]: data.items }));
-        setCommentsMock((s) => ({ ...s, [mediaId]: !!data.mock }));
-      } else {
-        setCommentsErr((s) => ({ ...s, [mediaId]: data.error }));
-      }
-    } catch (e) {
-      setCommentsErr((s) => ({ ...s, [mediaId]: e instanceof Error ? e.message : "댓글 조회 실패" }));
-    } finally {
-      setCommentsLoading((s) => ({ ...s, [mediaId]: false }));
-    }
-  }, []);
-
-  const togglePanel = useCallback((mediaId: string) => {
-    setOpenMediaId((prev) => {
-      const next = prev === mediaId ? null : mediaId;
-      if (next && !commentsByMedia[next]) loadComments(next);
-      return next;
-    });
-  }, [commentsByMedia, loadComments]);
-
-  const confirmDelete = useCallback(async () => {
-    if (!pendingDelete) return;
-    setDeleting(true);
-    const { mediaId, comment } = pendingDelete;
-    try {
-      const res = await fetch(`/api/instagram/comments/${encodeURIComponent(comment.id)}`, { method: "DELETE" });
-      const data = (await res.json()) as DeleteCommentResp;
-      if (data.ok) {
-        setCommentsByMedia((s) => ({
-          ...s,
-          [mediaId]: (s[mediaId] ?? []).filter((c) => c.id !== comment.id),
-        }));
-        showToast(data.mock ? "댓글 삭제 (mock)" : "댓글이 삭제됐어요");
-      } else {
-        showToast(`삭제 실패 — ${data.error}`);
-      }
-    } catch (e) {
-      showToast(`삭제 실패 — ${e instanceof Error ? e.message : "요청 실패"}`);
-    } finally {
-      setDeleting(false);
-      setPendingDelete(null);
-    }
-  }, [pendingDelete, showToast]);
-
   const canSubmit = imageUrl.trim().length > 0 && !submitting && !uploading;
 
   const onSubmit = async (e: React.FormEvent) => {
@@ -207,7 +142,8 @@ function PostsFlow() {
         showToast("Instagram 게시 완료");
         setImageUrl("");
         setCaption("");
-        loadRecent();
+        await loadRecent();
+        if (data.postId) setSelectedPostId(data.postId);
       } else {
         showToast(`게시 실패 — ${data.error}`);
       }
@@ -365,17 +301,10 @@ function PostsFlow() {
   };
 
   return (
-    <div className="px-10 py-9 max-w-[1180px] mx-auto">
-      <header className="mb-6 flex items-start justify-between gap-6">
-        <div>
-          <h1 className="font-bold text-[24px] leading-tight tracking-[-0.02em] text-[var(--w-fg-strong)]">
-            새 게시물
-          </h1>
-          <p className="text-[13.5px] leading-[1.55] text-[var(--w-fg-neutral)] mt-1.5">
-            Instagram 비즈니스 계정에 사진과 캡션을 게시해요. 오른쪽 미리보기는 실제 피드와 같은 모양으로 보여줍니다.
-          </p>
-        </div>
-      </header>
+    <>
+      <p className="text-[14px] leading-[1.55] text-[var(--w-fg-neutral)] mb-6">
+        Instagram 비즈니스 계정에 사진과 캡션을 게시해요. 오른쪽 미리보기는 실제 피드와 같은 모양으로 보여줍니다.
+      </p>
 
       {/* AI 컨텍스트 — 별도 섹션 */}
       {brandProfiles.length > 0 && (
@@ -387,7 +316,7 @@ function PostsFlow() {
 
           {/* 브랜드 프로필 선택 */}
           <div className="flex flex-col gap-1.5">
-            <div className="text-[10.5px] font-semibold text-[var(--w-fg-alternative)] uppercase tracking-wide">브랜드 프로필</div>
+            <div className="text-[11px] font-semibold text-[var(--w-fg-alternative)] uppercase tracking-wide">브랜드 프로필</div>
             <div className="flex gap-1.5 flex-wrap">
               {brandProfiles.map((p) => (
                 <button
@@ -398,7 +327,7 @@ function PostsFlow() {
                     const first = allPersonas.find((pe) => pe.brandProfileId === p.id);
                     setSelectedPersonaId(first?.id ?? null);
                   }}
-                  className={`px-2.5 py-1 rounded-full text-[11.5px] font-semibold border transition-colors ${
+                  className={`px-2.5 py-1 rounded-full text-[12px] font-semibold border transition-colors ${
                     selectedProfileId === p.id
                       ? "bg-[var(--w-fg-strong)] text-[var(--w-bg-elevated)] border-[var(--w-fg-strong)]"
                       : "border-[var(--w-line-normal)] text-[var(--w-fg-strong)] hover:bg-[var(--w-bg-neutral)]"
@@ -410,7 +339,7 @@ function PostsFlow() {
               <button
                 type="button"
                 onClick={() => { setSelectedProfileId(null); setSelectedPersonaId(null); }}
-                className={`px-2.5 py-1 rounded-full text-[11.5px] font-semibold border transition-colors ${
+                className={`px-2.5 py-1 rounded-full text-[12px] font-semibold border transition-colors ${
                   selectedProfileId === null
                     ? "bg-[var(--w-fg-strong)] text-[var(--w-bg-elevated)] border-[var(--w-fg-strong)]"
                     : "border-[var(--w-line-normal)] text-[var(--w-fg-neutral)] hover:bg-[var(--w-bg-neutral)]"
@@ -424,14 +353,14 @@ function PostsFlow() {
           {/* 페르소나 선택 */}
           {selectedProfileId && profilePersonas.length > 0 && (
             <div className="flex flex-col gap-1.5">
-              <div className="text-[10.5px] font-semibold text-[var(--w-fg-alternative)] uppercase tracking-wide">페르소나</div>
+              <div className="text-[11px] font-semibold text-[var(--w-fg-alternative)] uppercase tracking-wide">페르소나</div>
               <div className="flex gap-1.5 flex-wrap">
                 {profilePersonas.map((pe) => (
                   <button
                     key={pe.id}
                     type="button"
                     onClick={() => setSelectedPersonaId(pe.id)}
-                    className={`px-2.5 py-1 rounded-full text-[11.5px] font-semibold border transition-colors ${
+                    className={`px-2.5 py-1 rounded-full text-[12px] font-semibold border transition-colors ${
                       selectedPersonaId === pe.id
                         ? "bg-[var(--w-fg-strong)] text-[var(--w-bg-elevated)] border-[var(--w-fg-strong)]"
                         : "border-[var(--w-line-normal)] text-[var(--w-fg-strong)] hover:bg-[var(--w-bg-neutral)]"
@@ -443,7 +372,7 @@ function PostsFlow() {
                 <button
                   type="button"
                   onClick={() => setSelectedPersonaId(null)}
-                  className={`px-2.5 py-1 rounded-full text-[11.5px] font-semibold border transition-colors ${
+                  className={`px-2.5 py-1 rounded-full text-[12px] font-semibold border transition-colors ${
                     selectedPersonaId === null
                       ? "bg-[var(--w-fg-strong)] text-[var(--w-bg-elevated)] border-[var(--w-fg-strong)]"
                       : "border-[var(--w-line-normal)] text-[var(--w-fg-neutral)] hover:bg-[var(--w-bg-neutral)]"
@@ -558,17 +487,17 @@ function PostsFlow() {
                         )}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <div className="text-[12.5px] font-semibold text-[var(--w-fg-strong)] mb-1">
+                        <div className="text-[13px] font-semibold text-[var(--w-fg-strong)] mb-1">
                           이미지 선택됨
                           {previewBroken && (
                             <span className="ml-2 text-[11px] font-normal text-[var(--w-status-negative)]">미리보기 로드 실패 — URL 을 확인해 주세요</span>
                           )}
                         </div>
-                        <div className="text-[11.5px] text-[var(--w-fg-alternative)] break-all line-clamp-2">{imageUrl}</div>
+                        <div className="text-[12px] text-[var(--w-fg-alternative)] break-all line-clamp-2">{imageUrl}</div>
                         <button
                           type="button"
                           onClick={(e) => { e.stopPropagation(); setImageUrl(""); }}
-                          className="mt-2 text-[11.5px] font-semibold text-[var(--w-fg-neutral)] hover:text-[var(--w-status-negative)]"
+                          className="mt-2 text-[12px] font-semibold text-[var(--w-fg-neutral)] hover:text-[var(--w-status-negative)]"
                           disabled={submitting}
                         >
                           제거
@@ -578,10 +507,10 @@ function PostsFlow() {
                   ) : (
                     <div className="grid place-items-center text-center py-10 px-4">
                       <Icon name="image" size={28} />
-                      <div className="text-[13.5px] font-semibold text-[var(--w-fg-strong)] mt-2">
+                      <div className="text-[14px] font-semibold text-[var(--w-fg-strong)] mt-2">
                         {uploading ? "업로드 중..." : "클릭해서 파일을 고르거나 이미지 URL 을 드래그/붙여넣기"}
                       </div>
-                      <div className="text-[11.5px] text-[var(--w-fg-alternative)] mt-1 leading-[1.5] max-w-[360px]">
+                      <div className="text-[12px] text-[var(--w-fg-alternative)] mt-1 leading-[1.5] max-w-[360px]">
                         JPG · PNG · WebP, 최대 8MB. 업로드한 파일은 공개 URL 로 호스팅돼 Instagram 이 가져갑니다.
                       </div>
                     </div>
@@ -678,10 +607,10 @@ function PostsFlow() {
                     onChange={(e) => setCaption(e.target.value)}
                     rows={6}
                     maxLength={2200}
-                    className="px-3.5 py-3 rounded-[10px] border border-[var(--w-line-normal)] bg-[var(--w-bg-elevated)] text-[13.5px] text-[var(--w-fg-strong)] outline-none focus:border-[var(--w-primary-normal)] focus-visible:outline-none resize-y leading-[1.55]"
+                    className="px-3.5 py-3 rounded-[10px] border border-[var(--w-line-normal)] bg-[var(--w-bg-elevated)] text-[14px] text-[var(--w-fg-strong)] outline-none focus:border-[var(--w-primary-normal)] focus-visible:outline-none resize-y leading-[1.55]"
                     disabled={submitting}
                   />
-                  <div className="text-[11.5px] text-[var(--w-fg-alternative)] text-right">{caption.length} / 2200</div>
+                  <div className="text-[12px] text-[var(--w-fg-alternative)] text-right">{caption.length} / 2200</div>
                 </div>
               ) : (
                 <div className="flex gap-2 items-start">
@@ -718,13 +647,13 @@ function PostsFlow() {
                 href={lastResult.permalink}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-[12.5px] font-semibold text-[var(--w-primary-normal)] hover:underline"
+                className="text-[13px] font-semibold text-[var(--w-primary-normal)] hover:underline"
               >
                 방금 게시한 글 보기 →
               </a>
             )}
             {lastResult && !lastResult.ok && (
-              <div className="rounded-lg border border-[var(--w-status-negative)] bg-[rgba(232,72,72,0.06)] px-3.5 py-3 text-[12.5px] text-[var(--w-status-negative)] leading-[1.5]">
+              <div className="rounded-lg border border-[var(--w-status-negative)] bg-[rgba(232,72,72,0.06)] px-3.5 py-3 text-[13px] text-[var(--w-status-negative)] leading-[1.5]">
                 <span className="font-semibold">게시 실패 — </span>
                 {lastResult.error}
               </div>
@@ -732,7 +661,7 @@ function PostsFlow() {
           </div>
 
           <div>
-            <div className="text-[10.5px] font-semibold tracking-wide uppercase text-[var(--w-fg-alternative)] mb-2">
+            <div className="text-[11px] font-semibold tracking-wide uppercase text-[var(--w-fg-alternative)] mb-2">
               미리보기
             </div>
             <IgPostPreview
@@ -753,7 +682,7 @@ function PostsFlow() {
           <button
             type="button"
             onClick={loadRecent}
-            className="text-[11.5px] font-semibold text-[var(--w-fg-neutral)] hover:text-[var(--w-fg-strong)] inline-flex items-center gap-1"
+            className="text-[12px] font-semibold text-[var(--w-fg-neutral)] hover:text-[var(--w-fg-strong)] inline-flex items-center gap-1"
             disabled={recentLoading}
           >
             <Icon name="refresh" size={11} />
@@ -761,21 +690,16 @@ function PostsFlow() {
           </button>
         </div>
         {recentLoading ? (
-          <div className="text-[12.5px] text-[var(--w-fg-alternative)] py-8 text-center">불러오는 중…</div>
+          <div className="text-[13px] text-[var(--w-fg-alternative)] py-8 text-center">불러오는 중…</div>
         ) : recentErr ? (
-          <div className="text-[12.5px] text-[var(--w-fg-alternative)] py-8 text-center leading-[1.55]">{recentErr}</div>
+          <div className="text-[13px] text-[var(--w-fg-alternative)] py-8 text-center leading-[1.55]">{recentErr}</div>
         ) : recent.length === 0 ? (
-          <div className="text-[12.5px] text-[var(--w-fg-alternative)] py-8 text-center">아직 게시물이 없어요.</div>
+          <div className="text-[13px] text-[var(--w-fg-alternative)] py-8 text-center">아직 게시물이 없어요.</div>
         ) : (
           <div className="flex gap-6 items-start">
             <ul className="flex-1 min-w-0 flex flex-col gap-y-1">
               {recent.map((item) => {
-                const isOpen = openMediaId === item.id;
                 const isSelected = selectedPostId === item.id;
-                const comments = commentsByMedia[item.id] ?? [];
-                const loading = commentsLoading[item.id] ?? false;
-                const err = commentsErr[item.id] ?? null;
-                const mock = commentsMock[item.id] ?? false;
                 return (
                   <li
                     key={item.id}
@@ -798,7 +722,7 @@ function PostsFlow() {
                         </div>
                       )}
                       <div className="min-w-0 flex-1">
-                        <div className="text-[12.5px] text-[var(--w-fg-strong)] leading-[1.4] line-clamp-2">
+                        <div className="text-[13px] text-[var(--w-fg-strong)] leading-[1.4] line-clamp-2">
                           {item.caption || <span className="text-[var(--w-fg-alternative)]">(캡션 없음)</span>}
                         </div>
                         <div className="flex items-center gap-2 mt-1 text-[11px] text-[var(--w-fg-alternative)]">
@@ -814,14 +738,14 @@ function PostsFlow() {
                               열기
                             </a>
                           )}
-                          <button
-                            type="button"
-                            onClick={(e) => { e.stopPropagation(); togglePanel(item.id); }}
+                          <Link
+                            href={`/instagram/comments?media=${encodeURIComponent(item.id)}`}
+                            onClick={(e) => e.stopPropagation()}
                             className="font-semibold text-[var(--w-primary-normal)] hover:underline inline-flex items-center gap-1"
                           >
                             <Icon name="message" size={11} />
-                            {isOpen ? "댓글 접기" : "댓글 관리"}
-                          </button>
+                            댓글 관리
+                          </Link>
                         </div>
                         <div className="mt-2">
                           <button
@@ -840,51 +764,6 @@ function PostsFlow() {
                         </div>
                       </div>
                     </div>
-                    {isOpen && (
-                      <div className="mt-2.5 ml-[68px] rounded-lg border border-[var(--w-line-alternative)] bg-[var(--w-bg-base)] p-3">
-                        {loading ? (
-                          <div className="text-[11.5px] text-[var(--w-fg-alternative)] py-3 text-center">댓글 불러오는 중…</div>
-                        ) : err ? (
-                          <div className="text-[11.5px] text-[var(--w-status-negative)] py-3 text-center leading-[1.55]">{err}</div>
-                        ) : comments.length === 0 ? (
-                          <div className="text-[11.5px] text-[var(--w-fg-alternative)] py-3 text-center">아직 댓글이 없어요.</div>
-                        ) : (
-                          <ul className="flex flex-col gap-2">
-                            {mock && (
-                              <li className="text-[10.5px] text-[var(--w-fg-alternative)] mb-1">
-                                연결된 IG 계정이 없어 샘플 데이터를 보여줘요.
-                              </li>
-                            )}
-                            {comments.map((c) => (
-                              <li key={c.id} className="flex gap-2 items-start">
-                                <div className="min-w-0 flex-1">
-                                  <div className="flex items-center gap-1.5 text-[11.5px]">
-                                    <span className="font-semibold text-[var(--w-fg-strong)]">@{c.username}</span>
-                                    <span className="text-[var(--w-fg-alternative)]">{formatDate(c.timestamp)}</span>
-                                    {c.likeCount > 0 && (
-                                      <span className="text-[var(--w-fg-alternative)] inline-flex items-center gap-0.5">
-                                        <Icon name="heart" size={10} />{c.likeCount}
-                                      </span>
-                                    )}
-                                  </div>
-                                  <div className="text-[12px] text-[var(--w-fg-strong)] leading-[1.45] mt-0.5 break-words">
-                                    {c.text}
-                                  </div>
-                                </div>
-                                <button
-                                  type="button"
-                                  onClick={(e) => { e.stopPropagation(); setPendingDelete({ mediaId: item.id, comment: c }); }}
-                                  className="shrink-0 text-[11px] font-semibold text-[var(--w-status-negative)] hover:underline px-1.5 py-0.5"
-                                  aria-label={`@${c.username} 댓글 삭제`}
-                                >
-                                  삭제
-                                </button>
-                              </li>
-                            ))}
-                          </ul>
-                        )}
-                      </div>
-                    )}
                   </li>
                 );
               })}
@@ -896,7 +775,7 @@ function PostsFlow() {
               return (
                 <div className="w-[300px] shrink-0 sticky top-6">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-[10.5px] font-semibold tracking-wide uppercase text-[var(--w-fg-alternative)]">미리보기</span>
+                    <span className="text-[11px] font-semibold tracking-wide uppercase text-[var(--w-fg-alternative)]">미리보기</span>
                     <button
                       type="button"
                       onClick={() => setSelectedPostId(null)}
@@ -920,7 +799,7 @@ function PostsFlow() {
                         href={post.permalink}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-[var(--w-line-normal)] text-[12.5px] font-semibold text-[var(--w-fg-strong)] hover:bg-[var(--w-bg-neutral)] transition-colors"
+                        className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-[var(--w-line-normal)] text-[13px] font-semibold text-[var(--w-fg-strong)] hover:bg-[var(--w-bg-neutral)] transition-colors"
                       >
                         <Icon name="link" size={13} />
                         Instagram에서 보기
@@ -934,7 +813,7 @@ function PostsFlow() {
                         if (hint) params.set("outcomeHint", hint);
                         router.push(`/create?${params.toString()}`);
                       }}
-                      className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-[var(--w-primary-soft)] text-[var(--w-primary-normal)] text-[12.5px] font-semibold hover:bg-[rgba(0,102,255,0.15)] transition-colors"
+                      className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-[var(--w-primary-soft)] text-[var(--w-primary-normal)] text-[13px] font-semibold hover:bg-[rgba(0,102,255,0.15)] transition-colors"
                     >
                       <Icon name="sparkles" size={13} />
                       광고 만들기
@@ -946,23 +825,7 @@ function PostsFlow() {
           </div>
         )}
       </Card>
-
-      {pendingDelete && (
-        <ConfirmModal
-          title="이 댓글을 삭제할까요?"
-          desc={
-            <div className="flex flex-col gap-1.5">
-              <span>@{pendingDelete.comment.username} 의 댓글이 영구 삭제돼요. 되돌릴 수 없어요.</span>
-              <span className="text-[12px] text-[var(--w-fg-alternative)] line-clamp-3">“{pendingDelete.comment.text}”</span>
-            </div>
-          }
-          confirmLabel={deleting ? "삭제 중..." : "삭제"}
-          tone="danger"
-          onClose={() => { if (!deleting) setPendingDelete(null); }}
-          onConfirm={confirmDelete}
-        />
-      )}
-    </div>
+    </>
   );
 }
 

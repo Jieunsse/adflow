@@ -58,7 +58,8 @@ export function requireMetaSession(
 export interface MetaSessionOptions {
   // browse 세션일 때 route 고유 mock 페이로드를 반환(guard 는 payload 를 소유하지 않음).
   // 없으면 browse 세션은 real-only 로 간주 → requireMetaSession 이 401.
-  onBrowse?: (session: Session) => NextResponse | Promise<NextResponse>
+  // req = 쿼리 파라미터가 필요한 라우트용(옵셔널 — 기존 호출부 하위호환).
+  onBrowse?: (session: Session, req: NextRequest) => NextResponse | Promise<NextResponse>
 }
 
 // 공통 모양 라우트용 sugar. config+session 둘 다 필요한 라우트(generate-image 등)나
@@ -72,7 +73,7 @@ export function withMetaSession<C = unknown>(
     withRouteHandler(true, '', async () => {
       const session = await getServerSession(authOptions)
       if (session?.browseMode && opts.onBrowse) {
-        return opts.onBrowse(session)
+        return opts.onBrowse(session, req)
       }
       const s = requireMetaSession(session, requires)
       return handler(req, s, ctx)

@@ -20,10 +20,10 @@ export type IgDeleteResult =
 
 export const IG_COMMENTS_MOCK: Record<string, IgComment[]> = {
   default: [
-    { id: "mc1", username: "minji_lee",   text: "이거 어디서 살 수 있나요?",                timestamp: "2026-05-22T13:20:00Z", likeCount: 3, hidden: false, replyCount: 0 },
-    { id: "mc2", username: "studio.kim",  text: "색감 너무 예뻐요 ✨",                       timestamp: "2026-05-22T12:05:00Z", likeCount: 7, hidden: false, replyCount: 2 },
+    { id: "mc1", username: "minji_lee",   text: "이 수분 크림 어디서 살 수 있나요?",         timestamp: "2026-05-22T13:20:00Z", likeCount: 3, hidden: false, replyCount: 0 },
+    { id: "mc2", username: "studio.kim",  text: "무향이라 아침에 쓰기 좋아요 ✨",            timestamp: "2026-05-22T12:05:00Z", likeCount: 7, hidden: false, replyCount: 2 },
     { id: "mc3", username: "spam_xx_99",  text: "💰💰 DM 주세요 부업 안내",                  timestamp: "2026-05-22T10:48:00Z", likeCount: 0, hidden: false, replyCount: 0 },
-    { id: "mc4", username: "yuna___",     text: "사이즈 정보 추가 부탁드려요!",              timestamp: "2026-05-21T18:30:00Z", likeCount: 2, hidden: false, replyCount: 1 },
+    { id: "mc4", username: "yuna___",     text: "지성 피부도 써도 괜찮을까요?",             timestamp: "2026-05-21T18:30:00Z", likeCount: 2, hidden: false, replyCount: 1 },
     { id: "mc5", username: "daily.shop",  text: "재입고 알림 신청 어떻게 하나요?",           timestamp: "2026-05-21T17:15:00Z", likeCount: 1, hidden: false, replyCount: 0 },
   ],
 }
@@ -34,7 +34,7 @@ export const IG_REPLIES_MOCK: Record<string, IgComment[]> = {
     { id: "mr2-2", username: "studio.kim",            text: "감사합니다 꼭 구매해볼게요!",                      timestamp: "2026-05-22T12:45:00Z", likeCount: 1, hidden: false, replyCount: 0 },
   ],
   mc4: [
-    { id: "mr4-1", username: "greenroutine_official", text: "S/M/L 세 가지 사이즈로 출시됩니다. 상품 페이지에 치수표 추가해 드릴게요!", timestamp: "2026-05-21T19:00:00Z", likeCount: 2, hidden: false, replyCount: 0 },
+    { id: "mr4-1", username: "greenroutine_official", text: "지성 피부도 편하게 쓰실 수 있어요! 무향·무색소라 자극을 줄였어요 🌿", timestamp: "2026-05-21T19:00:00Z", likeCount: 2, hidden: false, replyCount: 0 },
   ],
 }
 

@@ -76,6 +76,8 @@ export interface CreateCampaignParams {
   abTestVariantB?: AbTestVariantBParam
   // Meta 앱 개발 모드 호환 — POST /adcreatives 가 subcode 1885183 으로 막혀서 Campaign + AdSet 까지만 생성하고 종료
   skipAdCreation?: boolean
+  // ADR-062 — 선택한 맞춤 타겟 id. AdSet targeting.custom_audiences 로 배선. 페르소나 인구통계는 유지(교집합).
+  customAudienceId?: string
 }
 
 export interface CampaignResult {
@@ -234,6 +236,7 @@ function buildAdSetBody(params: CreateCampaignParams, plan: LaunchPlan, campaign
       ...(params.genders && params.genders.length > 0 ? { genders: params.genders } : {}),
       geo_locations: { countries: [...params.countries, ...(params.location ?? [])] },
       targeting_automation: { advantage_audience: params.mode === 'simple' ? 1 : 0 },
+      ...(params.customAudienceId ? { custom_audiences: [{ id: params.customAudienceId }] } : {}),
       ...plan.placement,
     },
     start_time: toUnixKST(params.startDate),

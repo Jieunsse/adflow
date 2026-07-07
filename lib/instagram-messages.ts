@@ -105,11 +105,11 @@ export type IgThread = {
 export const IG_INBOX_MOCK: IgInbox = {
   mock: true,
   conversations: [
-    { id: "c1", participantId: "mock-1", participantHandle: "minji_lee",   preview: "사이즈 XL 도 있나요? 색상은 베이지 가능?", updatedAt: "2026-05-22T13:42:00Z" },
+    { id: "c1", participantId: "mock-1", participantHandle: "minji_lee",   preview: "수분 크림 지성 피부도 괜찮나요? 무향인가요?", updatedAt: "2026-05-22T13:42:00Z" },
     { id: "c2", participantId: "mock-2", participantHandle: "studio.kim",  preview: "협업 문의 드려요. 인스타 DM 이 편하실까요?",  updatedAt: "2026-05-22T09:15:00Z" },
-    { id: "c3", participantId: "mock-3", participantHandle: "yuna___",      preview: "주말 픽업 가능한가요? 토요일 오후 2시",        updatedAt: "2026-05-21T18:20:00Z" },
+    { id: "c3", participantId: "mock-3", participantHandle: "yuna___",      preview: "선크림 품절이던데 재입고 언제 되나요?",       updatedAt: "2026-05-21T18:20:00Z" },
     { id: "c4", participantId: "mock-4", participantHandle: "daily.shop",   preview: "감사합니다! 잘 받았어요 ✨",                    updatedAt: "2026-05-20T20:05:00Z" },
-    { id: "c5", participantId: "mock-5", participantHandle: "j_eunji",      preview: "광고 보고 연락 드려요. 가격 안내 부탁 ​드릴게요", updatedAt: "2026-05-19T11:30:00Z" },
+    { id: "c5", participantId: "mock-5", participantHandle: "j_eunji",      preview: "광고 보고 연락 드려요. 세트 가격 안내 부탁​드릴게요", updatedAt: "2026-05-19T11:30:00Z" },
   ],
 }
 
@@ -119,10 +119,10 @@ const MOCK_THREADS: Record<string, Omit<IgThread, 'mock'>> = {
     participantHandle: "minji_lee",
     messages: [
       { id: "m1", from: "them", text: "안녕하세요! 어제 인스타 광고 보고 연락드려요", createdAt: "2026-05-22T13:30:00Z" },
-      { id: "m2", from: "them", text: "사이즈 XL 도 있나요?",                        createdAt: "2026-05-22T13:31:00Z" },
-      { id: "m3", from: "me",   text: "안녕하세요 :) XL 까지 모두 재고 있어요!",       createdAt: "2026-05-22T13:38:00Z" },
-      { id: "m4", from: "them", text: "색상은 베이지도 가능한가요?",                  createdAt: "2026-05-22T13:40:00Z" },
-      { id: "m5", from: "me",   text: "베이지·차콜·아이보리 3색 중 고르실 수 있어요", createdAt: "2026-05-22T13:42:00Z" },
+      { id: "m2", from: "them", text: "수분 크림이 지성 피부에도 괜찮을까요?",        createdAt: "2026-05-22T13:31:00Z" },
+      { id: "m3", from: "me",   text: "안녕하세요 :) 무겁지 않은 제형이라 지성 피부도 편하게 쓰실 수 있어요!", createdAt: "2026-05-22T13:38:00Z" },
+      { id: "m4", from: "them", text: "무향인가요?",                                createdAt: "2026-05-22T13:40:00Z" },
+      { id: "m5", from: "me",   text: "네, 무향·무색소예요. 민감한 피부도 안심하고 쓰실 수 있어요 🌿", createdAt: "2026-05-22T13:42:00Z" },
     ],
   },
   c2: {
@@ -132,15 +132,15 @@ const MOCK_THREADS: Record<string, Omit<IgThread, 'mock'>> = {
       { id: "m1", from: "them", text: "안녕하세요. 스튜디오 김 입니다.",               createdAt: "2026-05-22T09:00:00Z" },
       { id: "m2", from: "them", text: "협업 컨텐츠 한 번 같이 해보고 싶어서 연락드려요", createdAt: "2026-05-22T09:01:00Z" },
       { id: "m3", from: "me",   text: "와 안녕하세요! 어떤 방향 생각하세요?",          createdAt: "2026-05-22T09:10:00Z" },
-      { id: "m4", from: "them", text: "5월 말 시즌룩 협업이요. 자료 보내드릴게요",     createdAt: "2026-05-22T09:15:00Z" },
+      { id: "m4", from: "them", text: "비건 스킨케어 루틴 협업이요. 자료 보내드릴게요", createdAt: "2026-05-22T09:15:00Z" },
     ],
   },
   c3: {
     conversationId: "c3",
     participantHandle: "yuna___",
     messages: [
-      { id: "m1", from: "them", text: "주문한 거 매장 픽업 가능한가요?",   createdAt: "2026-05-21T18:18:00Z" },
-      { id: "m2", from: "them", text: "토요일 오후 2시쯤 들를게요",         createdAt: "2026-05-21T18:20:00Z" },
+      { id: "m1", from: "them", text: "선크림 품절이던데 재입고 언제 되나요?", createdAt: "2026-05-21T18:18:00Z" },
+      { id: "m2", from: "me",   text: "다음 주 초 재입고 예정이에요! 알림 신청해두시면 문자로 안내드릴게요 :)", createdAt: "2026-05-21T18:20:00Z" },
     ],
   },
   c4: {

@@ -29,11 +29,11 @@ export const IG_MOCK_GOOD: IgAccountInsights = {
   igUsername: "greenroutine_official",
   mock: true,
   posts: [
-    { id: "ig1", mediaUrl: "https://picsum.photos/seed/ig1/200/200", caption: "새로운 시즌 컬렉션 출시! ✨", likeCount: 847, commentCount: 63, savedCount: 124, timestamp: "2026-05-10T09:00:00Z" },
-    { id: "ig2", mediaUrl: "https://picsum.photos/seed/ig2/200/200", caption: "고객 인터뷰 — 브랜드를 선택한 이유", likeCount: 612, commentCount: 41, savedCount: 89, timestamp: "2026-05-07T11:30:00Z" },
-    { id: "ig3", mediaUrl: "https://picsum.photos/seed/ig3/200/200", caption: "제품 뒷이야기 🎬", likeCount: 1024, commentCount: 78, savedCount: 201, timestamp: "2026-05-03T14:00:00Z" },
-    { id: "ig4", mediaUrl: "https://picsum.photos/seed/ig4/200/200", caption: "주말 이벤트 안내", likeCount: 398, commentCount: 29, savedCount: 55, timestamp: "2026-04-28T10:00:00Z" },
-    { id: "ig5", mediaUrl: "https://picsum.photos/seed/ig5/200/200", caption: "팔로워 Q&A 정리", likeCount: 723, commentCount: 112, savedCount: 167, timestamp: "2026-04-22T13:00:00Z" },
+    { id: "ig1", mediaUrl: "/demo/library/cream.jpg", caption: "새 비건 수분 크림, 오늘 출시했어요 🌿", likeCount: 847, commentCount: 63, savedCount: 124, timestamp: "2026-05-10T09:00:00Z" },
+    { id: "ig2", mediaUrl: "/demo/library/serum.jpg", caption: "고객 인터뷰 — 민감성 피부가 그린루틴을 고른 이유", likeCount: 612, commentCount: 41, savedCount: 89, timestamp: "2026-05-07T11:30:00Z" },
+    { id: "ig3", mediaUrl: "/demo/library/pack.jpg", caption: "식물성 세럼, 이렇게 만들어져요 🎬", likeCount: 1024, commentCount: 78, savedCount: 201, timestamp: "2026-05-03T14:00:00Z" },
+    { id: "ig4", mediaUrl: "/demo/library/toner.jpg", caption: "무향·무색소 비건 토너 소개", likeCount: 398, commentCount: 29, savedCount: 55, timestamp: "2026-04-28T10:00:00Z" },
+    { id: "ig5", mediaUrl: "/demo/library/pad.jpg", caption: "민감성 피부 Q&A 정리", likeCount: 723, commentCount: 112, savedCount: 167, timestamp: "2026-04-22T13:00:00Z" },
   ],
 }
 
@@ -45,11 +45,11 @@ export const IG_MOCK_POOR: IgAccountInsights = {
   igUsername: "greenroutine_official",
   mock: true,
   posts: [
-    { id: "ip1", mediaUrl: "https://picsum.photos/seed/ip1/200/200", caption: "신제품 안내", likeCount: 28, commentCount: 2, savedCount: 3, timestamp: "2026-05-10T09:00:00Z" },
-    { id: "ip2", mediaUrl: "https://picsum.photos/seed/ip2/200/200", caption: "이번 주 소식", likeCount: 19, commentCount: 1, savedCount: 1, timestamp: "2026-05-07T11:30:00Z" },
-    { id: "ip3", mediaUrl: "https://picsum.photos/seed/ip3/200/200", caption: "할인 이벤트", likeCount: 34, commentCount: 3, savedCount: 4, timestamp: "2026-05-03T14:00:00Z" },
-    { id: "ip4", mediaUrl: "https://picsum.photos/seed/ip4/200/200", caption: "브랜드 소개", likeCount: 12, commentCount: 0, savedCount: 2, timestamp: "2026-04-28T10:00:00Z" },
-    { id: "ip5", mediaUrl: "https://picsum.photos/seed/ip5/200/200", caption: "5월 프로모션", likeCount: 21, commentCount: 1, savedCount: 1, timestamp: "2026-04-22T13:00:00Z" },
+    { id: "ip1", mediaUrl: "/demo/library/toner.jpg", caption: "비건 토너 신제품 안내", likeCount: 28, commentCount: 2, savedCount: 3, timestamp: "2026-05-10T09:00:00Z" },
+    { id: "ip2", mediaUrl: "/demo/library/cleanser.jpg", caption: "이번 주 그린루틴 소식", likeCount: 19, commentCount: 1, savedCount: 1, timestamp: "2026-05-07T11:30:00Z" },
+    { id: "ip3", mediaUrl: "/demo/library/pack.jpg", caption: "시트 팩 리필 이벤트", likeCount: 34, commentCount: 3, savedCount: 4, timestamp: "2026-05-03T14:00:00Z" },
+    { id: "ip4", mediaUrl: "/demo/library/serum.jpg", caption: "그린루틴 브랜드 소개", likeCount: 12, commentCount: 0, savedCount: 2, timestamp: "2026-04-28T10:00:00Z" },
+    { id: "ip5", mediaUrl: "/demo/library/cream.jpg", caption: "5월 수분 크림 프로모션", likeCount: 21, commentCount: 1, savedCount: 1, timestamp: "2026-04-22T13:00:00Z" },
   ],
 }
 

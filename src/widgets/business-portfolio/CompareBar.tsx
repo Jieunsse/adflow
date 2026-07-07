@@ -108,7 +108,7 @@ export default function CompareBar({
       </div>
 
       {anyMock && (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[var(--w-accent-violet-soft)] text-[var(--w-accent-violet)] font-semibold text-[11.5px] leading-none">
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[var(--w-accent-violet-soft)] text-[var(--w-accent-violet)] font-semibold text-[12px] leading-none">
           mock 포함
         </span>
       )}

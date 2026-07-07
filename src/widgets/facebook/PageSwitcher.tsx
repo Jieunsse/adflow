@@ -42,7 +42,7 @@ export default function PageSwitcher({
         ) : (
           <div className="w-6 h-6 rounded-full bg-[var(--w-bg-neutral)]" />
         )}
-        <span className="font-medium text-[13.5px] text-[var(--w-fg-strong)]">{active?.name ?? "페이지 선택"}</span>
+        <span className="font-medium text-[14px] text-[var(--w-fg-strong)]">{active?.name ?? "페이지 선택"}</span>
         <Icon
           name="chev-down"
           size={14}
@@ -79,7 +79,7 @@ export default function PageSwitcher({
                 ) : (
                   <div className="w-6 h-6 rounded-full bg-[var(--w-bg-neutral)]" />
                 )}
-                <span className="flex-1 font-medium text-[13.5px]">{p.name}</span>
+                <span className="flex-1 font-medium text-[14px]">{p.name}</span>
                 {isActive && <Icon name="check" size={14} style={{ color: "var(--w-primary-normal)" }} />}
               </button>
             );

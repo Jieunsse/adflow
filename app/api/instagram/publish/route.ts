@@ -25,6 +25,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: "캡션은 2200자 이하여야 합니다." }, { status: 400 })
   }
 
+  if (session.browseMode) {
+    return NextResponse.json({ ok: true, postId: "mock-post", permalink: "https://www.instagram.com/p/mock-post/", mock: true })
+  }
+
   const result = await publishPhoto({
     imageUrl,
     caption,

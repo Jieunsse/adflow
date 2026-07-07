@@ -95,7 +95,7 @@ export default function PromotedContent() {
         <div className="font-semibold text-[14px] leading-[1.4] text-[var(--w-fg-strong)]">
           아직 홍보한 콘텐츠가 없어요
         </div>
-        <p className="font-medium text-[12.5px] leading-[1.55] text-[var(--w-fg-normal)] m-0">
+        <p className="font-medium text-[13px] leading-[1.55] text-[var(--w-fg-normal)] m-0">
           '광고 만들기'에서 콘텐츠 홍보를 선택하면 여기에 표시돼요.
         </p>
         <Link

@@ -29,7 +29,7 @@ export default function MessagesPermissionBanner() {
       </div>
       <a
         href="/api/auth/signin"
-        className="text-[12.5px] font-semibold text-[var(--w-primary-normal)] no-underline whitespace-nowrap"
+        className="text-[13px] font-semibold text-[var(--w-primary-normal)] no-underline whitespace-nowrap"
       >
         다시 연결 →
       </a>

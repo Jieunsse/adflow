@@ -1,3 +1,0 @@
-1. app/api/instagram/callback/route.ts (82 lines, language: typescript, fileCategory: code)
-2. app/api/instagram/token/route.ts (27 lines, language: typescript, fileCategory: code)
-3. lib/ig-token-store.ts (17 lines, language: typescript, fileCategory: code)

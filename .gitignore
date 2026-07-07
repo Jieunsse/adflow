@@ -59,3 +59,9 @@ next-env.d.ts
 /memory/
 
 certificates
+.gstack/
+
+# understand-anything tool cache (local-only)
+.understand-anything/
+# local state store cache
+/data/

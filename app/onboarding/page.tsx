@@ -61,7 +61,7 @@ function Step1({ onNext, onSkip }: { onNext: () => void; onSkip: () => void }) {
         <h1 className="font-[800] text-[21px] leading-[1.3] [font-family:var(--w-font-display)] text-[var(--w-fg-strong)] tracking-[-0.02em] m-0">
           광고 계정을 연결해주세요
         </h1>
-        <p className="font-medium text-[13.5px] leading-[1.55] text-[var(--w-fg-neutral)] mt-2 mb-0">
+        <p className="font-medium text-[14px] leading-[1.55] text-[var(--w-fg-neutral)] mt-2 mb-0">
           Meta 광고 계정과 페이스북 페이지를 선택해야 광고를 집행할 수 있어요.
         </p>
       </div>
@@ -157,14 +157,14 @@ function Step2({ onNext, onSkip }: { onNext: () => void; onSkip: () => void }) {
         <h1 className="font-[800] text-[21px] leading-[1.3] [font-family:var(--w-font-display)] text-[var(--w-fg-strong)] tracking-[-0.02em] m-0">
           브랜드를 소개해주세요
         </h1>
-        <p className="font-medium text-[13.5px] leading-[1.55] text-[var(--w-fg-neutral)] mt-2 mb-0">
+        <p className="font-medium text-[14px] leading-[1.55] text-[var(--w-fg-neutral)] mt-2 mb-0">
           Gemini가 광고 소재를 만들 때 이 정보를 참고해요.
         </p>
       </div>
 
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-1.5">
-          <label className="font-semibold text-[12.5px] leading-none text-[var(--w-fg-strong)]">
+          <label className="font-semibold text-[13px] leading-none text-[var(--w-fg-strong)]">
             브랜드명
           </label>
           <input
@@ -173,11 +173,11 @@ function Step2({ onNext, onSkip }: { onNext: () => void; onSkip: () => void }) {
             value={name}
             onChange={(e) => setName(e.target.value)}
             maxLength={80}
-            className="w-full h-10 px-3.5 rounded-xl border border-[var(--w-line-normal)] bg-[var(--w-bg-elevated)] text-[13.5px] font-medium text-[var(--w-fg-strong)] placeholder:text-[var(--w-fg-alternative)] outline-none focus:border-[var(--w-primary-normal)] transition-colors duration-[120ms]"
+            className="w-full h-10 px-3.5 rounded-xl border border-[var(--w-line-normal)] bg-[var(--w-bg-elevated)] text-[14px] font-medium text-[var(--w-fg-strong)] placeholder:text-[var(--w-fg-alternative)] outline-none focus:border-[var(--w-primary-normal)] transition-colors duration-[120ms]"
           />
         </div>
         <div className="flex flex-col gap-1.5">
-          <label className="font-semibold text-[12.5px] leading-none text-[var(--w-fg-strong)]">
+          <label className="font-semibold text-[13px] leading-none text-[var(--w-fg-strong)]">
             브랜드 설명 <span className="font-normal text-[var(--w-fg-neutral)]">(선택)</span>
           </label>
           <textarea
@@ -186,7 +186,7 @@ function Step2({ onNext, onSkip }: { onNext: () => void; onSkip: () => void }) {
             onChange={(e) => setDesc(e.target.value)}
             rows={4}
             maxLength={600}
-            className="w-full px-3.5 py-3 rounded-xl border border-[var(--w-line-normal)] bg-[var(--w-bg-elevated)] text-[13.5px] font-medium text-[var(--w-fg-strong)] placeholder:text-[var(--w-fg-alternative)] outline-none focus:border-[var(--w-primary-normal)] transition-colors duration-[120ms] resize-none"
+            className="w-full px-3.5 py-3 rounded-xl border border-[var(--w-line-normal)] bg-[var(--w-bg-elevated)] text-[14px] font-medium text-[var(--w-fg-strong)] placeholder:text-[var(--w-fg-alternative)] outline-none focus:border-[var(--w-primary-normal)] transition-colors duration-[120ms] resize-none"
           />
         </div>
       </div>
@@ -229,7 +229,7 @@ function Step3({ onComplete }: { onComplete: (next?: string) => void | Promise<v
         <h1 className="font-[800] text-[21px] leading-[1.3] [font-family:var(--w-font-display)] text-[var(--w-fg-strong)] tracking-[-0.02em] m-0">
           준비가 됐어요!
         </h1>
-        <p className="font-medium text-[13.5px] leading-[1.55] text-[var(--w-fg-neutral)] mt-2 mb-0">
+        <p className="font-medium text-[14px] leading-[1.55] text-[var(--w-fg-neutral)] mt-2 mb-0">
           Gemini가 카피·헤드라인·타겟팅을 제안해드려요. 지금 바로 첫 광고를 만들어봐요.
         </p>
       </div>
@@ -253,10 +253,13 @@ function OnboardingFlow() {
   const [step, setStep] = useState<Step>(1);
 
   useEffect(() => {
+    const stepParam = searchParams.get("step");
+    if (stepParam) {
+      setStep(stepFromParam(stepParam));
+      return;
+    }
     const saved = localStorage.getItem("adflow:onboarding-step");
-    const fromParam = stepFromParam(searchParams.get("step"));
-    const resolved = saved ? stepFromParam(saved) : fromParam;
-    setStep(resolved);
+    setStep(saved ? stepFromParam(saved) : 1);
   }, [searchParams]);
 
   function advanceTo(s: Step) {

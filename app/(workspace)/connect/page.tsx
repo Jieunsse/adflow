@@ -260,7 +260,7 @@ export default function ConnectPage() {
           <div className="flex items-center gap-4 px-[22px] py-[18px] bg-[rgba(255,66,66,0.04)] dark:bg-[rgba(255,66,66,0.06)] border border-[rgba(255,66,66,0.20)] rounded-[14px] mt-1">
             <div style={{ flex: 1 }}>
               <div className="font-bold text-[14px] leading-[1.3] text-[var(--w-status-negative)]">Meta 연결 해제</div>
-              <div className="font-medium text-[12.5px] leading-[1.5] text-[var(--w-fg-neutral)] mt-1">해제하면 캠페인 성과 조회·게재 제어가 멈춰요. 다시 연결하려면 로그아웃 후 Facebook으로 다시 로그인하면 돼요.</div>
+              <div className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)] mt-1">해제하면 캠페인 성과 조회·게재 제어가 멈춰요. 다시 연결하려면 로그아웃 후 Facebook으로 다시 로그인하면 돼요.</div>
             </div>
             <Button variant="danger" type="button" onClick={() => browseMode ? showToast(BROWSE_BLOCK_MSG) : setConfirmDisconnect(true)}>
               <Icon name="link" size={14} /> 연결 해제
@@ -309,8 +309,8 @@ function FacebookCard({ memberName, memberImage, tokenExpired, reauthing, onReau
       <div className="flex-1 min-w-0">
         <div className="flex justify-between items-start gap-4">
           <div>
-            <div className="font-bold text-[16.5px] leading-[1.35] [font-family:var(--w-font-display)] text-[var(--w-fg-strong)] tracking-[-0.012em]">{tokenExpired ? "Meta 인증이 만료됐어요" : "Facebook에 연결됨"}</div>
-            <div className="flex items-center gap-2 flex-wrap font-medium text-[12.5px] leading-none text-[var(--w-fg-neutral)] mt-2">
+            <div className="font-bold text-[17px] leading-[1.35] [font-family:var(--w-font-display)] text-[var(--w-fg-strong)] tracking-[-0.012em]">{tokenExpired ? "Meta 인증이 만료됐어요" : "Facebook에 연결됨"}</div>
+            <div className="flex items-center gap-2 flex-wrap font-medium text-[13px] leading-none text-[var(--w-fg-neutral)] mt-2">
               {memberImage ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={memberImage} alt="" className="w-5 h-5 rounded-full text-white grid place-items-center font-bold text-[10px] leading-none [font-family:var(--w-font-display)]" style={{ objectFit: "cover" }} />
@@ -325,11 +325,11 @@ function FacebookCard({ memberName, memberImage, tokenExpired, reauthing, onReau
           <div className="flex flex-col gap-2.5 items-end flex-none">
             {tokenExpired
               ? <span className="inline-flex items-center gap-[5px] px-2.5 py-1 rounded-full font-semibold text-[12px] leading-none text-[var(--w-status-negative)] bg-[rgba(255,66,66,0.12)]"><Icon name="warn" size={12} /> 인증 만료</span>
-              : <span className="inline-flex items-center gap-[5px] px-[9px] py-[3px] rounded-full font-semibold text-[11.5px] leading-none text-[var(--w-status-positive)] bg-[rgba(0,191,64,0.10)] dark:bg-[rgba(73,229,125,0.14)] dark:text-[#49e57d]"><span className="w-1.5 h-1.5 rounded-full bg-[var(--w-status-positive)] dark:bg-[#49e57d]" /> 정상</span>}
+              : <span className="inline-flex items-center gap-[5px] px-[9px] py-[3px] rounded-full font-semibold text-[12px] leading-none text-[var(--w-status-positive)] bg-[rgba(0,191,64,0.10)] dark:bg-[rgba(73,229,125,0.14)] dark:text-[#49e57d]"><span className="w-1.5 h-1.5 rounded-full bg-[var(--w-status-positive)] dark:bg-[#49e57d]" /> 정상</span>}
           </div>
         </div>
         {tokenExpired && (
-          <div className={cn("flex items-center gap-2.5 p-[10px_12px] rounded-[10px] font-medium text-[12.5px] leading-[1.5] mt-3.5", "bg-[rgba(255,66,66,0.08)] border border-[rgba(255,66,66,0.22)] text-[var(--w-status-negative)]")}>
+          <div className={cn("flex items-center gap-2.5 p-[10px_12px] rounded-[10px] font-medium text-[13px] leading-[1.5] mt-3.5", "bg-[rgba(255,66,66,0.08)] border border-[rgba(255,66,66,0.22)] text-[var(--w-status-negative)]")}>
             <Icon name="warn" size={14} />
             <span style={{ flex: 1 }}><strong>Meta 인증이 만료됐어요.</strong> 재인증해야 광고 집행과 성과 조회를 다시 할 수 있어요.</span>
             <Button variant="danger" size="sm" type="button" onClick={onReauth} disabled={reauthing}><Icon name="refresh" size={13} /> {reauthing ? "이동 중…" : "재인증"}</Button>
@@ -351,10 +351,10 @@ function AdAccountCard({ name, id, currency, status, disabled, onChange }: {
         <div className="flex justify-between items-start gap-4">
           <div style={{ minWidth: 0 }}>
             <div className="font-semibold text-[11px] leading-[1.45] tracking-[0.04em] uppercase text-[var(--w-fg-neutral)]" style={{ color: "var(--w-fg-alternative)", marginBottom: 6 }}>광고 계정</div>
-            <div className="font-bold text-[16.5px] leading-[1.35] [font-family:var(--w-font-display)] tracking-[-0.012em]" style={{ color: disabled ? "var(--w-fg-neutral)" : "var(--w-fg-strong)" }}>{name}</div>
+            <div className="font-bold text-[17px] leading-[1.35] [font-family:var(--w-font-display)] tracking-[-0.012em]" style={{ color: disabled ? "var(--w-fg-neutral)" : "var(--w-fg-strong)" }}>{name}</div>
             {currency !== "—" && (
               <div className="flex items-center gap-2 flex-wrap mt-2">
-                <span className="font-medium text-[12.5px] leading-none [font-family:var(--w-font-mono)] text-[var(--w-fg-neutral)]">{currency}</span>
+                <span className="font-medium text-[13px] leading-none [font-family:var(--w-font-mono)] text-[var(--w-fg-neutral)]">{currency}</span>
               </div>
             )}
             <div className="mt-4 mb-1.5">
@@ -369,18 +369,18 @@ function AdAccountCard({ name, id, currency, status, disabled, onChange }: {
             {status === "disabled"
               ? <span className="inline-flex items-center gap-[5px] px-2.5 py-1 rounded-full font-semibold text-[12px] leading-none text-[var(--w-status-cautionary)] bg-[rgba(255,146,0,0.12)]"><Icon name="warn" size={12} /> 비활성·정지</span>
               : status === "active"
-                ? <span className="inline-flex items-center gap-[5px] px-[9px] py-[3px] rounded-full font-semibold text-[11.5px] leading-none text-[var(--w-status-positive)] bg-[rgba(0,191,64,0.10)] dark:bg-[rgba(73,229,125,0.14)] dark:text-[#49e57d]"><span className="w-1.5 h-1.5 rounded-full bg-[var(--w-status-positive)] dark:bg-[#49e57d]" /> 활성</span>
+                ? <span className="inline-flex items-center gap-[5px] px-[9px] py-[3px] rounded-full font-semibold text-[12px] leading-none text-[var(--w-status-positive)] bg-[rgba(0,191,64,0.10)] dark:bg-[rgba(73,229,125,0.14)] dark:text-[#49e57d]"><span className="w-1.5 h-1.5 rounded-full bg-[var(--w-status-positive)] dark:bg-[#49e57d]" /> 활성</span>
                 : null}
           </div>
         </div>
         {status === "disabled" && (
-          <div className={cn("flex items-center gap-2.5 p-[10px_12px] rounded-[10px] font-medium text-[12.5px] leading-[1.5] mt-3.5", "bg-[rgba(255,146,0,0.10)] border border-[rgba(255,146,0,0.24)] text-[var(--w-status-cautionary)]")}>
+          <div className={cn("flex items-center gap-2.5 p-[10px_12px] rounded-[10px] font-medium text-[13px] leading-[1.5] mt-3.5", "bg-[rgba(255,146,0,0.10)] border border-[rgba(255,146,0,0.24)] text-[var(--w-status-cautionary)]")}>
             <Icon name="warn" size={14} />
             <span>이 광고 계정이 <strong>비활성/정지</strong> 상태예요. Meta 광고 관리자에서 결제·정책 위반 등을 확인해 주세요.</span>
           </div>
         )}
         {disabled && (
-          <div className={cn("flex items-center gap-2.5 p-[10px_12px] rounded-[10px] font-medium text-[12.5px] leading-[1.5] mt-3.5", "bg-[var(--w-bg-alternative)] text-[var(--w-fg-alternative)] border border-[var(--w-line-alternative)]")}>
+          <div className={cn("flex items-center gap-2.5 p-[10px_12px] rounded-[10px] font-medium text-[13px] leading-[1.5] mt-3.5", "bg-[var(--w-bg-alternative)] text-[var(--w-fg-alternative)] border border-[var(--w-line-alternative)]")}>
             <Icon name="lock" size={13} />
             <span>재인증 후 확인할 수 있어요.</span>
           </div>
@@ -405,8 +405,8 @@ function PixelCard({ name, id, disabled, onChange }: { name: string | null; id: 
             <div className="font-semibold text-[11px] leading-[1.45] tracking-[0.04em] uppercase text-[var(--w-fg-neutral)]" style={{ color: "var(--w-fg-alternative)", marginBottom: 6 }}>
               Facebook Pixel <span style={{ font: "500 11px/1 var(--w-font-sans)", color: "var(--w-fg-neutral)", verticalAlign: "middle" }}>(선택)</span>
             </div>
-            <div className="font-bold text-[16.5px] leading-[1.35] [font-family:var(--w-font-display)] tracking-[-0.012em]" style={{ color: disabled ? "var(--w-fg-neutral)" : "var(--w-fg-strong)" }}>{name ?? "선택 안 됨"}</div>
-            <div className="font-medium text-[12.5px] leading-[1.5] text-[var(--w-fg-neutral)]" style={{ marginTop: 6 }}>
+            <div className="font-bold text-[17px] leading-[1.35] [font-family:var(--w-font-display)] tracking-[-0.012em]" style={{ color: disabled ? "var(--w-fg-neutral)" : "var(--w-fg-strong)" }}>{name ?? "선택 안 됨"}</div>
+            <div className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)]" style={{ marginTop: 6 }}>
               {name ? "광고 클릭 후 사이트 방문을 이 Pixel로 추적해요." : "선택하면 광고 클릭 후 사이트 방문을 추적할 수 있어요. 없으면 건너뛰어도 돼요."}
             </div>
             {id && (
@@ -419,7 +419,7 @@ function PixelCard({ name, id, disabled, onChange }: { name: string | null; id: 
           </div>
         </div>
         {disabled && (
-          <div className={cn("flex items-center gap-2.5 p-[10px_12px] rounded-[10px] font-medium text-[12.5px] leading-[1.5] mt-3.5", "bg-[var(--w-bg-alternative)] text-[var(--w-fg-alternative)] border border-[var(--w-line-alternative)]")}>
+          <div className={cn("flex items-center gap-2.5 p-[10px_12px] rounded-[10px] font-medium text-[13px] leading-[1.5] mt-3.5", "bg-[var(--w-bg-alternative)] text-[var(--w-fg-alternative)] border border-[var(--w-line-alternative)]")}>
             <Icon name="lock" size={13} />
             <span>재인증 후 확인할 수 있어요.</span>
           </div>
@@ -447,8 +447,8 @@ function PageCard({ name, id, picture, disabled, onChange }: { name: string; id:
         <div className="flex justify-between items-start gap-4">
           <div style={{ minWidth: 0 }}>
             <div className="font-semibold text-[11px] leading-[1.45] tracking-[0.04em] uppercase text-[var(--w-fg-neutral)]" style={{ color: "var(--w-fg-alternative)", marginBottom: 6 }}>페이스북 페이지</div>
-            <div className="font-bold text-[16.5px] leading-[1.35] [font-family:var(--w-font-display)] tracking-[-0.012em]" style={{ color: disabled ? "var(--w-fg-neutral)" : "var(--w-fg-strong)" }}>{name}</div>
-            <div className="font-medium text-[12.5px] leading-[1.5] text-[var(--w-fg-neutral)]" style={{ marginTop: 6 }}>광고가 이 페이지 명의로 게재돼요.</div>
+            <div className="font-bold text-[17px] leading-[1.35] [font-family:var(--w-font-display)] tracking-[-0.012em]" style={{ color: disabled ? "var(--w-fg-neutral)" : "var(--w-fg-strong)" }}>{name}</div>
+            <div className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)]" style={{ marginTop: 6 }}>광고가 이 페이지 명의로 게재돼요.</div>
             <div className="mt-4 mb-1.5">
               <IdField
                 label="페이지 ID"
@@ -459,7 +459,7 @@ function PageCard({ name, id, picture, disabled, onChange }: { name: string; id:
           </div>
         </div>
         {disabled && (
-          <div className={cn("flex items-center gap-2.5 p-[10px_12px] rounded-[10px] font-medium text-[12.5px] leading-[1.5] mt-3.5", "bg-[var(--w-bg-alternative)] text-[var(--w-fg-alternative)] border border-[var(--w-line-alternative)]")}>
+          <div className={cn("flex items-center gap-2.5 p-[10px_12px] rounded-[10px] font-medium text-[13px] leading-[1.5] mt-3.5", "bg-[var(--w-bg-alternative)] text-[var(--w-fg-alternative)] border border-[var(--w-line-alternative)]")}>
             <Icon name="lock" size={13} />
             <span>재인증 후 확인할 수 있어요.</span>
           </div>
@@ -476,7 +476,7 @@ function PageCard({ name, id, picture, disabled, onChange }: { name: string; id:
 
 function PermCheck({ label }: { label: string }) {
   return (
-    <span className="inline-flex items-center gap-[5px] font-semibold text-[12.5px] leading-none text-[var(--w-status-positive)] dark:text-[#49e57d]">
+    <span className="inline-flex items-center gap-[5px] font-semibold text-[13px] leading-none text-[var(--w-status-positive)] dark:text-[#49e57d]">
       <span className="inline-grid place-items-center w-[14px] h-[14px] rounded-full bg-[var(--w-status-positive)] text-white dark:bg-[#49e57d] dark:text-[#0b1c12]">
         <Icon name="check" size={9} strokeWidth={3.5} />
       </span>
@@ -508,8 +508,8 @@ function InstagramCard({ username, id, picture, pageId, igAccessToken, disabled,
             <div className="font-semibold text-[11px] leading-[1.45] tracking-[0.04em] uppercase text-[var(--w-fg-neutral)]" style={{ color: "var(--w-fg-alternative)", marginBottom: 6 }}>
               Instagram 비즈니스 계정
             </div>
-            <div className="font-bold text-[16.5px] leading-[1.35] [font-family:var(--w-font-display)] tracking-[-0.012em]" style={{ color: disabled ? "var(--w-fg-neutral)" : "var(--w-fg-strong)" }}>{linked ? `@${username}` : "연결되지 않음"}</div>
-            <div className="font-medium text-[12.5px] leading-[1.5] text-[var(--w-fg-neutral)]" style={{ marginTop: 6 }}>
+            <div className="font-bold text-[17px] leading-[1.35] [font-family:var(--w-font-display)] tracking-[-0.012em]" style={{ color: disabled ? "var(--w-fg-neutral)" : "var(--w-fg-strong)" }}>{linked ? `@${username}` : "연결되지 않음"}</div>
+            <div className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)]" style={{ marginTop: 6 }}>
               {linked
                 ? "선택한 페이스북 페이지에 연결된 Instagram 계정의 인사이트를 보여드려요."
                 : "선택한 페이스북 페이지에 Instagram 비즈니스 계정이 연결돼 있지 않아요. 페이지 설정에서 Instagram 계정을 연결한 뒤 아래 [다시 불러오기]를 눌러주세요."}
@@ -518,10 +518,10 @@ function InstagramCard({ username, id, picture, pageId, igAccessToken, disabled,
               <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-4 mb-1.5">
                 {insightsAuthorized
                   ? <PermCheck label="인사이트 권한" />
-                  : <a className="inline-flex items-center gap-[5px] font-semibold text-[12.5px] leading-none text-[var(--w-primary-normal)] hover:underline" href="/api/instagram/connect"><Icon name="chart" size={13} /> 인사이트 권한 받기</a>}
+                  : <a className="inline-flex items-center gap-[5px] font-semibold text-[13px] leading-none text-[var(--w-primary-normal)] hover:underline" href="/api/instagram/connect"><Icon name="chart" size={13} /> 인사이트 권한 받기</a>}
                 {publishAuthorized
                   ? <PermCheck label="게시 권한" />
-                  : <span className="inline-flex items-center gap-[5px] font-semibold text-[12.5px] leading-none text-[var(--w-status-cautionary)]"><Icon name="warn" size={12} /> 게시 권한 없음</span>}
+                  : <span className="inline-flex items-center gap-[5px] font-semibold text-[13px] leading-none text-[var(--w-status-cautionary)]"><Icon name="warn" size={12} /> 게시 권한 없음</span>}
               </div>
             )}
             {id && (
@@ -534,7 +534,7 @@ function InstagramCard({ username, id, picture, pageId, igAccessToken, disabled,
           </div>
           <div className="flex flex-col gap-2.5 items-end flex-none">
             {linked
-              ? <span className="inline-flex items-center gap-[5px] px-[9px] py-[3px] rounded-full font-semibold text-[11.5px] leading-none text-[var(--w-status-positive)] bg-[rgba(0,191,64,0.10)] dark:bg-[rgba(73,229,125,0.14)] dark:text-[#49e57d]"><span className="w-1.5 h-1.5 rounded-full bg-[var(--w-status-positive)] dark:bg-[#49e57d]" /> 연결됨</span>
+              ? <span className="inline-flex items-center gap-[5px] px-[9px] py-[3px] rounded-full font-semibold text-[12px] leading-none text-[var(--w-status-positive)] bg-[rgba(0,191,64,0.10)] dark:bg-[rgba(73,229,125,0.14)] dark:text-[#49e57d]"><span className="w-1.5 h-1.5 rounded-full bg-[var(--w-status-positive)] dark:bg-[#49e57d]" /> 연결됨</span>
               : <span className="inline-flex items-center gap-[5px] px-2.5 py-1 rounded-full font-semibold text-[12px] leading-none text-[var(--w-status-cautionary)] bg-[rgba(255,146,0,0.12)]"><Icon name="warn" size={12} /> 미연결</span>}
             {linked && !disabled && (
               browseMode ? (
@@ -565,13 +565,13 @@ function InstagramCard({ username, id, picture, pageId, igAccessToken, disabled,
           </div>
         </div>
         {disabled && (
-          <div className={cn("flex items-center gap-2.5 p-[10px_12px] rounded-[10px] font-medium text-[12.5px] leading-[1.5] mt-3.5", "bg-[var(--w-bg-alternative)] text-[var(--w-fg-alternative)] border border-[var(--w-line-alternative)]")}>
+          <div className={cn("flex items-center gap-2.5 p-[10px_12px] rounded-[10px] font-medium text-[13px] leading-[1.5] mt-3.5", "bg-[var(--w-bg-alternative)] text-[var(--w-fg-alternative)] border border-[var(--w-line-alternative)]")}>
             <Icon name="lock" size={13} />
             <span>재인증 후 확인할 수 있어요.</span>
           </div>
         )}
         {linked && !publishAuthorized && !disabled && (
-          <div className={cn("flex items-center gap-2.5 p-[10px_12px] rounded-[10px] font-medium text-[12.5px] leading-[1.5] mt-3.5", "bg-[rgba(255,146,0,0.10)] border border-[rgba(255,146,0,0.24)] text-[var(--w-status-cautionary)]")}>
+          <div className={cn("flex items-center gap-2.5 p-[10px_12px] rounded-[10px] font-medium text-[13px] leading-[1.5] mt-3.5", "bg-[rgba(255,146,0,0.10)] border border-[rgba(255,146,0,0.24)] text-[var(--w-status-cautionary)]")}>
             <Icon name="warn" size={14} />
             <span style={{ flex: 1 }}>게시 권한 토큰이 없어요. <strong>재연결</strong> 후에도 해결 안 되면 <strong>수동 토큰 적용</strong>을 눌러보세요.</span>
             <Button variant="ghost" size="sm" type="button" onClick={onApplyToken} disabled={applyingToken}>
@@ -618,10 +618,10 @@ function NotionCard({ browseMode, onBrowseBlock }: { browseMode: boolean; onBrow
             <div className="font-semibold text-[11px] leading-[1.45] tracking-[0.04em] uppercase text-[var(--w-fg-neutral)]" style={{ color: "var(--w-fg-alternative)", marginBottom: 6 }}>
               Notion 워크스페이스
             </div>
-            <div className="font-bold text-[16.5px] leading-[1.35] [font-family:var(--w-font-display)] tracking-[-0.012em]" style={{ color: "var(--w-fg-strong)" }}>
+            <div className="font-bold text-[17px] leading-[1.35] [font-family:var(--w-font-display)] tracking-[-0.012em]" style={{ color: "var(--w-fg-strong)" }}>
               {connected ? workspaceName ?? "연결됨" : "연결되지 않음"}
             </div>
-            <div className="font-medium text-[12.5px] leading-[1.5] text-[var(--w-fg-neutral)]" style={{ marginTop: 6 }}>
+            <div className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)]" style={{ marginTop: 6 }}>
               {connected
                 ? "브랜드 프로필 만들 때 '노션에서 가져오기'로 흩어진 브랜드 자료를 끌어올 수 있어요."
                 : "노션에 정리해둔 브랜드 자료를 브랜드 프로필로 가져오려면 워크스페이스를 연결하세요."}
@@ -629,7 +629,7 @@ function NotionCard({ browseMode, onBrowseBlock }: { browseMode: boolean; onBrow
           </div>
           <div className="flex flex-col gap-2.5 items-end flex-none">
             {connected
-              ? <span className="inline-flex items-center gap-[5px] px-[9px] py-[3px] rounded-full font-semibold text-[11.5px] leading-none text-[var(--w-status-positive)] bg-[rgba(0,191,64,0.10)] dark:bg-[rgba(73,229,125,0.14)] dark:text-[#49e57d]"><span className="w-1.5 h-1.5 rounded-full bg-[var(--w-status-positive)] dark:bg-[#49e57d]" /> 연결됨</span>
+              ? <span className="inline-flex items-center gap-[5px] px-[9px] py-[3px] rounded-full font-semibold text-[12px] leading-none text-[var(--w-status-positive)] bg-[rgba(0,191,64,0.10)] dark:bg-[rgba(73,229,125,0.14)] dark:text-[#49e57d]"><span className="w-1.5 h-1.5 rounded-full bg-[var(--w-status-positive)] dark:bg-[#49e57d]" /> 연결됨</span>
               : <span className="inline-flex items-center gap-[5px] px-2.5 py-1 rounded-full font-semibold text-[12px] leading-none text-[var(--w-status-cautionary)] bg-[rgba(255,146,0,0.12)]"><Icon name="warn" size={12} /> 미연결</span>}
             {connected ? (
               <Button variant="ghost" size="sm" type="button" onClick={handleDisconnect} disabled={disconnecting}>
@@ -676,8 +676,8 @@ function PermissionsDisclosure({ open, onToggle }: { open: boolean; onToggle: ()
         <div className="flex flex-col gap-2.5 px-[22px] pb-5 pt-4 border-t border-[var(--w-line-alternative)]">
           {PERMS.map((p) => (
             <div key={p.code} className="flex items-start gap-3.5 p-[10px_12px] bg-[var(--w-bg-alternative)] rounded-[10px]">
-              <span className="font-semibold text-[11.5px] leading-[1.3] [font-family:var(--w-font-mono)] text-[var(--w-primary-press)] bg-[var(--w-bg-elevated)] px-[9px] py-[5px] rounded-[6px] flex-none border border-[var(--w-line-alternative)]">{p.code}</span>
-              <span className="font-medium text-[12.5px] leading-[1.5] text-[var(--w-fg-strong)] pt-1">{p.label}</span>
+              <span className="font-semibold text-[12px] leading-[1.3] [font-family:var(--w-font-mono)] text-[var(--w-primary-press)] bg-[var(--w-bg-elevated)] px-[9px] py-[5px] rounded-[6px] flex-none border border-[var(--w-line-alternative)]">{p.code}</span>
+              <span className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-strong)] pt-1">{p.label}</span>
             </div>
           ))}
           <div className="flex items-start gap-2 p-1 font-medium text-[12px] leading-[1.55] text-[var(--w-fg-alternative)]">
@@ -699,21 +699,21 @@ function UnconnectedCTA({ onConnect }: { onConnect: () => void }) {
         <div className="w-16 h-16 rounded-[18px] grid place-items-center shadow-[0_6px_16px_rgba(0,0,0,0.08)] bg-[#1877F2] text-white"><Icon name="facebook" size={32} /></div>
       </div>
       <h2 className="font-extrabold text-[26px] leading-[1.25] [font-family:var(--w-font-display)] text-[var(--w-fg-strong)] tracking-[-0.022em] m-0 mb-2.5 relative z-[1]">AdFlow를 Meta 광고 계정에 연결하세요</h2>
-      <p className="font-medium text-[14.5px] leading-[1.6] text-[var(--w-fg-neutral)] max-w-[480px] mx-auto mb-[30px] relative z-[1]">연결하면 AdFlow가 광고를 자동으로 게재하고, 성과를 추적하고, 최적화 제안을 만들어줘요.</p>
+      <p className="font-medium text-[15px] leading-[1.6] text-[var(--w-fg-neutral)] max-w-[480px] mx-auto mb-[30px] relative z-[1]">연결하면 AdFlow가 광고를 자동으로 게재하고, 성과를 추적하고, 최적화 제안을 만들어줘요.</p>
       <div className="grid grid-cols-3 gap-3.5 max-w-[680px] mx-auto mb-7 relative z-[1]">
         <CtaFeature icon="megaphone" title="광고 게재" desc="이 자리에서 바로 광고를 만들고 Meta에 올려요." />
         <CtaFeature icon="chart" title="성과 추적" desc="노출·클릭·CTR을 자동으로 가져와 보여줘요." />
         <CtaFeature icon="sparkles" title="최적화 제안" desc="실적이 낮은 소재·타겟에 대한 개선안을 받아요." />
       </div>
       <div className="flex flex-col w-max max-w-full text-left p-[20px_28px] bg-[var(--w-bg-alternative)] rounded-[14px] mx-auto mb-7 relative z-[1]">
-        <div className="font-semibold text-[11.5px] leading-none [font-family:var(--w-font-sans)] text-[var(--w-fg-alternative)] tracking-[0.06em] uppercase mb-3.5">필요한 것</div>
+        <div className="font-semibold text-[12px] leading-none [font-family:var(--w-font-sans)] text-[var(--w-fg-alternative)] tracking-[0.06em] uppercase mb-3.5">필요한 것</div>
         <ul className="list-none p-0 m-0 flex flex-col gap-2.5">
           <li className="flex items-center gap-2.5 font-medium text-[14px] leading-[1.45] text-[var(--w-fg-strong)] [&_svg]:text-[var(--w-fg-neutral)]"><Icon name="wallet" size={15} /> Meta Business 광고 계정 1개</li>
           <li className="flex items-center gap-2.5 font-medium text-[14px] leading-[1.45] text-[var(--w-fg-strong)] [&_svg]:text-[var(--w-fg-neutral)]"><Icon name="doc" size={15} /> 관리 중인 페이스북 페이지 1개</li>
         </ul>
       </div>
       <Button variant="fb" type="button" onClick={onConnect}><Icon name="facebook" size={16} /> 광고 계정·페이지 연결하기</Button>
-      <div className="font-medium text-[11.5px] leading-[1.5] text-[var(--w-fg-alternative)] mt-3.5 relative z-[1]">이미 Facebook으로 로그인돼 있어요. 광고 계정과 페이지를 골라주세요.</div>
+      <div className="font-medium text-[12px] leading-[1.5] text-[var(--w-fg-alternative)] mt-3.5 relative z-[1]">이미 Facebook으로 로그인돼 있어요. 광고 계정과 페이지를 골라주세요.</div>
     </div>
   );
 }
@@ -722,7 +722,7 @@ function CtaFeature({ icon, title, desc }: { icon: IconName; title: string; desc
   return (
     <div className="p-[18px] bg-[var(--w-bg-alternative)] rounded-xl text-left">
       <div className="w-8 h-8 rounded-[9px] bg-[var(--w-bg-elevated)] text-[var(--w-primary-press)] grid place-items-center mb-2.5 border border-[var(--w-line-alternative)]"><Icon name={icon} size={18} /></div>
-      <div className="font-bold text-[13.5px] leading-[1.3] text-[var(--w-fg-strong)]">{title}</div>
+      <div className="font-bold text-[14px] leading-[1.3] text-[var(--w-fg-strong)]">{title}</div>
       <div className="font-medium text-[12px] leading-[1.5] text-[var(--w-fg-neutral)] mt-1">{desc}</div>
     </div>
   );
@@ -746,7 +746,7 @@ function PickerModal({ kind, title, subtitle, currentId, onClose, onPick }: {
         <div className="flex items-center justify-between p-6 pb-0">
           <div>
             <h3 className="font-bold text-[17px] leading-[1.3] [font-family:var(--w-font-display)] text-[var(--w-fg-strong)] tracking-[-0.01em] m-0">{title}</h3>
-            <div className="font-medium text-[12.5px] leading-[1.5] text-[var(--w-fg-neutral)]" style={{ marginTop: 4 }}>{subtitle}</div>
+            <div className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)]" style={{ marginTop: 4 }}>{subtitle}</div>
           </div>
           <button className="w-8 h-8 rounded-lg border border-transparent bg-transparent text-[var(--w-fg-neutral)] cursor-pointer inline-grid place-items-center hover:bg-[var(--w-bg-neutral)] hover:text-[var(--w-fg-strong)] transition-[background,color] duration-[120ms]" type="button" onClick={onClose}><Icon name="x" size={16} /></button>
         </div>
@@ -766,8 +766,8 @@ function PickerModal({ kind, title, subtitle, currentId, onClose, onPick }: {
             </div>
           ) : q.isError ? (
             <div style={{ padding: "28px 18px 18px", textAlign: "center" }}>
-              <div className="font-semibold text-[13.5px] leading-[1.4] text-[var(--w-fg-strong)]">목록을 불러오지 못했어요</div>
-              <p className="font-medium text-[12.5px] leading-[1.5] text-[var(--w-fg-neutral)]" style={{ margin: "8px 0 14px" }}>{q.error instanceof Error ? q.error.message : "잠시 후 다시 시도해 주세요."}</p>
+              <div className="font-semibold text-[14px] leading-[1.4] text-[var(--w-fg-strong)]">목록을 불러오지 못했어요</div>
+              <p className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)]" style={{ margin: "8px 0 14px" }}>{q.error instanceof Error ? q.error.message : "잠시 후 다시 시도해 주세요."}</p>
               <Button variant="secondary" size="sm" type="button" onClick={() => q.refetch()}>다시 시도</Button>
             </div>
           ) : items.length === 0 ? (
@@ -775,8 +775,8 @@ function PickerModal({ kind, title, subtitle, currentId, onClose, onPick }: {
               <div style={{ width: 48, height: 48, borderRadius: 14, margin: "0 auto 12px", background: "var(--w-bg-alternative)", color: "var(--w-fg-neutral)", display: "grid", placeItems: "center" }}>
                 <Icon name={kind === "account" ? "wallet" : kind === "pixel" ? "chart" : "doc"} size={22} />
               </div>
-              <div className="font-bold text-[14.5px] leading-[1.35] [font-family:var(--w-font-display)] text-[var(--w-fg-strong)]">{kind === "pixel" ? "이 광고 계정에 Pixel이 없어요" : kind === "account" ? "연결된 광고 계정이 없어요" : "관리 중인 페이스북 페이지가 없어요"}</div>
-              <p className="font-medium text-[12.5px] leading-[1.55] text-[var(--w-fg-neutral)]" style={{ maxWidth: 320, margin: "10px auto 0" }}>
+              <div className="font-bold text-[15px] leading-[1.35] [font-family:var(--w-font-display)] text-[var(--w-fg-strong)]">{kind === "pixel" ? "이 광고 계정에 Pixel이 없어요" : kind === "account" ? "연결된 광고 계정이 없어요" : "관리 중인 페이스북 페이지가 없어요"}</div>
+              <p className="font-medium text-[13px] leading-[1.55] text-[var(--w-fg-neutral)]" style={{ maxWidth: 320, margin: "10px auto 0" }}>
                 {kind === "pixel" ? "Meta Events Manager에서 Pixel을 먼저 만들어주세요." : kind === "account" ? "Meta Business Manager에서 광고 계정을 먼저 만들어주세요." : "페이지 권한이 없거나 페이지가 없어요. 다른 계정으로 다시 로그인하면 권한을 다시 요청해요."}
               </p>
               <div style={{ marginTop: 16, display: "flex", gap: 8, justifyContent: "center" }}>
@@ -806,11 +806,11 @@ function PickerModal({ kind, title, subtitle, currentId, onClose, onPick }: {
                       kind === "pixel" && "bg-[var(--w-bg-alternative)] text-[var(--w-fg-neutral)]"
                     )}><Icon name={kind === "account" ? "wallet" : kind === "pixel" ? "chart" : "doc"} size={16} /></div>
                     <div style={{ flex: 1, minWidth: 0, textAlign: "left" }}>
-                      <div className="flex items-center gap-2 font-semibold text-[13.5px] leading-[1.3] text-[var(--w-fg-strong)]">
+                      <div className="flex items-center gap-2 font-semibold text-[14px] leading-[1.3] text-[var(--w-fg-strong)]">
                         {it.name}
                         {it.status === "disabled" && <span className="font-semibold text-[10px] leading-none [font-family:var(--w-font-mono)] bg-[rgba(255,146,0,0.12)] text-[var(--w-status-cautionary)] px-1.5 py-[3px] rounded-[4px] tracking-[0.04em]">비활성</span>}
                       </div>
-                      <div className="flex items-center gap-1.5 flex-wrap font-medium text-[11.5px] leading-[1.3] [font-family:var(--w-font-mono)] text-[var(--w-fg-neutral)] mt-1">
+                      <div className="flex items-center gap-1.5 flex-wrap font-medium text-[12px] leading-[1.3] [font-family:var(--w-font-mono)] text-[var(--w-fg-neutral)] mt-1">
                         <span>{maskId(it.id)}</span>
                         {it.currency && <><span className="w-[3px] h-[3px] rounded-full bg-[var(--w-fg-alternative)]" /><span>{it.currency}</span></>}
                       </div>

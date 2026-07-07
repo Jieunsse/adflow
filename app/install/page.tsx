@@ -63,15 +63,15 @@ function Faq({ step }: { step: number }) {
   if (items.length === 0) return null;
   return (
     <details className="border border-[var(--w-line-alternative)] rounded-[10px] bg-[var(--w-bg-alternative)]">
-      <summary className="list-none cursor-pointer flex items-center gap-2 px-[14px] py-3 font-semibold text-[12.5px] leading-none text-[var(--w-fg-neutral)] [&::-webkit-details-marker]:hidden">
+      <summary className="list-none cursor-pointer flex items-center gap-2 px-[14px] py-3 font-semibold text-[13px] leading-none text-[var(--w-fg-neutral)] [&::-webkit-details-marker]:hidden">
         <Icon name="info" size={14} /> 자주 막히는 부분
         <Icon name="chev-down" size={14} className="ml-auto transition-transform duration-[180ms] [[open]_&]:rotate-180" />
       </summary>
       <div className="border-t border-[var(--w-line-alternative)] px-[14px] py-3 flex flex-col gap-3.5">
         {items.map((item) => (
           <div key={item.q} className="flex flex-col gap-1">
-            <div className="font-semibold text-[12.5px] leading-[1.45] text-[var(--w-fg-strong)]">{item.q}</div>
-            <div className="font-medium text-[12.5px] leading-[1.6] text-[var(--w-fg-neutral)] whitespace-pre-line">{item.a}</div>
+            <div className="font-semibold text-[13px] leading-[1.45] text-[var(--w-fg-strong)]">{item.q}</div>
+            <div className="font-medium text-[13px] leading-[1.6] text-[var(--w-fg-neutral)] whitespace-pre-line">{item.a}</div>
           </div>
         ))}
       </div>
@@ -85,7 +85,7 @@ function ExternalLink({ href, children }: { href: string; children: React.ReactN
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="inline-flex items-center gap-1.5 self-start px-[14px] py-2 rounded-lg bg-[var(--w-primary-soft)] text-[var(--w-primary-press)] font-semibold text-[12.5px] leading-none no-underline transition-[background] duration-[140ms] hover:bg-[rgba(0,102,255,0.16)]"
+      className="inline-flex items-center gap-1.5 self-start px-[14px] py-2 rounded-lg bg-[var(--w-primary-soft)] text-[var(--w-primary-press)] font-semibold text-[13px] leading-none no-underline transition-[background] duration-[140ms] hover:bg-[rgba(0,102,255,0.16)]"
     >
       {children}
       <Icon name="arrow-right" size={12} />
@@ -97,7 +97,7 @@ function CopyBlock({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
   return (
     <div className="relative">
-      <pre className="m-0 px-4 py-[14px] pr-20 border border-[var(--w-line-normal)] rounded-[10px] bg-[var(--w-bg-alternative)] text-[var(--w-fg-strong)] [font-family:var(--w-font-mono,ui-monospace,monospace)] font-medium text-[12.5px] leading-[1.65] whitespace-pre-wrap break-words max-h-[280px] overflow-auto">{text}</pre>
+      <pre className="m-0 px-4 py-[14px] pr-20 border border-[var(--w-line-normal)] rounded-[10px] bg-[var(--w-bg-alternative)] text-[var(--w-fg-strong)] [font-family:var(--w-font-mono,ui-monospace,monospace)] font-medium text-[13px] leading-[1.65] whitespace-pre-wrap break-words max-h-[280px] overflow-auto">{text}</pre>
       <Button
         variant="ghost"
         size="sm"
@@ -150,7 +150,7 @@ function PhaseHeader({
         STEP {step}
       </span>
       <h1 className="font-[800] text-[21px] leading-[1.3] [font-family:var(--w-font-display)] text-[var(--w-fg-strong)] tracking-[-0.02em] m-0" style={{ marginTop: 8 }}>{title}</h1>
-      <p className="font-medium text-[13.5px] leading-[1.55] text-[var(--w-fg-neutral)] mt-2 mb-0">{subtitle}</p>
+      <p className="font-medium text-[14px] leading-[1.55] text-[var(--w-fg-neutral)] mt-2 mb-0">{subtitle}</p>
     </div>
   );
 }
@@ -165,13 +165,13 @@ function Step1Signup({ onNext }: { onNext: () => void }) {
         title="Meta 개발자 계정으로 가입해주세요"
         subtitle="이미 가입돼 있다면 다음 단계로 넘어가요."
       />
-      <div className="flex flex-col gap-4 font-medium text-[13.5px] leading-[1.6] text-[var(--w-fg-strong)]">
+      <div className="flex flex-col gap-4 font-medium text-[14px] leading-[1.6] text-[var(--w-fg-strong)]">
         <p className="m-0 text-[var(--w-fg-neutral)]">
           페이스북 / 인스타그램 광고 API를 쓰려면 Meta 개발자 계정이 필요해요.
           <br />
           사내 마케팅 계정으로 등록 가능해요.
         </p>
-        <a href="https://developers.facebook.com/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 self-start px-[14px] py-2 rounded-lg bg-[var(--w-primary-soft)] text-[var(--w-primary-press)] font-semibold text-[12.5px] leading-none no-underline transition-[background] duration-[140ms] hover:bg-[rgba(0,102,255,0.16)]">
+        <a href="https://developers.facebook.com/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 self-start px-[14px] py-2 rounded-lg bg-[var(--w-primary-soft)] text-[var(--w-primary-press)] font-semibold text-[13px] leading-none no-underline transition-[background] duration-[140ms] hover:bg-[rgba(0,102,255,0.16)]">
           META 개발자센터 링크
         </a>
         <Faq step={1} />
@@ -195,14 +195,14 @@ function Step2CreateApp({ onNext, onBack }: { onNext: () => void; onBack: () => 
         title="비즈니스 앱을 만들어주세요"
         subtitle="AdFlow가 광고를 게재할 Meta 앱이에요."
       />
-      <div className="flex flex-col gap-4 font-medium text-[13.5px] leading-[1.6] text-[var(--w-fg-strong)]">
+      <div className="flex flex-col gap-4 font-medium text-[14px] leading-[1.6] text-[var(--w-fg-strong)]">
         <ol className="m-0 pl-[22px] flex flex-col gap-1.5 font-medium text-[13px] leading-[1.55] text-[var(--w-fg-neutral)]" style={{ listStyle: "none", paddingLeft: 0 }}>
           <li>1. '앱 만들기' 페이지를 열어요.</li>
           <li>2. 앱 종류는 <b>'비즈니스(Business)'</b>를 선택해주세요.</li>
           <li>3. 앱 이름은 회사명 또는 'AdFlow - 회사명' 형식으로 자유롭게 지어요.</li>
           <li>4. 비즈니스 계정 선택 화면이 나오면 회사 계정을 골라주세요.</li>
         </ol>
-        <a href="https://developers.facebook.com/apps/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 self-start px-[14px] py-2 rounded-lg bg-[var(--w-primary-soft)] text-[var(--w-primary-press)] font-semibold text-[12.5px] leading-none no-underline transition-[background] duration-[140ms] hover:bg-[rgba(0,102,255,0.16)]">
+        <a href="https://developers.facebook.com/apps/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 self-start px-[14px] py-2 rounded-lg bg-[var(--w-primary-soft)] text-[var(--w-primary-press)] font-semibold text-[13px] leading-none no-underline transition-[background] duration-[140ms] hover:bg-[rgba(0,102,255,0.16)]">
           앱 만들기 페이지 열기
         </a>
         <Faq step={2} />
@@ -262,7 +262,7 @@ function Step3Credentials({ onSaved, onBack, preview = false }: { onSaved: (appN
         title="App ID와 App Secret을 입력해주세요"
         subtitle="Meta 앱 콘솔 → 설정 → 기본 화면에서 복사하면 돼요."
       />
-      <div className="flex flex-col gap-4 font-medium text-[13.5px] leading-[1.6] text-[var(--w-fg-strong)]">
+      <div className="flex flex-col gap-4 font-medium text-[14px] leading-[1.6] text-[var(--w-fg-strong)]">
         <label className="flex flex-col gap-1.5">
           <span className="font-semibold text-[12px] leading-none text-[var(--w-fg-neutral)] tracking-[0.02em]">App ID</span>
           <input
@@ -270,7 +270,7 @@ function Step3Credentials({ onSaved, onBack, preview = false }: { onSaved: (appN
             value={clientId}
             onChange={(e) => setClientId(e.target.value)}
             placeholder="예: 1234567890123456"
-            className="border border-[var(--w-line-normal)] rounded-lg px-[13px] py-[11px] font-medium text-[13.5px] leading-[1.4] [font-family:var(--w-font-mono,var(--w-font-sans))] bg-[var(--w-bg-base)] text-[var(--w-fg-strong)] transition-[border-color] duration-[140ms] outline-none focus:border-[var(--w-primary-normal)] disabled:bg-[var(--w-bg-alternative)] disabled:text-[var(--w-fg-neutral)]"
+            className="border border-[var(--w-line-normal)] rounded-lg px-[13px] py-[11px] font-medium text-[14px] leading-[1.4] [font-family:var(--w-font-mono,var(--w-font-sans))] bg-[var(--w-bg-base)] text-[var(--w-fg-strong)] transition-[border-color] duration-[140ms] outline-none focus:border-[var(--w-primary-normal)] disabled:bg-[var(--w-bg-alternative)] disabled:text-[var(--w-fg-neutral)]"
             disabled={busy}
           />
         </label>
@@ -281,7 +281,7 @@ function Step3Credentials({ onSaved, onBack, preview = false }: { onSaved: (appN
             value={clientSecret}
             onChange={(e) => setClientSecret(e.target.value)}
             placeholder="••••••••••••••••"
-            className="border border-[var(--w-line-normal)] rounded-lg px-[13px] py-[11px] font-medium text-[13.5px] leading-[1.4] [font-family:var(--w-font-mono,var(--w-font-sans))] bg-[var(--w-bg-base)] text-[var(--w-fg-strong)] transition-[border-color] duration-[140ms] outline-none focus:border-[var(--w-primary-normal)] disabled:bg-[var(--w-bg-alternative)] disabled:text-[var(--w-fg-neutral)]"
+            className="border border-[var(--w-line-normal)] rounded-lg px-[13px] py-[11px] font-medium text-[14px] leading-[1.4] [font-family:var(--w-font-mono,var(--w-font-sans))] bg-[var(--w-bg-base)] text-[var(--w-fg-strong)] transition-[border-color] duration-[140ms] outline-none focus:border-[var(--w-primary-normal)] disabled:bg-[var(--w-bg-alternative)] disabled:text-[var(--w-fg-neutral)]"
             disabled={busy}
           />
         </label>
@@ -322,7 +322,7 @@ function Step4Permissions({ onNext, onBack }: { onNext: () => void; onBack: () =
         title="필요한 권한 7개를 추가해주세요"
         subtitle="Meta 앱 콘솔 → '앱 검수' → '권한 및 기능'에서 추가해요."
       />
-      <div className="flex flex-col gap-4 font-medium text-[13.5px] leading-[1.6] text-[var(--w-fg-strong)]">
+      <div className="flex flex-col gap-4 font-medium text-[14px] leading-[1.6] text-[var(--w-fg-strong)]">
         <ol className="m-0 pl-[22px] flex flex-col gap-1.5 font-medium text-[13px] leading-[1.55] text-[var(--w-fg-neutral)]">
           <li>아래 권한 목록을 복사해서 하나씩 검색해 추가해주세요.</li>
           <li>각 권한 옆 'Advanced Access 요청' 버튼을 눌러주세요.</li>
@@ -354,7 +354,7 @@ function Step5Review({ onNext, onBack }: { onNext: () => void; onBack: () => voi
         title="App Review를 신청해주세요"
         subtitle="아래 사유서 템플릿을 권한별 사유 입력란에 그대로 붙여넣으면 돼요."
       />
-      <div className="flex flex-col gap-4 font-medium text-[13.5px] leading-[1.6] text-[var(--w-fg-strong)]">
+      <div className="flex flex-col gap-4 font-medium text-[14px] leading-[1.6] text-[var(--w-fg-strong)]">
         <ol className="m-0 pl-[22px] flex flex-col gap-1.5 font-medium text-[13px] leading-[1.55] text-[var(--w-fg-neutral)]">
           <li>Meta 앱 콘솔에서 권한별 'Submit for review' 버튼을 눌러요.</li>
           <li>사유 입력란에 아래 해당 권한의 사유를 복사해서 붙여넣어요.</li>
@@ -386,7 +386,7 @@ function Step6GoLive({ onDone, onBack }: { onDone: () => void; onBack: () => voi
         title="라이브 모드로 전환해주세요"
         subtitle="App Review 통과 메일을 받으셨다면 마지막 단계예요."
       />
-      <div className="flex flex-col gap-4 font-medium text-[13.5px] leading-[1.6] text-[var(--w-fg-strong)]">
+      <div className="flex flex-col gap-4 font-medium text-[14px] leading-[1.6] text-[var(--w-fg-strong)]">
         <ol className="m-0 pl-[22px] flex flex-col gap-1.5 font-medium text-[13px] leading-[1.55] text-[var(--w-fg-neutral)]">
           <li>Meta 앱 콘솔 → 설정 → 기본 화면을 열어요.</li>
           <li>상단의 '앱 모드' 토글을 <b>'라이브'</b>로 전환해주세요.</li>
@@ -421,12 +421,12 @@ function PhaseADone({ appName, onStartPhaseB, onLogin }: { appName: string; onSt
         <h1 className="font-[800] text-[21px] leading-[1.3] [font-family:var(--w-font-display)] text-[var(--w-fg-strong)] tracking-[-0.02em] m-0" style={{ marginTop: 8 }}>
           <b>{appName}</b> 와 연결됐어요
         </h1>
-        <p className="font-medium text-[13.5px] leading-[1.55] text-[var(--w-fg-neutral)] mt-2 mb-0">
+        <p className="font-medium text-[14px] leading-[1.55] text-[var(--w-fg-neutral)] mt-2 mb-0">
           이제 AdFlow를 개발 모드로 사용할 수 있어요. 팀장과 등록된 테스트 계정만 가능해요.
           전 직원 사용을 위해선 Phase B(App Review)를 진행해주세요.
         </p>
       </div>
-      <div className="flex flex-col gap-4 font-medium text-[13.5px] leading-[1.6] text-[var(--w-fg-strong)]">
+      <div className="flex flex-col gap-4 font-medium text-[14px] leading-[1.6] text-[var(--w-fg-strong)]">
         <div className="flex items-start gap-2.5 px-[14px] py-3 rounded-[10px] border border-transparent bg-[rgba(0,102,255,0.06)] border-[rgba(0,102,255,0.18)] text-[var(--w-primary-press)]">
           <Icon name="info" size={16} />
           <div style={{ font: "500 12.5px/1.5 var(--w-font-sans)" }}>
@@ -460,7 +460,7 @@ function AllDone({ onGo }: { onGo: () => void }) {
         <h1 className="font-[800] text-[21px] leading-[1.3] [font-family:var(--w-font-display)] text-[var(--w-fg-strong)] tracking-[-0.02em] m-0" style={{ marginTop: 8 }}>
           AdFlow를 전 직원과 함께 사용할 수 있어요
         </h1>
-        <p className="font-medium text-[13.5px] leading-[1.55] text-[var(--w-fg-neutral)] mt-2 mb-0">
+        <p className="font-medium text-[14px] leading-[1.55] text-[var(--w-fg-neutral)] mt-2 mb-0">
           페이스북 로그인을 통해 회사 모든 직원이 AdFlow를 쓸 수 있어요.
         </p>
       </div>

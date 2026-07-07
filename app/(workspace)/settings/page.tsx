@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import Icon from "@shared/ui/Icon";
 import IdField from "@shared/ui/IdField";
-import { Badge } from "@shared/ui/primitives";
+import { Chip } from "@shared/ui/Chip";
 import { Button } from "@shared/ui/Button";
 import { Card } from "@shared/ui/Card";
 import { cn } from "@shared/lib/cn";
@@ -36,7 +36,7 @@ export default function SettingsPage() {
             type="button"
             onClick={() => setTab(k)}
             className={cn(
-              "border-none px-3.5 py-2 rounded-lg font-semibold text-[12.5px] leading-none cursor-pointer transition-[background,color] duration-[120ms]",
+              "border-none px-3.5 py-2 rounded-lg font-semibold text-[13px] leading-none cursor-pointer transition-[background,color] duration-[120ms]",
               tab === k
                 ? "bg-[var(--w-bg-elevated)] text-[var(--w-fg-strong)] shadow-[0_1px_2px_rgba(23,23,23,0.08)]"
                 : "bg-transparent text-[var(--w-fg-neutral)]"
@@ -82,11 +82,11 @@ function AccountTab() {
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
               <h2 className="m-0 font-bold text-[17px] leading-[1.3] tracking-[-0.012em] text-[var(--w-fg-strong)]">연결 상태</h2>
               {connected ? (
-                <Badge kind="success" size="sm" dot live>연결됨</Badge>
+                <Chip variant="success" size="sm" dot live>연결됨</Chip>
               ) : browseMode ? (
-                <Badge kind="warn" size="sm">둘러보기</Badge>
+                <Chip variant="warn" size="sm">둘러보기</Chip>
               ) : (
-                <Badge kind="neg" size="sm">미연결</Badge>
+                <Chip variant="neg" size="sm">미연결</Chip>
               )}
             </div>
             <p className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)] mt-1 mb-0">
@@ -106,20 +106,20 @@ function AccountTab() {
                 <div style={{ width: 40, height: 40, borderRadius: 10, background: "var(--w-primary-soft)", color: "var(--w-primary-press)", display: "grid", placeItems: "center", flex: "0 0 auto" }}><Icon name="wallet" size={18} /></div>
                 <div style={{ minWidth: 0 }}>
                   <div className="font-semibold text-[14px] leading-[1.3] text-[var(--w-fg-strong)]">{session?.adAccountName ?? "광고 계정"}</div>
-                  <div className="font-medium text-[12.5px] leading-[1.4] text-[var(--w-fg-neutral)] mt-0.5">{session?.adAccountId}</div>
+                  <div className="font-medium text-[13px] leading-[1.4] text-[var(--w-fg-neutral)] mt-0.5">{session?.adAccountId}</div>
                 </div>
               </div>
-              <Badge kind="success" size="sm" dot>활성</Badge>
+              <Chip variant="success" size="sm" dot>활성</Chip>
             </div>
             <div className="flex items-center justify-between gap-3 py-4 px-[18px] rounded-xl border border-[var(--w-line-alternative)] bg-[var(--w-bg-elevated)] mt-2">
               <div style={{ display: "flex", alignItems: "center", gap: 14, minWidth: 0 }}>
                 <div style={{ width: 40, height: 40, borderRadius: 10, background: "var(--w-accent-violet-soft)", color: "var(--w-accent-violet)", display: "grid", placeItems: "center", flex: "0 0 auto" }}><Icon name="doc" size={18} /></div>
                 <div style={{ minWidth: 0 }}>
                   <div className="font-semibold text-[14px] leading-[1.3] text-[var(--w-fg-strong)]">{session?.pageName ?? "페이스북 페이지"}</div>
-                  <div className="font-medium text-[12.5px] leading-[1.4] text-[var(--w-fg-neutral)] mt-0.5">{session?.pageId}</div>
+                  <div className="font-medium text-[13px] leading-[1.4] text-[var(--w-fg-neutral)] mt-0.5">{session?.pageId}</div>
                 </div>
               </div>
-              <Badge kind="success" size="sm" dot>활성</Badge>
+              <Chip variant="success" size="sm" dot>활성</Chip>
             </div>
             <hr className="h-px bg-[var(--w-line-neutral)] my-[18px] border-0" />
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10 }}>
@@ -131,7 +131,7 @@ function AccountTab() {
           <div className="flex items-center justify-between gap-3 py-4 px-[18px] rounded-xl border border-[var(--w-line-alternative)] bg-[var(--w-bg-elevated)]" style={{ borderStyle: "dashed" }}>
             <div>
               <div className="font-semibold text-[14px] leading-[1.3] text-[var(--w-fg-strong)]">광고 계정이 연결되지 않았어요</div>
-              <div className="font-medium text-[12.5px] leading-[1.4] text-[var(--w-fg-neutral)] mt-0.5">{browseMode ? "광고를 집행하려면 Meta 광고 계정·페이지를 연결해주세요." : "Meta 광고 계정·페이지를 연결하면 광고를 만들고 집행할 수 있어요."}</div>
+              <div className="font-medium text-[13px] leading-[1.4] text-[var(--w-fg-neutral)] mt-0.5">{browseMode ? "광고를 집행하려면 Meta 광고 계정·페이지를 연결해주세요." : "Meta 광고 계정·페이지를 연결하면 광고를 만들고 집행할 수 있어요."}</div>
             </div>
             <Button variant="primary" size="sm" type="button" onClick={() => router.push("/connect")}><Icon name="link" size={14} /> 계정 연결하기</Button>
           </div>
@@ -146,7 +146,7 @@ function AccountTab() {
           <div style={{ flex: 1, minWidth: 220 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
               <div className="font-bold text-[17px] leading-[1.3] tracking-[-0.012em] text-[var(--w-fg-strong)]">광고를 만들 수 있어요</div>
-              <Badge kind="success" size="sm" dot live>준비됨</Badge>
+              <Chip variant="success" size="sm" dot live>준비됨</Chip>
             </div>
             <p style={{ font: "500 13px/1.55 var(--w-font-sans)", color: "var(--w-fg-neutral)", margin: "6px 0 0" }}>바로 광고 만들기 화면으로 이동해 첫 캠페인을 시작해보세요.</p>
           </div>
@@ -170,7 +170,7 @@ function AccountTab() {
         <div className="flex items-center justify-between gap-3 py-4 px-[18px] rounded-xl border border-[var(--w-line-alternative)] bg-[var(--w-bg-elevated)]">
           <div style={{ minWidth: 0 }}>
             <div className="font-semibold text-[14px] leading-[1.3] text-[var(--w-fg-strong)]">Instagram 비즈니스 계정</div>
-            <div className="font-medium text-[12.5px] leading-[1.4] text-[var(--w-fg-neutral)] mt-0.5">
+            <div className="font-medium text-[13px] leading-[1.4] text-[var(--w-fg-neutral)] mt-0.5">
               {connected
                 ? "Facebook 페이지에 Instagram 비즈니스 계정이 연결되면 자동으로 인사이트를 불러와요."
                 : "먼저 Meta 광고 계정과 Facebook 페이지를 연결해주세요."}
@@ -180,7 +180,7 @@ function AccountTab() {
             성과 탭에서 확인 <Icon name="arrow-right" size={13} />
           </Button>
         </div>
-        <div className="flex items-start gap-2.5 p-3 px-[14px] rounded-[10px] border bg-[rgba(0,102,255,0.06)] border-[rgba(0,102,255,0.18)] text-[var(--w-primary-press)] mt-[14px] font-medium text-[12.5px] leading-[1.5]">
+        <div className="flex items-start gap-2.5 p-3 px-[14px] rounded-[10px] border bg-[rgba(0,102,255,0.06)] border-[rgba(0,102,255,0.18)] text-[var(--w-primary-press)] mt-[14px] font-medium text-[13px] leading-[1.5]">
           <Icon name="info" size={14} style={{ flex: "0 0 auto", marginTop: 2 }} />
           <span>Instagram 비즈니스 계정 연결은 Facebook 페이지 설정에서 할 수 있어요. 연결 후 다시 로그인하면 인사이트가 활성화돼요.</span>
         </div>
@@ -221,7 +221,7 @@ function MetaAppCard({ previewMode = false }: { previewMode?: boolean }) {
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
             <h2 className="m-0 font-bold text-[17px] leading-[1.3] tracking-[-0.012em] text-[var(--w-fg-strong)]">Meta 앱 연결</h2>
-            <Badge kind={previewMode ? "warn" : "violet"} size="sm">{previewMode ? "둘러보기" : "관리자"}</Badge>
+            <Chip variant={previewMode ? "warn" : "violet"} size="sm">{previewMode ? "둘러보기" : "관리자"}</Chip>
           </div>
           <p className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)] mt-1 mb-0">
             {previewMode
@@ -256,7 +256,7 @@ function MetaAppCard({ previewMode = false }: { previewMode?: boolean }) {
         <div className="flex items-center justify-between gap-3 py-4 px-[18px] rounded-xl border border-[var(--w-line-alternative)] bg-[var(--w-bg-elevated)]" style={{ borderStyle: "dashed" }}>
           <div>
             <div className="font-semibold text-[14px] leading-[1.3] text-[var(--w-fg-strong)]">Meta 앱이 연결되지 않았어요</div>
-            <div className="font-medium text-[12.5px] leading-[1.4] text-[var(--w-fg-neutral)] mt-0.5">로그인이 동작하려면 Meta 앱 자격증명을 먼저 등록해야 해요.</div>
+            <div className="font-medium text-[13px] leading-[1.4] text-[var(--w-fg-neutral)] mt-0.5">로그인이 동작하려면 Meta 앱 자격증명을 먼저 등록해야 해요.</div>
           </div>
           <Button variant="primary" size="sm" type="button" onClick={() => router.push("/install")}>
             <Icon name="link" size={14} /> 셋업 시작
@@ -357,7 +357,7 @@ function DangerTab() {
         <div className="flex items-center justify-between gap-3 py-4 px-[18px] rounded-xl border border-[var(--w-line-alternative)] bg-[var(--w-bg-elevated)]">
           <div>
             <div className="font-semibold text-[14px] leading-[1.3] text-[var(--w-fg-strong)]">온보딩 다시 보기</div>
-            <div className="font-medium text-[12.5px] leading-[1.4] text-[var(--w-fg-neutral)] mt-0.5">계정 연결·브랜드 프로필 설정 흐름을 처음부터 다시 진행해요.</div>
+            <div className="font-medium text-[13px] leading-[1.4] text-[var(--w-fg-neutral)] mt-0.5">계정 연결·브랜드 프로필 설정 흐름을 처음부터 다시 진행해요.</div>
           </div>
           <Button variant="secondary" size="sm" type="button" onClick={restartOnboarding}>
             <Icon name="refresh" size={13} /> 다시 보기
@@ -366,18 +366,18 @@ function DangerTab() {
         <div className="flex items-center justify-between gap-3 py-4 px-[18px] rounded-xl border border-[var(--w-line-alternative)] bg-[var(--w-bg-elevated)] mt-2">
           <div>
             <div className="font-semibold text-[14px] leading-[1.3] text-[var(--w-fg-strong)]">로그아웃</div>
-            <div className="font-medium text-[12.5px] leading-[1.4] text-[var(--w-fg-neutral)] mt-0.5">이 기기에서 AdFlow를 종료하고 로그인 화면으로 돌아가요.</div>
+            <div className="font-medium text-[13px] leading-[1.4] text-[var(--w-fg-neutral)] mt-0.5">이 기기에서 AdFlow를 종료하고 로그인 화면으로 돌아가요.</div>
           </div>
           <Button variant="secondary" size="sm" type="button" onClick={() => signOut({ callbackUrl: "/login" })}><Icon name="logout" size={14} /> 로그아웃</Button>
         </div>
         <div className="flex items-center justify-between gap-3 py-4 px-[18px] rounded-xl border bg-[var(--w-bg-elevated)] mt-2" style={{ borderColor: "rgba(255,66,66,0.20)" }}>
           <div>
             <div className="font-semibold text-[14px] leading-[1.3]" style={{ color: "var(--w-status-negative)" }}>이 브라우저의 로컬 데이터 삭제</div>
-            <div className="font-medium text-[12.5px] leading-[1.4] text-[var(--w-fg-neutral)] mt-0.5">소재 라이브러리, 작성 중이던 입력값·미리보기 데이터를 지워요. Meta에 집행된 광고와 캠페인은 영향받지 않아요.</div>
+            <div className="font-medium text-[13px] leading-[1.4] text-[var(--w-fg-neutral)] mt-0.5">소재 라이브러리, 작성 중이던 입력값·미리보기 데이터를 지워요. Meta에 집행된 광고와 캠페인은 영향받지 않아요.</div>
           </div>
           <button
             type="button"
-            className="inline-flex items-center justify-center gap-1.5 h-8 px-3 text-[12.5px] rounded-lg font-semibold leading-none cursor-pointer border border-transparent bg-[rgba(255,66,66,0.10)] text-[var(--w-status-negative)]"
+            className="inline-flex items-center justify-center gap-1.5 h-8 px-3 text-[13px] rounded-lg font-semibold leading-none cursor-pointer border border-transparent bg-[rgba(255,66,66,0.10)] text-[var(--w-status-negative)]"
             onClick={() => setConfirmClear(true)}
           >
             데이터 삭제

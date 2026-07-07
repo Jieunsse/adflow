@@ -58,7 +58,7 @@ function PickRow({
         <Icon name={kind === "account" ? "wallet" : "doc"} size={16} />
       </div>
       <div style={{ flex: 1, minWidth: 0, textAlign: "left" }}>
-        <div className="flex items-center gap-2 font-semibold text-[13.5px] leading-[1.3] text-[var(--w-fg-strong)]">
+        <div className="flex items-center gap-2 font-semibold text-[14px] leading-[1.3] text-[var(--w-fg-strong)]">
           {title}
           {badge && (
             <span className="font-semibold text-[10px] leading-none [font-family:var(--w-font-mono)] bg-[rgba(255,146,0,0.12)] text-[var(--w-status-cautionary)] px-1.5 py-[3px] rounded-[4px] tracking-[0.04em]">
@@ -66,7 +66,7 @@ function PickRow({
             </span>
           )}
         </div>
-        <div className="flex items-center gap-1.5 flex-wrap [font-family:var(--w-font-mono)] text-[11.5px] leading-[1.3] text-[var(--w-fg-neutral)] mt-1">
+        <div className="flex items-center gap-1.5 flex-wrap [font-family:var(--w-font-mono)] text-[12px] leading-[1.3] text-[var(--w-fg-neutral)] mt-1">
           {meta.map((m, i) => (
             <span key={m} style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
               {i > 0 && <span className="w-[3px] h-[3px] rounded-full bg-[var(--w-fg-alternative)]" />}
@@ -90,10 +90,10 @@ function SetupEmpty({ kind }: { kind: "account" | "page" }) {
       <div className="w-11 h-11 rounded-xl bg-[var(--w-bg-alternative)] text-[var(--w-fg-neutral)] grid place-items-center">
         <Icon name={kind === "account" ? "wallet" : "doc"} size={20} />
       </div>
-      <div className="font-bold text-[14.5px] leading-[1.35] [font-family:var(--w-font-display)] text-[var(--w-fg-strong)]">
+      <div className="font-bold text-[15px] leading-[1.35] [font-family:var(--w-font-display)] text-[var(--w-fg-strong)]">
         {kind === "account" ? "연결된 광고 계정이 없어요" : "관리 중인 페이스북 페이지가 없어요"}
       </div>
-      <div className="font-medium text-[12.5px] leading-[1.55] text-[var(--w-fg-neutral)] max-w-[320px]">
+      <div className="font-medium text-[13px] leading-[1.55] text-[var(--w-fg-neutral)] max-w-[320px]">
         {kind === "account"
           ? "Meta Business Manager에서 광고 계정을 먼저 만들어주세요."
           : "페이지 권한이 없거나 페이지가 없어요. 로그아웃 후 다시 로그인하면 페이지 접근 권한을 다시 요청해요."}
@@ -194,7 +194,7 @@ function SetupFlow() {
             <h1 className="font-[800] text-[21px] leading-[1.3] [font-family:var(--w-font-display)] text-[var(--w-fg-strong)] tracking-[-0.02em] m-0" style={{ marginTop: 8 }}>
               {isPage ? "광고를 게재할 페이스북 페이지를 선택해주세요" : "광고 계정을 선택해주세요"}
             </h1>
-            <p className="font-medium text-[13.5px] leading-[1.55] text-[var(--w-fg-neutral)] mt-2 mb-0">
+            <p className="font-medium text-[14px] leading-[1.55] text-[var(--w-fg-neutral)] mt-2 mb-0">
               {isPage
                 ? "선택한 페이지 명의로 광고 소재가 게재돼요."
                 : "선택한 계정으로 광고를 집행하고 성과를 확인해요."}
@@ -291,7 +291,7 @@ function SetupFlow() {
               {selecting !== "__browse__" && <Icon name="arrow-right" size={13} />}
             </Button>
           </div>
-          <p className="font-medium text-[11.5px] leading-[1.6] text-[var(--w-fg-alternative)] m-0">
+          <p className="font-medium text-[12px] leading-[1.6] text-[var(--w-fg-alternative)] m-0">
             둘러보기 모드에선 소재 생성·화면 미리보기는 가능하지만, 실제 광고 집행은 광고 계정·페이지를 연결해야 해요.
           </p>
         </div>

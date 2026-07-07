@@ -13,7 +13,9 @@ import { Button } from "@shared/ui/Button";
 import { Card } from "@shared/ui/Card";
 import { Chip } from "@shared/ui/Chip";
 import { SegControl } from "@shared/ui/SegControl";
+import { Select } from "@shared/ui/Select";
 import { cn } from "@shared/lib/cn";
+import { OBJECTIVES_ALL } from "@entities/creative/options";
 
 type SortKey = "recent" | "oldest" | "az";
 type View = "grid" | "list";
@@ -60,11 +62,12 @@ export default function LibraryPage() {
   const goCreate = () => router.push("/create");
 
   const loadCreativeToEditor = (item: LibraryItem) => {
+    // goal 칼럼은 outcomeLabel 문자열 — 역매핑으로 outcome id 를 복원해 /create 가 스튜디오로 직행하게.
+    const outcomeId = OBJECTIVES_ALL.find((o) => o.outcomeLabel === item.goal)?.id;
     try {
       sessionStorage.setItem("adflow_brand", item.brand ?? "");
       sessionStorage.setItem("adflow_target", item.target ?? "");
-      // PRD §13.10 — adflow_goal sessionStorage 키 폐기. item.goal 은 LibraryItem 호환 목적만.
-      sessionStorage.setItem("adflow_loaded_creative", JSON.stringify({ headline: item.headline, primary: item.primary, ctaId: item.ctaId, tone: item.tone }));
+      sessionStorage.setItem("adflow_loaded_creative", JSON.stringify({ headline: item.headline, primary: item.primary, ctaId: item.ctaId, tone: item.tone, outcomeId }));
     } catch {
       /* sessionStorage 사용 불가 — 입력값 없이 이동 */
     }
@@ -99,15 +102,13 @@ export default function LibraryPage() {
         </div>
       </div>
 
-      <Card style={{ padding: 14, display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center", marginBottom: 18 }}>
-        <div style={{ position: "relative", flex: "1 1 280px", minWidth: 220 }}>
-          <Icon name="message" size={14} style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "var(--w-fg-alternative)" }} />
+      <Card style={{ padding: 14, display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center" }}>
+        <div style={{ flex: "1 1 280px", minWidth: 220 }}>
           <input
-            className="w-full bg-[var(--w-bg-elevated)] border border-[var(--w-line-normal)] rounded-xl px-3.5 py-3 font-medium text-[14px] leading-[1.5] text-[var(--w-fg-strong)] tracking-[0.004em] outline-none transition-[border-color,box-shadow] duration-[120ms] focus:border-[var(--w-primary-normal)] focus:shadow-[0_0_0_4px_rgba(0,102,255,0.14)] placeholder:text-[var(--w-fg-alternative)]"
+            className="w-full bg-[var(--w-bg-elevated)] border border-[var(--w-line-normal)] rounded-xl px-3.5 py-3 font-medium text-[14px] leading-[1.5] text-[var(--w-fg-strong)] tracking-[0.004em] outline-none transition-[border-color,box-shadow] duration-[120ms] focus:border-[var(--w-primary-normal)] focus:shadow-[0_0_0_4px_var(--w-focus-ring)] placeholder:text-[var(--w-fg-alternative)]"
             placeholder="브랜드·헤드라인·본문에서 검색"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            style={{ paddingLeft: 36 }}
           />
         </div>
         <div style={{ flex: "0 0 auto" }}>
@@ -117,16 +118,17 @@ export default function LibraryPage() {
             options={[{ value: "all", label: "전체" }, ...tones.map((t) => ({ value: t, label: TONE_LABEL[t] ?? t }))]}
           />
         </div>
-        <select
-          className="w-full bg-[var(--w-bg-elevated)] border border-[var(--w-line-normal)] rounded-xl px-3.5 py-3 font-medium text-[14px] leading-[1.5] text-[var(--w-fg-strong)] tracking-[0.004em] outline-none transition-[border-color,box-shadow] duration-[120ms] focus:border-[var(--w-primary-normal)] focus:shadow-[0_0_0_4px_rgba(0,102,255,0.14)] placeholder:text-[var(--w-fg-alternative)] appearance-none"
-          style={{ flex: "0 0 auto", width: 150 }}
-          value={sort}
-          onChange={(e) => setSort(e.target.value as SortKey)}
-        >
-          <option value="recent">최신순</option>
-          <option value="oldest">오래된순</option>
-          <option value="az">헤드라인 가나다</option>
-        </select>
+        <div style={{ flex: "0 0 auto", width: 150 }}>
+          <Select
+            value={sort}
+            onChange={(v) => setSort(v as SortKey)}
+            options={[
+              { value: "recent", label: "최신순" },
+              { value: "oldest", label: "오래된순" },
+              { value: "az", label: "헤드라인 가나다" },
+            ]}
+          />
+        </div>
         <div className="inline-flex gap-0.5 p-[3px] bg-[var(--w-bg-alternative)] rounded-[10px] ml-auto">
           <button
             type="button"
@@ -143,10 +145,9 @@ export default function LibraryPage() {
         </div>
       </Card>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 12, marginBottom: 18 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 12 }}>
         <SummaryStat label="저장된 소재" value={fmt(list.length)} icon="folder" />
         <SummaryStat label="이번 주 저장" value={fmt(list.filter((x) => Date.now() - x.savedAt < 7 * 86400000).length)} icon="sparkles" accent="violet" />
-        <SummaryStat label="필터 결과" value={fmt(filtered.length)} icon="target" />
       </div>
 
       {filtered.length === 0 ? (
@@ -190,7 +191,7 @@ function SummaryStat({ label, value, icon, accent }: { label: string; value: str
     <Card style={{ padding: 16, display: "flex", alignItems: "center", gap: 14 }}>
       <div style={{ width: 40, height: 40, borderRadius: 10, background: soft, color: tint, display: "grid", placeItems: "center", flex: "0 0 auto" }}><Icon name={icon} size={18} /></div>
       <div style={{ minWidth: 0 }}>
-        <div style={{ color: "var(--w-fg-neutral)", letterSpacing: "0.02em", marginBottom: 6 }} className="font-medium text-[11.5px] leading-none">{label}</div>
+        <div style={{ color: "var(--w-fg-neutral)", letterSpacing: "0.02em", marginBottom: 6 }} className="font-medium text-[12px] leading-none">{label}</div>
         <div style={{ color: "var(--w-fg-strong)", letterSpacing: "-0.02em" }} className="font-bold text-[22px] leading-none [font-family:var(--w-font-display)]">{value}</div>
       </div>
     </Card>
@@ -237,8 +238,8 @@ function CreativeRow({ item, onPreview, onDelete }: { item: LibraryItem; onPrevi
     >
       <div style={{ width: 80, height: 56, borderRadius: 8, background: item.gradient, backgroundImage: item.image ? `url(${item.image})` : undefined, backgroundSize: "cover", backgroundPosition: "center", flex: "0 0 auto" }} />
       <div style={{ minWidth: 0 }}>
-        <div style={{ color: "var(--w-fg-strong)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} className="font-semibold text-[14.5px] leading-[1.4]">{item.headline}</div>
-        <div style={{ marginTop: 3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "var(--w-fg-neutral)" }} className="font-medium text-[12.5px] leading-[1.5]">{item.brand}</div>
+        <div style={{ color: "var(--w-fg-strong)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} className="font-semibold text-[15px] leading-[1.4]">{item.headline}</div>
+        <div style={{ marginTop: 3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "var(--w-fg-neutral)" }} className="font-medium text-[13px] leading-[1.5]">{item.brand}</div>
       </div>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>{item.toneLabel && <Chip variant="neutral">{item.toneLabel}</Chip>}</div>
       <span style={{ color: "var(--w-fg-alternative)" }} className="font-medium text-[12px] leading-none">{timeAgo(item.savedAt)}</span>
@@ -273,8 +274,8 @@ function PreviewModal({ item, onClose, onDelete, onCopy, onUse }: { item: Librar
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
             <DetailRow label="톤앤매너"><Chip variant="neutral">{item.toneLabel || "—"}</Chip></DetailRow>
             <DetailRow label="CTA"><Chip variant="neutral"><Icon name="target" size={12} /> {item.ctaLabel || "—"}</Chip></DetailRow>
-            {item.goal && <DetailRow label="광고 목적"><div style={{ color: "var(--w-fg-strong)" }} className="font-medium text-[13.5px] leading-[1.55]">{item.goal}</div></DetailRow>}
-            {item.target && <DetailRow label="타겟"><div style={{ color: "var(--w-fg-strong)" }} className="font-medium text-[13.5px] leading-[1.55]">{item.target}</div></DetailRow>}
+            {item.goal && <DetailRow label="광고 목적"><div style={{ color: "var(--w-fg-strong)" }} className="font-medium text-[14px] leading-[1.55]">{item.goal}</div></DetailRow>}
+            {item.target && <DetailRow label="타겟"><div style={{ color: "var(--w-fg-strong)" }} className="font-medium text-[14px] leading-[1.55]">{item.target}</div></DetailRow>}
           </div>
         </div>
         <div style={{ padding: "14px 22px", borderTop: "1px solid var(--w-line-alternative)", background: "var(--w-bg-alternative)", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
@@ -293,7 +294,7 @@ function DetailRow({ label, actions, children }: { label: string; actions?: Reac
   return (
     <div>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-        <span style={{ textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--w-fg-alternative)" }} className="font-semibold text-[10.5px] leading-none">{label}</span>
+        <span style={{ textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--w-fg-alternative)" }} className="font-semibold text-[11px] leading-none">{label}</span>
         {actions}
       </div>
       {children}

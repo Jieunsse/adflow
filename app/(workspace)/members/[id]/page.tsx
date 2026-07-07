@@ -123,7 +123,7 @@ export default function MemberDetailPage() {
               {ROLE_LABEL[member.role]}
             </span>
             {isInvited && (
-              <span className="inline-flex items-center gap-[5px] px-[9px] py-[3px] rounded-full font-semibold text-[11.5px] leading-none text-[var(--w-fg-neutral)] bg-transparent border border-dashed border-[var(--w-line-normal)]">
+              <span className="inline-flex items-center gap-[5px] px-[9px] py-[3px] rounded-full font-semibold text-[12px] leading-none text-[var(--w-fg-neutral)] bg-transparent border border-dashed border-[var(--w-line-normal)]">
                 <Icon name="clock" size={11} /> 초대됨
               </span>
             )}
@@ -132,7 +132,7 @@ export default function MemberDetailPage() {
             {member.email}
           </div>
           {!isInvited && (
-            <div className="font-medium text-[12.5px] leading-[1.5] text-[var(--w-fg-alternative)] mt-1">
+            <div className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-alternative)] mt-1">
               {member.joined} 합류 · {member.lastActive} 활동
             </div>
           )}
@@ -164,7 +164,7 @@ export default function MemberDetailPage() {
                   type="button"
                   onClick={() => setTab(k)}
                   className={cn(
-                    "inline-flex items-center gap-1.5 py-[7px] px-3 rounded-full border border-[var(--w-line-normal)] bg-[var(--w-bg-elevated)] text-[var(--w-fg-strong)] font-semibold text-[12.5px] leading-none cursor-pointer hover:bg-[var(--w-bg-neutral)] transition-[background,color,border-color] duration-[120ms]",
+                    "inline-flex items-center gap-1.5 py-[7px] px-3 rounded-full border border-[var(--w-line-normal)] bg-[var(--w-bg-elevated)] text-[var(--w-fg-strong)] font-semibold text-[13px] leading-none cursor-pointer hover:bg-[var(--w-bg-neutral)] transition-[background,color,border-color] duration-[120ms]",
                     tab === k && "bg-[var(--w-fg-strong)] text-[var(--w-bg-elevated)] border-[var(--w-fg-strong)] hover:bg-[var(--w-fg-neutral)] hover:border-[var(--w-fg-neutral)]"
                   )}
                 >
@@ -212,7 +212,7 @@ function BackLink({ onClick }: { onClick: () => void }) {
     <button
       type="button"
       onClick={onClick}
-      className="bg-transparent border-none p-0 cursor-pointer inline-flex items-center gap-1.5 font-semibold text-[12.5px] leading-none text-[var(--w-fg-neutral)] hover:underline mb-1"
+      className="bg-transparent border-none p-0 cursor-pointer inline-flex items-center gap-1.5 font-semibold text-[13px] leading-none text-[var(--w-fg-neutral)] hover:underline mb-1"
     >
       <Icon name="arrow-left" size={13} /> 구성원
     </button>
@@ -269,11 +269,11 @@ function CampaignTabList({
       <table className="w-full border-collapse">
         <thead>
           <tr>
-            <th className="px-4 py-2.5 font-semibold text-[11.5px] leading-none tracking-[0.004em] text-[var(--w-fg-neutral)] border-b border-[var(--w-line-alternative)] text-left">캠페인</th>
-            <th className="px-4 py-2.5 font-semibold text-[11.5px] leading-none tracking-[0.004em] text-[var(--w-fg-neutral)] border-b border-[var(--w-line-alternative)] text-center" style={{ width: 110 }}>목표</th>
-            <th className="px-4 py-2.5 font-semibold text-[11.5px] leading-none tracking-[0.004em] text-[var(--w-fg-neutral)] border-b border-[var(--w-line-alternative)] text-center" style={{ width: 120 }}>상태</th>
-            <th className="px-4 py-2.5 font-semibold text-[11.5px] leading-none tracking-[0.004em] text-[var(--w-fg-neutral)] border-b border-[var(--w-line-alternative)] text-center" style={{ width: 120 }}>{kind === "created" ? "생성일" : "게재일"}</th>
-            <th className="px-4 py-2.5 font-semibold text-[11.5px] leading-none tracking-[0.004em] text-[var(--w-fg-neutral)] border-b border-[var(--w-line-alternative)] text-left" style={{ width: 44 }} />
+            <th className="px-4 py-2.5 font-semibold text-[12px] leading-none tracking-[0.004em] text-[var(--w-fg-neutral)] border-b border-[var(--w-line-alternative)] text-left">캠페인</th>
+            <th className="px-4 py-2.5 font-semibold text-[12px] leading-none tracking-[0.004em] text-[var(--w-fg-neutral)] border-b border-[var(--w-line-alternative)] text-center" style={{ width: 110 }}>목표</th>
+            <th className="px-4 py-2.5 font-semibold text-[12px] leading-none tracking-[0.004em] text-[var(--w-fg-neutral)] border-b border-[var(--w-line-alternative)] text-center" style={{ width: 120 }}>상태</th>
+            <th className="px-4 py-2.5 font-semibold text-[12px] leading-none tracking-[0.004em] text-[var(--w-fg-neutral)] border-b border-[var(--w-line-alternative)] text-center" style={{ width: 120 }}>{kind === "created" ? "생성일" : "게재일"}</th>
+            <th className="px-4 py-2.5 font-semibold text-[12px] leading-none tracking-[0.004em] text-[var(--w-fg-neutral)] border-b border-[var(--w-line-alternative)] text-left" style={{ width: 44 }} />
           </tr>
         </thead>
         <tbody>
@@ -283,7 +283,7 @@ function CampaignTabList({
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                   <div style={{ width: 38, height: 38, borderRadius: 8, background: campaignGradient(c.id), flex: "0 0 auto" }} />
                   <div style={{ minWidth: 0 }}>
-                    <div className="font-semibold text-[13.5px] leading-[1.35] text-[var(--w-fg-strong)] overflow-hidden text-ellipsis whitespace-nowrap">
+                    <div className="font-semibold text-[14px] leading-[1.35] text-[var(--w-fg-strong)] overflow-hidden text-ellipsis whitespace-nowrap">
                       {c.headline}
                     </div>
                   </div>
@@ -295,7 +295,7 @@ function CampaignTabList({
               <td className="px-4 py-3 border-b border-[var(--w-line-alternative)] group-hover:bg-[var(--w-bg-neutral)] text-center">
                 <CampaignStatusChip status={c.status} />
               </td>
-              <td className="px-4 py-3 border-b border-[var(--w-line-alternative)] group-hover:bg-[var(--w-bg-neutral)] text-center font-medium text-[12.5px] leading-none [font-family:var(--w-font-mono)] text-[var(--w-fg-strong)]">
+              <td className="px-4 py-3 border-b border-[var(--w-line-alternative)] group-hover:bg-[var(--w-bg-neutral)] text-center font-medium text-[13px] leading-none [font-family:var(--w-font-mono)] text-[var(--w-fg-strong)]">
                 {c.startDate ?? "—"}
               </td>
               <td className="px-4 py-3 border-b border-[var(--w-line-alternative)] group-hover:bg-[var(--w-bg-neutral)] text-[var(--w-fg-alternative)]">
@@ -335,19 +335,19 @@ function ReviewTabList({
 
   return (
     <>
-      <div className="font-medium text-[12.5px] leading-[1.5] text-[var(--w-fg-neutral)] mb-2.5">
+      <div className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)] mb-2.5">
         보낸 요청 <strong style={{ color: "var(--w-fg-strong)" }}>{outgoingCount}</strong>건 · 받은 요청 <strong style={{ color: "var(--w-fg-strong)" }}>{incomingCount}</strong>건
       </div>
       <Card className="p-0 overflow-hidden">
         <table className="w-full border-collapse">
           <thead>
             <tr>
-              <th className="px-4 py-2.5 font-semibold text-[11.5px] leading-none tracking-[0.004em] text-[var(--w-fg-neutral)] border-b border-[var(--w-line-alternative)] text-center" style={{ width: 44 }} />
-              <th className="px-4 py-2.5 font-semibold text-[11.5px] leading-none tracking-[0.004em] text-[var(--w-fg-neutral)] border-b border-[var(--w-line-alternative)] text-left">캠페인</th>
-              <th className="px-4 py-2.5 font-semibold text-[11.5px] leading-none tracking-[0.004em] text-[var(--w-fg-neutral)] border-b border-[var(--w-line-alternative)] text-left" style={{ width: 180 }}>상대</th>
-              <th className="px-4 py-2.5 font-semibold text-[11.5px] leading-none tracking-[0.004em] text-[var(--w-fg-neutral)] border-b border-[var(--w-line-alternative)] text-center" style={{ width: 100 }}>상태</th>
-              <th className="px-4 py-2.5 font-semibold text-[11.5px] leading-none tracking-[0.004em] text-[var(--w-fg-neutral)] border-b border-[var(--w-line-alternative)] text-center" style={{ width: 110 }}>요청일</th>
-              <th className="px-4 py-2.5 font-semibold text-[11.5px] leading-none tracking-[0.004em] text-[var(--w-fg-neutral)] border-b border-[var(--w-line-alternative)] text-left" style={{ width: 44 }} />
+              <th className="px-4 py-2.5 font-semibold text-[12px] leading-none tracking-[0.004em] text-[var(--w-fg-neutral)] border-b border-[var(--w-line-alternative)] text-center" style={{ width: 44 }} />
+              <th className="px-4 py-2.5 font-semibold text-[12px] leading-none tracking-[0.004em] text-[var(--w-fg-neutral)] border-b border-[var(--w-line-alternative)] text-left">캠페인</th>
+              <th className="px-4 py-2.5 font-semibold text-[12px] leading-none tracking-[0.004em] text-[var(--w-fg-neutral)] border-b border-[var(--w-line-alternative)] text-left" style={{ width: 180 }}>상대</th>
+              <th className="px-4 py-2.5 font-semibold text-[12px] leading-none tracking-[0.004em] text-[var(--w-fg-neutral)] border-b border-[var(--w-line-alternative)] text-center" style={{ width: 100 }}>상태</th>
+              <th className="px-4 py-2.5 font-semibold text-[12px] leading-none tracking-[0.004em] text-[var(--w-fg-neutral)] border-b border-[var(--w-line-alternative)] text-center" style={{ width: 110 }}>요청일</th>
+              <th className="px-4 py-2.5 font-semibold text-[12px] leading-none tracking-[0.004em] text-[var(--w-fg-neutral)] border-b border-[var(--w-line-alternative)] text-left" style={{ width: 44 }} />
             </tr>
           </thead>
           <tbody>
@@ -367,7 +367,7 @@ function ReviewTabList({
                           {campaign.headline}
                         </div>
                         {request.status === "rejected" && request.comment && (
-                          <div className="font-medium text-[11.5px] leading-[1.4] text-[var(--w-fg-alternative)] mt-1 overflow-hidden text-ellipsis whitespace-nowrap" title={request.comment}>
+                          <div className="font-medium text-[12px] leading-[1.4] text-[var(--w-fg-alternative)] mt-1 overflow-hidden text-ellipsis whitespace-nowrap" title={request.comment}>
                             반려 사유: {request.comment}
                           </div>
                         )}
@@ -381,7 +381,7 @@ function ReviewTabList({
                         <div className="font-medium text-[11px] leading-none [font-family:var(--w-font-mono)] text-[var(--w-fg-alternative)] mb-0.5">
                           {isOut ? "검토자" : "요청자"}
                         </div>
-                        <div className="font-semibold text-[12.5px] leading-[1.3] text-[var(--w-fg-strong)] overflow-hidden text-ellipsis whitespace-nowrap">
+                        <div className="font-semibold text-[13px] leading-[1.3] text-[var(--w-fg-strong)] overflow-hidden text-ellipsis whitespace-nowrap">
                           {counterpart.name ?? counterpart.email}
                         </div>
                       </div>
@@ -390,7 +390,7 @@ function ReviewTabList({
                   <td className="px-4 py-3 border-b border-[var(--w-line-alternative)] group-hover:bg-[var(--w-bg-neutral)] text-center">
                     <ReviewStatusChip status={request.status} />
                   </td>
-                  <td className="px-4 py-3 border-b border-[var(--w-line-alternative)] group-hover:bg-[var(--w-bg-neutral)] text-center font-medium text-[12.5px] leading-none [font-family:var(--w-font-mono)] text-[var(--w-fg-strong)]">
+                  <td className="px-4 py-3 border-b border-[var(--w-line-alternative)] group-hover:bg-[var(--w-bg-neutral)] text-center font-medium text-[13px] leading-none [font-family:var(--w-font-mono)] text-[var(--w-fg-strong)]">
                     {request.requestedAt}
                   </td>
                   <td className="px-4 py-3 border-b border-[var(--w-line-alternative)] group-hover:bg-[var(--w-bg-neutral)] text-[var(--w-fg-alternative)]">

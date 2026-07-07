@@ -187,6 +187,26 @@ create table if not exists flo_briefings (
   primary key (user_key, ad_account_id)
 );
 
+-- ADR-065 §9 — 인플루언서 마케팅 Synced Store. brand_profiles 와 동일 구조(id/user_email/data jsonb/synced_at).
+-- /api/stores/creators, /api/stores/influencer-campaigns 가 user_email(Owner Key) 스코핑으로 R/W.
+create table if not exists creators (
+  id text primary key,
+  user_email text,
+  data jsonb not null,
+  synced_at timestamptz default now()
+);
+create index if not exists creators_user_email on creators (user_email);
+alter table creators enable row level security;
+
+create table if not exists influencer_campaigns (
+  id text primary key,
+  user_email text,
+  data jsonb not null,
+  synced_at timestamptz default now()
+);
+create index if not exists influencer_campaigns_user_email on influencer_campaigns (user_email);
+alter table influencer_campaigns enable row level security;
+
 -- 위 두 테이블이 쓰는 public storage 버킷. getPublicUrl 로 서빙하므로 public = true.
 insert into storage.buckets (id, name, public)
 values ('product-images', 'product-images', true),

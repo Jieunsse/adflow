@@ -197,7 +197,7 @@ function FundingSourceCard({ billing, accountId }: { billing: Billing; accountId
                 {s.displayString || "—"}
               </span>
               {s.type && (
-                <Chip variant="neutral" className="text-[10.5px] [font-family:var(--w-font-mono)] font-medium">{fundingSourceTypeLabel(s.type)}</Chip>
+                <Chip variant="neutral" className="text-[11px] [font-family:var(--w-font-mono)] font-medium">{fundingSourceTypeLabel(s.type)}</Chip>
               )}
             </div>
           ))}

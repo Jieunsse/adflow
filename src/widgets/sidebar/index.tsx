@@ -28,6 +28,7 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
     label: "메인",
     items: [
       { href: "/dashboard", label: "대시보드", icon: "grid" },
+      { href: "/goals", label: "목표", icon: "target" },
       { href: "/create", label: "광고 만들기", icon: "sparkles", chip: "AI" },
     ],
   },
@@ -38,6 +39,14 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
       { href: "/ab-tests", label: "A/B 테스트", icon: "chart" },
       { href: "/approvals", label: "승인 대기", icon: "clock", countVariant: "warn" },
       { href: "/library", label: "소재 라이브러리", icon: "folder" },
+    ],
+  },
+  {
+    label: "인플루언서",
+    items: [
+      { href: "/creators", label: "크리에이터", icon: "user" },
+      { href: "/creators/campaigns", label: "협업 캠페인", icon: "megaphone" },
+      { href: "/instagram/partnerships", label: "파트너십 콘텐츠", icon: "hash" },
     ],
   },
   {
@@ -52,7 +61,7 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
           { href: "/instagram/posts", label: "게시", icon: "image" },
           { href: "/instagram/comments", label: "댓글 관리", icon: "comment" },
           { href: "/instagram/stories", label: "스토리", icon: "play" },
-          { href: "/instagram/partnerships", label: "파트너십", icon: "users" },
+          { href: "/instagram/reels", label: "릴스", icon: "play" },
           { href: "/instagram/messages", label: "메시지", icon: "message" },
         ],
       },
@@ -213,9 +222,15 @@ export default function Sidebar() {
             >
               {group.label}
             </div>
-            {group.items.map((it) => {
+            {(() => {
+              const bestGroupMatch = group.items.reduce<NavItem | null>((best, it) => {
+                const matches = pathname === it.href || pathname.startsWith(it.href + "/");
+                if (!matches) return best;
+                return !best || it.href.length > best.href.length ? it : best;
+              }, null);
+              return group.items.map((it) => {
               const hasChildren = !!it.children?.length;
-              const active = pathname === it.href || pathname.startsWith(it.href + "/");
+              const active = it.href === bestGroupMatch?.href;
               const liveCount = it.href === "/approvals" ? approvalsCount : it.count;
               const isOpen = hasChildren && openItems.has(it.href);
               return (
@@ -283,7 +298,8 @@ export default function Sidebar() {
                   })()}
                 </div>
               );
-            })}
+              });
+            })()}
           </div>
         ))}
       </nav>

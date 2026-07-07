@@ -94,7 +94,7 @@ export default function ApprovalsPage() {
                   type="button"
                   onClick={() => setFilter(k)}
                   className={cn(
-                    "inline-flex items-center gap-1.5 py-[7px] px-3 rounded-full border font-semibold text-[12.5px] leading-none cursor-pointer transition-[background,color,border-color] duration-[120ms]",
+                    "inline-flex items-center gap-1.5 py-[7px] px-3 rounded-full border font-semibold text-[13px] leading-none cursor-pointer transition-[background,color,border-color] duration-[120ms]",
                     filter === k
                       ? "bg-[var(--w-fg-strong)] text-[var(--w-bg-elevated)] border-[var(--w-fg-strong)] hover:bg-[var(--w-fg-neutral)] hover:border-[var(--w-fg-neutral)]"
                       : "bg-[var(--w-bg-elevated)] text-[var(--w-fg-strong)] border-[var(--w-line-normal)] hover:bg-[var(--w-bg-neutral)]"

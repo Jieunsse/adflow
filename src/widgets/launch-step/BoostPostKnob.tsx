@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import Icon from "@shared/ui/Icon";
 import { cn } from "@shared/lib/cn";
@@ -14,9 +15,10 @@ export interface IgMediaItem {
 interface Props {
   selectedId: string | null;
   onSelect: (media: IgMediaItem) => void;
+  preselectId?: string | null;
 }
 
-export default function BoostPostKnob({ selectedId, onSelect }: Props) {
+export default function BoostPostKnob({ selectedId, onSelect, preselectId }: Props) {
   const { data, isLoading, isError } = useQuery({
     queryKey: ["ig-recent-media"],
     queryFn: async (): Promise<{ ok: boolean; items: IgMediaItem[]; mock?: boolean }> => {
@@ -27,18 +29,25 @@ export default function BoostPostKnob({ selectedId, onSelect }: Props) {
     staleTime: 5 * 60 * 1000,
   });
 
+  useEffect(() => {
+    if (!preselectId || selectedId || !data?.items) return;
+    const hit = data.items.find((m) => m.id === preselectId);
+    if (hit) onSelect(hit);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [preselectId, data]);
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-8 gap-2 text-[var(--w-fg-neutral)]">
         <Icon name="spinner" size={16} />
-        <span className="font-medium text-[13.5px]">게시물 불러오는 중…</span>
+        <span className="font-medium text-[14px]">게시물 불러오는 중…</span>
       </div>
     );
   }
 
   if (isError || !data?.items.length) {
     return (
-      <div className="text-center py-8 text-[var(--w-fg-neutral)] font-medium text-[13.5px]">
+      <div className="text-center py-8 text-[var(--w-fg-neutral)] font-medium text-[14px]">
         인스타그램 게시물을 불러오지 못했어요. 계정이 연결돼 있는지 확인해주세요.
       </div>
     );
@@ -86,7 +95,7 @@ export default function BoostPostKnob({ selectedId, onSelect }: Props) {
       </div>
       {selected && (
         <div className="mt-3 px-3 py-2.5 rounded-xl bg-[var(--w-bg-alternative)]">
-          <p className="font-medium text-[12.5px] leading-[1.5] text-[var(--w-fg-normal)] m-0 line-clamp-2">
+          <p className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-normal)] m-0 line-clamp-2">
             {selected.caption || "캡션 없음"}
           </p>
         </div>

@@ -181,7 +181,7 @@ export default function AbTournamentDetailPage() {
       <button
         type="button"
         onClick={() => router.push("/ab-tests")}
-        className="bg-transparent border-none p-0 cursor-pointer inline-flex items-center gap-1.5 font-semibold text-[12.5px] leading-none text-[var(--w-fg-neutral)] hover:underline"
+        className="bg-transparent border-none p-0 cursor-pointer inline-flex items-center gap-1.5 font-semibold text-[13px] leading-none text-[var(--w-fg-neutral)] hover:underline"
       >
         <Icon name="arrow-left" size={13} /> A/B 테스트
       </button>
@@ -213,7 +213,21 @@ export default function AbTournamentDetailPage() {
 
       {/* ADR-053 — 게재 실패로 자동 진행이 멈춘 토너먼트. cron 이 한국어 사유를 lastError 에 저장한다. */}
       {t.lastError && (
-        <Callout tone="negative" icon="warn" title="자동 진행이 멈췄어요">
+        <Callout
+          tone="negative"
+          icon="warn"
+          title="자동 진행이 멈췄어요"
+          actions={
+            <Button
+              variant="secondary"
+              type="button"
+              disabled={busy}
+              onClick={() => act(client.resume(t.id), "자동 진행을 재개했어요 — 다음 라운드 게재를 다시 시도해요")}
+            >
+              {busy ? <><Icon name="spinner" size={14} spin /> 재시도 중…</> : "다시 시도"}
+            </Button>
+          }
+        >
           <span className="font-medium text-[13px] leading-[1.5] text-[var(--w-status-negative)]">{t.lastError}</span>
         </Callout>
       )}
@@ -249,13 +263,13 @@ export default function AbTournamentDetailPage() {
       {beat === "winner-handling" && (
         <WinnerHandlingPanel
           t={t}
-          onPromote={() => router.push("/create")}
+          onPromote={() => router.push(`/create?prefill=tournament:${t.id}`)}
           onRefill={() => act(client.refillEnvelope(t.id), "예산을 리필했어요 — 자동 진행을 재개해요")}
           onArchive={() => act(client.end(t.id), "토너먼트를 마치고 보관했어요")}
         />
       )}
 
-      {beat === "done" && <DonePanel t={t} onCreate={() => router.push("/create")} />}
+      {beat === "done" && <DonePanel t={t} onCreate={() => router.push(`/create?prefill=tournament:${t.id}`)} />}
 
       {/* 라운드 기록 — 결산 ≥2 라운드일 때만 (N=1 이면 결산 카드와 완전 중복) */}
       {settledRounds.length >= 2 && (
@@ -303,14 +317,14 @@ function RealLivePanel({ t }: { t: Tournament }) {
         <Card className="p-4">
           <div className="flex items-center gap-1.5 mb-2.5">
             <span style={{ width: 22, height: 22, borderRadius: "50%", background: "var(--w-bg-alternative)", border: "1.5px solid var(--w-line-normal)", color: "var(--w-fg-neutral)", display: "grid", placeItems: "center" }} className="font-bold text-[11px]">A</span>
-            <span className="font-semibold text-[12.5px] text-[var(--w-fg-neutral)]">챔피언</span>
+            <span className="font-semibold text-[13px] text-[var(--w-fg-neutral)]">챔피언</span>
           </div>
           <VariantBody variant={round.champion} only={round.axis} />
         </Card>
         <Card className="p-4" style={{ borderColor: "var(--w-primary-normal)" }}>
           <div className="flex items-center gap-1.5 mb-2.5">
             <span style={{ width: 22, height: 22, borderRadius: "50%", background: "var(--w-primary-soft)", border: "1.5px solid var(--w-primary-normal)", color: "var(--w-primary-press)", display: "grid", placeItems: "center" }} className="font-bold text-[11px]">B</span>
-            <span className="font-semibold text-[12.5px] text-[var(--w-primary-press)]">챌린저</span>
+            <span className="font-semibold text-[13px] text-[var(--w-primary-press)]">챌린저</span>
           </div>
           <VariantBody variant={round.challenger} highlight={round.axis} only={round.axis} />
         </Card>
@@ -326,8 +340,8 @@ function DecisionBanner({ title, desc }: { title: string; desc: string }) {
     <div className="flex items-start gap-3 py-3 px-4 rounded-xl bg-[var(--w-primary-soft)] border border-[var(--w-primary-weak)]">
       <span className="text-[18px] leading-none mt-0.5">🧑</span>
       <div>
-        <div className="font-bold text-[13.5px] leading-[1.4] text-[var(--w-primary-press)]">{title}</div>
-        <div className="font-medium text-[12.5px] leading-[1.5] text-[var(--w-fg-neutral)] mt-0.5">{desc}</div>
+        <div className="font-bold text-[14px] leading-[1.4] text-[var(--w-primary-press)]">{title}</div>
+        <div className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)] mt-0.5">{desc}</div>
       </div>
     </div>
   );
@@ -338,8 +352,8 @@ function AutoBanner({ title, desc }: { title: string; desc: string }) {
     <div className="flex items-start gap-3 py-3 px-4 rounded-xl bg-[var(--w-bg-alternative)] border border-[var(--w-line-normal)]">
       <span className="text-[18px] leading-none mt-0.5">🤖</span>
       <div>
-        <div className="font-bold text-[13.5px] leading-[1.4] text-[var(--w-fg-strong)]">{title}</div>
-        <div className="font-medium text-[12.5px] leading-[1.5] text-[var(--w-fg-neutral)] mt-0.5">{desc}</div>
+        <div className="font-bold text-[14px] leading-[1.4] text-[var(--w-fg-strong)]">{title}</div>
+        <div className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)] mt-0.5">{desc}</div>
       </div>
     </div>
   );
@@ -415,7 +429,7 @@ function LedgerPanel({ entries, brandProfileId }: { entries: Hypothesis[]; brand
 function StatItem({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-baseline gap-1.5">
-      <span className="font-medium text-[11.5px] text-[var(--w-fg-alternative)]">{label}</span>
+      <span className="font-medium text-[12px] text-[var(--w-fg-alternative)]">{label}</span>
       <span className="font-bold text-[13px] text-[var(--w-fg-strong)]">{value}</span>
     </div>
   );
@@ -424,8 +438,8 @@ function StatItem({ label, value }: { label: string; value: string }) {
 function Metric({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex flex-col gap-0.5">
-      <span className="font-medium text-[10.5px] text-[var(--w-fg-neutral)]">{label}</span>
-      <span className="font-semibold text-[12.5px] text-[var(--w-fg-strong)]">{value}</span>
+      <span className="font-medium text-[11px] text-[var(--w-fg-neutral)]">{label}</span>
+      <span className="font-semibold text-[13px] text-[var(--w-fg-strong)]">{value}</span>
     </div>
   );
 }
@@ -447,7 +461,7 @@ function VsPreviewColumn({ variant, likeCount, label, tag, accent, axisLabel, li
         >
           {label}
         </span>
-        <span className="font-semibold text-[12.5px]" style={{ color: accent ? "var(--w-primary-press)" : "var(--w-fg-neutral)" }}>{tag}</span>
+        <span className="font-semibold text-[13px]" style={{ color: accent ? "var(--w-primary-press)" : "var(--w-fg-neutral)" }}>{tag}</span>
         {axisLabel && <Chip variant="review" className="ml-auto">{axisLabel} 변경</Chip>}
       </div>
       {live ? (
@@ -489,7 +503,7 @@ function ChampionCard({ champion, challenger, axis, ctr, spec, confirmed, note, 
         {!confirmed && <Chip variant="review">검토 대기</Chip>}
       </div>
       {note && (
-        <div className="font-semibold text-[11.5px] text-[var(--w-status-positive)] -mt-1 mb-2.5">↑ {note}</div>
+        <div className="font-semibold text-[12px] text-[var(--w-status-positive)] -mt-1 mb-2.5">↑ {note}</div>
       )}
       {vs ? (
         <div className="grid grid-cols-[1fr_auto_1fr] gap-3 items-start">
@@ -544,7 +558,7 @@ function VariantBody({ variant, highlight, only, prohibited, noImage }: { varian
       {(!only || only === "headline") && (
         <div className={highlight === "headline" ? "rounded-lg px-2 py-1 -mx-2 bg-[var(--w-primary-soft)]" : ""}>
           <div className="font-medium text-[11px] text-[var(--w-fg-alternative)] mb-0.5">헤드라인</div>
-          <div className="font-semibold text-[14.5px] leading-[1.4] text-[var(--w-fg-strong)]"><Prohibited text={variant.headline} words={prohibited} /></div>
+          <div className="font-semibold text-[15px] leading-[1.4] text-[var(--w-fg-strong)]"><Prohibited text={variant.headline} words={prohibited} /></div>
         </div>
       )}
       {(!only || only === "primary_text") && (
@@ -638,13 +652,13 @@ function AdMetricCard({ label, tag, variant, ad, spec, hasData, accent, mark, ax
     <Card className="p-4" style={accent ? { borderColor: "var(--w-primary-normal)" } : undefined}>
       <div className="flex items-center gap-1.5 mb-3">
         <span style={{ width: 22, height: 22, borderRadius: "50%", background: accent ? "var(--w-primary-soft)" : "var(--w-bg-alternative)", border: `1.5px solid ${accent ? "var(--w-primary-normal)" : "var(--w-line-normal)"}`, color: accent ? "var(--w-primary-press)" : "var(--w-fg-neutral)", display: "grid", placeItems: "center" }} className="font-bold text-[11px]">{label}</span>
-        <span className="font-semibold text-[12.5px]" style={{ color: accent ? "var(--w-primary-press)" : "var(--w-fg-neutral)" }}>{tag}</span>
+        <span className="font-semibold text-[13px]" style={{ color: accent ? "var(--w-primary-press)" : "var(--w-fg-neutral)" }}>{tag}</span>
         {mark && <Chip variant={mark === "승격" ? "live" : "neutral"}>{mark}</Chip>}
       </div>
       <div className="flex items-baseline gap-2 mb-3">
         <span className="font-semibold text-[10px] uppercase tracking-[0.05em] text-[var(--w-fg-alternative)]">{spec.rateLabel}</span>
         <span className="font-bold text-[26px] leading-none tabular-nums" style={{ color: accent ? "var(--w-primary-press)" : "var(--w-fg-strong)" }}>{hasData ? formatPrimary(spec, primaryMetricValue(spec, ad)) : "—"}</span>
-        {lead && <span className="font-bold text-[12.5px] text-[var(--w-status-positive)]">▲ {leadStr}</span>}
+        {lead && <span className="font-bold text-[13px] text-[var(--w-status-positive)]">▲ {leadStr}</span>}
       </div>
       <VariantBody variant={variant} only={axis} prohibited={prohibited} />
       {/* 실 유저 — Meta 실측 4지표 + 실측 파생 단가(CPM·CPC)만. reach·빈도·링크클릭은 시드 추정이라 숨김(ADR-038 fake-performance). */}
@@ -699,8 +713,8 @@ function VerdictStrip({ report, winnerIsB, live }: { report?: RoundReport; winne
     <div className="flex flex-col gap-2 py-3 px-4 rounded-xl" style={{ background: "var(--w-primary-soft)", border: "1px solid var(--w-primary-weak)" }}>
       <div className="flex items-center gap-2 flex-wrap">
         <span className="text-[15px] leading-none">🏆</span>
-        <span className="font-bold text-[12.5px] text-[var(--w-primary-press)]">최종 판정</span>
-        <span className="font-semibold text-[12.5px] text-[var(--w-fg-strong)]">승자 {winnerIsB ? "B안 (챌린저)" : "A안 (챔피언)"}</span>
+        <span className="font-bold text-[13px] text-[var(--w-primary-press)]">최종 판정</span>
+        <span className="font-semibold text-[13px] text-[var(--w-fg-strong)]">승자 {winnerIsB ? "B안 (챌린저)" : "A안 (챔피언)"}</span>
         <span className="font-medium text-[12px] text-[var(--w-fg-neutral)]">· 신뢰도 {pct}%</span>
         <Chip variant={completed ? "live" : "neutral"} className="ml-auto">{report.status}</Chip>
       </div>
@@ -777,7 +791,7 @@ function WinnerHandlingPanel({ t, onPromote, onRefill, onArchive }: {
         <span className="text-[22px] leading-none">🏆</span>
         <div>
           <div className="font-bold text-[15px] leading-[1.3] text-[var(--w-primary-press)]">예산을 다 썼어요 — 위너 처리를 결정해주세요</div>
-          <div className="font-medium text-[12.5px] leading-[1.5] text-[var(--w-fg-neutral)] mt-1">
+          <div className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)] mt-1">
             {settled}개 라운드 무인 진행 · 최종 {spec.rateLabel} {formatPrimary(spec, t.championCtr)}
             {lift > 0.5 && <span className="text-[var(--w-status-positive)] font-semibold"> · 출발 대비 +{lift.toFixed(0)}%</span>}
             . 돈이 드는 결정이라 자동으로 넘기지 않아요.
@@ -818,13 +832,13 @@ function DonePanel({ t, onCreate }: { t: Tournament; onCreate: () => void }) {
         <span className="text-[22px] leading-none" aria-hidden>{meta.icon}</span>
         <div>
           <div className="font-bold text-[15px] leading-[1.3] text-[var(--w-primary-press)]">{meta.title}</div>
-          <div className="font-medium text-[12.5px] leading-[1.5] text-[var(--w-fg-neutral)] mt-1">
+          <div className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)] mt-1">
             {t.rounds.filter((r) => r.status === "settled").length}개 라운드 진행 · 최종 {spec.rateLabel} {formatPrimary(spec, t.championCtr)}
             {lift > 0.5 && <span className="text-[var(--w-status-positive)] font-semibold"> · 출발 대비 +{lift.toFixed(0)}%</span>}
           </div>
           {/* ADR-061 — ②수렴 멈춤은 절대 평가("충분히 좋아요") 금지. 사실(남은 예산·시작 대비 변화량)만 표기. */}
           {t.completionReason === "converged" && (
-            <div className="font-medium text-[12.5px] leading-[1.5] text-[var(--w-fg-neutral)] mt-1.5">
+            <div className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)] mt-1.5">
               남은 예산 {krw(remaining)} · 시작 대비 {spec.rateLabel} {formatPrimary(spec, startCtr)} → {formatPrimary(spec, t.championCtr)}
             </div>
           )}
@@ -864,7 +878,7 @@ function RoundHistory({ rounds, summary, dailyBudget, spec, isReal }: { rounds: 
                 <span className="font-bold text-[12px] text-[var(--w-fg-alternative)] w-12">R{r.index}</span>
                 <Chip variant="neutral">{r.hypothesis ? leverLabel(r.hypothesis.lever) : AXIS_LABEL[r.axis]}</Chip>
                 <div className="flex flex-col gap-0.5 min-w-0">
-                  <span className="font-medium text-[12.5px] text-[var(--w-fg-neutral)] truncate">
+                  <span className="font-medium text-[13px] text-[var(--w-fg-neutral)] truncate">
                     {r.hypothesis ? r.hypothesis.statement : `A ${formatPrimary(spec, r.verdict?.ctrA ?? 0)} → B ${formatPrimary(spec, r.verdict?.ctrB ?? 0)}`}
                     {winnerIsB && <span className="text-[var(--w-status-positive)] font-semibold"> ▲</span>}
                   </span>

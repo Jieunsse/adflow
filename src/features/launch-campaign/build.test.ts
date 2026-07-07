@@ -30,7 +30,7 @@ const baseLaunch: LaunchState = {
   platforms: "both",
   bidStrategy: "LOWEST_COST_WITHOUT_CAP",
   bidAmount: null,
-  lookalikeEnabled: false,
+  customAudienceId: null,
   placements: { mode: "auto" },
   autoPauseGuardrailEnabled: false,
   autoRelaunchEnabled: false,
@@ -368,5 +368,18 @@ describe("planBrowseLaunch", () => {
     const p = params();
     const plan = planBrowseLaunch(p, { ts: TS });
     expect(plan.message).toBe(launchSuccessMessage(p));
+  });
+
+  it("endDate/landingUrl 관통 + delivery=PAUSED → browseCampaign.status='paused'", () => {
+    const p = params({ dateEnd: "2026-07-11", landingUrl: "https://example.com", delivery: "PAUSED" });
+    const plan = planBrowseLaunch(p, { ts: TS });
+    expect(plan.browseCampaign.endDate).toBe("2026-07-11");
+    expect(plan.browseCampaign.landingUrl).toBe("https://example.com");
+    expect(plan.browseCampaign.status).toBe("paused");
+  });
+
+  it("delivery=ACTIVE → browseCampaign.status='live'", () => {
+    const plan = planBrowseLaunch(params({ delivery: "ACTIVE" }), { ts: TS });
+    expect(plan.browseCampaign.status).toBe("live");
   });
 });

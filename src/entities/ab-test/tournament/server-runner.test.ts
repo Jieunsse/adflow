@@ -219,6 +219,17 @@ describe("createServerRunner", () => {
     expect(settled?.rounds[0].hypothesis?.verdict).toBe("confirmed"); // B 유의 승 = 입증
   });
 
+  it("resume 은 lastError 를 지우고 저장한다 (ADR-053 복구)", async () => {
+    const r = runner();
+    const id = await r.createTournament(baseSetup());
+    const gated = await store.get(id);
+    await store.upsert({ ...gated!, lastError: "게재 실패: 테스트" });
+
+    await r.resume(id);
+    const t = await store.get(id);
+    expect(t?.lastError).toBeUndefined();
+  });
+
   it("이전 토너먼트에서 반증된 레버는 다음 토너먼트의 가설 생성에서 회피된다 (Ledger 투영이 결정에 반영)", async () => {
     // 토너먼트 1 — 챔피언(A) 유의 승 → 라운드 가설 반증(refuted)
     const r = runner();

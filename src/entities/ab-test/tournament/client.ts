@@ -84,6 +84,8 @@ export interface TournamentClient {
   launch(id: string): Promise<Tournament | null>;
   end(id: string): Promise<Tournament | null>;
   refillEnvelope(id: string, addBudget?: number): Promise<Tournament | null>;
+  // ADR-053 복구 — 게재 실패로 멈춘 토너먼트(lastError)를 사람이 확인 후 재시도.
+  resume(id: string): Promise<Tournament | null>;
   // ADR-047 — 이 토너먼트 맥락(브랜드·제품·목표)에 관련된 학습 노트(Hypothesis Ledger). 데모=localStorage, 실=투영.
   getLedger(id: string): Promise<Hypothesis[]>;
 }
@@ -134,6 +136,12 @@ function demoClient(): TournamentClient {
       refillEnvelope(id, addBudget);
       return snap(id);
     },
+    async resume(id) {
+      const t = getTournament(id);
+      if (!t || !t.lastError) return snap(id);
+      upsertTournament({ ...t, lastError: undefined });
+      return snap(id);
+    },
     async getLedger(id) {
       const t = getTournament(id);
       if (!t) return [];
@@ -170,6 +178,7 @@ function realClient(): TournamentClient {
       return get(id);
     },
     refillEnvelope: (id, addBudget) => act(id, { action: "refill-envelope", addBudget }),
+    resume: (id) => act(id, { action: "resume" }),
     async getLedger(id) {
       return (await apiJson<{ ledger: Hypothesis[] }>(`/api/tournaments/${id}/ledger`)).ledger;
     },

@@ -96,7 +96,9 @@ export default function CreativePreview() {
         </div>
       </div>
       <p className="font-medium text-[12px] leading-[1.5] text-[var(--w-fg-normal)] mt-2.5 mb-0">
-        업로드하지 않으면 아래에서 입력한 페이지의 og:image 가 사용돼요. JPEG·3MB 이하 권장.
+        {imageDataUrl
+          ? "이 이미지가 광고 소재로 사용돼요."
+          : "업로드하지 않으면 아래에서 입력한 페이지의 og:image 가 사용돼요. JPEG·3MB 이하 권장."}
       </p>
 
       {zoomed && imageDataUrl && (

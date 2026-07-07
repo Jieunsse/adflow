@@ -62,6 +62,7 @@ export type TournamentSetup = {
   startingChampion?: TourVariant;
   championSourceName?: string;
   variationIntensity?: VariationIntensity;
+  prohibitedWords?: string[]; // ADR-054 — 브랜드 금칙어. 챌린저 생성 프롬프트에 구조 주입
 };
 
 // 셋업 결정 → 출발 챔피언 확보. existing = 기존 광고 카피 즉시 확정, ai = Gemini 생성 후 검토 대기.
@@ -86,6 +87,7 @@ export async function startTournament(setup: TournamentSetup): Promise<string> {
     championSource: fromExisting ? "existing" : "ai",
     championSourceName: fromExisting ? setup.championSourceName : undefined,
     championConfirmed: true, // ADR-054 — AI 부트스트랩·기존 광고 모두 자동 확정(예산만 사람)
+    prohibitedWords: setup.prohibitedWords,
     axisCursor: 0,
     rounds: [],
     spentBudget: 0,

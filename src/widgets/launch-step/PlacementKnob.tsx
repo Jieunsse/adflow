@@ -20,7 +20,7 @@ import SubHead from "./SubHead";
 const chipBase = "inline-flex items-center gap-1.5 px-[14px] py-2 rounded-full border border-[var(--w-line-normal)] bg-[var(--w-bg-elevated)] font-medium text-[13px] leading-none text-[var(--w-fg-strong)] cursor-pointer transition-[background,border-color,color] duration-[120ms]";
 const chipOn = "bg-[var(--w-fg-strong)] text-[var(--w-bg-elevated)] border-[var(--w-fg-strong)]";
 
-const segBtnBase = "border-none bg-transparent px-[14px] py-2 rounded-lg font-semibold text-[12.5px] leading-none text-[var(--w-fg-neutral)] cursor-pointer transition-[background,color] duration-[120ms]";
+const segBtnBase = "border-none bg-transparent px-[14px] py-2 rounded-lg font-semibold text-[13px] leading-none text-[var(--w-fg-neutral)] cursor-pointer transition-[background,color] duration-[120ms]";
 const segBtnOn = "bg-[var(--w-bg-elevated)] text-[var(--w-fg-strong)] shadow-[0_1px_2px_rgba(23,23,23,0.08)]";
 
 export default function PlacementKnob() {

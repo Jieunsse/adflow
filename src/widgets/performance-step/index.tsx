@@ -162,7 +162,7 @@ export default function PerformanceStep({ onRestart }: { onRestart: () => void }
           <Card className="border-[var(--w-status-negative)] flex flex-col items-center gap-3 py-8 px-5 text-center">
             <div className="w-10 h-10 rounded-full bg-[rgba(255,66,66,0.10)] text-[var(--w-status-negative)] grid place-items-center"><Icon name="x" size={20} /></div>
             <div className="font-bold text-[15px] leading-[1.3] text-[var(--w-fg-strong)]">성과를 불러오지 못했어요</div>
-            <p className="font-medium text-[12.5px] leading-[1.5] text-[var(--w-fg-neutral)] m-0">{q.error instanceof Error ? q.error.message : "알 수 없는 오류"}</p>
+            <p className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)] m-0">{q.error instanceof Error ? q.error.message : "알 수 없는 오류"}</p>
             <Button variant="primary" size="sm" onClick={() => q.refetch()}>다시 시도</Button>
           </Card>
           {footer}

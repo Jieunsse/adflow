@@ -72,6 +72,7 @@ export type ServerTournamentSetup = {
   championSource?: "ai" | "existing";
   startingChampion?: TourVariant;
   championSourceName?: string;
+  prohibitedWords?: string[]; // ADR-054 — 브랜드 금칙어. 챌린저 생성 프롬프트에 구조 주입
   delivery: TournamentDelivery; // 실 게재 봉투 — cron 이 세션 없이 게재·폴링하는 데 필수
 };
 
@@ -116,6 +117,7 @@ export function createServerRunner(deps: {
       championSource: fromExisting ? "existing" : "ai",
       championSourceName: fromExisting ? setup.championSourceName : undefined,
       championConfirmed: true, // ADR-054 — AI 부트스트랩·기존 광고 모두 자동 확정(예산만 사람)
+      prohibitedWords: setup.prohibitedWords,
       axisCursor: 0,
       rounds: [],
       spentBudget: 0,
@@ -316,6 +318,15 @@ export function createServerRunner(deps: {
     await store.upsert(t);
   }
 
+  // ADR-053 복구 — 게재 실패로 멈춘 토너먼트(lastError)를 사람이 확인 후 재시도. lastError 제거만 하면
+  // 다음 cron 폴이 autoAdvance 를 다시 태운다.
+  async function resume(id: string): Promise<void> {
+    const t = await store.get(id);
+    if (!t || !t.lastError) return;
+    t.lastError = undefined;
+    await store.upsert(t);
+  }
+
   return {
     createTournament,
     regenerateChampion,
@@ -327,6 +338,7 @@ export function createServerRunner(deps: {
     pollAndSettle,
     autoAdvance,
     refillEnvelope,
+    resume,
   };
 }
 

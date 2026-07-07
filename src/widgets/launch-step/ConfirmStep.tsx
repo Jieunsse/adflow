@@ -1,9 +1,10 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+// PRD-create-flow-redesign §3.3 — 게재 계획서 우측 sticky 게재 카드.
+// 게재 상태 토글·계정/소재/URL 경고·mutation 에러·게재 버튼을 한 자리에 묶는다.
+
 import { useSession } from "next-auth/react";
 import { useLaunchDraft } from "@entities/campaign/model";
-import { useCreativeDraft } from "@entities/creative/model";
 import Icon from "@shared/ui/Icon";
 import { Button } from "@shared/ui/Button";
 import { Card } from "@shared/ui/Card";
@@ -16,7 +17,6 @@ interface MutationState {
 }
 
 interface Props {
-  onBack: () => void;
   canLaunch: boolean;
   canSkipLaunch: boolean;
   onLaunch: () => void;
@@ -25,23 +25,21 @@ interface Props {
   goSettings: () => void;
   devModeOn: boolean;
   testAccountActive: boolean;
+  blockReason: string | null;
 }
 
 export default function ConfirmStep({
-  onBack, canLaunch, canSkipLaunch, onLaunch, onSkipLaunch,
-  mutation, goSettings, devModeOn, testAccountActive,
+  canLaunch, canSkipLaunch, onLaunch, onSkipLaunch,
+  mutation, goSettings, devModeOn, testAccountActive, blockReason,
 }: Props) {
-  const router = useRouter();
   const { data: session } = useSession();
   const { state, dispatch } = useLaunchDraft();
-  const creative = useCreativeDraft();
 
   const accountConnected = !!(session?.adAccountId && session?.pageId);
   const browseMode = !!session?.browseMode;
-  const hasCreative = creative.state.headline.trim().length > 0;
 
   return (
-    <>
+    <Card>
       <div className="font-semibold text-[15px] leading-[1.3] tracking-[-0.008em] text-[var(--w-fg-strong)]" style={{ marginBottom: 6 }}>
         게재 상태
       </div>
@@ -49,7 +47,7 @@ export default function ConfirmStep({
         <button
           type="button"
           className={cn(
-            "border-none bg-transparent px-[14px] py-2 rounded-[8px] font-semibold text-[12.5px] leading-none cursor-pointer transition-[background,color] duration-[120ms]",
+            "border-none bg-transparent px-[14px] py-2 rounded-[8px] font-semibold text-[13px] leading-none cursor-pointer transition-[background,color] duration-[120ms]",
             state.delivery === "PAUSED"
               ? "bg-[var(--w-bg-elevated)] text-[var(--w-fg-strong)] shadow-[0_1px_2px_rgba(23,23,23,0.08)]"
               : "text-[var(--w-fg-neutral)]"
@@ -61,7 +59,7 @@ export default function ConfirmStep({
         <button
           type="button"
           className={cn(
-            "border-none bg-transparent px-[14px] py-2 rounded-[8px] font-semibold text-[12.5px] leading-none cursor-pointer transition-[background,color] duration-[120ms]",
+            "border-none bg-transparent px-[14px] py-2 rounded-[8px] font-semibold text-[13px] leading-none cursor-pointer transition-[background,color] duration-[120ms]",
             state.delivery === "ACTIVE"
               ? "bg-[var(--w-bg-elevated)] text-[var(--w-fg-strong)] shadow-[0_1px_2px_rgba(23,23,23,0.08)]"
               : "text-[var(--w-fg-neutral)]"
@@ -80,11 +78,6 @@ export default function ConfirmStep({
 
       <hr className="h-px bg-[var(--w-line-neutral)] my-[18px] border-0" />
 
-      {!hasCreative && (
-        <div className="font-medium text-[12px] leading-[1.5] tracking-[0.008em] text-[var(--w-status-cautionary)] flex items-center gap-1.5 flex-wrap" style={{ marginBottom: 12 }}>
-          <Icon name="warn" size={14} /> 아직 광고 소재가 없어요. STEP 01에서 소재를 만들면 집행할 수 있어요.
-        </div>
-      )}
       {!accountConnected && !browseMode && (
         <div className="font-medium text-[12px] leading-[1.5] tracking-[0.008em] text-[var(--w-status-cautionary)] flex items-center gap-1.5 flex-wrap" style={{ marginBottom: 12 }}>
           <Icon name="warn" size={14} /> 광고 계정·페이지가 연결되지 않아 집행할 수 없어요.
@@ -103,24 +96,25 @@ export default function ConfirmStep({
         </div>
       )}
 
-      <div className="flex items-center justify-between gap-3" style={{ marginTop: 8 }}>
-        <Button variant="secondary" type="button" onClick={onBack}>
-          이전
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "stretch", gap: 8, marginTop: 8 }}>
+        <Button variant="primary" size="lg" type="button" disabled={!canLaunch} onClick={onLaunch}>
+          {mutation.isPending ? (
+            <><div className="rounded-full border-[2.4px] border-[var(--w-line-normal)] border-t-[var(--w-primary-normal)] animate-[spin_0.85s_linear_infinite]" style={{ width: 16, height: 16 }} /> Meta에 전송 중…</>
+          ) : browseMode ? (
+            state.delivery === "ACTIVE" ? "Meta에 광고 게재하기" : "Meta에 광고 등록하기"
+          ) : (
+            <><Icon name="megaphone" size={16} /> {state.delivery === "ACTIVE" ? "Meta에 광고 게재하기" : "Meta에 광고 등록하기 (일시중지)"}</>
+          )}
         </Button>
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8 }}>
-          <span style={{ font: "500 12px/1 var(--w-font-sans)", color: "var(--w-fg-neutral)", display: "inline-flex", alignItems: "center", gap: 4 }}>
+        {blockReason ? (
+          <span className="font-medium text-[12px] leading-[1.4] text-[var(--w-status-cautionary)] text-center">
+            {blockReason}
+          </span>
+        ) : (
+          <span className="font-medium text-[12px] leading-[1.4] text-[var(--w-fg-neutral)] text-center inline-flex items-center justify-center gap-1">
             <Icon name="info" size={13} /> Meta 광고 정책 검토는 자동 진행돼요
           </span>
-          <Button variant="primary" size="lg" type="button" disabled={!canLaunch} onClick={onLaunch}>
-            {mutation.isPending ? (
-              <><div className="rounded-full border-[2.4px] border-[var(--w-line-normal)] border-t-[var(--w-primary-normal)] animate-[spin_0.85s_linear_infinite]" style={{ width: 16, height: 16 }} /> Meta에 전송 중…</>
-            ) : browseMode ? (
-              state.delivery === "ACTIVE" ? "Meta에 광고 게재하기" : "Meta에 광고 등록하기"
-            ) : (
-              <><Icon name="megaphone" size={16} /> {state.delivery === "ACTIVE" ? "Meta에 광고 게재하기" : "Meta에 광고 등록하기 (일시중지)"}</>
-            )}
-          </Button>
-        </div>
+        )}
       </div>
 
       {devModeOn && !testAccountActive && (
@@ -146,6 +140,6 @@ export default function ConfirmStep({
           </Button>
         </Card>
       )}
-    </>
+    </Card>
   );
 }

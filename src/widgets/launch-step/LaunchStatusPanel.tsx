@@ -44,7 +44,7 @@ export default function LaunchStatusPanel({ mutation, onNext }: Props) {
           <Icon name="x" size={20} />
         </div>
         <div className="font-bold text-[15px] leading-[1.3] text-[var(--w-fg-strong)]">집행 중 오류가 발생했어요</div>
-        <p className="font-medium text-[12.5px] leading-[1.5] text-[var(--w-fg-normal)] m-0">
+        <p className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-normal)] m-0">
           {mutation.error?.message ?? "알 수 없는 오류"}
         </p>
         <Button variant="primary" size="sm" type="button" onClick={() => mutation.reset()}>
@@ -71,7 +71,7 @@ export default function LaunchStatusPanel({ mutation, onNext }: Props) {
         <Icon name="play" size={22} />
       </div>
       <div className="font-semibold text-[15px] leading-[1.4] text-[var(--w-fg-strong)]">집행 설정 후 버튼을 눌러주세요</div>
-      <p className="font-medium text-[12.5px] leading-[1.55] text-[var(--w-fg-normal)] mt-2 mb-0">
+      <p className="font-medium text-[13px] leading-[1.55] text-[var(--w-fg-normal)] mt-2 mb-0">
         전송이 완료되면 Campaign / AdSet / Ad ID 가 여기에 표시돼요.
       </p>
     </Card>

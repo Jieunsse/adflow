@@ -122,10 +122,10 @@ function IssueCard({ issue, onAction }: { issue: ValidationIssue; onAction: (i: 
     )}>
       <Icon name={isBlock ? "warn" : "info"} size={16} />
       <div className="flex-1">
-        <div className="font-semibold text-[13.5px] leading-[1.4] text-[var(--w-fg-strong)] mb-1">
+        <div className="font-semibold text-[14px] leading-[1.4] text-[var(--w-fg-strong)] mb-1">
           {issue.title}
         </div>
-        <div className="font-medium text-[12.5px] leading-[1.55] text-[var(--w-fg-normal)]">
+        <div className="font-medium text-[13px] leading-[1.55] text-[var(--w-fg-normal)]">
           {issue.message}
         </div>
         {issue.action && (

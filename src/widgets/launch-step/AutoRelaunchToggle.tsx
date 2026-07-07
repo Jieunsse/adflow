@@ -55,12 +55,12 @@ export default function AutoRelaunchToggle() {
           </button>
         </div>
         <div>
-          <div className="font-semibold text-[13.5px] leading-[1.3] text-[var(--w-fg-strong)]">
+          <div className="font-semibold text-[14px] leading-[1.3] text-[var(--w-fg-strong)]">
             자동 재게재
           </div>
           <p className="font-normal text-[13px] leading-[1.5] text-[var(--w-fg-neutral)] mt-[3px] mb-0">
             {hasEndDate
-              ? "성과가 목표를 통과하면 종료 후 알림 받아요. 매번 직접 확인 후 게재돼요."
+              ? "성과가 목표를 통과하면 종료 후 앱을 보고 있을 때 알려드려요. 매번 직접 확인 후 게재돼요."
               : "종료일을 설정해야 켤 수 있어요."}
           </p>
         </div>

@@ -11,6 +11,8 @@ const GOAL_LABEL: Record<string, string> = {
   OUTCOME_AWARENESS: "인지도",
   OUTCOME_ENGAGEMENT: "참여",
   OUTCOME_LEADS: "잠재고객",
+  OUTCOME_SALES: "매출",
+  OUTCOME_APP_PROMOTION: "앱 홍보",
 };
 
 export function browseCampaignToSummary(camp: BrowseCampaign): CampaignSummary {
@@ -19,11 +21,11 @@ export function browseCampaignToSummary(camp: BrowseCampaign): CampaignSummary {
     id: camp.id,
     name: camp.name,
     headline: camp.headline,
-    status: camp.status === "ended" ? "ended" : "live",
+    status: camp.status,
     objective: camp.objective,
     goal: GOAL_LABEL[camp.objective] ?? "트래픽",
     startDate: camp.startDate,
-    endDate: null,
+    endDate: camp.endDate ?? null,
     adSetId: null,
     adId: null,
     dailyBudget: currentDailyBudget(camp),
@@ -41,6 +43,7 @@ export function browseCampaignToSummary(camp: BrowseCampaign): CampaignSummary {
     imageUrl: camp.imageUrl,
     primaryText: camp.primaryText,
     cta: camp.cta,
+    landingUrl: camp.landingUrl,
     ageMin: camp.ageMin,
     ageMax: camp.ageMax,
     genders: camp.genders,

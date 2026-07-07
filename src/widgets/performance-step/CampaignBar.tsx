@@ -3,7 +3,7 @@
 import Icon from "@shared/ui/Icon";
 import { Card } from "@shared/ui/Card";
 import { Button } from "@shared/ui/Button";
-import { Badge } from "@shared/ui/primitives";
+import { Chip } from "@shared/ui/Chip";
 import type { LaunchedCampaign } from "@entities/campaign/model";
 import type { CampaignObjective } from "@entities/insights/types";
 import { OBJECTIVES_PHASE1 } from "@entities/creative/options";
@@ -46,16 +46,16 @@ export default function CampaignBar({ exampleMode, launched, headline, objective
         <div className="min-w-0">
           <div className="flex items-center gap-2 mb-1 flex-wrap">
             {exampleMode
-              ? <Badge kind="violet">예시</Badge>
-              : launched!.status === "PAUSED" ? <Badge kind="warn" dot>일시정지</Badge> : <Badge kind="success" dot live>게재 중(또는 검토 중)</Badge>}
-            <Badge kind="violet">{badgeLabel(launched, objective)}</Badge>
-            <span className="font-medium text-[11.5px] leading-none font-mono text-[var(--w-fg-alternative)]">{launched ? launched.campaignId : "120207641834"}</span>
+              ? <Chip variant="violet">예시</Chip>
+              : launched!.status === "PAUSED" ? <Chip variant="warn" dot>일시정지</Chip> : <Chip variant="success" dot live>게재 중(또는 검토 중)</Chip>}
+            <Chip variant="violet">{badgeLabel(launched, objective)}</Chip>
+            <span className="font-medium text-[12px] leading-none font-mono text-[var(--w-fg-alternative)]">{launched ? launched.campaignId : "120207641834"}</span>
           </div>
           <div className="font-bold text-[17px] leading-[1.3] text-[var(--w-fg-strong)] overflow-hidden text-ellipsis whitespace-nowrap">{headline}</div>
         </div>
       </div>
       <div className="flex gap-2.5 items-center">
-        <span className="font-medium text-[12.5px] leading-none text-[var(--w-fg-neutral)] whitespace-nowrap">{periodLabel}</span>
+        <span className="font-medium text-[13px] leading-none text-[var(--w-fg-neutral)] whitespace-nowrap">{periodLabel}</span>
         <Button variant="secondary" size="sm" onClick={onRefetch} disabled={exampleMode || isFetching}>
           <Icon name="refresh" size={14} /> {isFetching ? "새로고침 중…" : "새로고침"}
         </Button>

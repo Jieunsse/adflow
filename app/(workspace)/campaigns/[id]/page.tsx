@@ -23,9 +23,11 @@ import { createBrowseRelaunchChild } from "@entities/campaign/browse/seed";
 import { browseCampaignToSummary } from "@entities/campaign/browse/summary";
 import { buildBrowseInsights, type BrowseQuality } from "@entities/campaign/browse/insights";
 import type { BrowseCampaign, AutomationPolicy, AutoPilotAction } from "@entities/campaign/browse/types";
+import { CAMPAIGN_STATUS_MAP } from "@entities/campaign/status";
 import PresenterFastForwardBar from "@widgets/presenter-fast-forward";
 import { judgeAbTest, rowToKpi } from "@entities/insights/ab-verdict";
 import { getMockCampaignAdIds, seedMockAdRows } from "@/lib/mock-campaigns";
+import { CTAS } from "@entities/creative/options";
 import { DEMO_AD_IMAGES } from "@/lib/demo/mock-images";
 import AbTestResultCard from "@widgets/performance-step/AbTestResultCard";
 import type { CampaignSummary, InsightsPeriod } from "@/lib/meta-ads";
@@ -69,11 +71,6 @@ type AutoPilotUi = {
   actions: AutoPilotAction[];
   onRequestEnable: () => void;
   onDisable: () => void;
-};
-
-const STATUS_CHIP: Record<string, { label: string; chip: string }> = {
-  live: { label: "게재 중", chip: "live" }, review: { label: "검토 중", chip: "review" },
-  paused: { label: "일시정지", chip: "paused" }, ended: { label: "종료", chip: "ended" }, issue: { label: "이슈", chip: "issue" },
 };
 
 async function fetchJson<T>(url: string, notFoundIs401Msg = "광고 계정을 먼저 연결해주세요."): Promise<T> {
@@ -268,7 +265,7 @@ function CampaignDetailFlow() {
           onClose={() => setShowAutoPilotModal(false)}
         />
       )}
-      <button type="button" onClick={() => router.push("/campaigns")} className="bg-transparent border-none p-0 cursor-pointer inline-flex items-center gap-1.5 font-semibold text-[12.5px] leading-none text-current hover:underline" style={{ display: "inline-flex", alignItems: "center", gap: 6, color: "var(--w-fg-neutral)", marginBottom: 4 }}>
+      <button type="button" onClick={() => router.push("/campaigns")} className="bg-transparent border-none p-0 cursor-pointer inline-flex items-center gap-1.5 font-semibold text-[13px] leading-none text-current hover:underline" style={{ display: "inline-flex", alignItems: "center", gap: 6, color: "var(--w-fg-neutral)", marginBottom: 4 }}>
         <Icon name="arrow-left" size={13} /> 캠페인
       </button>
 
@@ -280,8 +277,8 @@ function CampaignDetailFlow() {
       </div>
 
       <div className="inline-flex gap-0.5 p-[3px] bg-[var(--w-bg-alternative)] rounded-[10px] mb-4">
-        <button type="button" className={cn("border-none px-3.5 py-2 rounded-lg font-semibold text-[12.5px] leading-none cursor-pointer transition-[background,color] duration-[120ms]", activeTab === "info" ? "bg-[var(--w-bg-elevated)] text-[var(--w-fg-strong)] shadow-[0_1px_2px_rgba(23,23,23,0.08)]" : "bg-transparent text-[var(--w-fg-neutral)]")} onClick={() => setActiveTab("info")}>캠페인 정보</button>
-        <button type="button" className={cn("border-none px-3.5 py-2 rounded-lg font-semibold text-[12.5px] leading-none cursor-pointer transition-[background,color] duration-[120ms]", activeTab === "performance" ? "bg-[var(--w-bg-elevated)] text-[var(--w-fg-strong)] shadow-[0_1px_2px_rgba(23,23,23,0.08)]" : "bg-transparent text-[var(--w-fg-neutral)]")} onClick={() => setActiveTab("performance")}>성과</button>
+        <button type="button" className={cn("border-none px-3.5 py-2 rounded-lg font-semibold text-[13px] leading-none cursor-pointer transition-[background,color] duration-[120ms]", activeTab === "info" ? "bg-[var(--w-bg-elevated)] text-[var(--w-fg-strong)] shadow-[0_1px_2px_rgba(23,23,23,0.08)]" : "bg-transparent text-[var(--w-fg-neutral)]")} onClick={() => setActiveTab("info")}>캠페인 정보</button>
+        <button type="button" className={cn("border-none px-3.5 py-2 rounded-lg font-semibold text-[13px] leading-none cursor-pointer transition-[background,color] duration-[120ms]", activeTab === "performance" ? "bg-[var(--w-bg-elevated)] text-[var(--w-fg-strong)] shadow-[0_1px_2px_rgba(23,23,23,0.08)]" : "bg-transparent text-[var(--w-fg-neutral)]")} onClick={() => setActiveTab("performance")}>성과</button>
       </div>
 
       {metaUnauthorized ? (
@@ -298,13 +295,13 @@ function CampaignDetailFlow() {
               <div style={{ minWidth: 0 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6, flexWrap: "wrap" }}>
                   {c ? (
-                    <Chip variant={(STATUS_CHIP[c.status]?.chip ?? "neutral") as ChipVariant} dot>{STATUS_CHIP[c.status]?.label ?? c.status}</Chip>
+                    <Chip variant={(CAMPAIGN_STATUS_MAP[c.status as keyof typeof CAMPAIGN_STATUS_MAP]?.chip ?? "neutral") as ChipVariant} dot>{CAMPAIGN_STATUS_MAP[c.status as keyof typeof CAMPAIGN_STATUS_MAP]?.label ?? c.status}</Chip>
                   ) : (
                     <Skeleton className="h-[22px] w-[70px] rounded-full" />
                   )}
-                  <Chip variant="neutral" className="font-medium text-[11.5px] leading-none [font-family:var(--w-font-mono)]">Campaign ID · {id.slice(-10)}</Chip>
+                  <Chip variant="neutral" className="font-medium text-[12px] leading-none [font-family:var(--w-font-mono)]">Campaign ID · {id.slice(-10)}</Chip>
                 </div>
-                <div className="font-medium text-[12.5px] leading-none text-[var(--w-fg-neutral)]">{daysLine} · {progressLine}</div>
+                <div className="font-medium text-[13px] leading-none text-[var(--w-fg-neutral)]">{daysLine} · {progressLine}</div>
               </div>
             </div>
             <div className="flex items-center gap-2.5 flex-wrap">
@@ -485,7 +482,7 @@ function DetailBody({
         </div>
         <table className="w-full border-collapse">
           <thead>
-            <tr><th className="px-4 py-2.5 font-semibold text-[11.5px] leading-none tracking-[0.004em] text-[var(--w-fg-neutral)] border-b border-[var(--w-line-alternative)] text-left">날짜</th><th className="px-4 py-2.5 font-semibold text-[11.5px] leading-none tracking-[0.004em] text-[var(--w-fg-neutral)] border-b border-[var(--w-line-alternative)] text-left" style={{ textAlign: "right" }}>클릭</th><th className="px-4 py-2.5 font-semibold text-[11.5px] leading-none tracking-[0.004em] text-[var(--w-fg-neutral)] border-b border-[var(--w-line-alternative)] text-left" style={{ textAlign: "right" }}>CTR</th><th className="px-4 py-2.5 font-semibold text-[11.5px] leading-none tracking-[0.004em] text-[var(--w-fg-neutral)] border-b border-[var(--w-line-alternative)] text-left" style={{ textAlign: "right" }}>지출</th><th className="px-4 py-2.5 font-semibold text-[11.5px] leading-none tracking-[0.004em] text-[var(--w-fg-neutral)] border-b border-[var(--w-line-alternative)] text-left" style={{ width: 96, textAlign: "right" }}>전일 대비</th></tr>
+            <tr><th className="px-4 py-2.5 font-semibold text-[12px] leading-none tracking-[0.004em] text-[var(--w-fg-neutral)] border-b border-[var(--w-line-alternative)] text-left">날짜</th><th className="px-4 py-2.5 font-semibold text-[12px] leading-none tracking-[0.004em] text-[var(--w-fg-neutral)] border-b border-[var(--w-line-alternative)] text-left" style={{ textAlign: "right" }}>클릭</th><th className="px-4 py-2.5 font-semibold text-[12px] leading-none tracking-[0.004em] text-[var(--w-fg-neutral)] border-b border-[var(--w-line-alternative)] text-left" style={{ textAlign: "right" }}>CTR</th><th className="px-4 py-2.5 font-semibold text-[12px] leading-none tracking-[0.004em] text-[var(--w-fg-neutral)] border-b border-[var(--w-line-alternative)] text-left" style={{ textAlign: "right" }}>지출</th><th className="px-4 py-2.5 font-semibold text-[12px] leading-none tracking-[0.004em] text-[var(--w-fg-neutral)] border-b border-[var(--w-line-alternative)] text-left" style={{ width: 96, textAlign: "right" }}>전일 대비</th></tr>
           </thead>
           <tbody>
             {data.daily.map((row, i) => {
@@ -569,13 +566,13 @@ function AutomationReadinessCard({ readiness, autoPilot, lowPerformance }: { rea
         <div className="font-bold text-[16px] leading-[1.3] text-[var(--w-fg-strong)]" style={{ marginTop: 10 }}>AI가 광고를 자동 운영하고 있어요</div>
         <p className="font-medium text-[13px] leading-[1.55] text-[var(--w-fg-neutral)]" style={{ margin: "8px 0 12px" }}>성과를 지켜보다 예산·게재를 자동으로 조정해요. 모든 조치는 알림으로 알려드려요.</p>
         {autoPilot.actions.length === 0 ? (
-          <p className="font-medium text-[12.5px] leading-[1.5] text-[var(--w-fg-alternative)]" style={{ marginBottom: 14 }}>아직 조치 내역이 없어요 — 빨리감기로 시간을 넘기면 AI가 판단해요.</p>
+          <p className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-alternative)]" style={{ marginBottom: 14 }}>아직 조치 내역이 없어요 — 빨리감기로 시간을 넘기면 AI가 판단해요.</p>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 7, margin: "0 0 14px" }}>
             {autoPilot.actions.slice().reverse().map((a, i) => (
               <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 7 }}>
                 <Icon name={ACTION_ICON[a.kind]} size={13} />
-                <span className="font-medium text-[12.5px] leading-[1.45] text-[var(--w-fg-neutral)]"><b className="text-[var(--w-fg-strong)]">{a.atDay}일차</b> · {a.detail}</span>
+                <span className="font-medium text-[13px] leading-[1.45] text-[var(--w-fg-neutral)]"><b className="text-[var(--w-fg-strong)]">{a.atDay}일차</b> · {a.detail}</span>
               </div>
             ))}
           </div>
@@ -615,8 +612,8 @@ function AutoPilotConfirmModal({ policy, onPolicyChange, onConfirm, onClose }: {
     <label style={{ display: "flex", gap: 10, alignItems: "flex-start", padding: "12px 14px", borderRadius: 10, cursor: "pointer", border: `1px solid ${policy === value ? "var(--w-primary-normal)" : "var(--w-line-alternative)"}`, background: policy === value ? "var(--w-primary-soft)" : "transparent" }}>
       <input type="radio" name="autopilot-policy" checked={policy === value} onChange={() => onPolicyChange(value)} style={{ width: 15, height: 15, marginTop: 2 }} />
       <span>
-        <span className="font-semibold text-[13.5px] leading-[1.3] text-[var(--w-fg-strong)] block">{title}</span>
-        <span className="font-medium text-[12.5px] leading-[1.45] text-[var(--w-fg-neutral)] block" style={{ marginTop: 2 }}>{desc}</span>
+        <span className="font-semibold text-[14px] leading-[1.3] text-[var(--w-fg-strong)] block">{title}</span>
+        <span className="font-medium text-[13px] leading-[1.45] text-[var(--w-fg-neutral)] block" style={{ marginTop: 2 }}>{desc}</span>
       </span>
     </label>
   );
@@ -669,7 +666,7 @@ function OptCard({ icon, good, title, lines, children }: { icon: IconName; good:
       <div style={{ width: 36, height: 36, borderRadius: 10, background: good ? "var(--w-status-positive-soft)" : "var(--w-status-cautionary-soft)", color: good ? "var(--w-status-positive)" : "var(--w-status-cautionary)", display: "grid", placeItems: "center", flex: "0 0 auto" }}><Icon name={icon} size={18} /></div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div className="font-semibold text-[14px] leading-[1.4] text-[var(--w-fg-strong)]">{title}</div>
-        {lines.map((l, j) => <div key={j} className="font-medium text-[12.5px] leading-[1.55] text-[var(--w-fg-neutral)]" style={{ marginTop: 4 }}>{l}</div>)}
+        {lines.map((l, j) => <div key={j} className="font-medium text-[13px] leading-[1.55] text-[var(--w-fg-neutral)]" style={{ marginTop: 4 }}>{l}</div>)}
         {children && <div style={{ marginTop: 12 }}>{children}</div>}
       </div>
     </div>
@@ -691,6 +688,7 @@ const CTA_LABELS: Record<string, string> = {
   LEARN_MORE: "자세히 알아보기", SHOP_NOW: "지금 구매", SIGN_UP: "가입하기",
   DOWNLOAD: "다운로드", MESSAGE_PAGE: "메시지 보내기", CALL_NOW: "전화하기",
   GET_OFFER: "오퍼 받기", SUBSCRIBE: "구독하기", ORDER_NOW: "주문하기", WATCH_MORE: "더 보기",
+  ...Object.fromEntries(CTAS.map((c) => [c.id, c.label])),
 };
 const PLATFORM_LABELS: Record<string, string> = {
   both: "FB + IG (자동 최적화)", facebook: "페이스북", instagram: "인스타그램",
@@ -703,7 +701,7 @@ const PLACEMENT_LABELS: Record<string, string> = {
 function ConfigRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <>
-      <span className="font-medium text-[12.5px] leading-[1.6] text-[var(--w-fg-alternative)] whitespace-nowrap">{label}</span>
+      <span className="font-medium text-[13px] leading-[1.6] text-[var(--w-fg-alternative)] whitespace-nowrap">{label}</span>
       <span className="font-medium text-[13px] leading-[1.6] text-[var(--w-fg-strong)]">{value}</span>
     </>
   );
@@ -981,15 +979,15 @@ function CampaignConfigurationTab({ c, isLoading, campaignId, onRefetch, isAbCam
             )}
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               <div>
-                <div className="font-semibold text-[12.5px] leading-[1.3] text-[var(--w-fg-strong)]" style={{ marginBottom: 6 }}>헤드라인</div>
+                <div className="font-semibold text-[13px] leading-[1.3] text-[var(--w-fg-strong)]" style={{ marginBottom: 6 }}>헤드라인</div>
                 <input className="w-full bg-[var(--w-bg-elevated)] border border-[var(--w-line-normal)] rounded-xl px-3.5 py-3 font-medium text-[14px] leading-[1.5] text-[var(--w-fg-strong)] tracking-[0.004em] outline-none transition-[border-color,box-shadow] duration-[120ms] focus:border-[var(--w-primary-normal)] focus:shadow-[0_0_0_4px_rgba(0,102,255,0.14)] placeholder:text-[var(--w-fg-alternative)]" type="text" value={creativeHeadline} onChange={(e) => setCreativeHeadline(e.target.value)} />
               </div>
               <div>
-                <div className="font-semibold text-[12.5px] leading-[1.3] text-[var(--w-fg-strong)]" style={{ marginBottom: 6 }}>본문</div>
+                <div className="font-semibold text-[13px] leading-[1.3] text-[var(--w-fg-strong)]" style={{ marginBottom: 6 }}>본문</div>
                 <textarea className="w-full bg-[var(--w-bg-elevated)] border border-[var(--w-line-normal)] rounded-xl px-3.5 py-3 font-medium text-[14px] leading-[1.5] text-[var(--w-fg-strong)] tracking-[0.004em] outline-none transition-[border-color,box-shadow] duration-[120ms] focus:border-[var(--w-primary-normal)] focus:shadow-[0_0_0_4px_rgba(0,102,255,0.14)] placeholder:text-[var(--w-fg-alternative)]" rows={3} value={creativePrimaryText} onChange={(e) => setCreativePrimaryText(e.target.value)} style={{ resize: "vertical" }} />
               </div>
               <div>
-                <div className="font-semibold text-[12.5px] leading-[1.3] text-[var(--w-fg-strong)]" style={{ marginBottom: 8 }}>이미지</div>
+                <div className="font-semibold text-[13px] leading-[1.3] text-[var(--w-fg-strong)]" style={{ marginBottom: 8 }}>이미지</div>
                 <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
                   {([{ val: "keep", label: "그대로 유지" }, { val: "upload", label: "직접 업로드" }] as const).map(({ val, label }) => (
                     <button key={val} type="button" onClick={() => setImageMode(val)}
@@ -1044,7 +1042,7 @@ function CampaignConfigurationTab({ c, isLoading, campaignId, onRefetch, isAbCam
             <ConfigRow label="본문" value={c.primaryText ?? dash} />
             <ConfigRow label="CTA" value={c.cta ? (CTA_LABELS[c.cta] ?? c.cta) : dash} />
             <ConfigRow label="랜딩 URL" value={c.landingUrl
-              ? <a href={c.landingUrl} target="_blank" rel="noreferrer" className="font-medium text-[12.5px] leading-[1.4]" style={{ color: "var(--w-primary-normal)", wordBreak: "break-all" }}>{c.landingUrl}</a>
+              ? <a href={c.landingUrl} target="_blank" rel="noreferrer" className="font-medium text-[13px] leading-[1.4]" style={{ color: "var(--w-primary-normal)", wordBreak: "break-all" }}>{c.landingUrl}</a>
               : dash}
             />
           </div>
@@ -1058,7 +1056,7 @@ function CampaignConfigurationTab({ c, isLoading, campaignId, onRefetch, isAbCam
 
         <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: "12px 24px", alignItems: "center" }}>
           <ConfigRow label="캠페인 목표" value={c.goal} />
-          <ConfigRow label="상태" value={<Chip variant={(STATUS_CHIP[c.status]?.chip ?? "neutral") as ChipVariant} dot>{STATUS_CHIP[c.status]?.label ?? c.status}</Chip>} />
+          <ConfigRow label="상태" value={<Chip variant={(CAMPAIGN_STATUS_MAP[c.status as keyof typeof CAMPAIGN_STATUS_MAP]?.chip ?? "neutral") as ChipVariant} dot>{CAMPAIGN_STATUS_MAP[c.status as keyof typeof CAMPAIGN_STATUS_MAP]?.label ?? c.status}</Chip>} />
           <ConfigRow label="Campaign ID" value={<span className="font-medium text-[12px] leading-none [font-family:var(--w-font-mono)] text-[var(--w-fg-alternative)]">{campaignId.slice(-10)}</span>} />
         </div>
 
@@ -1070,7 +1068,7 @@ function CampaignConfigurationTab({ c, isLoading, campaignId, onRefetch, isAbCam
         {editingSchedule ? (
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             <div>
-              <div className="font-semibold text-[12.5px] leading-[1.3] text-[var(--w-fg-strong)]" style={{ marginBottom: 6 }}>일 예산 (₩)</div>
+              <div className="font-semibold text-[13px] leading-[1.3] text-[var(--w-fg-strong)]" style={{ marginBottom: 6 }}>일 예산 (₩)</div>
               <input
                 className="w-full bg-[var(--w-bg-elevated)] border border-[var(--w-line-normal)] rounded-xl px-3.5 py-3 font-medium text-[14px] leading-[1.5] text-[var(--w-fg-strong)] tracking-[0.004em] outline-none transition-[border-color,box-shadow] duration-[120ms] focus:border-[var(--w-primary-normal)] focus:shadow-[0_0_0_4px_rgba(0,102,255,0.14)] placeholder:text-[var(--w-fg-alternative)]"
                 type="number"
@@ -1088,11 +1086,11 @@ function CampaignConfigurationTab({ c, isLoading, campaignId, onRefetch, isAbCam
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
               <div>
-                <div className="font-semibold text-[12.5px] leading-[1.3] text-[var(--w-fg-strong)]" style={{ marginBottom: 6 }}>시작일</div>
+                <div className="font-semibold text-[13px] leading-[1.3] text-[var(--w-fg-strong)]" style={{ marginBottom: 6 }}>시작일</div>
                 <DatePicker value={startDateVal} onChange={setStartDateVal} aria-label="시작일" />
               </div>
               <div>
-                <div className="font-semibold text-[12.5px] leading-[1.3] text-[var(--w-fg-strong)]" style={{ marginBottom: 6 }}>종료일</div>
+                <div className="font-semibold text-[13px] leading-[1.3] text-[var(--w-fg-strong)]" style={{ marginBottom: 6 }}>종료일</div>
                 <DatePicker value={endDateVal} onChange={setEndDateVal} placeholder="종료일 없음" aria-label="종료일" />
               </div>
             </div>
@@ -1122,11 +1120,11 @@ function CampaignConfigurationTab({ c, isLoading, campaignId, onRefetch, isAbCam
         {editingTargeting ? (
           <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
             <div>
-              <div className="font-semibold text-[12.5px] leading-[1.3] text-[var(--w-fg-strong)]" style={{ marginBottom: 10 }}>연령</div>
+              <div className="font-semibold text-[13px] leading-[1.3] text-[var(--w-fg-strong)]" style={{ marginBottom: 10 }}>연령</div>
               <AgeRange value={ageRange} onChange={setAgeRange} />
             </div>
             <div>
-              <div className="font-semibold text-[12.5px] leading-[1.3] text-[var(--w-fg-strong)]" style={{ marginBottom: 8 }}>성별</div>
+              <div className="font-semibold text-[13px] leading-[1.3] text-[var(--w-fg-strong)]" style={{ marginBottom: 8 }}>성별</div>
               <div style={{ display: "flex", gap: 8 }}>
                 {[{ label: "모두", val: [] as number[] }, { label: "남성", val: [1] }, { label: "여성", val: [2] }].map(({ label, val }) => {
                   const active = val.length === 0 ? genders.length === 0 : genders.length === 1 && genders[0] === val[0];
@@ -1143,7 +1141,7 @@ function CampaignConfigurationTab({ c, isLoading, campaignId, onRefetch, isAbCam
               </div>
             </div>
             <div>
-              <div className="font-semibold text-[12.5px] leading-[1.3] text-[var(--w-fg-strong)]" style={{ marginBottom: 8 }}>국가</div>
+              <div className="font-semibold text-[13px] leading-[1.3] text-[var(--w-fg-strong)]" style={{ marginBottom: 8 }}>국가</div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                 {COUNTRIES.map((ct) => {
                   const on = targetCountries.includes(ct.code);
@@ -1191,7 +1189,7 @@ function CampaignConfigurationTab({ c, isLoading, campaignId, onRefetch, isAbCam
               <span className="font-medium text-[12px] leading-[1.4] text-[var(--w-fg-neutral)]">입찰 전략·배치 변경은 성과 안정화 구간이 재시작될 수 있어요</span>
             </Callout>
             <div>
-              <div className="font-semibold text-[12.5px] leading-[1.3] text-[var(--w-fg-strong)]" style={{ marginBottom: 8 }}>입찰 전략</div>
+              <div className="font-semibold text-[13px] leading-[1.3] text-[var(--w-fg-strong)]" style={{ marginBottom: 8 }}>입찰 전략</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {([
                   { val: "LOWEST_COST_WITHOUT_CAP", label: "최저 비용 (상한 없음)", desc: "Meta가 예산 내에서 가장 낮은 비용으로 결과를 최대화해요" },
@@ -1210,7 +1208,7 @@ function CampaignConfigurationTab({ c, isLoading, campaignId, onRefetch, isAbCam
             </div>
             {bidStrategy !== "LOWEST_COST_WITHOUT_CAP" && (
               <div>
-                <div className="font-semibold text-[12.5px] leading-[1.3] text-[var(--w-fg-strong)]" style={{ marginBottom: 6 }}>
+                <div className="font-semibold text-[13px] leading-[1.3] text-[var(--w-fg-strong)]" style={{ marginBottom: 6 }}>
                   {bidStrategy === "COST_CAP" ? "목표 비용 (₩)" : "입찰 상한 (₩)"}
                 </div>
                 <input className="w-full bg-[var(--w-bg-elevated)] border border-[var(--w-line-normal)] rounded-xl px-3.5 py-3 font-medium text-[14px] leading-[1.5] text-[var(--w-fg-strong)] tracking-[0.004em] outline-none transition-[border-color,box-shadow] duration-[120ms] focus:border-[var(--w-primary-normal)] focus:shadow-[0_0_0_4px_rgba(0,102,255,0.14)] placeholder:text-[var(--w-fg-alternative)]" type="number" min={100} step={100} value={bidAmount}
@@ -1218,7 +1216,7 @@ function CampaignConfigurationTab({ c, isLoading, campaignId, onRefetch, isAbCam
               </div>
             )}
             <div>
-              <div className="font-semibold text-[12.5px] leading-[1.3] text-[var(--w-fg-strong)]" style={{ marginBottom: 8 }}>플랫폼</div>
+              <div className="font-semibold text-[13px] leading-[1.3] text-[var(--w-fg-strong)]" style={{ marginBottom: 8 }}>플랫폼</div>
               <div style={{ display: "flex", gap: 8 }}>
                 {([{ val: "both", label: "FB + IG" }, { val: "facebook", label: "페이스북만" }, { val: "instagram", label: "인스타그램만" }] as const).map(({ val, label }) => (
                   <button key={val} type="button" onClick={() => setEditPlatforms(val)}
@@ -1232,7 +1230,7 @@ function CampaignConfigurationTab({ c, isLoading, campaignId, onRefetch, isAbCam
               </div>
             </div>
             <div>
-              <div className="font-semibold text-[12.5px] leading-[1.3] text-[var(--w-fg-strong)]" style={{ marginBottom: 8 }}>배치</div>
+              <div className="font-semibold text-[13px] leading-[1.3] text-[var(--w-fg-strong)]" style={{ marginBottom: 8 }}>배치</div>
               <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
                 {([{ val: "auto", label: "자동 (Advantage+)" }, { val: "manual", label: "수동" }] as const).map(({ val, label }) => (
                   <button key={val} type="button" onClick={() => {
@@ -1308,7 +1306,7 @@ function EvidenceText({ evidence }: { evidence: WinnerEvidence }) {
       <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
         <div className="font-semibold text-[13px] leading-[1.3] text-[var(--w-status-positive)]">🏆 KPI 목표 모두 통과</div>
         {evidence.passed.map((p, i) => (
-          <div key={i} className="font-medium text-[12.5px] leading-[1.4] text-[var(--w-fg-neutral)]">
+          <div key={i} className="font-medium text-[13px] leading-[1.4] text-[var(--w-fg-neutral)]">
             {p.kpi.toUpperCase()} {p.current.toFixed(2)} (목표 {p.direction === "gte" ? "≥" : "≤"}{p.target})
           </div>
         ))}
@@ -1326,7 +1324,7 @@ function EvidenceText({ evidence }: { evidence: WinnerEvidence }) {
         🏆 {labels[evidence.objective] ?? "광고"} 호조 기준 통과
       </div>
       {evidence.passed.map((p, i) => (
-        <div key={i} className="font-medium text-[12.5px] leading-[1.4] text-[var(--w-fg-neutral)]">
+        <div key={i} className="font-medium text-[13px] leading-[1.4] text-[var(--w-fg-neutral)]">
           {p.metric} {p.current.toFixed(2)} (기준 {p.threshold})
         </div>
       ))}
@@ -1364,7 +1362,7 @@ function RelaunchConfirmModal({
             자동 재게재 — &apos;{campaignName}&apos;
           </div>
           {cycleCount > 1 && (
-            <div className="font-medium text-[12.5px] leading-none text-[var(--w-fg-alternative)]" style={{ marginTop: 6 }}>
+            <div className="font-medium text-[13px] leading-none text-[var(--w-fg-alternative)]" style={{ marginTop: 6 }}>
               📊 누적 {cycleCount}번째 사이클
             </div>
           )}
@@ -1384,7 +1382,7 @@ function RelaunchConfirmModal({
 
         {error && (
           <Callout tone="negative" size="sm">
-            <div className="font-medium text-[12.5px] leading-[1.4] text-[var(--w-status-negative)]">{error}</div>
+            <div className="font-medium text-[13px] leading-[1.4] text-[var(--w-status-negative)]">{error}</div>
           </Callout>
         )}
 

@@ -64,7 +64,7 @@ export default function AbTestsPage() {
           </div>
           <div className="font-bold text-[17px] leading-[1.3] text-[var(--w-fg-strong)]">A/B 토너먼트를 시작하려면 계정 연결이 필요해요</div>
           <div className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)] max-w-[420px]">실제 Meta 광고 위에서 챔피언-챌린저 라운드를 돌려요. 광고 계정·페이지를 연결하면 토너먼트를 열 수 있어요.</div>
-          <Button variant="primary" type="button" className="mt-2" onClick={() => router.push("/connect")}>계정 연결</Button>
+          <Button variant="primary" type="button" className="mt-2" onClick={() => router.push("/setup")}>계정 연결</Button>
         </Card>
       </div>
     );
@@ -114,6 +114,7 @@ export default function AbTestsPage() {
 
 const krw = (n: number) => `₩${(n || 0).toLocaleString("ko-KR")}`;
 const FONT_MONO = "font-[family-name:var(--w-font-mono)]";
+const signedPct = (n: number) => `${n >= 0 ? "+" : ""}${Math.round(n)}%`;
 
 // 디자인 4상태로 토너먼트를 가른다. lastError(게재 실패) 가 최우선 — "AI 작동 중"이 아니라 "고장".
 type AbState = "stopped" | "winner" | "running" | "completed";
@@ -260,8 +261,8 @@ function Lineage({ rounds, compact = false }: { rounds: TourRound[]; compact?: b
             </div>
             {!compact && (
               <>
-                <div className={`${FONT_MONO} text-[10.5px] font-bold text-[var(--w-fg-alternative)] mt-1.5`}>R{r.index}</div>
-                <div className="text-[10.5px] font-semibold mt-px leading-[1.2] text-center text-[var(--w-fg-neutral)]">
+                <div className={`${FONT_MONO} text-[11px] font-bold text-[var(--w-fg-alternative)] mt-1.5`}>R{r.index}</div>
+                <div className="text-[11px] font-semibold mt-px leading-[1.2] text-center text-[var(--w-fg-neutral)]">
                   {isLive ? "겨루는 중" : roundLabel(r)}
                 </div>
               </>
@@ -303,29 +304,29 @@ function StoppedCard({ t, onOpen }: { t: Tournament; onOpen: () => void }) {
     <div
       onClick={onOpen} role="button" tabIndex={0}
       onKeyDown={(e) => { if (e.key === "Enter") onOpen(); }}
-      className="grid grid-cols-1 sm:grid-cols-[auto_1fr_auto] items-center gap-[18px] rounded-[18px] cursor-pointer transition-shadow duration-150 outline-none focus-visible:shadow-[0_0_0_3px_var(--w-focus-ring)] hover:shadow-[0_1px_2px_rgba(255,66,66,0.10),0_6px_18px_rgba(255,66,66,0.14)]"
-      style={{ background: "linear-gradient(90deg, var(--w-status-negative-soft), var(--w-bg-elevated) 40%)", border: "1.5px solid var(--w-status-negative-line)", borderLeft: "5px solid var(--w-status-negative)", padding: "18px 20px 18px 18px" }}
+      className="grid grid-cols-1 sm:grid-cols-[auto_1fr_auto] items-center gap-4 rounded-xl cursor-pointer bg-[var(--w-bg-elevated)] border border-[var(--w-status-negative-line)] p-4 outline-none focus-visible:shadow-[0_0_0_3px_var(--w-focus-ring)]"
+      style={{ borderLeft: "3px solid var(--w-status-negative)" }}
     >
-      <div className="grid place-items-center shrink-0 rounded-[13px] w-[50px] h-[50px] text-[var(--w-status-negative)]" style={{ background: "var(--w-status-negative-soft)", border: "1.5px solid var(--w-status-negative-line)" }}>
+      <div className="grid place-items-center shrink-0 rounded-xl w-[50px] h-[50px] text-[var(--w-status-negative)] bg-[var(--w-status-negative-soft)] border border-[var(--w-status-negative-line)]">
         <PlugOffIcon size={24} />
       </div>
       <div className="min-w-0 flex flex-col gap-1.5">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-[5px] rounded-full font-extrabold text-[11.5px] leading-none bg-[var(--w-status-negative-soft)] text-[var(--w-status-negative)]">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-[5px] rounded-full font-bold text-[12px] leading-none bg-[var(--w-status-negative-soft)] text-[var(--w-status-negative)]">
             <span className="w-2 h-2 rounded-sm bg-[var(--w-status-negative)] shrink-0" /> 게재 멈춤 · 복구 필요
           </span>
         </div>
-        <div className="font-extrabold text-[16px] tracking-[-0.01em] text-[var(--w-fg-strong)]">{t.productName}</div>
+        <div className="font-bold text-[16px] tracking-[-0.01em] text-[var(--w-fg-strong)]">{t.productName}</div>
         <div className="text-[13px] font-medium leading-[1.5] text-[var(--w-fg-neutral)] max-w-[560px] text-pretty">
           <span className="font-bold text-[var(--w-status-negative)]">고장 —</span> {t.lastError || "게재가 중단됐어요. 상세에서 원인을 확인하고 복구해 주세요."}
         </div>
       </div>
       <div className="flex flex-col gap-2 items-stretch shrink-0">
         <button type="button" onClick={(e) => { e.stopPropagation(); onOpen(); }}
-          className="inline-flex items-center justify-center gap-[7px] h-10 px-[18px] rounded-[10px] font-bold text-[13.5px] text-white border-none cursor-pointer transition-colors bg-[var(--w-status-negative)] hover:bg-[#e53535]">
+          className="inline-flex items-center justify-center gap-[7px] h-10 px-[18px] rounded-lg font-bold text-[14px] text-white border-none cursor-pointer transition-opacity bg-[var(--w-status-negative)] hover:opacity-90">
           <Icon name="refresh" size={15} /> 복구하기
         </button>
-        <span className="text-[11.5px] font-semibold text-center text-[var(--w-fg-alternative)]">자동 진행은 멈춰 있어요</span>
+        <span className="text-[12px] font-semibold text-center text-[var(--w-fg-alternative)]">자동 진행은 멈춰 있어요</span>
       </div>
     </div>
   );
@@ -335,41 +336,46 @@ function StoppedCard({ t, onOpen }: { t: Tournament; onOpen: () => void }) {
 function WinnerCard({ t, onOpen }: { t: Tournament; onOpen: () => void }) {
   const lf = liftOf(t);
   const spec = tourMetricSpec(t.objective);
+  const isChampionReview = deriveBeat(t) === "champion-review";
   return (
     <div
       onClick={onOpen} role="button" tabIndex={0}
       onKeyDown={(e) => { if (e.key === "Enter") onOpen(); }}
-      className="grid grid-cols-1 sm:grid-cols-[auto_1fr_auto] items-center gap-[18px] rounded-[18px] cursor-pointer transition-shadow duration-150 outline-none focus-visible:shadow-[0_0_0_3px_var(--w-focus-ring)] hover:shadow-[0_1px_2px_rgba(0,102,255,0.10),0_6px_18px_rgba(0,102,255,0.12)]"
-      style={{ background: "linear-gradient(90deg, var(--w-primary-soft), var(--w-bg-elevated) 42%)", border: "1.5px solid rgba(0,102,255,0.30)", borderLeft: "5px solid var(--w-primary-normal)", padding: "18px 20px 18px 18px" }}
+      className="grid grid-cols-1 sm:grid-cols-[auto_1fr_auto] items-center gap-4 rounded-xl cursor-pointer bg-[var(--w-bg-elevated)] border border-[var(--w-line-normal)] p-4 outline-none focus-visible:shadow-[0_0_0_3px_var(--w-focus-ring)]"
+      style={{ borderLeft: "3px solid var(--w-primary-normal)" }}
     >
       <div className="relative shrink-0">
         {t.champion.imageUrl ? (
-          <img src={t.champion.imageUrl} alt="" className="w-[54px] h-[54px] rounded-[14px] object-cover" style={{ border: "2px solid var(--w-primary-normal)" }} />
+          <img src={t.champion.imageUrl} alt="" className="w-[54px] h-[54px] rounded-xl object-cover border-2 border-[var(--w-primary-normal)]" />
         ) : (
-          <div className="w-[54px] h-[54px] rounded-[14px] grid place-items-center bg-[var(--w-primary-soft)] text-[var(--w-primary-normal)]" style={{ border: "2px solid var(--w-primary-normal)" }}><Icon name="chart" size={24} /></div>
+          <div className="w-[54px] h-[54px] rounded-xl grid place-items-center bg-[var(--w-primary-soft)] text-[var(--w-primary-normal)] border-2 border-[var(--w-primary-normal)]"><Icon name="chart" size={24} /></div>
         )}
-        <span className="absolute -right-1.5 -bottom-1.5 w-[26px] h-[26px] rounded-full grid place-items-center bg-[var(--w-primary-normal)] text-white" style={{ border: "2px solid var(--w-bg-elevated)" }}>
+        <span className="absolute -right-1.5 -bottom-1.5 w-[26px] h-[26px] rounded-full grid place-items-center bg-[var(--w-primary-normal)] text-white border-2 border-[var(--w-bg-elevated)]">
           <TrophyIcon size={14} />
         </span>
       </div>
       <div className="min-w-0 flex flex-col gap-1.5">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-[5px] rounded-full font-extrabold text-[11.5px] leading-none bg-[var(--w-primary-soft)] text-[var(--w-primary-press)]">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-[5px] rounded-full font-bold text-[12px] leading-none bg-[var(--w-primary-soft)] text-[var(--w-primary-press)]">
             <TrophyIcon size={13} /> {decisionStage(deriveBeat(t))}
           </span>
-          <LiftBadge value={lf} size="sm" />
+          {!isChampionReview && <LiftBadge value={lf} size="sm" />}
         </div>
-        <div className="font-extrabold text-[16px] tracking-[-0.01em] text-[var(--w-fg-strong)]">{t.productName}</div>
+        <div className="font-bold text-[16px] tracking-[-0.01em] text-[var(--w-fg-strong)]">{t.productName}</div>
         <div className="text-[13px] font-medium leading-[1.5] text-[var(--w-fg-neutral)] max-w-[560px] text-pretty">
-          <span className="font-bold text-[var(--w-fg-strong)]">{settledCount(t)}라운드 진화로 이긴 광고를 찾았어요.</span> 최종 {spec.rateLabel} {formatPrimary(spec, t.championCtr)} · 이제 어떻게 쓸지 골라주세요. 돈이 드는 결정이라 자동으로 넘기지 않아요.
+          {isChampionReview ? (
+            <>출발 광고를 확인해 주세요. 확정하면 AI가 챌린저를 붙여 자동 진화를 시작해요.</>
+          ) : (
+            <><span className="font-bold text-[var(--w-fg-strong)]">{settledCount(t)}라운드 진화로 이긴 광고를 찾았어요.</span> 최종 {spec.rateLabel} {formatPrimary(spec, t.championCtr)} · 이제 어떻게 쓸지 골라주세요. 돈이 드는 결정이라 자동으로 넘기지 않아요.</>
+          )}
         </div>
       </div>
       <div className="flex flex-col gap-2 items-stretch shrink-0">
         <button type="button" onClick={(e) => { e.stopPropagation(); onOpen(); }}
-          className="inline-flex items-center justify-center gap-[7px] h-10 px-[18px] rounded-[10px] font-bold text-[13.5px] text-white border-none cursor-pointer transition-colors bg-[var(--w-primary-normal)] hover:bg-[var(--w-primary-hover)]">
-          <Icon name="sparkles" size={15} /> 승자 선택
+          className="inline-flex items-center justify-center gap-[7px] h-10 px-[18px] rounded-lg font-bold text-[14px] text-white border-none cursor-pointer transition-colors bg-[var(--w-primary-normal)] hover:bg-[var(--w-primary-hover)]">
+          <Icon name="sparkles" size={15} /> {isChampionReview ? "출발 광고 확인" : "승자 선택"}
         </button>
-        <span className="text-[11.5px] font-semibold text-center text-[var(--w-primary-press)]">승격 · 리필 · 종료 중 선택</span>
+        <span className="text-[12px] font-semibold text-center text-[var(--w-primary-press)]">{isChampionReview ? "확인 · 수정 · 다시 생성 중 선택" : "승격 · 리필 · 종료 중 선택"}</span>
       </div>
     </div>
   );
@@ -385,29 +391,29 @@ function RunningCard({ t, onOpen }: { t: Tournament; onOpen: () => void }) {
     <div
       onClick={onOpen} role="button" tabIndex={0}
       onKeyDown={(e) => { if (e.key === "Enter") onOpen(); }}
-      className="group grid grid-cols-[72px_1fr] xl:grid-cols-[72px_1fr_200px] gap-[22px] items-stretch rounded-[18px] cursor-pointer bg-[var(--w-bg-elevated)] border border-[var(--w-line-normal)] p-5 transition-[border-color,box-shadow] duration-150 outline-none hover:border-[rgba(0,102,255,0.35)] hover:shadow-[var(--w-shadow-card)] focus-visible:shadow-[0_0_0_3px_var(--w-focus-ring)]"
+      className="group grid grid-cols-[72px_1fr] xl:grid-cols-[72px_1fr_200px] gap-[22px] items-stretch rounded-2xl cursor-pointer bg-[var(--w-bg-elevated)] border border-[var(--w-line-normal)] p-5 transition-[border-color,box-shadow] duration-150 outline-none hover:border-[rgba(0,102,255,0.35)] hover:shadow-[var(--w-shadow-card)] focus-visible:shadow-[0_0_0_3px_var(--w-focus-ring)]"
     >
       {t.champion.imageUrl ? (
-        <img src={t.champion.imageUrl} alt="" className="w-[72px] h-[72px] rounded-[14px] object-cover border border-[var(--w-line-normal)] shrink-0" />
+        <img src={t.champion.imageUrl} alt="" className="w-[72px] h-[72px] rounded-xl object-cover border border-[var(--w-line-normal)] shrink-0" />
       ) : (
-        <div className="w-[72px] h-[72px] rounded-[14px] grid place-items-center bg-[var(--w-primary-soft)] text-[var(--w-primary-normal)] shrink-0 border border-[var(--w-line-normal)]"><Icon name="chart" size={28} /></div>
+        <div className="w-[72px] h-[72px] rounded-xl grid place-items-center bg-[var(--w-primary-soft)] text-[var(--w-primary-normal)] shrink-0 border border-[var(--w-line-normal)]"><Icon name="chart" size={28} /></div>
       )}
 
       <div className="min-w-0 flex flex-col gap-2.5">
         <div className="flex items-center gap-2 flex-wrap">
-          <Chip variant="live" dot>🤖 자동 진화 중</Chip>
+          <Chip variant="live" dot>자동 진화 중</Chip>
           <span className={`${FONT_MONO} text-[12px] font-bold text-[var(--w-fg-neutral)]`}>{roundsSoFar(t)}라운드째</span>
         </div>
-        <div className="font-extrabold text-[16.5px] tracking-[-0.01em] text-[var(--w-fg-strong)] truncate">{t.productName}</div>
+        <div className="font-bold text-[17px] tracking-[-0.01em] text-[var(--w-fg-strong)] truncate">{t.productName}</div>
         {/* 진화 사다리 — 무엇을 이겼고/지켰는지 */}
         <div className="mt-0.5 max-w-[360px]">
           <Lineage rounds={t.rounds} />
         </div>
         {/* 지금 겨루는 중 */}
         {liveRound && (
-          <div className="inline-flex items-center gap-[9px] mt-1 px-3 py-2 rounded-[10px] bg-[var(--w-bg-alternative)] self-start max-w-full">
+          <div className="inline-flex items-center gap-[9px] mt-1 px-3 py-2 rounded-lg bg-[var(--w-bg-alternative)] self-start max-w-full">
             <span className="grid place-items-center shrink-0 text-[var(--w-primary-normal)]"><FlaskIcon size={15} /></span>
-            <span className="text-[12.5px] font-semibold leading-[1.4] text-[var(--w-fg-neutral)]">
+            <span className="text-[13px] font-semibold leading-[1.4] text-[var(--w-fg-neutral)]">
               지금 <span className="text-[var(--w-fg-strong)] font-bold">{roundLabel(liveRound)}</span> 레버로 겨루는 중{liveDays > 0 ? ` · ${liveDays}일째` : ""}
             </span>
           </div>
@@ -417,10 +423,10 @@ function RunningCard({ t, onOpen }: { t: Tournament; onOpen: () => void }) {
       <div className="col-span-2 xl:col-span-1 flex flex-col justify-between items-stretch gap-3 xl:border-l border-t xl:border-t-0 border-[var(--w-line-alternative)] pt-3.5 xl:pt-0 xl:pl-[22px]">
         <div className="w-full flex flex-col items-stretch gap-2">
           <div className="flex items-center justify-between gap-2">
-            <span className="text-[10.5px] font-bold tracking-[0.04em] uppercase text-[var(--w-fg-alternative)]">챔피언 {spec.rateLabel} 진화</span>
+            <span className="text-[11px] font-bold tracking-[0.04em] uppercase text-[var(--w-fg-alternative)]">챔피언 {spec.rateLabel} 진화</span>
             <LiftBadge value={lf} size="sm" />
           </div>
-          <div className="w-full"><Sparkline points={tr} w={200} h={84} open fluid /></div>
+          <div className="w-full"><Sparkline points={spec.higherBetter ? tr : tr.map((v) => -v)} w={200} h={84} open fluid /></div>
           <div className="flex items-baseline gap-[7px]">
             <span className={`${FONT_MONO} font-extrabold text-[19px] tracking-[-0.01em] text-[var(--w-fg-strong)]`}>{formatPrimary(spec, t.championCtr)}</span>
             <span className="text-[11px] font-semibold text-[var(--w-fg-alternative)]">현재 챔피언</span>
@@ -443,24 +449,25 @@ function CompletedCard({ t, onOpen, best }: { t: Tournament; onOpen: () => void;
     <div
       onClick={onOpen} role="button" tabIndex={0}
       onKeyDown={(e) => { if (e.key === "Enter") onOpen(); }}
-      className="flex flex-col gap-[13px] rounded-[18px] cursor-pointer bg-[var(--w-bg-elevated)] border border-[var(--w-line-normal)] p-[18px] transition-[border-color,box-shadow] duration-150 outline-none hover:border-[rgba(0,102,255,0.35)] hover:shadow-[var(--w-shadow-card)] focus-visible:shadow-[0_0_0_3px_var(--w-focus-ring)]"
+      className="flex flex-col gap-[13px] rounded-2xl cursor-pointer bg-[var(--w-bg-elevated)] border border-[var(--w-line-normal)] p-[18px] transition-[border-color,box-shadow] duration-150 outline-none hover:border-[rgba(0,102,255,0.35)] hover:shadow-[var(--w-shadow-card)] focus-visible:shadow-[0_0_0_3px_var(--w-focus-ring)]"
     >
       <div className="flex items-center justify-between gap-2.5">
-        <Chip variant={converged ? "live" : "ended"} dot={converged}>{converged ? "🎯 수렴 종료" : "완료"}</Chip>
+        <Chip variant={converged ? "live" : "ended"} dot={converged}>{converged ? "수렴 종료" : "완료"}</Chip>
         {best ? (
-          <span className="inline-flex items-center gap-1.5 font-extrabold text-[10.5px] leading-none tracking-[0.02em] px-[9px] py-[5px] rounded-[7px] text-[#a9740a] bg-[rgba(255,176,38,0.16)] dark:text-[#ffcf6b]"><TrophyIcon size={12} /> 최고 우승작</span>
+          <span className="inline-flex items-center gap-1.5 font-bold text-[11px] leading-none tracking-[0.02em] px-[9px] py-[5px] rounded-md text-[#a9740a] bg-[rgba(255,176,38,0.16)] dark:text-[#ffcf6b]"><TrophyIcon size={12} /> 최고 우승작</span>
         ) : (
-          <span className={`${FONT_MONO} text-[11.5px] font-semibold text-[var(--w-fg-alternative)]`}>{settledCount(t)}라운드</span>
+          <span className={`${FONT_MONO} text-[12px] font-semibold text-[var(--w-fg-alternative)]`}>{settledCount(t)}라운드</span>
         )}
       </div>
-      <div className="font-extrabold text-[16px] tracking-[-0.01em] text-[var(--w-fg-strong)]">{t.productName}</div>
+      <div className="font-bold text-[16px] tracking-[-0.01em] text-[var(--w-fg-strong)]">{t.productName}</div>
       <div className="flex items-center justify-between gap-3 py-2.5 border-y border-[var(--w-line-alternative)]">
         <div className="flex flex-col gap-1.5">
           <CtrTrack from={formatPrimary(spec, startCtrOf(t))} to={formatPrimary(spec, t.championCtr)} />
           <Lineage rounds={t.rounds} compact />
         </div>
         <div className="flex flex-col items-end gap-[5px]">
-          <Sparkline points={tr} w={92} h={38} tone="positive" />
+          {/* 스파크라인은 우상향=이기는 중 서사 — CPM 등 낮을수록 우세인 지표는 부호 반전해 그린다 */}
+          <Sparkline points={spec.higherBetter ? tr : tr.map((v) => -v)} w={92} h={38} tone="positive" />
           <LiftBadge value={lf} size="sm" />
         </div>
       </div>
@@ -484,19 +491,19 @@ function TrophyHighlight({ t, onOpen }: { t: Tournament; onOpen: () => void }) {
         <TrophyIcon size={38} strokeWidth={1.6} />
       </div>
       <div className="min-w-0 flex flex-col gap-2">
-        <span className="inline-flex items-center gap-[7px] font-extrabold text-[11px] leading-none tracking-[0.1em] uppercase text-[#a9740a] dark:text-[#ffcf6b]">
+        <span className="inline-flex items-center gap-[7px] font-bold text-[11px] leading-none tracking-[0.1em] uppercase text-[#a9740a] dark:text-[#ffcf6b]">
           <TrophyIcon size={13} /> 최고 우승작 · 가장 큰 개선
         </span>
-        <div className="font-extrabold text-[21px] tracking-[-0.02em] text-[var(--w-fg-strong)]">{t.productName}</div>
+        <div className="font-bold text-[21px] tracking-[-0.02em] text-[var(--w-fg-strong)]">{t.productName}</div>
         <p className="m-0 pl-3 border-l-2 border-[rgba(212,150,30,0.5)] font-semibold text-[14px] leading-[1.5] text-[var(--w-fg-neutral)] text-pretty">“{t.champion.headline}”</p>
         <div className="flex items-center gap-3.5 mt-0.5 flex-wrap">
           <CtrTrack from={formatPrimary(spec, startCtrOf(t))} to={formatPrimary(spec, t.championCtr)} />
-          <span className="text-[12.5px] font-semibold text-[var(--w-fg-neutral)]">{settledCount(t)}라운드 진화</span>
+          <span className="text-[13px] font-semibold text-[var(--w-fg-neutral)]">{settledCount(t)}라운드 진화</span>
         </div>
       </div>
       <div className="self-center shrink-0 flex flex-col items-center gap-1 min-w-[128px] py-[18px] px-[22px] rounded-[16px] bg-[rgba(0,191,64,0.08)] border border-[rgba(0,191,64,0.22)]">
-        <span className="font-extrabold text-[36px] leading-none tracking-[-0.03em] text-[var(--w-status-positive)]">+{Math.round(lf)}%</span>
-        <span className="font-bold text-[10.5px] tracking-[0.04em] uppercase text-[var(--w-fg-neutral)]">{spec.rateLabel} 개선</span>
+        <span className="font-extrabold text-[36px] leading-none tracking-[-0.03em] text-[var(--w-status-positive)]">{signedPct(lf)}</span>
+        <span className="font-bold text-[11px] tracking-[0.04em] uppercase text-[var(--w-fg-neutral)]">{spec.rateLabel} 개선</span>
       </div>
     </div>
   );
@@ -513,11 +520,11 @@ function SectionHead({ rank, title, count, tone, sub }: { rank?: string; title: 
   const [cbg, cfg] = toneMap[tone || "zero"];
   return (
     <div className="flex flex-col gap-1">
-      <h2 className="m-0 flex items-center gap-2.5 font-extrabold text-[18.5px] tracking-[-0.016em] text-[var(--w-fg-strong)]">
-        {rank && <span className={`${FONT_MONO} font-extrabold text-[14px] text-[var(--w-fg-alternative)]`}>{rank}</span>}
+      <h2 className="m-0 flex items-center gap-2.5 font-bold text-[19px] tracking-[-0.016em] text-[var(--w-fg-strong)]">
+        {rank && <span className={`${FONT_MONO} font-bold text-[14px] text-[var(--w-fg-alternative)]`}>{rank}</span>}
         {title}
         {count != null && (
-          <span className={`${FONT_MONO} font-extrabold text-[12px] leading-none min-w-[22px] h-[22px] px-[7px] rounded-full inline-grid place-items-center`} style={{ background: cbg, color: cfg }}>{count}</span>
+          <span className={`${FONT_MONO} font-bold text-[12px] leading-none min-w-[22px] h-[22px] px-[7px] rounded-full inline-grid place-items-center`} style={{ background: cbg, color: cfg }}>{count}</span>
         )}
       </h2>
       <p className="m-0 text-[13px] font-medium leading-[1.5] text-[var(--w-fg-neutral)]">{sub}</p>
@@ -528,12 +535,12 @@ function SectionHead({ rank, title, count, tone, sub }: { rank?: string; title: 
 /* ① 평시 안심 밴드 — 개입할 게 0건일 때 ("맡겨둬" 정서). dashed empty 가 아님. */
 function CalmBand({ runningCount }: { runningCount: number }) {
   return (
-    <div className="flex items-center gap-4 px-[22px] py-5 rounded-[16px]" style={{ background: "linear-gradient(90deg, var(--w-status-positive-soft), var(--w-bg-elevated) 55%)", border: "1px solid var(--w-status-positive-line)" }}>
+    <div className="flex items-center gap-4 px-[22px] py-5 rounded-2xl bg-[var(--w-bg-elevated)] border border-[var(--w-status-positive-line)]">
       <div className="w-[46px] h-[46px] rounded-xl grid place-items-center shrink-0 bg-[var(--w-status-positive-soft)] text-[var(--w-status-positive)]">
         <Icon name="check-circle" size={24} />
       </div>
       <div className="min-w-0">
-        <div className="font-extrabold text-[15.5px] tracking-[-0.01em] text-[var(--w-fg-strong)]">지금 손볼 건 없어요 — 맡겨두셔도 돼요</div>
+        <div className="font-bold text-[16px] tracking-[-0.01em] text-[var(--w-fg-strong)]">지금 손볼 건 없어요 — 맡겨두셔도 돼요</div>
         <div className="text-[13px] font-medium leading-[1.5] text-[var(--w-fg-neutral)] mt-0.5 text-pretty">
           {runningCount > 0
             ? `AI가 토너먼트 ${runningCount}개를 알아서 진화시키고 있어요. 예산이 다하거나 게재가 멈추면 그때 바로 여기로 알려드릴게요.`
@@ -547,7 +554,7 @@ function CalmBand({ runningCount }: { runningCount: number }) {
 /* 진행 중 비어 있을 때 안내 (dashed) */
 function RunningEmpty() {
   return (
-    <div className="px-[22px] py-[26px] rounded-[16px] bg-[var(--w-bg-elevated)] border border-dashed border-[var(--w-line-normal)] text-center text-[13.5px] font-medium text-[var(--w-fg-neutral)]">
+    <div className="px-[22px] py-[26px] rounded-[16px] bg-[var(--w-bg-elevated)] border border-dashed border-[var(--w-line-normal)] text-center text-[14px] font-medium text-[var(--w-fg-neutral)]">
       지금 진행 중인 토너먼트가 없어요. 새로 시작하면 여기서 진화 과정을 실시간으로 지켜볼 수 있어요.
     </div>
   );
@@ -556,9 +563,9 @@ function RunningEmpty() {
 /* 전체 빈 상태 */
 function EmptyAll({ onNew }: { onNew: () => void }) {
   return (
-    <div className="flex flex-col items-center text-center gap-3.5 px-8 py-[72px] rounded-[20px] bg-[var(--w-bg-elevated)] border border-dashed border-[var(--w-line-normal)]">
-      <div className="w-[60px] h-[60px] rounded-[16px] grid place-items-center bg-[var(--w-primary-soft)] text-[var(--w-primary-normal)]"><SwordsIcon size={28} /></div>
-      <div className="font-extrabold text-[19px] tracking-[-0.01em] text-[var(--w-fg-strong)]">아직 토너먼트가 없어요</div>
+    <div className="flex flex-col items-center text-center gap-3.5 px-8 py-[72px] rounded-2xl bg-[var(--w-bg-elevated)] border border-dashed border-[var(--w-line-normal)]">
+      <div className="w-[60px] h-[60px] rounded-xl grid place-items-center bg-[var(--w-primary-soft)] text-[var(--w-primary-normal)]"><SwordsIcon size={28} /></div>
+      <div className="font-bold text-[19px] tracking-[-0.01em] text-[var(--w-fg-strong)]">아직 토너먼트가 없어요</div>
       <p className="m-0 max-w-[440px] text-[14px] font-medium leading-[1.6] text-[var(--w-fg-neutral)] text-pretty">
         광고 하나를 올려두면, AI가 챌린저를 붙여 라운드마다 더 나은 버전으로 진화시켜요. 예산이 다할 때까지 끝점 없이 계속 더 좋은 광고를 찾아요.
       </p>
@@ -576,7 +583,7 @@ function GlanceRibbon({ list }: { list: Tournament[] }) {
   const al = completedList.length ? Math.round(completedList.reduce((s, c) => s + liftOf(c), 0) / completedList.length) : 0;
   const Cell = ({ value, label, accent }: { value: ReactNode; label: string; accent?: string }) => (
     <div className="flex items-baseline gap-[7px]">
-      <span className={`${FONT_MONO} font-extrabold text-[16px] tracking-[-0.01em]`} style={{ color: accent || "var(--w-fg-strong)" }}>{value}</span>
+      <span className={`${FONT_MONO} font-bold text-[16px] tracking-[-0.01em]`} style={{ color: accent || "var(--w-fg-strong)" }}>{value}</span>
       <span className="text-[12px] font-semibold text-[var(--w-fg-neutral)]">{label}</span>
     </div>
   );
@@ -588,7 +595,7 @@ function GlanceRibbon({ list }: { list: Tournament[] }) {
       <Cell value={running} label="자동 진행" />
       <Div />
       <Cell value={completedList.length} label="완료" />
-      {completedList.length > 0 && <><Div /><Cell value={`+${al}%`} label="평균 성과 개선" accent="var(--w-status-positive)" /></>}
+      {completedList.length > 0 && <><Div /><Cell value={signedPct(al)} label="평균 성과 개선" accent="var(--w-status-positive)" /></>}
     </div>
   );
 }
@@ -596,8 +603,8 @@ function GlanceRibbon({ list }: { list: Tournament[] }) {
 function headerSub(stopped: number, winner: number, running: number, completed: number, al: number): string {
   if (stopped) return "지금 바로 손봐야 할 토너먼트가 있어요. 멈춘 게재부터 복구해 주세요.";
   if (winner) return "AI가 이긴 광고를 찾아 두고 당신의 결정을 기다리고 있어요.";
-  if (running) return completed ? `AI가 ${running}개를 진화시키는 중 · 끝낸 ${completed}개는 평균 +${al}% 개선했어요.` : `AI가 ${running}개 토너먼트를 알아서 진화시키고 있어요.`;
-  if (completed) return `토너먼트 ${completed}개를 끝냈어요 — 평균 +${al}% 개선.`;
+  if (running) return completed ? `AI가 ${running}개를 진화시키는 중 · 끝낸 ${completed}개는 평균 ${signedPct(al)} 개선했어요.` : `AI가 ${running}개 토너먼트를 알아서 진화시키고 있어요.`;
+  if (completed) return `토너먼트 ${completed}개를 끝냈어요 — 평균 ${signedPct(al)} 개선.`;
   return "광고 하나를 챔피언으로, AI 챌린저와 끝점 없이 겨루게 해요.";
 }
 
@@ -616,12 +623,12 @@ function TournamentDashboard({ tournaments, onOpen, onNew }: { tournaments: Tour
       {/* ── 헤더 ── */}
       <header className="flex items-end justify-between gap-6 flex-wrap">
         <div className="min-w-0">
-          <span className="inline-flex items-center gap-2 font-extrabold text-[11px] leading-none tracking-[0.1em] uppercase text-[var(--w-fg-alternative)] mb-3 whitespace-nowrap">
-            <span className="w-[22px] h-[22px] rounded-[7px] grid place-items-center bg-[var(--w-primary-soft)] text-[var(--w-primary-normal)]"><SwordsIcon size={13} /></span>
+          <span className="inline-flex items-center gap-2 font-bold text-[11px] leading-none tracking-[0.1em] uppercase text-[var(--w-fg-alternative)] mb-3 whitespace-nowrap">
+            <span className="w-[22px] h-[22px] rounded-md grid place-items-center bg-[var(--w-primary-soft)] text-[var(--w-primary-normal)]"><SwordsIcon size={13} /></span>
             A/B 테스트 · 토너먼트
           </span>
-          <h1 className="m-0 font-extrabold text-[31px] leading-[1.15] tracking-[-0.028em] text-[var(--w-fg-strong)]">이기는 광고 찾기</h1>
-          <p className="mt-2 mb-0 max-w-[600px] font-medium text-[14.5px] leading-[1.6] text-[var(--w-fg-neutral)] text-pretty">
+          <h1 className="m-0 font-bold text-[31px] leading-[1.15] tracking-[-0.028em] text-[var(--w-fg-strong)]">이기는 광고 찾기</h1>
+          <p className="mt-2 mb-0 max-w-[600px] font-medium text-[15px] leading-[1.6] text-[var(--w-fg-neutral)] text-pretty">
             {headerSub(stopped.length, winner.length, running.length, completed.length, al)}
           </p>
         </div>
@@ -676,7 +683,7 @@ function TournamentDashboard({ tournaments, onOpen, onNew }: { tournaments: Tour
           {completed.length > 0 && (
             <section className="flex flex-col gap-3.5">
               <SectionHead title="끝낸 토너먼트" count={completed.length} tone="done"
-                sub={`진화를 마친 광고들 — 이 자동화가 실제로 효과 있다는 증거예요 (평균 +${al}% 개선).`} />
+                sub={`진화를 마친 광고들 — 이 자동화가 실제로 효과 있다는 증거예요 (평균 ${signedPct(al)} 개선).`} />
               {best && <TrophyHighlight t={best} onOpen={() => onOpen(best.id)} />}
               {completedRest.length > 0 && (
                 <div className="grid gap-3.5 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">

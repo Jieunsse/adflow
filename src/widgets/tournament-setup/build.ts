@@ -45,6 +45,8 @@ export type SetupFormState = {
   country: string;
   ageMin: number;
   ageMax: number;
+  // ADR-054 — 활성 브랜드 프로필 정책의 금칙어. 챌린저 생성 프롬프트에 구조 주입.
+  prohibitedWords: string[];
 };
 
 // POST /api/tournaments 바디 — Supabase + Meta delivery 봉투.
@@ -69,6 +71,7 @@ export type TournamentRequestBody = {
   countries: string[];
   ageMin: number;
   ageMax: number;
+  prohibitedWords: string[];
 };
 
 // 출발 챔피언이 기존 광고에서 왔는가 — existing 모드 + 광고 선택 + 변형 확보.
@@ -100,15 +103,17 @@ export function buildTournamentRequest(f: SetupFormState, brandProfileId: string
     countries: [f.country],
     ageMin: f.ageMin,
     ageMax: f.ageMax,
+    prohibitedWords: f.prohibitedWords,
   };
 }
 
-// 데모 — startTournament 에 넘길 TournamentSetup. brandProfile/product 는 browse 고정.
-export function buildDemoSetup(f: SetupFormState): TournamentSetup {
+// 데모 — startTournament 에 넘길 TournamentSetup. brandProfileId 는 호출자가 활성 프로필에서 넘김
+// (실경로 buildTournamentRequest 와 동일 계약 — ledger 키·학습 탭이 활성 프로필 id 로 읽는다).
+export function buildDemoSetup(f: SetupFormState, brandProfileId: string): TournamentSetup {
   const fromExisting = isFromExisting(f);
   return {
-    brandProfileId: "browse",
-    productId: "browse",
+    brandProfileId: brandProfileId || "browse",
+    productId: f.productId || "browse",
     productName: f.productName.trim(),
     brandDescription: f.description.trim(),
     productDescription: f.description.trim(),
@@ -120,6 +125,7 @@ export function buildDemoSetup(f: SetupFormState): TournamentSetup {
     championSource: fromExisting ? "existing" : "ai",
     startingChampion: fromExisting ? f.champVariant! : undefined,
     championSourceName: fromExisting ? f.selected!.name : undefined,
+    prohibitedWords: f.prohibitedWords,
   };
 }
 

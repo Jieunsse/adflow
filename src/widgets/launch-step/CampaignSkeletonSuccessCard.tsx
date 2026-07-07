@@ -37,14 +37,14 @@ export default function CampaignSkeletonSuccessCard() {
     <Card className="p-[18px] border-dashed bg-[var(--w-bg-alternative)]">
       <div className="flex items-center gap-2 mb-1.5">
         <Icon name="info" size={14} />
-        <span className="font-semibold text-[11.5px] leading-none text-[var(--w-fg-neutral)] tracking-[0.04em] uppercase">
+        <span className="font-semibold text-[12px] leading-none text-[var(--w-fg-neutral)] tracking-[0.04em] uppercase">
           Meta App 개발 모드
         </span>
       </div>
       <div className="font-bold text-[15px] leading-[1.35] text-[var(--w-fg-strong)] mb-1.5">
         캠페인 + 광고 세트가 생성됐어요
       </div>
-      <p className="font-medium text-[12.5px] leading-[1.55] text-[var(--w-fg-normal)] m-0 mb-3.5">
+      <p className="font-medium text-[13px] leading-[1.55] text-[var(--w-fg-normal)] m-0 mb-3.5">
         Ad Creative · Ad 단계는 건너뛰었어요 (PAUSED). Meta 광고 관리자에서 확인할 수 있어요.
       </p>
 
@@ -54,10 +54,10 @@ export default function CampaignSkeletonSuccessCard() {
             key={label}
             className="flex items-center gap-2.5 px-2.5 py-2 bg-[var(--w-bg-elevated)] border border-[var(--w-line-normal)] rounded-lg"
           >
-            <span className="font-semibold text-[10.5px] leading-none font-[var(--w-font-mono)] text-[var(--w-fg-neutral)] min-w-[56px] tracking-[0.04em]">
+            <span className="font-semibold text-[11px] leading-none font-[var(--w-font-mono)] text-[var(--w-fg-neutral)] min-w-[56px] tracking-[0.04em]">
               {label}
             </span>
-            <span className="font-medium text-[12.5px] leading-none font-[var(--w-font-mono)] text-[var(--w-fg-strong)] flex-1 overflow-hidden text-ellipsis whitespace-nowrap">
+            <span className="font-medium text-[13px] leading-none font-[var(--w-font-mono)] text-[var(--w-fg-strong)] flex-1 overflow-hidden text-ellipsis whitespace-nowrap">
               {value}
             </span>
             <button

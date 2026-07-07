@@ -136,8 +136,8 @@ export function Lineage({ rounds, compact = false }: { rounds: TourRound[]; comp
             </div>
             {!compact && (
               <>
-                <div className={`${FONT_MONO} text-[10.5px] font-bold text-[var(--w-fg-alternative)] mt-1.5`}>R{r.index}</div>
-                <div className="text-[10.5px] font-semibold mt-px leading-[1.2] text-center text-[var(--w-fg-neutral)]">
+                <div className={`${FONT_MONO} text-[11px] font-bold text-[var(--w-fg-alternative)] mt-1.5`}>R{r.index}</div>
+                <div className="text-[11px] font-semibold mt-px leading-[1.2] text-center text-[var(--w-fg-neutral)]">
                   {isLive ? "겨루는 중" : roundLabel(r)}
                 </div>
               </>

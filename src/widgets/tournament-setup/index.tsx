@@ -24,6 +24,7 @@ import { listBrowse, BROWSE_CHANGE_EVENT } from "@entities/campaign/browse/store
 import { browseCampaignToSummary } from "@entities/campaign/browse/summary";
 import type { CampaignSummary } from "@/lib/meta-ads";
 import { useBrandProfileStorage } from "@features/brand-profile/model/useBrandProfileStorage";
+import type { SopSection } from "@features/sop/model/useSopStorage";
 import { useProducts } from "@shared/lib/products";
 import { shrinkImageDataUrl } from "@shared/lib/shrink-image";
 import ChallengerImageGen from "./ChallengerImageGen";
@@ -105,9 +106,10 @@ export default function TournamentSetup({ real = false }: { real?: boolean }) {
   const [ctaType, setCtaType] = useState("LEARN_MORE");
   const [ageMin, setAgeMin] = useState(18);
   const [ageMax, setAgeMax] = useState(65);
-  const [productName, setProductName] = useState("수분 가득 비건 크림");
+  // real 모드는 유저가 직접 제품을 고르거나 입력해야 실 광고비 게재가 안전 — 데모 기본값 금지(정직성 게이트).
+  const [productName, setProductName] = useState(real ? "" : "수분 가득 비건 크림");
   const [productId, setProductId] = useState("");
-  const [description, setDescription] = useState(DEMO_INPUTS.brand);
+  const [description, setDescription] = useState(real ? "" : DEMO_INPUTS.brand);
   const [tone, setTone] = useState<Tone>("warm");
   const [objective, setObjective] = useState("traffic");
   const [totalBudget, setTotalBudget] = useState(600000);
@@ -172,8 +174,10 @@ export default function TournamentSetup({ real = false }: { real?: boolean }) {
   }, [fromCampaignId, selected]);
 
   // 제품 = 활성 브랜드 프로필의 등록 제품에서 선택. 제품이 없으면 자유 입력으로 폴백(브라우즈 데모).
-  const { activeId } = useBrandProfileStorage();
+  const { profile, profiles, activeId } = useBrandProfileStorage();
   const { products } = useProducts(activeId ?? "");
+  // profile(BrandProfile) 은 policy 미포함 — 활성 엔트리(BrandProfileEntry)에서 정책만 별도로 읽는다.
+  const activeEntry = profiles.find((p) => p.id === activeId);
 
   function handlePickProduct(id: string) {
     setProductId(id);
@@ -188,6 +192,23 @@ export default function TournamentSetup({ real = false }: { real?: boolean }) {
     if (products.length && !productId) handlePickProduct(products[0].id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [products]);
+
+  // real 모드 — 제품이 없으면 활성 브랜드 프로필의 brandDescription 으로 설명란만 폴백(제품명은 유저 직접 입력 게이트 유지).
+  useEffect(() => {
+    if (real && !products.length && !description && profile.brandDescription) {
+      setDescription(profile.brandDescription);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [real, products.length, profile.brandDescription]);
+
+  // ADR-054 — 활성 브랜드 프로필 정책의 금칙어를 챌린저 생성 요청에 구조 주입.
+  const prohibitedWords = useMemo(
+    () =>
+      activeEntry?.policy
+        ?.find((s): s is Extract<SopSection, { type: "prohibited_words" }> => s.type === "prohibited_words")
+        ?.data.words ?? [],
+    [activeEntry],
+  );
 
   function handlePickCampaign(id: string) {
     setCampaignId(id);
@@ -221,6 +242,7 @@ export default function TournamentSetup({ real = false }: { real?: boolean }) {
     country,
     ageMin,
     ageMax,
+    prohibitedWords,
   };
 
   // 우측 대진 미리보기용 챌린저(B) — 바꾼 축만 다르게, 나머지는 챔피언 그대로. 비면 챔피언 값으로 폴백 표시.
@@ -244,7 +266,7 @@ export default function TournamentSetup({ real = false }: { real?: boolean }) {
       const res = await fetch("/api/generate-creative", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ brand: description.trim() || productName.trim(), target: productName.trim(), tone, outcome: objective, hint: DEGREE_HINT[chDegree] }),
+        body: JSON.stringify({ brand: description.trim() || productName.trim(), target: productName.trim(), tone, outcome: objective, hint: DEGREE_HINT[chDegree], prohibitedWords }),
       });
       if (!res.ok) throw new Error();
       const data = await res.json();
@@ -298,7 +320,7 @@ export default function TournamentSetup({ real = false }: { real?: boolean }) {
 
       // 둘러보기는 localStorage 저장(데모) — 큰 생성 이미지(2MB PNG)를 그대로 복사하면 용량을 넘겨
       // 저장이 조용히 실패한다. 챔피언/챌린저 이미지를 저장 전 축소해 발자국을 줄인다.
-      const demoSetup = buildDemoSetup(form);
+      const demoSetup = buildDemoSetup(form, activeId ?? "");
       const startingChampion = demoSetup.startingChampion
         ? { ...demoSetup.startingChampion, imageUrl: await shrinkImageDataUrl(demoSetup.startingChampion.imageUrl ?? "") }
         : undefined;
@@ -327,7 +349,7 @@ export default function TournamentSetup({ real = false }: { real?: boolean }) {
       <button
         type="button"
         onClick={goBack}
-        className="bg-transparent border-none p-0 cursor-pointer inline-flex items-center gap-1.5 font-semibold text-[12.5px] leading-none text-[var(--w-fg-neutral)] hover:underline self-start"
+        className="bg-transparent border-none p-0 cursor-pointer inline-flex items-center gap-1.5 font-semibold text-[13px] leading-none text-[var(--w-fg-neutral)] hover:underline self-start"
       >
         <Icon name="arrow-left" size={13} /> {step === "method" ? "A/B 테스트" : STEP_LABELS[STEP_ORDER[stepIdx - 1]]}
       </button>
@@ -373,7 +395,7 @@ export default function TournamentSetup({ real = false }: { real?: boolean }) {
                         </div>
                         <div className="font-bold text-[14px] leading-[1.4] text-[var(--w-fg-strong)]">{selected.headline}</div>
                         {selected.primaryText && (
-                          <p className="font-medium text-[12.5px] leading-[1.5] text-[var(--w-fg-neutral)] m-0">{selected.primaryText}</p>
+                          <p className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)] m-0">{selected.primaryText}</p>
                         )}
                       </div>
                     </div>
@@ -382,7 +404,7 @@ export default function TournamentSetup({ real = false }: { real?: boolean }) {
               ) : (
                 <div className="py-2.5 px-3.5 rounded-lg flex items-start gap-2 bg-[var(--w-bg-alternative)]">
                   <Icon name="sparkles" size={14} style={{ color: "var(--w-accent-violet)", flex: "0 0 auto", marginTop: 1 }} />
-                  <span className="font-medium text-[12.5px] leading-[1.5] text-[var(--w-fg-neutral)]">
+                  <span className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)]">
                     AI 가 브랜드·제품 설명을 바탕으로 출발 광고를 제안해요. 다음 화면에서 검토 후 확정합니다.
                   </span>
                 </div>
@@ -427,8 +449,8 @@ export default function TournamentSetup({ real = false }: { real?: boolean }) {
                   {chAxis !== "image" && (
                     <div className="mt-3.5 flex flex-col gap-2">
                       <div className="flex items-center justify-between gap-3">
-                        <span className="font-semibold text-[12.5px] leading-none text-[var(--w-fg-strong)]">변화 정도</span>
-                        <span className="font-medium text-[11.5px] leading-none text-[var(--w-fg-alternative)]">AI 가 챔피언을 얼마나 바꿀지</span>
+                        <span className="font-semibold text-[13px] leading-none text-[var(--w-fg-strong)]">변화 정도</span>
+                        <span className="font-medium text-[12px] leading-none text-[var(--w-fg-alternative)]">AI 가 챔피언을 얼마나 바꿀지</span>
                       </div>
                       <SegControl options={DEGREE_OPTIONS} value={chDegree} onChange={(v) => setChDegree(v as Degree)} />
                       <Button
@@ -545,7 +567,7 @@ export default function TournamentSetup({ real = false }: { real?: boolean }) {
                     className="mt-0.5 size-4 accent-[var(--w-primary-normal)] cursor-pointer"
                   />
                   <span className="flex flex-col gap-0.5">
-                    <span className="font-semibold text-[13.5px] leading-[1.4] text-[var(--w-fg-strong)]">예산 자동충전</span>
+                    <span className="font-semibold text-[14px] leading-[1.4] text-[var(--w-fg-strong)]">예산 자동충전</span>
                     <span className="font-medium text-[12px] leading-[1.5] text-[var(--w-fg-neutral)]">
                       예산을 다 써도 멈추지 않고 누적 상한까지 자동으로 충전해요. 이기는 광고를 찾으면 자동으로 멈춰요.
                     </span>
@@ -617,7 +639,7 @@ export default function TournamentSetup({ real = false }: { real?: boolean }) {
               </span>
             </div>
 
-            {error && <p className="font-medium text-[12.5px] leading-[1.4] text-[var(--w-status-negative)] m-0">{error}</p>}
+            {error && <p className="font-medium text-[13px] leading-[1.4] text-[var(--w-status-negative)] m-0">{error}</p>}
 
             <Button variant="primary" type="button" disabled={!startReady || starting} onClick={handleStart} className="w-full">
               {starting
@@ -715,7 +737,7 @@ function MethodCard({ icon, title, desc, tag, tagColor, onClick }: {
           </div>
           <div className="font-bold text-[15px] leading-[1.4] text-[var(--w-fg-strong)]">{title}</div>
         </div>
-        <span className="font-bold text-[11.5px] leading-none" style={{ color: tagColor, background: `color-mix(in srgb, ${tagColor} 12%, transparent)`, padding: "4px 9px", borderRadius: 999, border: `1px solid color-mix(in srgb, ${tagColor} 30%, transparent)`, flex: "0 0 auto" }}>
+        <span className="font-bold text-[12px] leading-none" style={{ color: tagColor, background: `color-mix(in srgb, ${tagColor} 12%, transparent)`, padding: "4px 9px", borderRadius: 999, border: `1px solid color-mix(in srgb, ${tagColor} 30%, transparent)`, flex: "0 0 auto" }}>
           {tag}
         </span>
       </div>
@@ -740,7 +762,7 @@ function MatchupCard({ championMode, champion, challenger, chAxis, axisLabel, ct
       {championMode === "ai" || !champion || !challenger ? (
         <div className="py-6 px-3 rounded-xl bg-[var(--w-bg-alternative)] flex flex-col items-center gap-2 text-center">
           <Icon name="sparkles" size={20} style={{ color: "var(--w-accent-violet)" }} />
-          <span className="font-medium text-[12.5px] leading-[1.5] text-[var(--w-fg-neutral)]">
+          <span className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)]">
             {championMode === "ai"
               ? "AI 가 출발 챔피언을 생성하면 대진이 채워져요."
               : "기존 광고를 선택하면 1라운드 대진이 여기 나타나요."}
@@ -752,8 +774,8 @@ function MatchupCard({ championMode, champion, challenger, chAxis, axisLabel, ct
 
           <div className="flex items-center gap-2 my-2">
             <div className="h-px flex-1 bg-[var(--w-line-normal)]" />
-            <span className="font-bold text-[10.5px] leading-none px-2 py-1 rounded-full bg-[var(--w-bg-alternative)] text-[var(--w-fg-neutral)]">VS</span>
-            <span className="font-semibold text-[10.5px] leading-none px-2 py-1 rounded-full" style={{ color: "var(--w-accent-violet)", background: "color-mix(in srgb, var(--w-accent-violet) 12%, transparent)" }}>{axisLabel} 변경</span>
+            <span className="font-bold text-[11px] leading-none px-2 py-1 rounded-full bg-[var(--w-bg-alternative)] text-[var(--w-fg-neutral)]">VS</span>
+            <span className="font-semibold text-[11px] leading-none px-2 py-1 rounded-full" style={{ color: "var(--w-accent-violet)", background: "color-mix(in srgb, var(--w-accent-violet) 12%, transparent)" }}>{axisLabel} 변경</span>
             <div className="h-px flex-1 bg-[var(--w-line-normal)]" />
           </div>
 
@@ -781,8 +803,8 @@ function SideCard({ tag, tagColor, variant, chAxis, highlight, badge }: {
         {chAxis === "image" && <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full" style={{ background: highlight ? "var(--w-accent-violet)" : "var(--w-primary-normal)", border: "2px solid var(--w-bg-elevated)" }} />}
       </div>
       <div className="flex flex-col gap-1 min-w-0">
-        <span className="font-bold text-[10.5px] leading-none" style={{ color: tagColor }}>{tag}</span>
-        <div className="font-semibold text-[12.5px] leading-[1.35] text-[var(--w-fg-strong)] line-clamp-2">{variant.headline}</div>
+        <span className="font-bold text-[11px] leading-none" style={{ color: tagColor }}>{tag}</span>
+        <div className="font-semibold text-[13px] leading-[1.35] text-[var(--w-fg-strong)] line-clamp-2">{variant.headline}</div>
         {badge && <span className="font-bold text-[10px] leading-none px-1.5 py-0.5 rounded bg-[var(--w-bg-alternative)] text-[var(--w-fg-neutral)] self-start">{badge}</span>}
       </div>
     </div>
@@ -832,8 +854,8 @@ function ConditionSummary({ toneLabel, objectiveLabel, totalBudget, dailyBudget 
 function SummaryRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between gap-3">
-      <span className="font-medium text-[12.5px] leading-none text-[var(--w-fg-alternative)]">{label}</span>
-      <span className="font-semibold text-[12.5px] leading-none text-[var(--w-fg-strong)] text-right">{value}</span>
+      <span className="font-medium text-[13px] leading-none text-[var(--w-fg-alternative)]">{label}</span>
+      <span className="font-semibold text-[13px] leading-none text-[var(--w-fg-strong)] text-right">{value}</span>
     </div>
   );
 }
@@ -877,7 +899,7 @@ function SectionCard({ title, hint, children }: { title: string; hint?: string; 
     <section className="rounded-2xl border border-[var(--w-line-normal)] bg-[var(--w-bg-elevated)] p-6 flex flex-col gap-5">
       <div>
         <div className="font-bold text-[15px] leading-[1.3] text-[var(--w-fg-strong)]">{title}</div>
-        {hint && <p className="font-medium text-[12.5px] leading-[1.4] text-[var(--w-fg-neutral)] mt-1 m-0">{hint}</p>}
+        {hint && <p className="font-medium text-[13px] leading-[1.4] text-[var(--w-fg-neutral)] mt-1 m-0">{hint}</p>}
       </div>
       {children}
     </section>

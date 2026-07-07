@@ -92,6 +92,7 @@ export function buildLaunchParams(
     abTestVariantB: abActive ? variantB ?? undefined : undefined,
     skipAdCreation: opts.skipAdCreation || undefined,
     brandName: opts.brandName || undefined,
+    customAudienceId: launch.customAudienceId ?? undefined,
   };
 }
 
@@ -141,9 +142,10 @@ export function planBrowseLaunch(params: LaunchParams, opts: { brandName?: strin
       ? { adIds: [`ad_browse_${ts}_a`, `ad_browse_${ts}_b`] as [string, string] }
       : params.skipAdCreation ? {} : { adId: `ad_browse_${ts}` }),
   };
-  const objective: MetaObjectiveParam = BROWSE_OBJECTIVES.has(params.objective as MetaObjectiveParam)
-    ? (params.objective as MetaObjectiveParam)
-    : "OUTCOME_TRAFFIC";
+  const objectiveDowngraded = !BROWSE_OBJECTIVES.has(params.objective as MetaObjectiveParam);
+  const objective: MetaObjectiveParam = objectiveDowngraded
+    ? "OUTCOME_TRAFFIC"
+    : (params.objective as MetaObjectiveParam);
   return {
     launched: buildLaunchedCampaign(mock, params),
     browseCampaign: {
@@ -156,12 +158,15 @@ export function planBrowseLaunch(params: LaunchParams, opts: { brandName?: strin
       objective,
       dailyBudget: params.dailyBudget,
       startDate: params.startDate,
+      endDate: params.endDate,
+      landingUrl: params.linkUrl,
+      status: params.status === "PAUSED" ? "paused" : "live",
       ageMin: params.ageMin,
       ageMax: params.ageMax,
       genders: params.genders,
       countries: params.countries,
     },
-    message: launchSuccessMessage(params),
+    message: launchSuccessMessage(params) + (objectiveDowngraded ? " (데모에서는 트래픽 목표로 게재돼요)" : ""),
   };
 }
 

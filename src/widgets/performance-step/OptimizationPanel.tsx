@@ -5,7 +5,7 @@
 import Icon, { type IconName } from "@shared/ui/Icon";
 import { Card } from "@shared/ui/Card";
 import { Button } from "@shared/ui/Button";
-import { Badge } from "@shared/ui/primitives";
+import { Chip } from "@shared/ui/Chip";
 import { fmtKRW } from "@shared/lib/format";
 import { type Suggestion, type AutomationReadiness } from "@entities/insights/optimization";
 
@@ -87,15 +87,14 @@ export default function OptimizationPanel({ isPaused, suggestions, readiness, da
         <p className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)] mt-1 mb-0">충분한 데이터가 쌓이면 AI가 자동으로 광고를 운영할 수 있어요.</p>
         <hr className="h-px bg-[var(--w-line-neutral)] my-[18px] border-0" />
         {readiness.ready ? (
-          <div className="bg-[rgba(0,191,64,0.06)] border border-[rgba(0,191,64,0.20)] rounded-xl p-[18px]">
-            <Badge kind="success" dot live>자동화 준비 완료</Badge>
-            <div className="font-bold text-[16px] leading-[1.3] text-[var(--w-fg-strong)] mt-2.5">AI 자동 운영을 켤 수 있어요</div>
-            <p className="font-medium text-[13px] leading-[1.55] text-[var(--w-fg-neutral)] mt-2 mb-3.5">{readiness.reason}</p>
-            <Button variant="primary" size="sm" disabled title="자동 실행 환경 연동 후 활성화돼요">자동화 켜기 (연동 준비 중)</Button>
+          <div className="bg-[var(--w-bg-alternative)] rounded-xl p-[18px]">
+            <Chip variant="neutral" dot>지표 조건 충족</Chip>
+            <div className="font-bold text-[16px] leading-[1.3] text-[var(--w-fg-strong)] mt-2.5">자동 운영 기능을 준비하고 있어요</div>
+            <p className="font-medium text-[13px] leading-[1.55] text-[var(--w-fg-neutral)] mt-2 mb-0">{readiness.reason}</p>
           </div>
         ) : (
           <div className="bg-[var(--w-bg-alternative)] rounded-xl p-[18px]">
-            <Badge kind="warn" dot>아직 준비 중</Badge>
+            <Chip variant="warn" dot>아직 준비 중</Chip>
             <div className="font-bold text-[16px] leading-[1.3] text-[var(--w-fg-strong)] mt-2.5">아직 자동화를 맡기기엔 지표가 아쉬워요</div>
             <p className="font-medium text-[13px] leading-[1.55] text-[var(--w-fg-neutral)] mt-2 mb-0">부족: {readiness.reason}. 데이터가 더 쌓이면 자동화를 제안해드릴게요.</p>
           </div>

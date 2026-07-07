@@ -162,7 +162,7 @@ export default function ChallengerImageGen({
   };
 
   const uploadBtnClass = cn(
-    "inline-flex items-center justify-center gap-[5px] border font-semibold leading-none whitespace-nowrap h-8 px-3 text-[12.5px] rounded-lg",
+    "inline-flex items-center justify-center gap-[5px] border font-semibold leading-none whitespace-nowrap h-8 px-3 text-[13px] rounded-lg",
     "bg-transparent border-[var(--w-line-normal)] text-[var(--w-fg-strong)] hover:bg-[var(--w-bg-neutral)] cursor-pointer transition-[background] duration-[120ms]",
   );
 
@@ -179,8 +179,8 @@ export default function ChallengerImageGen({
               style={{ width: 44, height: 44, objectFit: "cover", borderRadius: 8, border: "1px solid var(--w-line-normal)", flex: "none", opacity: packageRefOn ? 1 : 0.4 }}
             />
             <div className="flex-1 min-w-0">
-              <div className="font-semibold text-[12.5px] leading-tight text-[var(--w-fg-strong)]">제품 보존 연출 {packageRefOn ? "적용 중" : "꺼짐"}</div>
-              <div className="font-medium text-[11.5px] leading-snug text-[var(--w-fg-neutral)] mt-0.5">제품 원본(라벨·로고)은 그대로 두고 배경·씬만 컨셉별로 만들어요</div>
+              <div className="font-semibold text-[13px] leading-tight text-[var(--w-fg-strong)]">제품 보존 연출 {packageRefOn ? "적용 중" : "꺼짐"}</div>
+              <div className="font-medium text-[12px] leading-snug text-[var(--w-fg-neutral)] mt-0.5">제품 원본(라벨·로고)은 그대로 두고 배경·씬만 컨셉별로 만들어요</div>
             </div>
             <Button variant="ghost" size="sm" type="button" onClick={() => setPackageRefOn((v) => !v)} className="border border-[var(--w-line-normal)]">
               {packageRefOn ? "끄기" : "켜기"}
@@ -193,8 +193,8 @@ export default function ChallengerImageGen({
         ) : (
           <>
             <div className="flex-1">
-              <div className="font-semibold text-[12.5px] leading-tight text-[var(--w-fg-strong)]">제품 레퍼런스 (선택)</div>
-              <div className="font-medium text-[11.5px] leading-snug text-[var(--w-fg-neutral)] mt-0.5">제품 사진을 올리면 원본 그대로 두고 배경·씬만 생성해요</div>
+              <div className="font-semibold text-[13px] leading-tight text-[var(--w-fg-strong)]">제품 레퍼런스 (선택)</div>
+              <div className="font-medium text-[12px] leading-snug text-[var(--w-fg-neutral)] mt-0.5">제품 사진을 올리면 원본 그대로 두고 배경·씬만 생성해요</div>
             </div>
             <label className={uploadBtnClass}>
               <Icon name="upload" size={13} /> 제품 사진 첨부

@@ -34,6 +34,7 @@ const baseForm: SetupFormState = {
   country: "KR",
   ageMin: 18,
   ageMax: 65,
+  prohibitedWords: [],
 };
 
 const existingForm: SetupFormState = {
@@ -84,6 +85,11 @@ describe("buildTournamentRequest", () => {
     expect(r.goalId).toBe("traffic");
     expect(r.mode).toBe("auto");
   });
+
+  it("금칙어 설정 → 챌린저 생성 요청(prohibitedWords)에 그대로 포함 (ADR-054)", () => {
+    const r = buildTournamentRequest({ ...existingForm, prohibitedWords: ["완치", "100% 보장"] }, "bp");
+    expect(r.prohibitedWords).toEqual(["완치", "100% 보장"]);
+  });
 });
 
 describe("buildEnvelope (ADR-061)", () => {
@@ -105,17 +111,29 @@ describe("buildEnvelope (ADR-061)", () => {
 });
 
 describe("buildDemoSetup", () => {
-  it("brandProfile/product 는 browse 고정·delivery 봉투 없음", () => {
-    const s = buildDemoSetup(existingForm);
-    expect(s.brandProfileId).toBe("browse");
-    expect(s.productId).toBe("browse");
+  it("brandProfileId 는 호출자 전달값(활성 프로필) — 미전달 시 browse 폴백·delivery 봉투 없음", () => {
+    const s = buildDemoSetup(existingForm, "demo-greenroutine-001");
+    expect(s.brandProfileId).toBe("demo-greenroutine-001");
     expect("linkUrl" in s).toBe(false);
+
+    const fallback = buildDemoSetup(existingForm, "");
+    expect(fallback.brandProfileId).toBe("browse");
+  });
+
+  it("productId 는 폼의 실제 제품 id — 미선택 시 browse 폴백", () => {
+    expect(buildDemoSetup(existingForm, "bp").productId).toBe("prod-1");
+    expect(buildDemoSetup(baseForm, "bp").productId).toBe("browse");
   });
 
   it("existing → startingCtr·champion 시드 동일 규칙", () => {
-    const s = buildDemoSetup(existingForm);
+    const s = buildDemoSetup(existingForm, "bp");
     expect(s.startingCtr).toBe(4.2);
     expect(s.startingChampion).toEqual(CHAMP);
+  });
+
+  it("prohibitedWords 패스스루 — 챌린저 생성 요청에 금칙어 포함 (ADR-054)", () => {
+    const s = buildDemoSetup({ ...existingForm, prohibitedWords: ["역대급", "1위"] }, "bp");
+    expect(s.prohibitedWords).toEqual(["역대급", "1위"]);
   });
 });
 

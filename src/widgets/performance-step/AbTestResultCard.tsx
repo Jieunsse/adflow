@@ -138,7 +138,7 @@ function WinnerBody({
         <p className="font-semibold text-[13px] leading-[1.6] text-[var(--w-fg-strong)] m-0">
           💡 {winnerLabel}이 CTR {ratio}배 더 높아요.
         </p>
-        <p className="font-medium text-[12.5px] leading-[1.6] text-[var(--w-fg-normal)] mt-1 mb-0">
+        <p className="font-medium text-[13px] leading-[1.6] text-[var(--w-fg-normal)] mt-1 mb-0">
           다음 캠페인을 {winnerLabel} {AXIS_LABEL[axis]}(으)로 만드시겠어요?
           만든 캠페인은 검토 후 직접 집행 버튼을 눌러야 시작돼요.
         </p>

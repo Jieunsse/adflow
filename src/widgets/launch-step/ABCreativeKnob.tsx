@@ -89,7 +89,7 @@ export default function ABCreativeKnob() {
           onChange={(e) => dispatch({ type: "SET_AB_TEST_ENABLED", enabled: e.target.checked })}
         />
         <div>
-          <div className="font-semibold text-[13.5px] leading-[1.3] text-[var(--w-fg-strong)]">
+          <div className="font-semibold text-[14px] leading-[1.3] text-[var(--w-fg-strong)]">
             A/B 시험으로 집행
           </div>
           <p className="font-normal text-[13px] leading-[1.5] text-[var(--w-fg-neutral)] mt-[3px] mb-0">
@@ -112,7 +112,7 @@ export default function ABCreativeKnob() {
                   onClick={() => available && switchAxis(t.id)}
                   disabled={!available}
                   className={cn(
-                    "px-[14px] py-[7px] rounded-lg border font-semibold text-[12.5px] leading-none cursor-pointer",
+                    "px-[14px] py-[7px] rounded-lg border font-semibold text-[13px] leading-none cursor-pointer",
                     on
                       ? "border-[1.5px] border-[var(--w-primary-normal)] bg-[var(--w-primary-soft)] text-[var(--w-primary-press)]"
                       : available
@@ -192,7 +192,7 @@ function HeadlineAxis({ headlineA, options, selected, onSelect }: {
           <RadioIndicator on={true} />
           <div className="flex-1">
             <div className="font-semibold text-[11px] leading-none font-[var(--w-font-mono)] text-[var(--w-fg-neutral)] tracking-[0.04em] uppercase">A안 (고정)</div>
-            <div className="font-semibold text-[14.5px] leading-[1.45] text-[var(--w-fg-strong)] mt-1">{headlineA}</div>
+            <div className="font-semibold text-[15px] leading-[1.45] text-[var(--w-fg-strong)] mt-1">{headlineA}</div>
           </div>
         </div>
         {options.map((h) => {
@@ -210,7 +210,7 @@ function HeadlineAxis({ headlineA, options, selected, onSelect }: {
               <RadioIndicator on={on} />
               <div className="flex-1">
                 <div className="font-semibold text-[11px] leading-none font-[var(--w-font-mono)] text-[var(--w-fg-neutral)] tracking-[0.04em] uppercase">B안</div>
-                <div className="font-semibold text-[14.5px] leading-[1.45] text-[var(--w-fg-strong)] mt-1">{h}</div>
+                <div className="font-semibold text-[15px] leading-[1.45] text-[var(--w-fg-strong)] mt-1">{h}</div>
               </div>
             </div>
           );
@@ -240,7 +240,7 @@ function PrimaryTextAxis({ textA, options, selected, onSelect, textB, onChangeB 
           <RadioIndicator on={true} />
           <div className="flex-1">
             <div className="font-semibold text-[11px] leading-none font-[var(--w-font-mono)] text-[var(--w-fg-neutral)] tracking-[0.04em] uppercase">A안 (고정)</div>
-            <div className="font-semibold text-[14.5px] leading-[1.45] text-[var(--w-fg-strong)] mt-1">{textA || "카피 문구 없음"}</div>
+            <div className="font-semibold text-[15px] leading-[1.45] text-[var(--w-fg-strong)] mt-1">{textA || "카피 문구 없음"}</div>
           </div>
         </div>
         {hasOptions ? (
@@ -259,14 +259,14 @@ function PrimaryTextAxis({ textA, options, selected, onSelect, textB, onChangeB 
                 <RadioIndicator on={on} />
                 <div className="flex-1">
                   <div className="font-semibold text-[11px] leading-none font-[var(--w-font-mono)] text-[var(--w-fg-neutral)] tracking-[0.04em] uppercase">B안</div>
-                  <div className="font-semibold text-[14.5px] leading-[1.45] text-[var(--w-fg-strong)] mt-1">{t}</div>
+                  <div className="font-semibold text-[15px] leading-[1.45] text-[var(--w-fg-strong)] mt-1">{t}</div>
                 </div>
               </div>
             );
           })
         ) : (
           <div className="p-3 rounded-[10px] border-[1.5px] border-[var(--w-primary-normal)] bg-[var(--w-bg-normal)]">
-            <div className="font-semibold text-[11.5px] leading-none text-[var(--w-primary-press)] mb-2 uppercase tracking-[0.06em]">B안</div>
+            <div className="font-semibold text-[12px] leading-none text-[var(--w-primary-press)] mb-2 uppercase tracking-[0.06em]">B안</div>
             <textarea
               value={textB}
               onChange={(e) => onChangeB(e.target.value)}

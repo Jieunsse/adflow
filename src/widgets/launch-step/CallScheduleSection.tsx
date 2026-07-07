@@ -66,7 +66,7 @@ export default function CallScheduleSection() {
       {phoneMissing && (
         <div className="flex items-start gap-2.5 px-[14px] py-3 rounded-[10px] border bg-[rgba(255,146,0,0.10)] border-[rgba(255,146,0,0.24)] text-[var(--w-status-cautionary)] mb-3">
           <Icon name="warn" size={16} />
-          <div className="font-medium text-[12.5px] leading-[1.5]">
+          <div className="font-medium text-[13px] leading-[1.5]">
             활성 페이지 <strong>{activePage?.name}</strong> 에 전화번호가 등록돼있지 않아요. 전화 받기 광고는 페이지 전화번호가 필수예요.
             <br />
             Meta 페이지 설정 → 정보 → 전화번호 에서 추가하면 활성화돼요.
@@ -99,7 +99,7 @@ export default function CallScheduleSection() {
             const dayLabel = DAYS.find((d) => d.d === s.day)?.label ?? "";
             return (
               <div key={s.day} className="grid gap-2 items-center" style={{ gridTemplateColumns: "40px 1fr auto 1fr" }}>
-                <span className="font-semibold text-[12.5px] leading-none text-[var(--w-fg-strong)]">{dayLabel}</span>
+                <span className="font-semibold text-[13px] leading-none text-[var(--w-fg-strong)]">{dayLabel}</span>
                 <input
                   type="time"
                   className="w-full px-[14px] py-3 border border-[var(--w-line-normal)] rounded-xl bg-[var(--w-bg-elevated)] font-medium text-[14px] leading-[1.5] tracking-[0.004em] text-[var(--w-fg-strong)] outline-none transition-[border-color,box-shadow] duration-[120ms] focus:border-[var(--w-primary-normal)] focus:shadow-[0_0_0_4px_rgba(0,102,255,0.14)]"

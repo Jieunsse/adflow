@@ -53,6 +53,9 @@ export type BrowseCampaignInput = {
   objective: MetaObjectiveParam;
   dailyBudget: number;
   startDate?: string;
+  endDate?: string;
+  landingUrl?: string;
+  status?: BrowseCampaign["status"];
   ageMin: number;
   ageMax: number;
   genders: number[];
@@ -78,7 +81,9 @@ export function createBrowseCampaign(input: BrowseCampaignInput): string {
     baseDailyClicks: Math.round(BROWSE_SEED.baseDailyClicks * scale),
     baseDailySpend: Math.round(BROWSE_SEED.baseDailySpend * scale),
     startDate: input.startDate ?? today(),
-    status: "live",
+    endDate: input.endDate,
+    landingUrl: input.landingUrl,
+    status: input.status ?? "live",
     fastForwardDays: BROWSE_SEED.fastForwardDays,
     kpiTarget: input.kpiTarget,
     cycle: 1,

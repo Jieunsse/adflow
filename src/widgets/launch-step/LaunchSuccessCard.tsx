@@ -7,7 +7,7 @@ import { useState } from "react";
 import Icon from "@shared/ui/Icon";
 import { Button } from "@shared/ui/Button";
 import { Card } from "@shared/ui/Card";
-import { Badge } from "@shared/ui/primitives";
+import { Chip } from "@shared/ui/Chip";
 import { useLaunchDraft } from "@entities/campaign/model";
 
 export default function LaunchSuccessCard({ onNext }: { onNext: () => void }) {
@@ -36,7 +36,7 @@ export default function LaunchSuccessCard({ onNext }: { onNext: () => void }) {
         </div>
         <div>
           <div className="font-bold text-[15px] leading-[1.3] text-[var(--w-fg-strong)]">광고가 Meta에 등록됐어요</div>
-          <div className="font-medium text-[12.5px] leading-[1.4] text-[var(--w-fg-normal)] mt-0.5">
+          <div className="font-medium text-[13px] leading-[1.4] text-[var(--w-fg-normal)] mt-0.5">
             {launched.status === "ACTIVE"
               ? "검토가 끝나면 자동으로 게재가 시작돼요."
               : "일시중지 상태로 만들어졌어요. Meta 광고 관리자에서 켤 수 있어요."}
@@ -44,17 +44,17 @@ export default function LaunchSuccessCard({ onNext }: { onNext: () => void }) {
         </div>
       </div>
       <div className="flex items-center gap-2 p-[10px_12px] bg-[var(--w-bg-elevated)] rounded-[10px] mb-3.5">
-        <Badge kind="accent" dot>검토 중</Badge>
+        <Chip variant="accent" dot>검토 중</Chip>
         <Icon name="arrow-right" size={12} style={{ color: "var(--w-fg-alternative)" }} />
-        <Badge kind="success" dot>게재 중</Badge>
+        <Chip variant="success" dot>게재 중</Chip>
       </div>
       <div className="flex flex-col gap-2">
         {rows.map(([l, v]) => (
           <div key={l} className="flex items-center gap-3 p-[12px_14px] bg-[var(--w-bg-alternative)] rounded-[10px]">
-            <span className="font-semibold text-[11.5px] leading-none text-[var(--w-fg-neutral)] tracking-[0.04em] uppercase min-w-[90px]">{l}</span>
+            <span className="font-semibold text-[12px] leading-none text-[var(--w-fg-neutral)] tracking-[0.04em] uppercase min-w-[90px]">{l}</span>
             <span className="font-medium text-[13px] leading-none font-[var(--w-font-mono)] text-[var(--w-fg-strong)] flex-1 overflow-hidden text-ellipsis">{v}</span>
             <button
-              className="border-none bg-transparent font-semibold text-[11.5px] leading-none text-[var(--w-primary-press)] cursor-pointer px-2 py-1.5 rounded-md hover:bg-[var(--w-primary-soft)]"
+              className="border-none bg-transparent font-semibold text-[12px] leading-none text-[var(--w-primary-press)] cursor-pointer px-2 py-1.5 rounded-md hover:bg-[var(--w-primary-soft)]"
               type="button"
               onClick={() => copy(l, v)}
             >

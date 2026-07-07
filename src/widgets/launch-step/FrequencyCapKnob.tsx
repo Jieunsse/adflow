@@ -5,7 +5,7 @@
 // V1 = UI 만, 실 게재 적용은 후속(launch-campaign build 확장 필요).
 
 import Icon from "@shared/ui/Icon";
-import { Badge } from "@shared/ui/primitives";
+import { Chip } from "@shared/ui/Chip";
 import { cn } from "@shared/lib/cn";
 import { useLaunchDraft } from "@entities/campaign/model";
 import SubHead from "./SubHead";
@@ -42,8 +42,8 @@ export default function FrequencyCapKnob() {
           onChange={(e) => toggle(e.target.checked)}
         />
         <div>
-          <div className="flex items-center gap-1.5 font-semibold text-[13.5px] leading-[1.3] text-[var(--w-fg-strong)]">
-            노출 피로도 관리 (빈도 캡) <Badge kind="neutral">곧 연동</Badge>
+          <div className="flex items-center gap-1.5 font-semibold text-[14px] leading-[1.3] text-[var(--w-fg-strong)]">
+            노출 피로도 관리 (빈도 캡) <Chip variant="neutral">곧 연동</Chip>
           </div>
           <p className="font-normal text-[13px] leading-[1.5] text-[var(--w-fg-neutral)] mt-[3px] mb-0">
             같은 사람에게 광고가 반복 노출되지 않도록 1인당 노출 횟수를 제한해요. 인지도 캠페인에 효과적이에요.

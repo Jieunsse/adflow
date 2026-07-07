@@ -4,7 +4,7 @@
 import type { MetaObjectiveParam } from "@/lib/meta-ads";
 import type { KpiTarget } from "@entities/insights/winner-types";
 
-export type BrowseStatus = "live" | "ended";
+export type BrowseStatus = "live" | "paused" | "ended";
 
 // ADR-034 — Auto-Pilot(AI 자동 운영). 부진 대응 정책은 확인 모달에서 선택.
 export type AutomationPolicy = "decrease" | "pause";
@@ -34,6 +34,8 @@ export type BrowseCampaign = {
   baseDailySpend: number;
 
   startDate: string; // 시드 시점(YYYY-MM-DD)
+  endDate?: string;
+  landingUrl?: string;
   status: BrowseStatus;
   fastForwardDays: number; // 빨리감기 단일 소스 — 누적 일수
 

@@ -29,7 +29,11 @@ const USER_CHOICE_CTAS: CtaId[] = ["buy", "learn", "sample"];
 const chipBase = "inline-flex items-center gap-1.5 px-[14px] py-2 rounded-full border border-[var(--w-line-normal)] bg-[var(--w-bg-elevated)] font-medium text-[13px] leading-none text-[var(--w-fg-strong)] cursor-pointer transition-[background,border-color,color] duration-[120ms]";
 const chipOn = "bg-[var(--w-fg-strong)] text-[var(--w-bg-elevated)] border-[var(--w-fg-strong)]";
 
-export default function DestinationField() {
+interface Props {
+  urlAttempted?: boolean;
+}
+
+export default function DestinationField({ urlAttempted = false }: Props) {
   const { state, dispatch } = useLaunchDraft();
   const { state: creative, dispatch: creativeDispatch } = useCreativeDraft();
   const { data: session } = useSession();
@@ -54,7 +58,7 @@ export default function DestinationField() {
 
   const urlValue = state.landingUrl.trim();
   const httpsOk = urlValue.startsWith("https://");
-  const showUrlError = urlTouched && urlValue.length > 0 && !httpsOk;
+  const showUrlError = (urlTouched || urlAttempted) && !httpsOk;
   const [overrideOpen, setOverrideOpen] = useState(false);
 
   const ctaPicker = ctaMode === "user_choice" ? (
@@ -99,7 +103,7 @@ export default function DestinationField() {
         />
         {showUrlError && (
           <div className="font-medium text-[12px] leading-[1.5] tracking-[0.008em] text-[var(--w-status-negative)] mt-2">
-            https:// 로 시작해야 해요.
+            광고를 누른 사람이 이동할 페이지가 필요해요. https:// 로 시작하는 URL을 입력해주세요.
           </div>
         )}
         {ctaPicker && <div className="mt-4">{ctaPicker}</div>}
@@ -131,10 +135,10 @@ export default function DestinationField() {
           <Icon name={destIcon} size={20} strokeWidth={1.7} />
         </div>
         <div className="flex-1 min-w-0">
-          <div className="font-medium text-[11.5px] leading-none text-[var(--w-fg-neutral)] mb-1">
+          <div className="font-medium text-[12px] leading-none text-[var(--w-fg-neutral)] mb-1">
             {destLabel}
           </div>
-          <div className="font-bold text-[14.5px] leading-[1.3] text-[var(--w-fg-strong)]">
+          <div className="font-bold text-[15px] leading-[1.3] text-[var(--w-fg-strong)]">
             {activeName}
           </div>
           <div className="font-medium text-[11px] leading-[1.2] font-[var(--w-font-mono)] text-[var(--w-fg-alternative)] mt-1 overflow-hidden text-ellipsis whitespace-nowrap">

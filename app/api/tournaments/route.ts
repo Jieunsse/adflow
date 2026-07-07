@@ -68,6 +68,7 @@ interface CreateBody {
   ageMax: number;
   genders?: number[];
   imageDataUrl?: string;
+  prohibitedWords?: string[];
 }
 
 export async function POST(req: NextRequest) {
@@ -110,6 +111,7 @@ export async function POST(req: NextRequest) {
       championSource: b.championSource,
       startingChampion: b.startingChampion,
       championSourceName: b.championSourceName,
+      prohibitedWords: b.prohibitedWords,
       delivery,
     };
 

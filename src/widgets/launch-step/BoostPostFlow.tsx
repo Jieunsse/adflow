@@ -45,8 +45,15 @@ export default function BoostPostFlow({ onNext }: Props) {
 
   const [boostGoal, setBoostGoal] = useState<'engagement' | 'profile' | 'website' | 'message'>('engagement');
   const [boostLandingUrl, setBoostLandingUrl] = useState('');
+  const [preselectId] = useState<string | null>(() => {
+    try {
+      const id = sessionStorage.getItem("adflow_boost_igmedia_preselect");
+      sessionStorage.removeItem("adflow_boost_igmedia_preselect");
+      return id;
+    } catch { return null; }
+  });
   const [boostMedia, setBoostMedia] = useState<IgMediaItem | null>(null);
-  const [boostSubStep, setBoostSubStep] = useState<1 | 2 | 3 | 4 | 5>(1);
+  const [boostSubStep, setBoostSubStep] = useState<1 | 2 | 3 | 4 | 5>(preselectId ? 2 : 1);
 
   const budgetNum = parseInt(state.budget.replace(/[^\d]/g, ""), 10) || 0;
   const canBoostLaunch = !boostMutation.isPending && !state.launchedCampaign && !!boostMedia
@@ -168,7 +175,7 @@ export default function BoostPostFlow({ onNext }: Props) {
         {boostSubStep === 2 && (
           <>
             <SubHead title="홍보할 게시물 선택" subtitle="인스타그램 계정의 최근 게시물 중 홍보할 콘텐츠를 골라주세요." />
-            <BoostPostKnob selectedId={boostMedia?.id ?? null} onSelect={setBoostMedia} />
+            <BoostPostKnob selectedId={boostMedia?.id ?? null} onSelect={setBoostMedia} preselectId={preselectId} />
             <div style={{ display: "flex", justifyContent: "space-between", marginTop: 24 }}>
               <Button variant="secondary" type="button" onClick={() => setBoostSubStep(1)}><Icon name="arrow-left" size={14} /> 이전</Button>
               <Button variant="primary" type="button" disabled={!boostMedia} onClick={() => setBoostSubStep(3)}>
@@ -253,8 +260,8 @@ export default function BoostPostFlow({ onNext }: Props) {
                   <img src={boostMedia.mediaUrl} alt="선택한 게시물" className="rounded-xl object-cover flex-shrink-0" style={{ width: 72, height: 72 }} />
                 )}
                 <div>
-                  <p className="font-semibold text-[13.5px] leading-[1.4] text-[var(--w-fg-strong)] m-0 mb-1">선택한 게시물</p>
-                  <p className="font-medium text-[12.5px] leading-[1.5] text-[var(--w-fg-neutral)] m-0 line-clamp-2">{boostMedia?.caption || "캡션 없음"}</p>
+                  <p className="font-semibold text-[14px] leading-[1.4] text-[var(--w-fg-strong)] m-0 mb-1">선택한 게시물</p>
+                  <p className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)] m-0 line-clamp-2">{boostMedia?.caption || "캡션 없음"}</p>
                 </div>
               </div>
               <hr className="h-px bg-[var(--w-line-neutral)] border-0 m-0" />

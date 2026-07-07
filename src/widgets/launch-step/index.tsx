@@ -1,7 +1,8 @@
 "use client";
 
-// STEP 02 광고 집행 widget — 모드 토글·디테일 분기·폼 입력·좌우 레이아웃 오케스트레이터.
-// 각 서브스텝 패널은 별도 파일로 분리됨. page.tsx는 navigation 콜백 3개만 전달.
+// STEP 03 게재 계획서 widget — PRD-create-flow-redesign §3.3.
+// 카드 스택(도착지·예산·타겟·A/B·고급 설정) 상시 노출 + 우측 sticky(프리뷰·요약·게재).
+// 게재 성공(state.launchedCampaign) 시 같은 화면이 완료 상태로 전환.
 
 import { useEffect, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
@@ -19,44 +20,50 @@ import { addNotification } from "@shared/lib/notifications";
 import { useAutoRelaunch } from "@shared/lib/autoRelaunch";
 import { useToast } from "@shared/ui/Toast";
 import { validateAdImage, buildLaunchParams, buildLaunchedCampaign, launchSuccessMessage, planBrowseLaunch } from "@features/launch-campaign/build";
+import { launchBlockReason, firstInvalidCard, type PlanCardId } from "@features/launch-campaign/plan-status";
 import { Card } from "@shared/ui/Card";
 import { Button } from "@shared/ui/Button";
 import Icon from "@shared/ui/Icon";
 
-import ModeToggle from "./ModeToggle";
 import ObjectivePicker from "./ObjectivePicker";
 import DetailKnobs from "./DetailKnobs";
+import ABCreativeKnob from "./ABCreativeKnob";
 import DestinationField from "./DestinationField";
 import CreativePreview from "./CreativePreview";
 import SummaryCard from "./SummaryCard";
-import LaunchStatusPanel from "./LaunchStatusPanel";
 import CallScheduleSection from "./CallScheduleSection";
 import MessagesAutoReplyCallout from "./MessagesAutoReplyCallout";
 import PageActivityCallout from "./PageActivityCallout";
 import PreLaunchSafetyModal from "./PreLaunchSafetyModal";
-import SubStepIndicator from "./SubStepIndicator";
 import BudgetScheduleStep from "./BudgetScheduleStep";
 import TargetStep from "./TargetStep";
 import ConfirmStep from "./ConfirmStep";
 import BoostPostFlow from "./BoostPostFlow";
+import PostLaunchChecklist from "@widgets/post-launch-checklist";
 import { validateLaunch, type ValidationIssue } from "@features/launch-validation";
 
 interface Props {
   onNext: () => void;
   goSettings: () => void;
-  /** PRD §5.4.1 — 디테일에서 목표 변경했을 때 STEP 01 카피 다시 만들기 링크 (Q6 결정). */
+  /** PRD-create-flow-redesign §3.4 — 소재 스튜디오(step 1)로 비파괴 복귀. */
   goCreative: () => void;
   brandName?: string;
+  onRestart: () => void;
 }
 
-export default function LaunchStep({ onNext, goSettings, goCreative, brandName }: Props) {
+const CARD_DOM_ID: Record<PlanCardId, string> = {
+  destination: "plan-card-destination",
+  target: "plan-card-target",
+};
+
+export default function LaunchStep({ onNext, goSettings, goCreative, brandName, onRestart }: Props) {
   const creative = useCreativeDraft();
   const launch = useLaunchDraft();
   const state = launch.state;
   const dispatch = launch.dispatch;
   const { setEnabled: setAutoRelaunch } = useAutoRelaunch();
 
-  // STEP 02 진입 시 — STEP 01 AI가 채운 타겟팅으로 연령·성별 prefill.
+  // STEP 03 진입 시 — 소재 스튜디오 AI가 채운 타겟팅으로 연령·성별 prefill.
   const targeting = creative.state.targeting;
   useEffect(() => {
     if (!targeting) return;
@@ -132,8 +139,6 @@ export default function LaunchStep({ onNext, goSettings, goCreative, brandName }
       createBrowseCampaign({ ...plan.browseCampaign, imageUrl });
       addNotification({ type: "launch", message: plan.message });
       if (state.autoRelaunchEnabled) setAutoRelaunch(plan.launched.campaignId, true);
-      // 둘러보기 모드 — 기술적 ID 패널을 건너뛰고 바로 STEP 03 마무리 점검으로.
-      onNext();
       return;
     }
     launchMutation.mutate(params, {
@@ -147,11 +152,27 @@ export default function LaunchStep({ onNext, goSettings, goCreative, brandName }
     });
   };
 
+  const [urlAttempted, setUrlAttempted] = useState(false);
   const [safetyIssues, setSafetyIssues] = useState<ValidationIssue[]>([]);
   const [pendingSkipAd, setPendingSkipAd] = useState(false);
+  const [advancedOpen, setAdvancedOpen] = useState(false);
   const modalOpen = safetyIssues.length > 0;
 
+  const hasCreative = creative.state.headline.trim().length > 0;
+  const httpsOk = state.landingUrl.trim().startsWith("https://");
+  const urlRequired = profile?.url.mode !== "hidden";
+
   const attemptLaunch = (skipAdCreation: boolean) => {
+    setUrlAttempted(true);
+    const invalidCard = firstInvalidCard({
+      urlRequired,
+      httpsOk,
+      countriesCount: state.countries.length,
+    });
+    if (invalidCard) {
+      document.getElementById(CARD_DOM_ID[invalidCard])?.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
     const phaseObjective = outcomeChip && profile ? (outcomeChip as ObjectivePhase1Id) : null;
     const issues = validateLaunch({
       objective: phaseObjective,
@@ -163,131 +184,101 @@ export default function LaunchStep({ onNext, goSettings, goCreative, brandName }
     setPendingSkipAd(skipAdCreation);
   };
 
-  const skipAd = state.mode === "simple";
-  const handleLaunch = () => attemptLaunch(skipAd);
+  const handleLaunch = () => attemptLaunch(false);
   const handleSkipAdLaunch = () => attemptLaunch(true);
   const handleSafetyConfirm = () => { setSafetyIssues([]); runLaunch(pendingSkipAd); };
   const handleSafetyClose = () => setSafetyIssues([]);
 
-  const hasCreative = creative.state.headline.trim().length > 0;
-  const httpsOk = state.landingUrl.trim().startsWith("https://");
-  const baseLaunchOk = (accountConnected || browseMode) && hasCreative && state.countries.length > 0 && !launchMutation.isPending && !state.launchedCampaign;
-  const urlRequired = profile?.url.mode !== "hidden";
-  const canLaunch = baseLaunchOk && (skipAd || !urlRequired || httpsOk);
-  const canSkipLaunch = baseLaunchOk;
+  const blockReason = launchBlockReason({
+    hasCreative,
+    accountConnected,
+    browseMode,
+    countriesCount: state.countries.length,
+    urlRequired,
+    httpsOk,
+    isPending: launchMutation.isPending,
+    alreadyLaunched: !!state.launchedCampaign,
+  });
+  const canLaunch = !blockReason;
+  const canSkipLaunch = (accountConnected || browseMode) && hasCreative && state.countries.length > 0 && !launchMutation.isPending && !state.launchedCampaign;
 
-  const [subStep, setSubStep] = useState<1 | 2 | 3 | 4 | 5>(1);
-  const [modeConfirmed, setModeConfirmed] = useState(false);
-  const subSteps = state.mode === "detailed"
-    ? [{ n: 1, label: "소재 확인" }, { n: 2, label: "예산 · 일정" }, { n: 3, label: "타겟" }, { n: 4, label: "고급 설정" }, { n: 5, label: "최종 확인" }]
-    : [{ n: 1, label: "소재 확인" }, { n: 2, label: "예산 · 일정" }, { n: 3, label: "타겟" }, { n: 4, label: "최종 확인" }];
+  if (state.launchedCampaign) {
+    return <PostLaunchChecklist onRestart={onRestart} />;
+  }
 
   if (isBoostPost) return <BoostPostFlow onNext={onNext} />;
 
   return (
     <div style={{ display: "grid", gridTemplateColumns: "1.25fr 1fr", gap: 20, alignItems: "flex-start" }}>
-      <Card variant="lg">
-        {!modeConfirmed ? (
-          <>
-            <div className="mb-4">
-              <p className="font-bold text-[15px] leading-[1.4] text-[var(--w-fg-strong)] mb-1">집행 방식을 선택해 주세요</p>
-              <p className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)] m-0">나중에도 변경할 수 있어요.</p>
-            </div>
-            <ModeToggle />
-            <div style={{ display: "flex", justifyContent: "center", marginTop: 8 }}>
-              <Button variant="primary" size="lg" type="button" onClick={() => setModeConfirmed(true)} style={{ minWidth: 240 }}>
-                다음
-              </Button>
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <span className="font-semibold text-[13px] text-[var(--w-fg-neutral)]">집행 방식</span>
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[var(--w-accent-violet-soft)] text-[var(--w-accent-violet)] font-semibold text-[12px]">
-                  {state.mode === "simple" ? "간단 설정" : "디테일 설정"}
-                </span>
-              </div>
-              <button
-                type="button"
-                className="font-medium text-[12px] text-[var(--w-fg-neutral)] underline underline-offset-2 cursor-pointer"
-                onClick={() => setModeConfirmed(false)}
-              >
-                변경
-              </button>
-            </div>
-            <SubStepIndicator steps={subSteps} current={subStep} onStepClick={(n) => setSubStep(n as 1 | 2 | 3 | 4 | 5)} />
-            <hr className="h-px bg-[var(--w-line-neutral)] border-0" style={{ margin: "0 0 20px" }} />
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        <ObjectivePicker goCreative={goCreative} />
 
-            {subStep === 1 && (
-              <>
-                <CreativePreview />
-                <hr className="h-px bg-[var(--w-line-neutral)] my-[18px] border-0" />
-                <DestinationField />
-                {profile?.uniqueSections.includes("call_schedule") && (
-                  <><hr className="h-px bg-[var(--w-line-neutral)] my-[18px] border-0" /><CallScheduleSection /></>
-                )}
-                {profile?.uniqueSections.includes("messages_auto_reply") && (
-                  <><hr className="h-px bg-[var(--w-line-neutral)] my-[18px] border-0" /><MessagesAutoReplyCallout /></>
-                )}
-                {profile?.uniqueSections.includes("page_activity") && (
-                  <><hr className="h-px bg-[var(--w-line-neutral)] my-[18px] border-0" /><PageActivityCallout /></>
-                )}
-                <div className="flex items-center justify-between gap-3" style={{ marginTop: 24 }}>
-                  <Button variant="secondary" type="button" onClick={() => setModeConfirmed(false)}>
-                    이전
-                  </Button>
-                  <Button variant="primary" type="button" onClick={() => setSubStep(2)}>
-                    다음
-                  </Button>
-                </div>
-              </>
-            )}
+        <Card variant="lg" id={CARD_DOM_ID.destination}>
+          <DestinationField urlAttempted={urlAttempted} />
+          {profile?.uniqueSections.includes("call_schedule") && (
+            <><hr className="h-px bg-[var(--w-line-neutral)] my-[18px] border-0" /><CallScheduleSection /></>
+          )}
+          {profile?.uniqueSections.includes("messages_auto_reply") && (
+            <><hr className="h-px bg-[var(--w-line-neutral)] my-[18px] border-0" /><MessagesAutoReplyCallout /></>
+          )}
+          {profile?.uniqueSections.includes("page_activity") && (
+            <><hr className="h-px bg-[var(--w-line-neutral)] my-[18px] border-0" /><PageActivityCallout /></>
+          )}
+        </Card>
 
-            {subStep === 2 && (
-              <BudgetScheduleStep onBack={() => setSubStep(1)} onNext={() => setSubStep(3)} />
-            )}
+        <Card variant="lg">
+          <BudgetScheduleStep />
+        </Card>
 
-            {subStep === 3 && (
-              <TargetStep onBack={() => setSubStep(2)} onNext={() => setSubStep(4)} />
-            )}
+        <Card variant="lg" id={CARD_DOM_ID.target}>
+          <TargetStep />
+        </Card>
 
-            {subStep === 4 && state.mode === "detailed" && (
-              <>
-                <ObjectivePicker goCreative={goCreative} />
-                <hr className="h-px bg-[var(--w-line-neutral)] my-[18px] border-0" />
-                <DetailKnobs />
-                <div className="flex items-center justify-between gap-3" style={{ marginTop: 24 }}>
-                  <Button variant="secondary" type="button" onClick={() => setSubStep(3)}>
-                    이전
-                  </Button>
-                  <Button variant="primary" type="button" onClick={() => setSubStep(5)}>
-                    다음
-                  </Button>
-                </div>
-              </>
-            )}
+        <Card variant="lg">
+          <ABCreativeKnob />
+        </Card>
 
-            {((subStep === 4 && state.mode !== "detailed") || subStep === 5) && (
-              <ConfirmStep
-                onBack={() => setSubStep(state.mode === "detailed" ? 4 : 3)}
-                canLaunch={canLaunch}
-                canSkipLaunch={canSkipLaunch}
-                onLaunch={handleLaunch}
-                onSkipLaunch={handleSkipAdLaunch}
-                mutation={launchMutation}
-                goSettings={goSettings}
-                devModeOn={devModeOn}
-                testAccountActive={testAccountActive}
-              />
-            )}
-          </>
-        )}
-      </Card>
+        <Card variant="lg">
+          <button
+            type="button"
+            onClick={() => setAdvancedOpen((v) => !v)}
+            aria-expanded={advancedOpen}
+            className="w-full flex items-center justify-between gap-2 cursor-pointer bg-transparent border-none p-0"
+          >
+            <span className="font-semibold text-[15px] leading-[1.3] tracking-[-0.008em] text-[var(--w-fg-strong)]">
+              고급 설정
+            </span>
+            <Icon
+              name="chev-down"
+              size={16}
+              className={advancedOpen ? "rotate-180" : ""}
+              style={{ color: "var(--w-fg-alternative)", transition: "transform 160ms" }}
+            />
+          </button>
+          {advancedOpen && (
+            <>
+              <hr className="h-px bg-[var(--w-line-neutral)] my-[18px] border-0" />
+              <DetailKnobs />
+            </>
+          )}
+        </Card>
+      </div>
 
       <div style={{ position: "sticky", top: 20, display: "flex", flexDirection: "column", gap: 16 }}>
-        <LaunchStatusPanel mutation={launchMutation} onNext={onNext} />
+        <Card variant="lg">
+          <CreativePreview />
+        </Card>
+        <ConfirmStep
+          canLaunch={canLaunch}
+          canSkipLaunch={canSkipLaunch}
+          onLaunch={handleLaunch}
+          onSkipLaunch={handleSkipAdLaunch}
+          mutation={launchMutation}
+          goSettings={goSettings}
+          devModeOn={devModeOn}
+          testAccountActive={testAccountActive}
+          blockReason={blockReason}
+        />
         <SummaryCard />
       </div>
 

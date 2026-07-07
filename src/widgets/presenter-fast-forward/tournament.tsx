@@ -75,7 +75,7 @@ export default function PresenterTournamentBar({ t }: { t: Tournament }) {
     ) : t.status === "completed" ? (
       <ConsoleStatusBadge ok icon="check-circle">토너먼트 완료 · {settledCount}라운드</ConsoleStatusBadge>
     ) : (
-      <span className="font-medium text-[12.5px] leading-[1.5] text-[var(--w-fg-neutral)]">
+      <span className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)]">
         {settledCount}라운드 완료 · 빨리감기로 다음 라운드를 자동 진행해요
       </span>
     );

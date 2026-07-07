@@ -17,7 +17,7 @@ export default function PageActivityCallout() {
       <SubHead title="페이지 활성도 확인" subtitle="좋아요 광고는 활성 페이지일 때 효율적이에요. 최근 7일 내 게시물이 있는지 점검해주세요." />
       <div className="flex items-start gap-2.5 px-[14px] py-3 rounded-[10px] border bg-[rgba(0,102,255,0.06)] border-[rgba(0,102,255,0.18)] text-[var(--w-primary-press)] mb-1">
         <Icon name="info" size={16} />
-        <div className="font-medium text-[12.5px] leading-[1.5]">
+        <div className="font-medium text-[13px] leading-[1.5]">
           {pageName ? <><strong>{pageName}</strong> 페이지에 </> : "활성 페이지에 "}
           최근 게시물이 없으면 광고 클릭 후 사용자가 빠르게 이탈해요. 좋아요 광고 집행 전에 최근 콘텐츠를 1개 이상 올려두는 걸 권장해요.
         </div>

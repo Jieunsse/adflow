@@ -7,7 +7,6 @@ import { type Gender } from "@shared/lib/meta/targeting";
 import AgeRange from "@shared/ui/AgeRange";
 import SubHead from "./SubHead";
 import Icon from "@shared/ui/Icon";
-import { Button } from "@shared/ui/Button";
 import { cn } from "@shared/lib/cn";
 
 const chipBase = "inline-flex items-center gap-1.5 px-[14px] py-2 rounded-full border border-[var(--w-line-normal)] bg-[var(--w-bg-elevated)] font-medium text-[13px] leading-none text-[var(--w-fg-strong)] cursor-pointer transition-[background,border-color,color] duration-[120ms]";
@@ -30,9 +29,7 @@ function SourceBadge({ source }: { source: "persona" | "ai" }) {
   );
 }
 
-interface Props { onBack: () => void; onNext: () => void }
-
-export default function TargetStep({ onBack, onNext }: Props) {
+export default function TargetStep() {
   const { state, dispatch } = useLaunchDraft();
   const creative = useCreativeDraft();
   const targeting = creative.state.targeting;
@@ -50,52 +47,40 @@ export default function TargetStep({ onBack, onNext }: Props) {
       <SubHead
         title="타겟"
         subtitle={
-          state.mode === "simple"
-            ? "광고를 노출할 국가만 선택하세요. 연령·성별은 Meta 어드밴티지+가 자동으로 최적화해요."
-            : targeting
-              ? "연령·성별은 AI가 입력 내용을 보고 추천했어요. 그대로 두거나 조정해도 돼요."
-              : "타겟 조건을 설정해주세요."
+          targeting
+            ? "연령·성별은 AI가 입력 내용을 보고 추천했어요. 그대로 두거나 조정해도 돼요."
+            : "타겟 조건을 설정해주세요."
         }
       />
       <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-        {state.mode === "simple" && (
-          <div className="font-medium text-[12px] leading-[1.5] tracking-[0.008em] text-[var(--w-fg-neutral)] flex items-center gap-1.5" style={{ color: "var(--w-primary-press)" }}>
-            <Icon name="sparkles" size={12} />
-            어드밴티지+ 타겟 · 노출 위치 — 연령·성별·게재 위치를 Meta가 자동으로 최적화해요.
+        <div>
+          <label className="font-semibold text-[15px] leading-[1.3] tracking-[-0.008em] text-[var(--w-fg-strong)] flex items-center gap-1.5" style={{ marginBottom: 10 }}>
+            연령
+            {source && <SourceBadge source={source.age} />}
+          </label>
+          <AgeRange
+            value={[state.ageMin, state.ageMax]}
+            onChange={(v) => dispatch({ type: "SET_AGE_RANGE", min: v[0], max: v[1] })}
+          />
+        </div>
+        <div>
+          <label className="font-semibold text-[15px] leading-[1.3] tracking-[-0.008em] text-[var(--w-fg-strong)] flex items-center gap-1.5" style={{ marginBottom: 8 }}>
+            성별
+            {source && <SourceBadge source={source.gender} />}
+          </label>
+          <div className="flex gap-2 flex-wrap">
+            {GENDER_OPTS.map(([k, l]) => (
+              <button
+                key={k}
+                type="button"
+                className={cn(chipBase, state.gender === k && chipOn)}
+                onClick={() => dispatch({ type: "SET_GENDER", value: k })}
+              >
+                {l}
+              </button>
+            ))}
           </div>
-        )}
-        {state.mode === "detailed" && (
-          <>
-            <div>
-              <label className="font-semibold text-[15px] leading-[1.3] tracking-[-0.008em] text-[var(--w-fg-strong)] flex items-center gap-1.5" style={{ marginBottom: 10 }}>
-                연령
-                {source && <SourceBadge source={source.age} />}
-              </label>
-              <AgeRange
-                value={[state.ageMin, state.ageMax]}
-                onChange={(v) => dispatch({ type: "SET_AGE_RANGE", min: v[0], max: v[1] })}
-              />
-            </div>
-            <div>
-              <label className="font-semibold text-[15px] leading-[1.3] tracking-[-0.008em] text-[var(--w-fg-strong)] flex items-center gap-1.5" style={{ marginBottom: 8 }}>
-                성별
-                {source && <SourceBadge source={source.gender} />}
-              </label>
-              <div className="flex gap-2 flex-wrap">
-                {GENDER_OPTS.map(([k, l]) => (
-                  <button
-                    key={k}
-                    type="button"
-                    className={cn(chipBase, state.gender === k && chipOn)}
-                    onClick={() => dispatch({ type: "SET_GENDER", value: k })}
-                  >
-                    {l}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </>
-        )}
+        </div>
         <div>
           <label className="font-semibold text-[15px] leading-[1.3] tracking-[-0.008em] text-[var(--w-fg-strong)] flex items-center gap-1.5" style={{ marginBottom: 8 }}>지역 (국가, 복수 선택)</label>
           <div className="flex gap-2 flex-wrap">
@@ -119,14 +104,6 @@ export default function TargetStep({ onBack, onNext }: Props) {
             </div>
           )}
         </div>
-      </div>
-      <div className="flex items-center justify-between gap-3" style={{ marginTop: 24 }}>
-        <Button variant="secondary" type="button" onClick={onBack}>
-          <Icon name="arrow-left" size={14} /> 이전
-        </Button>
-        <Button variant="primary" type="button" onClick={onNext}>
-          다음 <Icon name="arrow-right" size={14} />
-        </Button>
       </div>
     </>
   );

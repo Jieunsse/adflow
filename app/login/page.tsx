@@ -49,11 +49,6 @@ function LoginContent() {
     signIn("facebook", { callbackUrl: "/dashboard" });
   }
 
-  function handleAxhub() {
-    setLoading(true);
-    signIn("axhub", { callbackUrl: "/dashboard" });
-  }
-
   function handleBrowse() {
     setLoading(true);
     signIn("guest", { callbackUrl: "/dashboard" });
@@ -140,10 +135,6 @@ function LoginContent() {
                 <Button variant="primary" size="lg" block type="button" onClick={handleLogin} disabled={loading}>
                   {loading ? <Icon name="spinner" size={16} /> : <Icon name="facebook" size={16} />}
                   {loading ? "Facebook에 연결 중…" : "Facebook으로 로그인"}
-                </Button>
-                <Button variant="secondary" size="lg" block type="button" onClick={handleAxhub} disabled={loading} style={{ marginTop: 10 }}>
-                  <Icon name="globe" size={16} />
-                  axhub 계정으로 로그인
                 </Button>
                 <Button variant="secondary" size="lg" block type="button" onClick={handleBrowse} disabled={loading} style={{ marginTop: 10 }}>
                   로그인 없이 서비스 둘러보기

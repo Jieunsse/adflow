@@ -245,7 +245,7 @@ function ProhibitedWordsForm({
         </label>
         <div className="flex flex-wrap gap-1.5 min-h-[28px] py-1">
           {words.length === 0 && (
-            <span className="font-medium text-[12.5px] text-[var(--w-fg-alternative)] self-center">
+            <span className="font-medium text-[13px] text-[var(--w-fg-alternative)] self-center">
               아래 입력란에 단어를 적고 Enter 또는 쉼표로 추가
             </span>
           )}
@@ -283,9 +283,9 @@ function ProhibitedWordsForm({
           }}
           onBlur={commit}
           placeholder="예: 100% 보장, 최고, 1위"
-          className="w-full bg-[var(--w-bg-elevated)] border border-[var(--w-line-normal)] rounded-xl px-3.5 py-2.5 font-medium text-[13.5px] leading-[1.5] text-[var(--w-fg-strong)] outline-none transition-[border-color,box-shadow] duration-[120ms] focus:border-[var(--w-primary-normal)] focus:shadow-[0_0_0_4px_rgba(0,102,255,0.14)] placeholder:text-[var(--w-fg-alternative)]"
+          className="w-full bg-[var(--w-bg-elevated)] border border-[var(--w-line-normal)] rounded-xl px-3.5 py-2.5 font-medium text-[14px] leading-[1.5] text-[var(--w-fg-strong)] outline-none transition-[border-color,box-shadow] duration-[120ms] focus:border-[var(--w-primary-normal)] focus:shadow-[0_0_0_4px_rgba(0,102,255,0.14)] placeholder:text-[var(--w-fg-alternative)]"
         />
-        <div className="font-medium text-[11.5px] text-[var(--w-fg-alternative)]">
+        <div className="font-medium text-[12px] text-[var(--w-fg-alternative)]">
           쉼표 또는 Enter 로 한 단어씩 추가돼요.
         </div>
       </div>
@@ -347,7 +347,7 @@ function ImageRestrictionsForm({
     setFormats((prev) => (prev.includes(f) ? prev.filter((x) => x !== f) : [...prev, f]));
 
   const inputClass =
-    "w-full bg-[var(--w-bg-elevated)] border border-[var(--w-line-normal)] rounded-xl px-3.5 py-2.5 font-medium text-[13.5px] leading-[1.5] text-[var(--w-fg-strong)] outline-none transition-[border-color,box-shadow] duration-[120ms] focus:border-[var(--w-primary-normal)] focus:shadow-[0_0_0_4px_rgba(0,102,255,0.14)] placeholder:text-[var(--w-fg-alternative)]";
+    "w-full bg-[var(--w-bg-elevated)] border border-[var(--w-line-normal)] rounded-xl px-3.5 py-2.5 font-medium text-[14px] leading-[1.5] text-[var(--w-fg-strong)] outline-none transition-[border-color,box-shadow] duration-[120ms] focus:border-[var(--w-primary-normal)] focus:shadow-[0_0_0_4px_rgba(0,102,255,0.14)] placeholder:text-[var(--w-fg-alternative)]";
   const labelClass = "font-semibold text-[13px] text-[var(--w-fg-strong)]";
 
   return (
@@ -467,7 +467,7 @@ function LengthLimitsForm({
   return (
     <>
       <div className="px-6 py-5 flex flex-col gap-3">
-        <div className="font-medium text-[12.5px] text-[var(--w-fg-neutral)] mb-1">
+        <div className="font-medium text-[13px] text-[var(--w-fg-neutral)] mb-1">
           비워두면 그 항목은 제한 없음으로 처리해요.
         </div>
         <LimitRow label="헤드라인" unit="자" value={headline} onChange={setHeadline} placeholder="예: 40" />
@@ -575,7 +575,7 @@ function CtaRestrictionsForm({
           </label>
           <div className="flex flex-wrap gap-1.5 min-h-[28px] py-1">
             {blacklist.length === 0 && (
-              <span className="font-medium text-[12.5px] text-[var(--w-fg-alternative)] self-center">
+              <span className="font-medium text-[13px] text-[var(--w-fg-alternative)] self-center">
                 금지하고 싶은 CTA 문구를 추가
               </span>
             )}
@@ -616,7 +616,7 @@ function CtaRestrictionsForm({
             }}
             onBlur={commit}
             placeholder="예: 지금 구매, 한정 할인"
-            className="w-full bg-[var(--w-bg-elevated)] border border-[var(--w-line-normal)] rounded-xl px-3.5 py-2.5 font-medium text-[13.5px] leading-[1.5] text-[var(--w-fg-strong)] outline-none transition-[border-color,box-shadow] duration-[120ms] focus:border-[var(--w-primary-normal)] focus:shadow-[0_0_0_4px_rgba(0,102,255,0.14)] placeholder:text-[var(--w-fg-alternative)]"
+            className="w-full bg-[var(--w-bg-elevated)] border border-[var(--w-line-normal)] rounded-xl px-3.5 py-2.5 font-medium text-[14px] leading-[1.5] text-[var(--w-fg-strong)] outline-none transition-[border-color,box-shadow] duration-[120ms] focus:border-[var(--w-primary-normal)] focus:shadow-[0_0_0_4px_rgba(0,102,255,0.14)] placeholder:text-[var(--w-fg-alternative)]"
           />
         </div>
 
@@ -628,7 +628,7 @@ function CtaRestrictionsForm({
             value={note}
             onChange={(e) => setNote(e.target.value)}
             placeholder="예: 의료 광고는 '상담 예약'만 허용"
-            className="w-full bg-[var(--w-bg-elevated)] border border-[var(--w-line-normal)] rounded-xl px-3.5 py-2.5 font-medium text-[13.5px] leading-[1.5] text-[var(--w-fg-strong)] outline-none transition-[border-color,box-shadow] duration-[120ms] focus:border-[var(--w-primary-normal)] focus:shadow-[0_0_0_4px_rgba(0,102,255,0.14)] placeholder:text-[var(--w-fg-alternative)]"
+            className="w-full bg-[var(--w-bg-elevated)] border border-[var(--w-line-normal)] rounded-xl px-3.5 py-2.5 font-medium text-[14px] leading-[1.5] text-[var(--w-fg-strong)] outline-none transition-[border-color,box-shadow] duration-[120ms] focus:border-[var(--w-primary-normal)] focus:shadow-[0_0_0_4px_rgba(0,102,255,0.14)] placeholder:text-[var(--w-fg-alternative)]"
           />
         </div>
       </div>
@@ -687,7 +687,7 @@ function RequiredChipListForm({
         </label>
         <div className="flex flex-wrap gap-1.5 min-h-[28px] py-1">
           {items.length === 0 && (
-            <span className="font-medium text-[12.5px] text-[var(--w-fg-alternative)] self-center">
+            <span className="font-medium text-[13px] text-[var(--w-fg-alternative)] self-center">
               아래 입력란에 {itemLabel}를 적고 Enter 또는 쉼표로 추가
             </span>
           )}
@@ -725,9 +725,9 @@ function RequiredChipListForm({
           }}
           onBlur={commit}
           placeholder={placeholder}
-          className="w-full bg-[var(--w-bg-elevated)] border border-[var(--w-line-normal)] rounded-xl px-3.5 py-2.5 font-medium text-[13.5px] leading-[1.5] text-[var(--w-fg-strong)] outline-none transition-[border-color,box-shadow] duration-[120ms] focus:border-[var(--w-primary-normal)] focus:shadow-[0_0_0_4px_rgba(0,102,255,0.14)] placeholder:text-[var(--w-fg-alternative)]"
+          className="w-full bg-[var(--w-bg-elevated)] border border-[var(--w-line-normal)] rounded-xl px-3.5 py-2.5 font-medium text-[14px] leading-[1.5] text-[var(--w-fg-strong)] outline-none transition-[border-color,box-shadow] duration-[120ms] focus:border-[var(--w-primary-normal)] focus:shadow-[0_0_0_4px_rgba(0,102,255,0.14)] placeholder:text-[var(--w-fg-alternative)]"
         />
-        <div className="font-medium text-[11.5px] text-[var(--w-fg-alternative)]">
+        <div className="font-medium text-[12px] text-[var(--w-fg-alternative)]">
           쉼표 또는 Enter 로 하나씩 추가돼요.
         </div>
       </div>
@@ -819,7 +819,7 @@ function FreeTextForm({
                   }
                 }}
                 placeholder={idx === 0 ? SOP_FREETEXT_PLACEHOLDER[type] : ""}
-                className="flex-1 bg-[var(--w-bg-elevated)] border border-[var(--w-line-normal)] rounded-xl px-3.5 py-2.5 font-medium text-[13.5px] leading-[1.5] text-[var(--w-fg-strong)] outline-none transition-[border-color,box-shadow] duration-[120ms] focus:border-[var(--w-primary-normal)] focus:shadow-[0_0_0_4px_rgba(0,102,255,0.14)] placeholder:text-[var(--w-fg-alternative)]"
+                className="flex-1 bg-[var(--w-bg-elevated)] border border-[var(--w-line-normal)] rounded-xl px-3.5 py-2.5 font-medium text-[14px] leading-[1.5] text-[var(--w-fg-strong)] outline-none transition-[border-color,box-shadow] duration-[120ms] focus:border-[var(--w-primary-normal)] focus:shadow-[0_0_0_4px_rgba(0,102,255,0.14)] placeholder:text-[var(--w-fg-alternative)]"
               />
               {lines.length > 1 && (
                 <button

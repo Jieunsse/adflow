@@ -5,9 +5,11 @@
 // 3층: (B)결론 헤드라인 + ①키워드 성과 리스트 + ②제품 칩→모달(기존 상세 row 재사용).
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Panel from "./Panel";
 import Icon from "@shared/ui/Icon";
 import { Chip } from "@shared/ui/Chip";
+import { Button } from "@shared/ui/Button";
 import { Callout } from "@shared/ui/Callout";
 import { Dialog, DialogContent, DialogTitle } from "@shared/ui/Dialog";
 import { OBJECTIVES_ALL, type ObjectiveId } from "@entities/creative/options";
@@ -20,7 +22,7 @@ import {
   type LeverAggregate,
 } from "@entities/ab-test/tournament/ui/ledger-view";
 import type { Hypothesis } from "@entities/ab-test/tournament/tournament";
-import type { Lever } from "@entities/ab-test/tournament/lever";
+import { isCopyLever, type Lever } from "@entities/ab-test/tournament/lever";
 
 const VERDICT_RANK: Record<NonNullable<Hypothesis["verdict"]>, number> = {
   confirmed: 0,
@@ -44,12 +46,16 @@ function LeverRow({
   expanded,
   items,
   onToggle,
+  onCreateAd,
+  onRetest,
 }: {
   agg: LeverAggregate;
   top: boolean;
   expanded: boolean;
   items: Hypothesis[];
   onToggle: () => void;
+  onCreateAd: () => void;
+  onRetest: () => void;
 }) {
   const meta = CLASS_META[agg.klass];
   const liftText =
@@ -65,7 +71,7 @@ function LeverRow({
         <span className="w-4 shrink-0 text-[13px] leading-none text-[var(--w-status-cautionary)]">
           {top ? "★" : ""}
         </span>
-        <span className="font-bold text-[13.5px] leading-[1.4] text-[var(--w-fg-strong)] shrink-0">{agg.label}</span>
+        <span className="font-bold text-[14px] leading-[1.4] text-[var(--w-fg-strong)] shrink-0">{agg.label}</span>
         <Chip variant={meta.chip}>{meta.label}</Chip>
         <span className="ml-auto flex items-center gap-2 font-semibold text-[12px] leading-[1.5] text-[var(--w-fg-neutral)]">
           <span>{agg.confirmed}/{agg.total} 입증</span>
@@ -85,6 +91,16 @@ function LeverRow({
           {items.map((h) => (
             <HypothesisDetailRow key={h.id} h={h} />
           ))}
+          {agg.klass === "works" && (
+            <div className="flex items-center gap-1 pt-1">
+              <Button variant="ghost" size="sm" type="button" onClick={onCreateAd}>
+                이 방식으로 새 광고 만들기
+              </Button>
+              <Button variant="ghost" size="sm" type="button" onClick={onRetest}>
+                토너먼트로 재검증
+              </Button>
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -130,6 +146,7 @@ export default function LearningSection({
   entries: Hypothesis[];
   products: { id: string; name: string }[];
 }) {
+  const router = useRouter();
   const [openProduct, setOpenProduct] = useState<string | null>(null);
   const [openLever, setOpenLever] = useState<Lever | null>(null);
   const [openHeadline, setOpenHeadline] = useState(false);
@@ -212,7 +229,7 @@ export default function LearningSection({
 
                 {topAgg.confirmed <= 2 && (
                   <Callout tone="cautionary" size="sm" icon="info">
-                    <span className="text-[12.5px] leading-[1.5] text-[var(--w-fg-neutral)]">
+                    <span className="text-[13px] leading-[1.5] text-[var(--w-fg-neutral)]">
                       아직 표본이 적어요 — 더 검증하면 확신이 올라가요.
                     </span>
                   </Callout>
@@ -220,12 +237,12 @@ export default function LearningSection({
 
                 {refutedContexts.length > 0 ? (
                   <Callout tone="cautionary" size="sm" icon="info">
-                    <span className="text-[12.5px] leading-[1.5] text-[var(--w-fg-neutral)]">
+                    <span className="text-[13px] leading-[1.5] text-[var(--w-fg-neutral)]">
                       단, &apos;{refutedContexts.join(", ")}&apos;에선 역효과였어요.
                     </span>
                   </Callout>
                 ) : backfires ? (
-                  <div className="flex items-center gap-2 text-[12.5px] text-[var(--w-fg-neutral)] px-1">
+                  <div className="flex items-center gap-2 text-[13px] text-[var(--w-fg-neutral)] px-1">
                     반대로 이 브랜드에서 안 통한 방식:
                     <Chip variant="paused">{backfires.label}</Chip>
                   </div>
@@ -248,6 +265,10 @@ export default function LearningSection({
                 expanded={openLever === agg.lever}
                 items={leverItems(agg.lever)}
                 onToggle={() => setOpenLever((cur) => (cur === agg.lever ? null : agg.lever))}
+                onCreateAd={() =>
+                  router.push(isCopyLever(agg.lever) ? `/create?hook=${agg.lever}` : "/create")
+                }
+                onRetest={() => router.push("/ab-tests/new")}
               />
             ))}
           </div>

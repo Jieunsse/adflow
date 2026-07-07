@@ -86,8 +86,34 @@ export function upsertProfile(entry: BrandProfileEntry): void {
   useStore.getState().upsert(entry);
 }
 
+const PERSONAS_KEY = "adflow:personas";
+
 export function removeProfile(id: string): void {
+  const items = useStore.getState().items;
+  const removed = items.find((p) => p.id === id);
   useStore.getState().removeById(id);
+
+  if (getActiveId() === id) {
+    try {
+      localStorage.removeItem(ACTIVE_ID_KEY);
+    } catch {}
+  }
+
+  if (removed?.isDefault) {
+    const remaining = items.filter((p) => p.id !== id);
+    if (remaining.length > 0) setDefaultProfile(remaining[0].id);
+  }
+
+  try {
+    const raw = localStorage.getItem(PERSONAS_KEY);
+    if (raw) {
+      const personas = JSON.parse(raw) as { brandProfileId: string }[];
+      const next = personas.filter((p) => p.brandProfileId !== id);
+      if (next.length !== personas.length) {
+        localStorage.setItem(PERSONAS_KEY, JSON.stringify(next));
+      }
+    }
+  } catch {}
 }
 
 export function setDefaultProfile(id: string): void {
@@ -96,6 +122,7 @@ export function setDefaultProfile(id: string): void {
     const want = p.id === id;
     if (!!p.isDefault !== want) useStore.getState().upsert({ ...p, isDefault: want });
   });
+  setActiveIdInStorage(id);
 }
 
 // 활성 프로필 ID — 기기별 UI 선택 상태(별도 키, 동기화 대상 아님).

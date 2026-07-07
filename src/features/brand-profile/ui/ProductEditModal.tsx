@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { Button } from "@shared/ui/Button";
 import Icon from "@shared/ui/Icon";
 import { cn } from "@shared/lib/cn";
+import { Dialog, DialogContent, DialogTitle } from "@shared/ui/Dialog";
 import type { ProductEntry } from "@shared/lib/products";
 
 const INPUT_CLS =
@@ -59,58 +60,37 @@ export default function ProductEditModal({ brandProfileId, product, onSave, onCl
   };
 
   return (
-    <div
-      style={{
-        position: "fixed", inset: 0, zIndex: 50,
-        background: "rgba(0,0,0,0.4)", backdropFilter: "blur(2px)",
-        display: "flex", alignItems: "center", justifyContent: "center", padding: 24,
-      }}
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
-    >
-      <div
-        style={{
-          background: "var(--w-bg-normal)", borderRadius: 16,
-          border: "1px solid var(--w-line-normal)",
-          padding: "24px 28px", width: "100%", maxWidth: 480,
-          display: "flex", flexDirection: "column", gap: 18,
-          maxHeight: "90vh", overflowY: "auto",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <span style={{ font: "700 17px/1.3 var(--w-font-sans)", color: "var(--w-fg-strong)" }}>
+    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      <DialogContent style={{ width: 480 }}>
+      <div className="flex flex-col gap-[18px] p-6">
+        <div className="flex items-center justify-between">
+          <DialogTitle className="m-0 font-bold text-[17px] leading-[1.3] tracking-[-0.014em] text-[var(--w-fg-strong)]">
             {product ? "제품 수정" : "제품 추가"}
-          </span>
-          <button type="button" onClick={onClose} style={{ padding: 4, cursor: "pointer", background: "transparent", border: "none" }}>
-            <Icon name="x" size={18} style={{ color: "var(--w-fg-neutral)" }} />
+          </DialogTitle>
+          <button type="button" onClick={onClose} className="p-1 text-[var(--w-fg-neutral)] hover:text-[var(--w-fg-strong)]">
+            <Icon name="x" size={18} />
           </button>
         </div>
 
         {/* 제품 이미지 */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          <span style={{ font: "600 13.5px/1.3 var(--w-font-sans)", color: "var(--w-fg-strong)" }}>제품 이미지 (선택)</span>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div className="flex flex-col gap-2">
+          <span className="font-semibold text-[14px] text-[var(--w-fg-strong)]">제품 이미지 (선택)</span>
+          <div className="flex items-center gap-[10px]">
             {previewUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={previewUrl}
                 alt="제품 이미지"
-                style={{ width: 60, height: 60, objectFit: "cover", borderRadius: 8, border: "1px solid var(--w-line-normal)" }}
+                className="w-[60px] h-[60px] object-cover rounded-lg border border-[var(--w-line-normal)]"
               />
             ) : (
-              <div style={{ width: 60, height: 60, borderRadius: 8, border: "1px dashed var(--w-line-normal)", background: "var(--w-bg-alternative)", display: "grid", placeItems: "center" }}>
-                <Icon name="image" size={18} style={{ color: "var(--w-fg-alternative)" }} />
+              <div className="w-[60px] h-[60px] rounded-lg border border-dashed border-[var(--w-line-normal)] bg-[var(--w-bg-alternative)] grid place-items-center">
+                <Icon name="image" size={18} className="text-[var(--w-fg-alternative)]" />
               </div>
             )}
-            <div style={{ display: "flex", gap: 6 }}>
-              <label style={{ cursor: "pointer" }}>
-                <span
-                  style={{
-                    display: "inline-flex", alignItems: "center", gap: 4,
-                    padding: "6px 12px", borderRadius: 8,
-                    border: "1px solid var(--w-line-normal)", background: "var(--w-bg-elevated)",
-                    font: "500 12.5px/1 var(--w-font-sans)", color: "var(--w-fg-strong)", cursor: "pointer",
-                  }}
-                >
+            <div className="flex gap-1.5">
+              <label className="cursor-pointer">
+                <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-[var(--w-line-normal)] bg-[var(--w-bg-elevated)] font-medium text-[13px] text-[var(--w-fg-strong)] cursor-pointer">
                   <Icon name="upload" size={12} />
                   {previewUrl ? "변경" : "업로드"}
                 </span>
@@ -118,7 +98,7 @@ export default function ProductEditModal({ brandProfileId, product, onSave, onCl
                   ref={fileRef}
                   type="file"
                   accept="image/jpeg,image/png,image/webp"
-                  style={{ display: "none" }}
+                  className="hidden"
                   onChange={(e) => handleImage(e.target.files)}
                 />
               </label>
@@ -126,7 +106,7 @@ export default function ProductEditModal({ brandProfileId, product, onSave, onCl
                 <button
                   type="button"
                   onClick={() => { setPreviewUrl(null); setImageFile(undefined); }}
-                  style={{ padding: "6px 10px", borderRadius: 8, border: "1px solid var(--w-line-normal)", background: "transparent", font: "500 12.5px/1 var(--w-font-sans)", color: "var(--w-fg-neutral)", cursor: "pointer" }}
+                  className="px-2.5 py-1.5 rounded-lg border border-[var(--w-line-normal)] bg-transparent font-medium text-[13px] text-[var(--w-fg-neutral)] cursor-pointer"
                 >
                   제거
                 </button>
@@ -136,9 +116,9 @@ export default function ProductEditModal({ brandProfileId, product, onSave, onCl
         </div>
 
         {/* 제품명 */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <label style={{ font: "600 13.5px/1.3 var(--w-font-sans)", color: "var(--w-fg-strong)" }}>
-            제품명 <span style={{ color: "var(--w-status-negative)" }}>*</span>
+        <div className="flex flex-col gap-1.5">
+          <label className="font-semibold text-[14px] text-[var(--w-fg-strong)]">
+            제품명 <span className="text-[var(--w-status-negative)]">*</span>
           </label>
           <input
             className={INPUT_CLS}
@@ -149,11 +129,11 @@ export default function ProductEditModal({ brandProfileId, product, onSave, onCl
         </div>
 
         {/* 제품 설명 */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <label style={{ font: "600 13.5px/1.3 var(--w-font-sans)", color: "var(--w-fg-strong)" }}>
-            제품 설명 <span style={{ color: "var(--w-status-negative)" }}>*</span>
+        <div className="flex flex-col gap-1.5">
+          <label className="font-semibold text-[14px] text-[var(--w-fg-strong)]">
+            제품 설명 <span className="text-[var(--w-status-negative)]">*</span>
           </label>
-          <p style={{ margin: 0, font: "500 12px/1.5 var(--w-font-sans)", color: "var(--w-fg-neutral)" }}>
+          <p className="m-0 font-medium text-[12px] leading-[1.5] text-[var(--w-fg-neutral)]">
             강점·성분·사용감 등 AI 카피 생성에 활용돼요.
           </p>
           <textarea
@@ -165,8 +145,8 @@ export default function ProductEditModal({ brandProfileId, product, onSave, onCl
         </div>
 
         {/* 가격 */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <label style={{ font: "600 13.5px/1.3 var(--w-font-sans)", color: "var(--w-fg-strong)" }}>가격 (선택)</label>
+        <div className="flex flex-col gap-1.5">
+          <label className="font-semibold text-[14px] text-[var(--w-fg-strong)]">가격 (선택)</label>
           <input
             className={INPUT_CLS}
             value={price}
@@ -176,9 +156,9 @@ export default function ProductEditModal({ brandProfileId, product, onSave, onCl
         </div>
 
         {/* 랜딩 URL */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <label style={{ font: "600 13.5px/1.3 var(--w-font-sans)", color: "var(--w-fg-strong)" }}>랜딩 페이지 URL (선택)</label>
-          <p style={{ margin: 0, font: "500 12px/1.5 var(--w-font-sans)", color: "var(--w-fg-neutral)" }}>
+        <div className="flex flex-col gap-1.5">
+          <label className="font-semibold text-[14px] text-[var(--w-fg-strong)]">랜딩 페이지 URL (선택)</label>
+          <p className="m-0 font-medium text-[12px] leading-[1.5] text-[var(--w-fg-neutral)]">
             광고 만들기 STEP 02에서 자동으로 채워져요.
           </p>
           <input
@@ -189,7 +169,7 @@ export default function ProductEditModal({ brandProfileId, product, onSave, onCl
           />
         </div>
 
-        <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, paddingTop: 4 }}>
+        <div className="flex justify-end gap-2 pt-1">
           <Button variant="secondary" type="button" onClick={onClose}>취소</Button>
           <Button
             variant="primary"
@@ -201,6 +181,7 @@ export default function ProductEditModal({ brandProfileId, product, onSave, onCl
           </Button>
         </div>
       </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

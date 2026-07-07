@@ -74,7 +74,7 @@ export function IgPostPreview({
           </div>
         </div>
         <div className="min-w-0 flex-1">
-          <div className="text-[12.5px] font-semibold text-[var(--w-fg-strong)] truncate">
+          <div className="text-[13px] font-semibold text-[var(--w-fg-strong)] truncate">
             {handle}
           </div>
           {sponsored && (
@@ -111,7 +111,7 @@ export function IgPostPreview({
           <div className="absolute inset-0 grid place-items-center text-[var(--w-fg-alternative)]">
             <div className="text-center">
               <Icon name="image" size={28} />
-              <div className="text-[11.5px] mt-1.5 leading-[1.4] max-w-[220px]">
+              <div className="text-[12px] mt-1.5 leading-[1.4] max-w-[220px]">
                 이미지를 추가하면 여기에 미리보기가 나타나요
               </div>
             </div>
@@ -122,7 +122,7 @@ export function IgPostPreview({
 
       {headline && (
         <div className="flex items-center gap-2 px-3 py-2.5 bg-[var(--w-bg-neutral)] border-t border-[var(--w-line-normal)]">
-          <div className="min-w-0 flex-1 text-[12.5px] font-semibold text-[var(--w-fg-strong)] leading-[1.35] truncate">
+          <div className="min-w-0 flex-1 text-[13px] font-semibold text-[var(--w-fg-strong)] leading-[1.35] truncate">
             {headline}
           </div>
           <span className="shrink-0 inline-flex items-center gap-0.5 text-[12px] font-semibold text-[var(--w-fg-neutral)]">
@@ -172,11 +172,11 @@ export function IgPostPreview({
         </button>
       </div>
 
-      <div className="px-3 text-[12.5px] font-semibold text-[var(--w-fg-strong)]">
+      <div className="px-3 text-[13px] font-semibold text-[var(--w-fg-strong)]">
         좋아요 {likeCount ?? 0}개
       </div>
 
-      <div className="px-3 pt-1 pb-2 text-[12.5px] text-[var(--w-fg-strong)] leading-[1.5] break-words">
+      <div className="px-3 pt-1 pb-2 text-[13px] text-[var(--w-fg-strong)] leading-[1.5] break-words">
         {caption ? (
           <>
             <span className="font-semibold mr-1.5">{handle}</span>

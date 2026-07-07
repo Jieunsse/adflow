@@ -57,7 +57,7 @@ export default function ReferenceMaterialsTab({ brandProfileId, canEdit }: { bra
 
   return (
     <div className="flex flex-col gap-4 pt-4">
-      <p className="m-0 font-medium text-[13.5px] leading-[1.5] text-[var(--w-fg-neutral)]">
+      <p className="m-0 font-medium text-[14px] leading-[1.5] text-[var(--w-fg-neutral)]">
         AI 카피·이미지 생성 시 참고할 자료를 보관하세요. STEP 02에서 직접 선택해 Gemini에 주입할 수 있어요.
       </p>
 
@@ -88,7 +88,7 @@ export default function ReferenceMaterialsTab({ brandProfileId, canEdit }: { bra
             )}
           >
             <Icon name="upload" size={24} style={{ color: "var(--w-fg-neutral)" }} />
-            <p className="m-0 mt-2 font-semibold text-[13.5px] text-[var(--w-fg-strong)]">
+            <p className="m-0 mt-2 font-semibold text-[14px] text-[var(--w-fg-strong)]">
               {uploading ? "업로드 중..." : "클릭하거나 파일을 여기에 드래그"}
             </p>
             <p className="m-0 mt-1 font-medium text-[12px] text-[var(--w-fg-neutral)]">
@@ -132,8 +132,8 @@ export default function ReferenceMaterialsTab({ brandProfileId, canEdit }: { bra
                 <span className="font-semibold text-[13px] leading-[1.3] text-[var(--w-fg-strong)] truncate">{m.name}</span>
                 <div className="flex items-center gap-2">
                   <TypeBadge type={m.type} />
-                  <span className="font-medium text-[11.5px] text-[var(--w-fg-neutral)]">{formatBytes(m.sizeBytes)}</span>
-                  <span className="font-medium text-[11.5px] text-[var(--w-fg-neutral)]">
+                  <span className="font-medium text-[12px] text-[var(--w-fg-neutral)]">{formatBytes(m.sizeBytes)}</span>
+                  <span className="font-medium text-[12px] text-[var(--w-fg-neutral)]">
                     {new Date(m.uploadedAt).toLocaleDateString("ko-KR", { month: "short", day: "numeric" })}
                   </span>
                 </div>

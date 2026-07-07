@@ -77,7 +77,7 @@ export default function IgImportModal({ onImport, onClose }: Props) {
             <DialogTitle className="m-0 font-bold text-[17px] leading-[1.3] tracking-[-0.012em] text-[var(--w-fg-strong)]">
               IG 게시글에서 가져오기
             </DialogTitle>
-            <p className="m-0 mt-1 font-medium text-[12.5px] text-[var(--w-fg-neutral)]">
+            <p className="m-0 mt-1 font-medium text-[13px] text-[var(--w-fg-neutral)]">
               가져올 게시글을 선택하세요
             </p>
           </div>
@@ -100,7 +100,7 @@ export default function IgImportModal({ onImport, onClose }: Props) {
               </p>
             )}
             {error && (
-              <p className="font-medium text-[13px] text-[var(--w-status-destructive)] text-center py-8">
+              <p className="font-medium text-[13px] text-[var(--w-status-negative)] text-center py-8">
                 {error}
               </p>
             )}
@@ -157,7 +157,7 @@ export default function IgImportModal({ onImport, onClose }: Props) {
 
         {/* Footer */}
         <div className="px-6 py-4 border-t border-[var(--w-line-normal)] flex items-center justify-between gap-3 shrink-0">
-          <span className="font-medium text-[12.5px] text-[var(--w-fg-neutral)]">
+          <span className="font-medium text-[13px] text-[var(--w-fg-neutral)]">
             {selected.size > 0 ? `${selected.size}개 선택됨` : "선택 없음"}
           </span>
           <div className="flex gap-2">

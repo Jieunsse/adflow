@@ -51,7 +51,7 @@ export default function PersonaCard({ persona, index = 0, canEdit = true, onEdit
         className="flex items-end px-4 py-5 min-h-[88px] overflow-hidden"
         style={{ background: bg }}
       >
-        <div className="w-full font-bold text-[16px] leading-[1.35] tracking-[-0.014em] [font-family:var(--w-font-display)] [text-shadow:0_1px_4px_rgba(0,0,0,0.25)] text-white">
+        <div className="w-full font-bold text-[16px] leading-[1.35] tracking-[-0.014em] [font-family:var(--w-font-display)] text-[var(--w-fg-strong)]">
           {persona.name}
         </div>
       </div>

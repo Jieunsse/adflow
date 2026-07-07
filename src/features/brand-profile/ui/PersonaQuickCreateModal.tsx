@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Button } from "@shared/ui/Button";
 import Icon from "@shared/ui/Icon";
-import { cn } from "@shared/lib/cn";
+import { Select } from "@shared/ui/Select";
 import { Dialog, DialogContent, DialogTitle, DialogClose } from "@shared/ui/Dialog";
 import type { PersonaEntry } from "../model/usePersonasStorage";
 import type { BrandProfileEntry } from "../model/useBrandProfileStorage";
@@ -54,7 +54,7 @@ export default function PersonaQuickCreateModal({ activeBrandProfileId, profiles
           <div className="flex flex-col gap-4">
             {needsProfileSelect && (
               <div className="flex flex-col gap-1.5">
-                <label className="font-semibold text-[13.5px] text-[var(--w-fg-strong)]">
+                <label className="font-semibold text-[14px] text-[var(--w-fg-strong)]">
                   브랜드 프로필 <span className="text-red-500">*</span>
                 </label>
                 {profiles.length === 0 ? (
@@ -63,22 +63,18 @@ export default function PersonaQuickCreateModal({ activeBrandProfileId, profiles
                     <a href="/brand-profile" className="text-[var(--w-primary-normal)] hover:underline">만들러 가기 →</a>
                   </p>
                 ) : (
-                  <select
-                    className={cn(INPUT_CLS, "cursor-pointer")}
+                  <Select
                     value={selectedProfileId}
-                    onChange={(e) => setSelectedProfileId(e.target.value)}
-                  >
-                    <option value="">선택해주세요</option>
-                    {profiles.map((bp) => (
-                      <option key={bp.id} value={bp.id}>{bp.name}</option>
-                    ))}
-                  </select>
+                    onChange={setSelectedProfileId}
+                    options={profiles.map((bp) => ({ value: bp.id, label: bp.name }))}
+                    placeholder="선택해주세요"
+                  />
                 )}
               </div>
             )}
 
             <div className="flex flex-col gap-1.5">
-              <label className="font-semibold text-[13.5px] text-[var(--w-fg-strong)]">
+              <label className="font-semibold text-[14px] text-[var(--w-fg-strong)]">
                 이름 <span className="text-red-500">*</span>
               </label>
               <input
@@ -92,7 +88,7 @@ export default function PersonaQuickCreateModal({ activeBrandProfileId, profiles
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="font-semibold text-[13.5px] text-[var(--w-fg-strong)]">
+              <label className="font-semibold text-[14px] text-[var(--w-fg-strong)]">
                 고객 설명 <span className="font-normal text-[var(--w-fg-neutral)]">(선택)</span>
               </label>
               <textarea

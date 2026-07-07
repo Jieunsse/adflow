@@ -303,7 +303,8 @@ export function seedDemoIfEmpty(): void {
     }
 
     const others = parsed.filter((p) => p.id !== DEMO_PROFILE_ID);
-    replaceProfiles([DEMO_PROFILE, ...others]);
+    const demoWasDefault = parsed.find((p) => p.id === DEMO_PROFILE_ID)?.isDefault ?? parsed.length === 0;
+    replaceProfiles([{ ...DEMO_PROFILE, isDefault: demoWasDefault }, ...others]);
     localStorage.setItem(SEED_VERSION_KEY, SEED_VERSION);
 
     const existingPersonas: PersonaEntry[] = (() => {

@@ -49,7 +49,7 @@ export default function SopCard({ type, section, canEdit, onEdit }: SopCardProps
           <Icon name={iconName} size={15} />
         </div>
         <div className="flex-1 min-w-0">
-          <div className="font-bold text-[13.5px] leading-[1.3] text-[var(--w-fg-strong)] tracking-[-0.006em] truncate">
+          <div className="font-bold text-[14px] leading-[1.3] text-[var(--w-fg-strong)] tracking-[-0.006em] truncate">
             {SOP_SECTION_LABEL[type]}
           </div>
           <div className="font-medium text-[11px] leading-[1.35] text-[var(--w-fg-alternative)] truncate mt-0.5">
@@ -84,7 +84,7 @@ export default function SopCard({ type, section, canEdit, onEdit }: SopCardProps
           disabled={!canEdit}
           className="flex-1 flex flex-col items-start justify-center gap-1.5 -mx-1 px-1 py-1 border-none bg-transparent text-left rounded-lg transition-colors disabled:cursor-default enabled:cursor-pointer enabled:hover:bg-[var(--w-bg-alternative)]/60"
         >
-          <div className="font-medium text-[12.5px] leading-[1.5] text-[var(--w-fg-alternative)]">
+          <div className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-alternative)]">
             {canEdit
               ? "아직 정의된 룰이 없어요"
               : "팀장이 정의하면 여기에 표시돼요"}
@@ -134,7 +134,7 @@ function ChipList({ items, accent }: { items: string[]; accent: string }) {
       {items.map((w, i) => (
         <span
           key={i}
-          className="inline-flex items-center px-2 py-1 rounded-md font-medium text-[11.5px] leading-none"
+          className="inline-flex items-center px-2 py-1 rounded-md font-medium text-[12px] leading-none"
           style={{
             background: `color-mix(in srgb, ${accent} 12%, transparent)`,
             color: accent,
@@ -163,7 +163,7 @@ function LengthRows({
       {rows.map((r) => (
         <div
           key={r.label}
-          className="flex items-baseline justify-between font-medium text-[12.5px] leading-[1.6] text-[var(--w-fg-strong)]"
+          className="flex items-baseline justify-between font-medium text-[13px] leading-[1.6] text-[var(--w-fg-strong)]"
         >
           <span className="text-[var(--w-fg-neutral)]">{r.label}</span>
           <span className="tabular-nums font-semibold">{r.value}</span>
@@ -183,7 +183,7 @@ function BulletList({ text }: { text: string }) {
       {lines.map((l, i) => (
         <li
           key={i}
-          className="font-medium text-[12.5px] leading-[1.55] text-[var(--w-fg-strong)]"
+          className="font-medium text-[13px] leading-[1.55] text-[var(--w-fg-strong)]"
           style={{ listStyleType: "disc" }}
         >
           {l}

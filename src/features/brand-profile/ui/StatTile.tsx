@@ -1,4 +1,5 @@
 import Icon from "@shared/ui/Icon";
+import { cn } from "@shared/lib/cn";
 
 type IconName = Parameters<typeof Icon>[0]["name"];
 
@@ -7,11 +8,12 @@ interface Props {
   label: string;
   value: number;
   accent?: string;
+  onClick?: () => void;
 }
 
-export default function StatTile({ icon, label, value, accent }: Props) {
-  return (
-    <div className="flex flex-col gap-3 rounded-2xl border border-[var(--w-line-normal)] bg-[var(--w-bg-elevated)] px-5 py-[18px] dark:shadow-[var(--w-shadow-card)]">
+export default function StatTile({ icon, label, value, accent, onClick }: Props) {
+  const content = (
+    <>
       <div className="flex items-center gap-2">
         <span
           className="grid place-items-center w-7 h-7 rounded-lg shrink-0"
@@ -27,6 +29,22 @@ export default function StatTile({ icon, label, value, accent }: Props) {
       <div className="font-extrabold text-[28px] leading-none tracking-[-0.02em] text-[var(--w-fg-strong)] tabular-nums">
         {value}
       </div>
-    </div>
+    </>
   );
+
+  const cls = "flex flex-col gap-3 rounded-2xl border border-[var(--w-line-normal)] bg-[var(--w-bg-elevated)] px-5 py-[18px] dark:shadow-[var(--w-shadow-card)] text-left";
+
+  if (onClick) {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        className={cn(cls, "cursor-pointer transition-colors hover:border-[var(--w-primary-normal)] focus-visible:border-[var(--w-primary-normal)] focus-visible:outline-none")}
+      >
+        {content}
+      </button>
+    );
+  }
+
+  return <div className={cls}>{content}</div>;
 }

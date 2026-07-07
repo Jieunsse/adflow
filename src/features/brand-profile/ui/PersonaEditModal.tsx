@@ -50,7 +50,7 @@ function TagInput({
           {value.map((tag) => (
             <span
               key={tag}
-              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[var(--w-bg-neutral)] font-medium text-[12.5px] text-[var(--w-fg-strong)]"
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[var(--w-bg-neutral)] font-medium text-[13px] text-[var(--w-fg-strong)]"
             >
               {tag}
               <button
@@ -133,7 +133,7 @@ export default function PersonaEditModal({ brandProfileId, persona, onSave, onCl
 
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
-            <label className="font-semibold text-[13.5px] text-[var(--w-fg-strong)]">이름 <span className="text-red-500">*</span></label>
+            <label className="font-semibold text-[14px] text-[var(--w-fg-strong)]">이름 <span className="text-red-500">*</span></label>
             <input
               className={INPUT_CLS}
               value={name}
@@ -145,7 +145,7 @@ export default function PersonaEditModal({ brandProfileId, persona, onSave, onCl
 
           <div className="flex flex-col gap-1.5">
             <div className="flex items-center justify-between">
-              <label className="font-semibold text-[13.5px] text-[var(--w-fg-strong)]">연령대</label>
+              <label className="font-semibold text-[14px] text-[var(--w-fg-strong)]">연령대</label>
               <button
                 type="button"
                 onClick={() => setAgeAuto((v) => !v)}
@@ -160,7 +160,7 @@ export default function PersonaEditModal({ brandProfileId, persona, onSave, onCl
               </button>
             </div>
             {ageAuto ? (
-              <p className="m-0 font-medium text-[12.5px] leading-[1.5] text-[var(--w-fg-neutral)]">
+              <p className="m-0 font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)]">
                 연령대를 비워두면 AI가 광고 내용을 보고 추천해요.
               </p>
             ) : (
@@ -205,7 +205,7 @@ export default function PersonaEditModal({ brandProfileId, persona, onSave, onCl
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="font-semibold text-[13.5px] text-[var(--w-fg-strong)]">성별</label>
+            <label className="font-semibold text-[14px] text-[var(--w-fg-strong)]">성별</label>
             <div className="flex gap-2">
               {GENDER_OPTIONS.map(({ value, label }) => {
                 const selected = genderMode === value;
@@ -230,17 +230,17 @@ export default function PersonaEditModal({ brandProfileId, persona, onSave, onCl
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="font-semibold text-[13.5px] text-[var(--w-fg-strong)]">관심사</label>
+            <label className="font-semibold text-[14px] text-[var(--w-fg-strong)]">관심사</label>
             <TagInput value={interests} onChange={setInterests} placeholder="예) 뷰티, 헬스케어 (Enter)" />
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="font-semibold text-[13.5px] text-[var(--w-fg-strong)]">지역</label>
+            <label className="font-semibold text-[14px] text-[var(--w-fg-strong)]">지역</label>
             <TagInput value={location} onChange={setLocation} placeholder="예) 서울, 경기 (Enter)" />
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="font-semibold text-[13.5px] text-[var(--w-fg-strong)]">고객 설명</label>
+            <label className="font-semibold text-[14px] text-[var(--w-fg-strong)]">고객 설명</label>
             <p className="text-[12px] leading-[1.4] text-[var(--w-fg-alternative)] m-0">
               이 사람이 지금 어떤 상황인가요? 무엇을 참고 있나요?
             </p>

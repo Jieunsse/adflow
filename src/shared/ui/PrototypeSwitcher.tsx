@@ -58,7 +58,7 @@ export function PrototypeSwitcher({
       >
         <Icon name="arrow-left" size={15} />
       </button>
-      <span className="px-2 font-semibold text-[12.5px] leading-none tabular-nums min-w-[140px] text-center">
+      <span className="px-2 font-semibold text-[13px] leading-none tabular-nums min-w-[140px] text-center">
         {active.key} — {active.name}
       </span>
       <button

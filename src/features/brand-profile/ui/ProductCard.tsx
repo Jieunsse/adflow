@@ -16,7 +16,7 @@ export default function ProductCard({ product, canEdit = true, onEdit, onDelete 
     <div
       style={{
         borderRadius: 12,
-        border: "1.5px solid var(--w-line-normal)",
+        border: "1px solid var(--w-line-normal)",
         background: "var(--w-bg-elevated)",
         padding: "14px 16px",
         display: "flex",

@@ -94,7 +94,7 @@ export default function AiDraftModal({ channel, suggestionTitle, suggestionDetai
             <span className="font-semibold text-[11px] tracking-[0.04em] uppercase text-[var(--w-fg-neutral)]">AI 콘텐츠 초안 · {isIg ? "Instagram" : "Facebook"}</span>
           </div>
           <h3 className="m-0 font-bold text-[17px] leading-[1.35] tracking-[-0.01em] text-[var(--w-fg-strong)]">{suggestionTitle}</h3>
-          <p className="font-medium text-[12.5px] leading-[1.55] text-[var(--w-fg-neutral)] mt-1.5 mb-0">
+          <p className="font-medium text-[13px] leading-[1.55] text-[var(--w-fg-neutral)] mt-1.5 mb-0">
             {isIg
               ? "캡션을 다듬은 뒤 \"이 초안으로 게시하기\" 로 바로 발행할 수 있어요."
               : "초안을 복사해서 Facebook 페이지에서 직접 게시해주세요."}
@@ -112,7 +112,7 @@ export default function AiDraftModal({ channel, suggestionTitle, suggestionDetai
           {status === "error" && (
             <div className="flex flex-col items-center gap-3 py-8 text-center">
               <div className="font-bold text-[15px] leading-[1.3] text-[var(--w-fg-strong)]">초안을 만들지 못했어요</div>
-              <div className="font-medium text-[12.5px] leading-[1.5] text-[var(--w-fg-neutral)]">{error}</div>
+              <div className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)]">{error}</div>
               <Button variant="primary" size="sm" type="button" onClick={regenerate}>다시 시도</Button>
             </div>
           )}
@@ -185,7 +185,7 @@ function DraftField({ label, value, hint, onCopy }: { label: string; value: stri
       <div className="font-medium text-[13px] leading-[1.55] text-[var(--w-fg-strong)] whitespace-pre-wrap rounded-[10px] border border-[var(--w-line-alternative)] bg-[var(--w-bg-alternative)] p-3">
         {value}
       </div>
-      {hint && <div className="font-medium text-[11.5px] text-[var(--w-fg-neutral)] mt-1.5">{hint}</div>}
+      {hint && <div className="font-medium text-[12px] text-[var(--w-fg-neutral)] mt-1.5">{hint}</div>}
     </div>
   );
 }

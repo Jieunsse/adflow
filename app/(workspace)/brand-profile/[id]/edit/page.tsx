@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Icon from "@shared/ui/Icon";
 import { Button } from "@shared/ui/Button";
@@ -37,6 +37,8 @@ import type { CopyReference } from "@features/brand-profile/model/useBrandProfil
 
 type Tab = "style" | "policy" | "persona" | "materials" | "products";
 
+const TABS: Tab[] = ["style", "policy", "persona", "products", "materials"];
+
 const TEXTAREA_CLS =
   "w-full px-[14px] py-3 border border-[var(--w-line-normal)] rounded-xl bg-[var(--w-bg-elevated)] font-medium text-[14px] leading-[1.6] tracking-[0.004em] text-[var(--w-fg-strong)] outline-none transition-[border-color,box-shadow] duration-[120ms] placeholder:text-[var(--w-fg-alternative)] focus:border-[var(--w-primary-normal)] focus:shadow-[0_0_0_4px_rgba(0,102,255,0.14)] resize-y";
 
@@ -47,7 +49,7 @@ function Field({ label, hint, children }: { label: string; hint?: string; childr
         {label}
       </label>
       {hint && (
-        <p className="font-medium text-[12.5px] leading-[1.5] text-[var(--w-fg-neutral)] m-0">{hint}</p>
+        <p className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)] m-0">{hint}</p>
       )}
       {children}
     </div>
@@ -77,16 +79,20 @@ export default function BrandProfileEditPage() {
   const params = useParams<{ id: string }>();
   const id = params.id;
   const router = useRouter();
+  const searchParams = useSearchParams();
   const showToast = useToast();
   const { data: session } = useSession();
   const isOwner = session?.role === "팀장";
   const browseMode = !!session?.browseMode;
-  seedDemoIfEmpty();
+  useEffect(() => {
+    if (browseMode) seedDemoIfEmpty();
+  }, [browseMode]);
   const { profiles, saveProfile } = useBrandProfilesStorage();
   const { personas, savePersona, deletePersona } = usePersonasForProfile(id);
   const { products, save: saveProduct, remove: deleteProduct } = useProducts(id);
 
-  const [tab, setTab] = useState<Tab>("style");
+  const initialTab = TABS.find((t) => t === searchParams.get("tab")) ?? "style";
+  const [tab, setTab] = useState<Tab>(initialTab);
   const [loaded, setLoaded] = useState(false);
   const [entry, setEntry] = useState<BrandProfileEntry | null>(null);
   const [editingType, setEditingType] = useState<SopItemType | null>(null);
@@ -174,7 +180,7 @@ export default function BrandProfileEditPage() {
     setNotionOpen(false);
     showToast(
       filled.length
-        ? `노션에서 ${filled.join(", ")}을(를) 가져왔어요. 검토 후 저장하세요.`
+        ? `노션에서 다음 항목을 가져왔어요: ${filled.join(", ")}. 확인하고 저장해 주세요.`
         : "이미 채워진 항목이라 가져올 내용이 없었어요.",
     );
   };
@@ -211,7 +217,7 @@ export default function BrandProfileEditPage() {
       <div>
         <Link
           href={`/brand-profile/${id}`}
-          className="inline-flex items-center gap-1.5 font-medium text-[12.5px] text-[var(--w-fg-neutral)] hover:text-[var(--w-fg-strong)] transition-colors mb-3 no-underline"
+          className="inline-flex items-center gap-1.5 font-medium text-[13px] text-[var(--w-fg-neutral)] hover:text-[var(--w-fg-strong)] transition-colors mb-3 no-underline"
         >
           <Icon name="arrow-left" size={13} /> {entry.name}
         </Link>
@@ -243,19 +249,19 @@ export default function BrandProfileEditPage() {
       </div>
 
       <div className="flex gap-1 border-b border-[var(--w-line-normal)]" style={{ marginBottom: -16 }}>
-        {(["style", "policy", "persona", "products", "materials"] as Tab[]).map((t) => (
+        {TABS.map((t) => (
           <button
             key={t}
             type="button"
             onClick={() => setTab(t)}
             className={cn(
-              "px-4 py-2.5 font-semibold text-[13.5px] leading-none border-none bg-transparent cursor-pointer border-b-2 -mb-px transition-colors",
+              "px-4 py-2.5 font-semibold text-[14px] leading-none border-none bg-transparent cursor-pointer border-b-2 -mb-px transition-colors",
               tab === t
                 ? "border-[var(--w-primary-normal)] text-[var(--w-primary-press)]"
                 : "border-transparent text-[var(--w-fg-neutral)] hover:text-[var(--w-fg-strong)]"
             )}
           >
-            {t === "style" ? "스타일" : t === "policy" ? "정책" : t === "persona" ? "페르소나" : t === "products" ? "제품" : "참고 자료"}
+            {t === "style" ? "정체성" : t === "policy" ? "정책" : t === "persona" ? "페르소나" : t === "products" ? "제품" : "참고 자료"}
           </button>
         ))}
       </div>
@@ -377,8 +383,8 @@ export default function BrandProfileEditPage() {
 
       {tab === "policy" && (
         <div className="flex flex-col gap-4 pt-4">
-          <p className="m-0 font-medium text-[13.5px] leading-[1.5] text-[var(--w-fg-neutral)]">
-            광고·콘텐츠 제작 시 따라야 하는 가드레일을 설정하세요.
+          <p className="m-0 font-medium text-[14px] leading-[1.5] text-[var(--w-fg-neutral)]">
+            광고 카피가 지켜야 할 규칙을 정해두면 생성 시 반영돼요.
           </p>
           <div className="grid grid-cols-2 gap-4">
             {SOP_SECTION_ORDER.map((type) => {
@@ -399,8 +405,8 @@ export default function BrandProfileEditPage() {
 
       {tab === "persona" && (
         <div className="flex flex-col gap-4 pt-4">
-          <p className="m-0 font-medium text-[13.5px] leading-[1.5] text-[var(--w-fg-neutral)]">
-            이 브랜드 프로필의 타겟 고객 페르소나를 정의하세요. AI 카피 생성 시 활용돼요.
+          <p className="m-0 font-medium text-[14px] leading-[1.5] text-[var(--w-fg-neutral)]">
+            타겟 고객 페르소나를 만들어두면 AI 카피 생성에 활용돼요.
           </p>
           {personas.length > 0 ? (
             <div className="grid grid-cols-2 gap-3">
@@ -434,8 +440,8 @@ export default function BrandProfileEditPage() {
 
       {tab === "products" && (
         <div className="flex flex-col gap-4 pt-4">
-          <p className="m-0 font-medium text-[13.5px] leading-[1.5] text-[var(--w-fg-neutral)]">
-            이 브랜드의 제품을 등록하세요. 광고 만들기에서 제품을 선택하면 AI 카피에 반영돼요.
+          <p className="m-0 font-medium text-[14px] leading-[1.5] text-[var(--w-fg-neutral)]">
+            제품을 등록해두면 광고 만들기에서 선택해 AI 카피에 반영할 수 있어요.
           </p>
           {products.length > 0 ? (
             <div className="grid grid-cols-2 gap-3">

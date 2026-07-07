@@ -1,11 +1,14 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import Icon from "@shared/ui/Icon";
 import { Button } from "@shared/ui/Button";
 import { Card } from "@shared/ui/Card";
 import { useToast } from "@shared/ui/Toast";
+import ConfirmModal from "@shared/ui/ConfirmModal";
 import { cn } from "@shared/lib/cn";
 import { TONES } from "@entities/creative/options";
 import {
@@ -14,32 +17,11 @@ import {
 } from "@features/brand-profile/model/useBrandProfileStorage";
 import { seedDemoIfEmpty } from "@features/brand-profile/model/seed-demo";
 import { readPersonas, type PersonaEntry } from "@features/brand-profile/model/usePersonasStorage";
-import { isSectionFilled, type SopItemType } from "@features/sop/model/useSopStorage";
+import { isSectionFilled } from "@features/sop/model/useSopStorage";
 import { SOP_SECTION_LABEL } from "@features/sop/model/section-labels";
-
-const SECTION_CHIP_CLS: Record<SopItemType, string> = {
-  prohibited_words:     "bg-[#feecec] text-[#b20c0c]",
-  required_phrases:     "bg-[#d9ffe6] text-[#006e25]",
-  required_hashtags:    "bg-[rgba(0,189,222,0.14)] text-[#0095b0]",
-  length_limits:        "bg-[#eaf2fe] text-[#0054d1]",
-  cta_restrictions:     "bg-[var(--w-accent-violet-soft)] text-[var(--w-accent-violet)]",
-  image_restrictions:   "bg-[rgba(255,146,0,0.14)] text-[#9c5800]",
-  industry_regulations: "bg-[rgba(255,146,0,0.14)] text-[#9c5800]",
-  competitor_policy:    "bg-[rgba(0,189,222,0.14)] text-[#0095b0]",
-  pricing_rules:        "bg-[#d9ffe6] text-[#006e25]",
-  audience_restrictions:"bg-[var(--w-accent-violet-soft)] text-[var(--w-accent-violet)]",
-  platform_rules:       "bg-[#eaf2fe] text-[#0054d1]",
-};
+import { SECTION_ACCENT } from "@features/sop/ui/section-style";
 
 const GENDER_LABEL: Record<number, string> = { 1: "남", 2: "여" };
-
-function personaChipCls(p: PersonaEntry): string {
-  const isMale = p.genders?.length === 1 && p.genders[0] === 1;
-  const isFemale = p.genders?.length === 1 && p.genders[0] === 2;
-  if (isMale) return "bg-[rgba(0,102,255,0.10)] text-[var(--w-primary-press)]";
-  if (isFemale) return "bg-[rgba(217,75,167,0.14)] text-[#c2185b]";
-  return "bg-[rgba(0,191,64,0.12)] text-[#006e25]";
-}
 
 function personaChipLabel(p: PersonaEntry): string {
   const age =
@@ -68,15 +50,23 @@ function ProfileCard({ profile, personas, onDelete, onSetDefault }: ProfileCardP
   const router = useRouter();
   const toneLabel = profile.tone ? TONES.find((t) => t.id === profile.tone)?.label : null;
   const filledSections = (profile.policy ?? []).filter(isSectionFilled);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const goToDetail = () => router.push(`/brand-profile/${profile.id}`);
 
   return (
     <div
       role="button"
       tabIndex={0}
-      onClick={() => router.push(`/brand-profile/${profile.id}`)}
-      onKeyDown={(e) => e.key === "Enter" && router.push(`/brand-profile/${profile.id}`)}
+      onClick={goToDetail}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") goToDetail();
+        if (e.key === " ") {
+          e.preventDefault();
+          goToDetail();
+        }
+      }}
       className={cn(
-        "rounded-2xl border bg-[var(--w-bg-elevated)] p-5 flex flex-col gap-4 transition-[border-color,box-shadow] duration-[120ms] hover:border-[var(--w-primary-normal)] hover:shadow-[0_0_0_4px_rgba(0,102,255,0.08)] cursor-pointer",
+        "rounded-2xl border bg-[var(--w-bg-elevated)] p-5 flex flex-col gap-4 transition-[border-color,box-shadow] duration-[120ms] hover:border-[var(--w-primary-normal)] hover:shadow-[0_0_0_4px_color-mix(in_srgb,var(--w-primary-normal)_8%,transparent)] focus-visible:border-[var(--w-primary-normal)] focus-visible:shadow-[0_0_0_4px_color-mix(in_srgb,var(--w-primary-normal)_8%,transparent)] focus-visible:outline-none cursor-pointer",
         profile.isDefault ? "border-[var(--w-primary-normal)]" : "border-[var(--w-line-normal)]"
       )}
     >
@@ -115,7 +105,11 @@ function ProfileCard({ profile, personas, onDelete, onSetDefault }: ProfileCardP
               {filledSections.map((s) => (
                 <span
                   key={s.type}
-                  className={cn("inline-flex items-center px-2 py-0.5 rounded-full font-medium text-[11px]", SECTION_CHIP_CLS[s.type])}
+                  className="inline-flex items-center px-2 py-0.5 rounded-full font-medium text-[11px]"
+                  style={{
+                    background: `color-mix(in srgb, ${SECTION_ACCENT[s.type]} 12%, transparent)`,
+                    color: SECTION_ACCENT[s.type],
+                  }}
                 >
                   {SOP_SECTION_LABEL[s.type]}
                 </span>
@@ -132,7 +126,7 @@ function ProfileCard({ profile, personas, onDelete, onSetDefault }: ProfileCardP
               {personas.map((p) => (
                   <span
                     key={p.id}
-                    className={cn("inline-flex items-center px-2 py-0.5 rounded-full font-medium text-[11px]", personaChipCls(p))}
+                    className="inline-flex items-center px-2 py-0.5 rounded-full font-medium text-[11px] bg-[var(--w-bg-alternative)] text-[var(--w-fg-neutral)]"
                   >
                     {personaChipLabel(p)}
                   </span>
@@ -168,17 +162,32 @@ function ProfileCard({ profile, personas, onDelete, onSetDefault }: ProfileCardP
           </Link>
           <button
             type="button"
-            className="font-medium text-[12px] text-[var(--w-fg-neutral)] hover:text-[var(--w-status-destructive)] transition-colors"
+            className="font-medium text-[12px] text-[var(--w-fg-neutral)] hover:text-[var(--w-status-negative)] transition-colors"
             onClick={(e) => {
               e.preventDefault();
-              if (!window.confirm(`"${profile.name}" 프로필을 삭제할까요?`)) return;
-              onDelete(profile.id);
+              setConfirmOpen(true);
             }}
           >
             삭제
           </button>
         </div>
       </div>
+
+      {confirmOpen && (
+        <div onClick={(e) => e.stopPropagation()}>
+          <ConfirmModal
+            title={`"${profile.name}" 프로필을 삭제할까요?`}
+            desc="연결된 페르소나도 함께 지워져요. 되돌릴 수 없어요."
+            confirmLabel="삭제"
+            tone="danger"
+            onClose={() => setConfirmOpen(false)}
+            onConfirm={() => {
+              setConfirmOpen(false);
+              onDelete(profile.id);
+            }}
+          />
+        </div>
+      )}
     </div>
   );
 }
@@ -187,7 +196,7 @@ function AddCard({ onClick }: { onClick: () => void }) {
   return (
     <button
       type="button"
-      className="rounded-2xl border border-dashed border-[var(--w-line-normal)] bg-transparent p-5 flex flex-col items-center justify-center gap-2 cursor-pointer transition-[border-color,background] duration-[120ms] hover:border-[var(--w-primary-normal)] hover:bg-[rgba(0,102,255,0.04)] min-h-[120px]"
+      className="rounded-2xl border border-dashed border-[var(--w-line-normal)] bg-transparent p-5 flex flex-col items-center justify-center gap-2 cursor-pointer transition-[border-color,background] duration-[120ms] hover:border-[var(--w-primary-normal)] hover:bg-[color-mix(in_srgb,var(--w-primary-normal)_4%,transparent)] min-h-[120px]"
       onClick={onClick}
     >
       <Icon name="plus" size={20} style={{ color: "var(--w-fg-alternative)" }} />
@@ -199,14 +208,18 @@ function AddCard({ onClick }: { onClick: () => void }) {
 export default function BrandProfilePage() {
   const router = useRouter();
   const showToast = useToast();
-  seedDemoIfEmpty();
+  const { data: session } = useSession();
+  const browseMode = !!session?.browseMode;
+  useEffect(() => {
+    if (browseMode) seedDemoIfEmpty();
+  }, [browseMode]);
   const { profiles, saveProfile, deleteProfile, setDefault } = useBrandProfilesStorage();
   const allPersonas = readPersonas();
 
   const openNew = () => {
     const id = crypto.randomUUID();
     saveProfile({ id, name: "새 프로필", isDefault: profiles.length === 0 });
-    router.push(`/brand-profile/${id}`);
+    router.push(`/brand-profile/${id}/edit`);
   };
 
   const handleDelete = (id: string) => {

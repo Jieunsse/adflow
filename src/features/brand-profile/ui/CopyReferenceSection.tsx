@@ -53,7 +53,7 @@ export default function CopyReferenceSection({ refs, canEdit, onSave }: Props) {
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between gap-2">
         <div className="flex flex-col gap-0.5">
-          <span className="font-semibold text-[12.5px] text-[var(--w-fg-neutral)]">
+          <span className="font-semibold text-[13px] text-[var(--w-fg-neutral)]">
             카피 레퍼런스
           </span>
           <span className="font-medium text-[12px] leading-[1.5] text-[var(--w-fg-alternative)]">

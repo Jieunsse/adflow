@@ -13,10 +13,17 @@ export type ChipVariant =
   | "obj-awareness"
   | "obj-leads"
   | "obj-engagement"
-  | "obj-install";
+  | "obj-install"
+  | "accent"
+  | "success"
+  | "warn"
+  | "neg"
+  | "violet";
 
 const BASE =
   "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full font-semibold text-xs leading-none tracking-[0.006em] whitespace-nowrap";
+
+const SIZE_SM = "gap-1 px-[7px] py-0.5 text-[11px]";
 
 const VARIANT: Record<ChipVariant, string> = {
   live: "bg-[var(--w-green-100)] text-[var(--w-green-800)] dark:bg-[rgba(0,191,64,0.14)] dark:text-[var(--w-green-400)]",
@@ -31,17 +38,22 @@ const VARIANT: Record<ChipVariant, string> = {
   neutral:
     "bg-[rgba(112,115,124,0.08)] text-[var(--w-fg-strong)] dark:bg-[rgba(255,255,255,0.06)]",
   "obj-traffic":
-    "bg-[rgba(0,102,255,0.10)] text-[var(--w-primary-press)] dark:bg-[rgba(0,102,255,0.20)] dark:text-[#6ea7ff]",
+    "bg-transparent text-[var(--w-fg-neutral)] border border-[var(--w-line-normal)] dark:border-[rgba(255,255,255,0.14)]",
   "obj-conversion":
-    "bg-[var(--w-accent-violet-soft)] text-[var(--w-accent-violet)] dark:bg-[rgba(101,65,242,0.22)] dark:text-[#b9a4ff]",
+    "bg-transparent text-[var(--w-fg-neutral)] border border-[var(--w-line-normal)] dark:border-[rgba(255,255,255,0.14)]",
   "obj-awareness":
-    "bg-[rgba(0,189,222,0.14)] text-[#0095b0] dark:bg-[rgba(0,189,222,0.22)] dark:text-[#5dd5e8]",
+    "bg-transparent text-[var(--w-fg-neutral)] border border-[var(--w-line-normal)] dark:border-[rgba(255,255,255,0.14)]",
   "obj-leads":
-    "bg-[rgba(255,146,0,0.14)] text-[var(--w-yellow-800)] dark:bg-[var(--w-status-cautionary-soft)] dark:text-[#ffb74d]",
+    "bg-transparent text-[var(--w-fg-neutral)] border border-[var(--w-line-normal)] dark:border-[rgba(255,255,255,0.14)]",
   "obj-engagement":
-    "bg-[var(--w-status-positive-soft)] text-[var(--w-green-800)] dark:bg-[rgba(0,191,64,0.18)] dark:text-[var(--w-green-400)]",
+    "bg-transparent text-[var(--w-fg-neutral)] border border-[var(--w-line-normal)] dark:border-[rgba(255,255,255,0.14)]",
   "obj-install":
-    "bg-[rgba(217,75,167,0.14)] text-[#c2185b] dark:bg-[rgba(217,75,167,0.22)] dark:text-[#ff7fbf]",
+    "bg-transparent text-[var(--w-fg-neutral)] border border-[var(--w-line-normal)] dark:border-[rgba(255,255,255,0.14)]",
+  accent: "bg-[var(--w-primary-soft)] text-[var(--w-primary-press)]",
+  success: "bg-[var(--w-status-positive-soft)] text-[var(--w-status-positive)]",
+  warn: "bg-[var(--w-status-cautionary-soft)] text-[var(--w-status-cautionary)] border border-[var(--w-status-cautionary-line)]",
+  neg: "bg-[var(--w-status-negative-soft)] text-[var(--w-status-negative)]",
+  violet: "bg-[var(--w-accent-violet-soft)] text-[var(--w-accent-violet)]",
 };
 
 const DOT_COLOR: Partial<Record<ChipVariant, string>> = {
@@ -50,31 +62,41 @@ const DOT_COLOR: Partial<Record<ChipVariant, string>> = {
   review: "bg-[var(--w-status-info)] dark:bg-[#6ea7ff]",
   ended: "bg-[var(--w-fg-alternative)]",
   issue: "bg-[var(--w-status-negative)] dark:bg-[#ff7a7a]",
+  accent: "bg-[var(--w-primary-normal)]",
+  success: "bg-[var(--w-status-positive)]",
+  warn: "bg-[var(--w-status-cautionary)]",
+  neg: "bg-[var(--w-status-negative)]",
+  violet: "bg-[var(--w-accent-violet)]",
 };
 
 interface ChipProps extends HTMLAttributes<HTMLSpanElement> {
   variant: ChipVariant;
   dot?: boolean;
+  live?: boolean;
+  size?: "sm";
 }
 
 export function Chip({
   variant,
   dot,
+  live,
+  size,
   className,
   children,
   ...props
 }: ChipProps) {
-  const isLive = variant === "live";
+  const pulse = !!live || variant === "live";
   return (
-    <span className={cn(BASE, VARIANT[variant], className)} {...props}>
+    <span className={cn(BASE, VARIANT[variant], size === "sm" && SIZE_SM, className)} {...props}>
       {dot && (
         <span
           className={cn(
-            "relative w-1.5 h-1.5 rounded-full shrink-0",
+            "relative rounded-full shrink-0",
+            size === "sm" ? "w-[5px] h-[5px]" : "w-1.5 h-1.5",
             DOT_COLOR[variant],
           )}
         >
-          {isLive && (
+          {pulse && (
             <span className="absolute inset-[-3px] rounded-full border-2 border-current opacity-35 animate-[live-pulse_1.6s_ease-out_infinite]" />
           )}
         </span>

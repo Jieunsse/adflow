@@ -231,6 +231,7 @@
   --w-status-positive-soft:  rgba(16,185,129,0.10);
   --w-status-cautionary-soft:rgba(245,158,11,0.10);
   --w-status-negative-soft:  rgba(229,72,77,0.10);
+  --w-status-info-soft:      rgba(0,102,255,0.10);
   --w-status-positive-line:  rgba(16,185,129,0.25);
   --w-status-cautionary-line:rgba(245,158,11,0.25);
   --w-status-negative-line:  rgba(229,72,77,0.25);
@@ -319,6 +320,7 @@
   --w-status-positive-soft:  rgba(16,185,129,0.20);
   --w-status-cautionary-soft:rgba(245,158,11,0.20);
   --w-status-negative-soft:  rgba(229,72,77,0.20);
+  --w-status-info-soft:      rgba(0,102,255,0.20);
   --w-status-positive-line:  rgba(16,185,129,0.34);
   --w-status-cautionary-line:rgba(245,158,11,0.34);
   --w-status-negative-line:  rgba(229,72,77,0.34);

@@ -31,7 +31,7 @@ export function SegControl<T extends string>({
           type="button"
           onClick={() => onChange(opt.value)}
           className={cn(
-            "border-none px-3.5 py-2 rounded-lg font-semibold text-[12.5px] leading-none cursor-pointer transition-[background,color] duration-[120ms]",
+            "border-none px-3.5 py-2 rounded-lg font-semibold text-[13px] leading-none cursor-pointer transition-[background,color] duration-[120ms]",
             value === opt.value
               ? "bg-[var(--w-bg-elevated)] text-[var(--w-fg-strong)] shadow-[0_1px_2px_rgba(23,23,23,0.08)]"
               : "bg-transparent text-[var(--w-fg-neutral)]",

@@ -134,7 +134,7 @@ export default function NotionImportModal({
         {loadError === "not_connected" ? (
           <div className="flex flex-col items-center gap-3 py-8 text-center">
             <div className="w-11 h-11 rounded-xl grid place-items-center bg-[rgba(255,146,0,0.12)] text-[var(--w-status-cautionary)]"><Icon name="warn" size={20} /></div>
-            <p className="m-0 font-medium text-[13.5px] leading-[1.5] text-[var(--w-fg-neutral)]">
+            <p className="m-0 font-medium text-[14px] leading-[1.5] text-[var(--w-fg-neutral)]">
               노션 워크스페이스가 연결되지 않았어요.<br />연결 탭에서 먼저 연결해주세요.
             </p>
             <Link href="/connect" className="no-underline">
@@ -142,14 +142,14 @@ export default function NotionImportModal({
             </Link>
           </div>
         ) : loadError === "failed" ? (
-          <div className="py-8 text-center font-medium text-[13.5px] text-[var(--w-fg-neutral)]">
+          <div className="py-8 text-center font-medium text-[14px] text-[var(--w-fg-neutral)]">
             노션 자료를 불러오지 못했어요. 잠시 후 다시 시도해주세요.
           </div>
         ) : resources === null ? (
-          <div className="py-8 text-center font-medium text-[13.5px] text-[var(--w-fg-neutral)]">불러오는 중…</div>
+          <div className="py-8 text-center font-medium text-[14px] text-[var(--w-fg-neutral)]">불러오는 중…</div>
         ) : resources.length === 0 ? (
-          <div className="py-8 text-center font-medium text-[13.5px] text-[var(--w-fg-neutral)]">
-            integration 에 공유된 페이지가 없어요. 노션에서 페이지를 integration 에 공유한 뒤 다시 열어주세요.
+          <div className="py-8 text-center font-medium text-[14px] text-[var(--w-fg-neutral)]">
+            AdFlow와 공유된 노션 페이지가 없어요. 노션에서 페이지를 공유한 뒤 다시 열어 주세요.
           </div>
         ) : (
           <div className="flex flex-col gap-1.5 max-h-[44vh] overflow-y-auto -mx-1 px-1">
@@ -174,8 +174,8 @@ export default function NotionImportModal({
                     {checked && <Icon name="check" size={11} strokeWidth={3} />}
                   </span>
                   <Icon name={ICON_BY_TYPE[r.type]} size={15} />
-                  <span className="flex-1 min-w-0 font-medium text-[13.5px] leading-[1.4] text-[var(--w-fg-strong)] truncate">{r.title}</span>
-                  <span className="font-medium text-[11.5px] text-[var(--w-fg-alternative)] flex-none">{r.type === "page" ? "페이지" : "DB"}</span>
+                  <span className="flex-1 min-w-0 font-medium text-[14px] leading-[1.4] text-[var(--w-fg-strong)] truncate">{r.title}</span>
+                  <span className="font-medium text-[12px] text-[var(--w-fg-alternative)] flex-none">{r.type === "page" ? "페이지" : "DB"}</span>
                 </button>
               );
             })}
@@ -183,12 +183,12 @@ export default function NotionImportModal({
         )}
 
         {importError && (
-          <div className="font-medium text-[12.5px] text-[var(--w-status-negative)]">{importError}</div>
+          <div className="font-medium text-[13px] text-[var(--w-status-negative)]">{importError}</div>
         )}
 
         {resources !== null && resources.length > 0 && !loadError && (
           <div className="flex items-center justify-between gap-3 pt-1">
-            <span className="font-medium text-[12.5px] text-[var(--w-fg-neutral)]">{selected.size}개 선택됨</span>
+            <span className="font-medium text-[13px] text-[var(--w-fg-neutral)]">{selected.size}개 선택됨</span>
             <div className="flex gap-2">
               <Button variant="ghost" size="sm" type="button" onClick={onClose}>취소</Button>
               <Button variant="primary" size="sm" type="button" onClick={handleImport} disabled={selected.size === 0 || importing}>

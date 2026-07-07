@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useSession } from "next-auth/react";
 import Icon from "@shared/ui/Icon";
 import { Button } from "@shared/ui/Button";
 import { useBrandProfilesStorage } from "@features/brand-profile/model/useBrandProfileStorage";
@@ -31,7 +32,11 @@ export default function BrandProfileViewPage() {
   const id = params.id;
   const router = useRouter();
   const searchParams = useSearchParams();
-  seedDemoIfEmpty();
+  const { data: session } = useSession();
+  const browseMode = !!session?.browseMode;
+  useEffect(() => {
+    if (browseMode) seedDemoIfEmpty();
+  }, [browseMode]);
 
   const { profiles } = useBrandProfilesStorage();
   const { personas } = usePersonasForProfile(id);
@@ -43,9 +48,16 @@ export default function BrandProfileViewPage() {
   );
   const [ledger, setLedger] = useState<Hypothesis[]>([]);
   useEffect(() => {
-    seedDemoLedger(id);
-    setLedger(readLedger(id));
-  }, [id]);
+    if (browseMode) {
+      seedDemoLedger(id);
+      setLedger(readLedger(id));
+      return;
+    }
+    fetch(`/api/ledger?brandProfileId=${encodeURIComponent(id)}`)
+      .then((r) => (r.ok ? r.json() : { ledger: [] }))
+      .then((d: { ledger?: Hypothesis[] }) => setLedger(d.ledger ?? []))
+      .catch(() => setLedger([]));
+  }, [id, browseMode]);
 
   useEffect(() => {
     if (profiles.length === 0 && !loaded) return;
@@ -110,12 +122,12 @@ export default function BrandProfileViewPage() {
       </div>
 
       {/* KPI 요약 타일 */}
-      <div className="grid grid-cols-5 gap-3 mb-5">
-        <StatTile icon="lock" label="정책" value={filledPolicy.length} accent="var(--w-accent-violet)" />
-        <StatTile icon="users" label="페르소나" value={personas.length} accent="var(--w-primary-normal)" />
-        <StatTile icon="grid" label="제품" value={products.length} accent="var(--w-status-positive)" />
-        <StatTile icon="chart" label="근거 자료" value={proofCount} accent="var(--w-status-warning)" />
-        <StatTile icon="copy" label="카피 레퍼런스" value={refCount} accent="var(--w-fg-neutral)" />
+      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3 mb-5">
+        <StatTile icon="lock" label="정책" value={filledPolicy.length} accent="var(--w-accent-violet)" onClick={() => setTab("policy")} />
+        <StatTile icon="users" label="페르소나" value={personas.length} accent="var(--w-primary-normal)" onClick={() => setTab("audience")} />
+        <StatTile icon="grid" label="제품" value={products.length} accent="var(--w-status-positive)" onClick={() => setTab("audience")} />
+        <StatTile icon="chart" label="근거 자료" value={proofCount} accent="var(--w-status-warning)" onClick={() => setTab("identity")} />
+        <StatTile icon="copy" label="카피 레퍼런스" value={refCount} accent="var(--w-fg-neutral)" onClick={() => setTab("identity")} />
       </div>
 
       {/* 세부 탭 */}
@@ -124,9 +136,9 @@ export default function BrandProfileViewPage() {
         onChange={setTab}
         options={[
           { value: "identity", label: "정체성" },
-          { value: "policy", label: `정책 ${filledPolicy.length}` },
-          { value: "audience", label: `타깃 · 제품 ${personas.length + products.length}` },
-          { value: "learning", label: `학습 ${ledger.filter((h) => h.verdict).length}` },
+          { value: "policy", label: "정책" },
+          { value: "audience", label: "타깃 · 제품" },
+          { value: "learning", label: "학습" },
         ]}
         className="mb-4"
       />
@@ -142,11 +154,11 @@ export default function BrandProfileViewPage() {
           count={filledPolicy.length}
           desc="광고 카피에 적용되는 금지·필수 규칙이에요."
         >
-          <div className="grid grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
             {filledPolicy.map((type) => (
               <SopCard key={type} type={type} section={policy.find((s) => s.type === type)} canEdit={false} onEdit={() => {}} />
             ))}
-            <EmptyCard label="미설정" hint="새 정책 항목" href={editHref} />
+            <EmptyCard label="미설정" hint="새 정책 항목" href={`${editHref}?tab=policy`} />
           </div>
         </Panel>
       )}
@@ -166,11 +178,11 @@ export default function BrandProfileViewPage() {
             desc="이 브랜드가 가장 자주 겨냥하는 타깃이에요."
             nested
           >
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 xl:grid-cols-3 gap-3">
               {personas.map((p, i) => (
                 <PersonaCard key={p.id} persona={p} index={i} canEdit={false} onEdit={() => {}} onDelete={() => {}} />
               ))}
-              <EmptyCard label="미설정" hint="새 페르소나" href={editHref} />
+              <EmptyCard label="미설정" hint="새 페르소나" href={`${editHref}?tab=persona`} />
             </div>
           </Panel>
 
@@ -181,11 +193,11 @@ export default function BrandProfileViewPage() {
             desc="광고에 연결할 수 있는 대표 제품이에요."
             nested
           >
-            <div className="grid grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
               {products.map((p) => (
                 <ProductCard key={p.id} product={p} canEdit={false} onEdit={() => {}} onDelete={() => {}} />
               ))}
-              <EmptyCard label="미등록" hint="새 제품" href={editHref} />
+              <EmptyCard label="미등록" hint="새 제품" href={`${editHref}?tab=products`} />
             </div>
           </Panel>
         </Panel>

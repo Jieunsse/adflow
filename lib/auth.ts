@@ -64,6 +64,9 @@ function buildCommonOptions(meta?: MetaCredentials): AuthOptions {
   }
 
   return {
+    // 명시 지정 필수 — 없으면 NextAuth가 authOptions 해시로 자체 폴백해서
+    // proxy.ts(withAuth, process.env.NEXTAUTH_SECRET 직접 참조)와 세션 암호화 키가 어긋난다.
+    secret: process.env.NEXTAUTH_SECRET,
     debug: true,
     logger: {
       error(code, metadata) {

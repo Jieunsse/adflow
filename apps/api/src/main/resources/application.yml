@@ -1,0 +1,35 @@
+spring:
+  application:
+    name: adflow-api
+  datasource:
+    url: jdbc:postgresql://localhost:5432/adflow
+    username: adflow
+    password: adflow
+  jpa:
+    hibernate:
+      # 로컬 전용. 배포를 결정하면 Flyway 로 교체해야 한다 (설계 §10 부채).
+      ddl-auto: update
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info
+
+app:
+  poller:
+    # 운영 기본값 6시간. 로컬 프로필에서 짧게 덮어쓴다 (설계 §6).
+    interval: PT6H
+
+---
+spring:
+  config:
+    activate:
+      on-profile: local
+app:
+  poller:
+    interval: PT1M

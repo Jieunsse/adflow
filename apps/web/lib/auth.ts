@@ -43,8 +43,12 @@ function buildCommonOptions(meta?: MetaCredentials): AuthOptions {
     }),
   ]
 
+  // 둘러보기 전용 환경(백엔드 미배포)에서는 실사용 로그인을 막는다 — 로그인에 성공해도
+  // 영속 레이어가 없어 빈 화면이 된다. 게스트 provider 만 남긴다.
+  const browseOnly = process.env.ADFLOW_BROWSE_ONLY === "true"
+
   // Meta 자격증명이 있을 때만 Facebook provider 등록. 없으면 마법사로 강제 이동 (middleware 가드).
-  if (meta) {
+  if (meta && !browseOnly) {
     providers.unshift(
       FacebookProvider({
         clientId: meta.clientId,

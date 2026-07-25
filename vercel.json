@@ -1,8 +1,1 @@
-{
-  "crons": [
-    {
-      "path": "/api/cron/tournament-poller",
-      "schedule": "0 0 * * *"
-    }
-  ]
-}
+{}

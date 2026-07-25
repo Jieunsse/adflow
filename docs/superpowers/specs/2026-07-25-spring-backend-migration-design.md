@@ -48,7 +48,16 @@ Supabase 가 제공하던 것은 네 가지다 — Postgres, PostgREST(자동 RE
 
 ### 런타임
 
-JDK 21 (Temurin 21.0.10 설치 확인) + Spring Boot 3.5.x + Gradle Kotlin DSL(wrapper). JDK 21 의 virtual threads 는 계정별 Meta API 병렬 호출에 그대로 이득.
+JDK 21 (Temurin 21.0.10 설치 확인) + **Spring Boot 4.1.0** + Gradle Kotlin DSL(wrapper). JDK 21 의 virtual threads 는 계정별 Meta API 병렬 호출에 그대로 이득.
+
+> **버전 정정 (단계 0 실측)** — 원안은 Spring Boot 3.5.x 였으나 Initializr 가 3.x 를 더 이상 제공하지 않는다(제공 목록: 4.1.1-SNAPSHOT · 4.1.0 · 4.0.8-SNAPSHOT · 4.0.7). 지원 종료된 라인을 학습·팀표준 목적에 쓰는 것은 부적절하므로 4.1.0 을 채택했다. `springdoc-openapi 2.8.6`(최신, 명목상 Boot 3.x 대상)이 4.1.0 에서 정상 동작하는 것을 실측 확인했다 — `/v3/api-docs` 가 OpenAPI 3.1.0 을 반환한다.
+>
+> Boot 4 의 변경점 중 이후 단계에 영향을 주는 것:
+> - starter 이름 변경 — `spring-boot-starter-web` → `spring-boot-starter-webmvc`
+> - 테스트 starter 가 모듈별로 분리 — 단일 `spring-boot-starter-test` 가 아니라 `spring-boot-starter-webmvc-test` 등
+> - 테스트 애노테이션 패키지 이동 — `@AutoConfigureMockMvc` 가 `org.springframework.boot.webmvc.test.autoconfigure` 로
+>
+> 단계 1(Spring Security)은 Boot 4 기준 구성을 따라야 한다. Boot 3 예제를 그대로 옮기면 깨진다.
 
 ### 디렉토리
 
@@ -301,6 +310,7 @@ Spring 폴러 ──▶ POST /api/internal/notify/tournament-concluded ──▶
 | 토큰 두 개 | NextAuth 세션 + Spring JWT. 갱신 경로 필요 | 단계 1 |
 | jsonb → 정규화 파급 | `src/` 28,624줄이 현재 TS 타입에 의존 | 단계 2~5 에 분산 |
 | Owner Key 3종 혼재 | 토큰 해시로 저장된 `tournaments` 행은 email 표준화 시 소유자 상실 | 단계 7 ETL 에서 실측 후 매핑 또는 폐기 |
+| Spring Boot 4 + springdoc 2.x | springdoc 2.8.6 은 명목상 Boot 3.x 대상. 현재 동작하지만 공식 지원 조합이 아니라 springdoc 업그레이드 시 깨질 수 있다 | springdoc 3.x(Boot 4 대응) 출시 시 전환 |
 
 ## 11. 기각된 선택지
 

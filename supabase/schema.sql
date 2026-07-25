@@ -155,20 +155,22 @@ create table if not exists notion_connections (
   updated_at     timestamptz not null default now()
 );
 
--- ADR-045 — 플로(Flo) Briefing 영속. 활성 광고 계정당 최신 1건만 보관(on-demand 캐시).
--- user_key = 소유 유저(ownerKeyFrom: email 우선·토큰 해시 폴백, 토너먼트와 동일). browse 게스트는
--- ad_account_id='browse'. findings = Finding[] jsonb. (user_key, ad_account_id) 복합 PK → upsert 로 최신 1건 유지.
-create table if not exists flo_briefings (
-  user_key      text not null,
-  ad_account_id text not null,
-  id            text not null,
-  model         text not null,
-  headline      text not null,
-  findings      jsonb not null default '[]',
-  created_at    text not null,
-  updated_at    timestamptz default now(),
-  primary key (user_key, ad_account_id)
+-- ADR-022 — Persona. Brand Profile 1:N 타겟 페르소나. localStorage 가 primary, 이 테이블은 미러.
+-- 컬럼은 snake_case — usePersonasStorage 의 personaRow 가 camelCase PersonaEntry 를 여기에 맞춰 매핑한다.
+create table if not exists personas (
+  id                   text primary key,
+  brand_profile_id     text not null,
+  name                 text not null,
+  age_min              int,
+  age_max              int,
+  genders              int[],
+  location             text[],
+  interests            text[],
+  customer_description text,
+  synced_at            timestamptz default now()
 );
+
+create index if not exists personas_brand_profile_id on personas (brand_profile_id);
 
 -- ADR-065 §9 — 인플루언서 마케팅 Synced Store. brand_profiles 와 동일 구조(id/user_email/data jsonb/synced_at).
 -- /api/stores/creators, /api/stores/influencer-campaigns 가 user_email(Owner Key) 스코핑으로 R/W.
@@ -195,3 +197,19 @@ insert into storage.buckets (id, name, public)
 values ('product-images', 'product-images', true),
        ('reference-materials', 'reference-materials', true)
 on conflict (id) do nothing;
+
+-- ── RLS: anon 키 직접 접근 차단 ────────────────────────────────────────────
+-- anon 키는 NEXT_PUBLIC_ 으로 브라우저에 노출된다. 아래 테이블은 전부 서버(service-role)만
+-- 읽고 쓰므로 RLS 를 켜고 정책을 두지 않는다 = service-role 은 우회, anon 은 전면 거부.
+-- 특히 notion_connections 는 노션 OAuth 액세스 토큰, ig_messages 는 DM 본문을 담는다.
+--
+-- 여기 없는 sops·campaign_launches·auto_relaunch_states·personas 는 supabase-sync 가
+-- 브라우저에서 anon 키로 직접 write 한다 — RLS 를 켜면 미러가 조용히 죽는다.
+-- 켜려면 /api/stores/* 패턴(서버 라우트 + Owner Key 스코핑)으로 먼저 이관해야 한다.
+alter table ig_messages         enable row level security;
+alter table onboarded_users     enable row level security;
+alter table tournaments         enable row level security;
+alter table cron_runs           enable row level security;
+alter table notion_connections  enable row level security;
+alter table products            enable row level security;
+alter table reference_materials enable row level security;

@@ -32,6 +32,21 @@ function persistPersonas(personas: PersonaEntry[]): void {
   } catch {}
 }
 
+// 미러 컬럼은 snake_case — PostgREST 가 키를 컬럼명으로 그대로 쓰므로 camelCase 를 넘기면 조용히 실패한다.
+function personaRow(entry: PersonaEntry): Record<string, unknown> {
+  return {
+    id: entry.id,
+    brand_profile_id: entry.brandProfileId,
+    name: entry.name,
+    age_min: entry.ageMin ?? null,
+    age_max: entry.ageMax ?? null,
+    genders: entry.genders ?? null,
+    location: entry.location ?? null,
+    interests: entry.interests ?? null,
+    customer_description: entry.customerDescription ?? null,
+  };
+}
+
 export function usePersonasStorage() {
   const [personas, setPersonas] = useState<PersonaEntry[]>([]);
 
@@ -44,7 +59,7 @@ export function usePersonasStorage() {
       const idx = prev.findIndex((p) => p.id === entry.id);
       const next = idx >= 0 ? prev.map((p, i) => (i === idx ? entry : p)) : [...prev, entry];
       persistPersonas(next);
-      syncUpsert("persona", entry as unknown as Record<string, unknown>);
+      syncUpsert("personas", personaRow(entry));
       return next;
     });
   }, []);
@@ -53,7 +68,7 @@ export function usePersonasStorage() {
     setPersonas((prev) => {
       const next = prev.filter((p) => p.id !== id);
       persistPersonas(next);
-      syncDelete("persona", "id", id);
+      syncDelete("personas", "id", id);
       return next;
     });
   }, []);
@@ -77,7 +92,7 @@ export function usePersonasForProfile(brandProfileId: string) {
         const allIdx = all.findIndex((p) => p.id === entry.id);
         const allNext = allIdx >= 0 ? all.map((p, i) => (i === allIdx ? entry : p)) : [...all, entry];
         persistPersonas(allNext);
-        syncUpsert("persona", entry as unknown as Record<string, unknown>);
+        syncUpsert("personas", personaRow(entry));
         return next;
       });
     },
@@ -89,7 +104,7 @@ export function usePersonasForProfile(brandProfileId: string) {
       const next = prev.filter((p) => p.id !== id);
       const all = readPersonas().filter((p) => p.id !== id);
       persistPersonas(all);
-      syncDelete("persona", "id", id);
+      syncDelete("personas", "id", id);
       return next;
     });
   }, []);

@@ -77,16 +77,19 @@ cd /Users/jieunsse/jieunsse/dev/meta
 git ls-files -z | xargs -0 grep -ril "axhub\|apphub" 2>/dev/null
 ```
 
-기대 출력 — 정확히 5줄:
+기대 출력 — 정확히 6줄:
 ```
 .gitignore
 apphub.yaml
 axhub.yaml
+docs/superpowers/plans/2026-07-25-phase0-monorepo-spring-skeleton.md
 docs/superpowers/specs/2026-07-25-spring-backend-migration-design.md
 package-lock.json
 ```
 
-설계 문서의 언급은 히스토리 기술이라 그대로 둔다. 나머지 4개가 이 작업 대상이다.
+**`docs/` 아래 2개는 대상이 아니다.** 설계 문서는 전환 배경을 기술하고 이 계획서는 axhub 제거 작업 자체를 서술하므로 당연히 단어가 등장한다. 둘 다 히스토리·지침 문서라 수정하지 않는다.
+
+나머지 4개(`.gitignore` `apphub.yaml` `axhub.yaml` `package-lock.json`)가 이 작업 대상이다.
 
 - [ ] **Step 2: 매니페스트와 중복 락파일 삭제**
 
@@ -129,7 +132,7 @@ npx tsc --noEmit && npm test -- --run && npm run build
 git ls-files -z | xargs -0 grep -ril "axhub\|apphub" 2>/dev/null
 ```
 
-기대: 설계 문서 1줄만 출력
+기대: `docs/` 아래 2개(설계 문서·이 계획서)만 출력. 코드·설정 파일은 0건.
 
 - [ ] **Step 7: 커밋**
 

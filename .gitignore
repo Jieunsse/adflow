@@ -1,7 +1,7 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
-/node_modules
+node_modules
 /.pnp
 .pnp.*
 .yarn/*
@@ -11,14 +11,14 @@
 !.yarn/versions
 
 # testing
-/coverage
+coverage
 
 # next.js
-/.next/
-/out/
+.next/
+out/
 
 # production
-/build
+build
 
 # misc
 .DS_Store
@@ -45,11 +45,13 @@ next-env.d.ts
 .document/*
 .jayden/*
 .claude/*
+.codex/*
 
 # adflow local secrets (Meta 자격증명 암호화 저장)
 .adflow/
 # /posts 업로드 — IG Graph 가 가져갈 임시 호스팅
-/public/uploads/
+# 중간 슬래시 패턴은 .gitignore 위치에 고정되므로 apps/web 아래를 잡으려면 **/ 필요.
+**/public/uploads/
 # local scratch / agent issue tracker
 .scratch/
 # agent auto-memory (personal — do not commit)
@@ -61,4 +63,4 @@ certificates
 # understand-anything tool cache (local-only)
 .understand-anything/
 # local state store cache
-/data/
+data/

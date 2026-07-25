@@ -1,0 +1,6 @@
+{
+  "name": "@adflow/contracts",
+  "version": "0.0.0",
+  "private": true,
+  "description": "OpenAPI 스펙과 생성된 TypeScript 타입 · 엔진 동등성 검증용 골든 픽스처"
+}

@@ -43,7 +43,6 @@
 - 마법사 진입점: `/install` (Phase A: 즉시 셋업, Phase B: App Review). 자격증명 없으면 `middleware.ts` 가 강제 리디렉트.
 - 권한: 첫 셋업은 누구나, 자격증명 교체·삭제는 팀장만. 변경 이력은 audit log 자동 기록.
 - NextAuth: 14곳에서 import 하는 `authOptions` 는 정적(Facebook provider 없음, 세션 검증용). `app/api/auth/[...nextauth]/route.ts` 만 `getAuthOptionsForNextAuth()` 로 동적 빌드 — 자격증명 교체 시 5분 캐시 후 자동 반영.
-- 향후: Axhub Data plane 스펙 확정되면 `lib/meta-credentials.ts` 에 어댑터 추가 (현재 로컬 파일 어댑터와 갈아끼우기).
 
 ## Pull Request body 형식
 

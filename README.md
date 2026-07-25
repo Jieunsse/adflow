@@ -1,110 +1,39 @@
-# nextjs-axhub
+# AdFlow
 
-axhub 위에서 바로 굴러가는 **Next.js 16 + React 19 + Tailwind 3** 템플릿이에요.
-**Claude Code** 로 바이브코딩하면서 axhub 에 한 줄 명령으로 배포할 수 있게 미리 세팅돼 있어요.
+Meta(Facebook·Instagram) 광고를 기획부터 게재·성과 회고까지 한 흐름으로 굴리는 마케팅 워크스페이스예요.
+**Next.js 16 (App Router) + React 19 + TypeScript strict + Tailwind 3**.
 
-## 0. 누가 쓰면 좋아요
-
-비전공자, 비개발자, 기획자, 사무직, 디자이너 — 코드를 직접 한 줄도 안 짜더라도 AI 한테
-"이런 화면 만들어줘" 만 부탁하면 알아서 굴러가도록 디자인됐어요.
-
-## 1. 5분 안에 시작
+## 시작하기
 
 ```bash
-# 1) 이 템플릿만 내 컴퓨터로 가져오기 (npm 깔려 있어야 함, Node 20+ 권장)
-npx degit jocoding-ax-partners/examples/nextjs-axhub my-app
-cd my-app
-
-# 2) 의존성 설치
 npm install
-
-# 3) 환경변수 채우기
-cp .env.example .env.local
-# .env.local 을 열어서 APPHUB_* 값을 채워요. axhub 콘솔에서 받아요.
-
-# 4) 로컬 서버 띄우기
-npm run dev
-# http://localhost:3000 에 접속
+cp .env.example .env.local   # NEXTAUTH_SECRET 등 필수값 채우기
+npm run dev                  # http://localhost:3000
 ```
 
-## 2. 바이브코딩 흐름
+Meta 앱 자격증명은 `.env.local` 대신 `/install` 마법사로 넣는 게 기본이에요 (로컬 암호화 파일에 저장).
+자격증명이 없으면 `middleware.ts` 가 `/install` 로 보내요. 로그인 없이 훑어보려면 `둘러보기` 모드를 쓰세요.
 
-1. Claude Code 를 열어요.
-2. "메인 페이지에 입력 폼이랑 결과 카드 넣어줘" 같은 자연어 요청을 던져요.
-3. AI 가 `app/page.tsx` 같은 파일을 고쳐요.
-4. 저장하면 브라우저가 자동 새로고침 — 결과 확인.
-5. 마음에 들면 다음 기능, 안 들면 다시 부탁.
+## npm scripts
 
-## 3. axhub Hub API 쓰기
-
-`lib/axhub.ts` 안에 헬퍼가 있어요. Server Component / Route Handler / Server Action 에서 그대로 쓰세요.
-
-```ts
-// 예: app/api/users/route.ts
-import { axhub } from "@/lib/axhub";
-
-export async function GET() {
-  const res = await axhub.fetch("/v1/me");
-  const data = await res.json();
-  return Response.json(data);
-}
-```
-
-> ⚠️ `lib/axhub.ts` 는 **Server-side 전용**이에요. `"use client"` 컴포넌트에서 import 하면
-> `APPHUB_API_KEY` 가 브라우저로 새요. 클라이언트는 항상 본인 Server route 를 거쳐서 호출해요.
-
-## 4. axhub 에 배포
-
-### A. Claude Code 사용자
-
-```
-/axhub:deploy
-```
-
-배포 미리보기 카드 → 동의 → 끝. 빌드 진행 상황 자동으로 한국어로 안내해줘요.
-
-### B. CLI 직접
-
-```bash
-# 한 번만: axhub 콘솔에서 앱 등록 후 슬러그 복사
-axhub apps          # 내 앱 목록 확인
-axhub deploy create --app my-app-slug --branch main
-axhub deploy status dep_xxxxx --watch
-```
-
-## 5. 환경변수 (axhub 가 빌드 시 자동 주입)
-
-| 변수 | 용도 |
+| 명령 | 용도 |
 |------|------|
-| `APPHUB_API_URL` | Hub API endpoint |
-| `APPHUB_API_KEY` | Hub API 인증 (Server-side 전용) |
-| `APPHUB_APP_SLUG` | 내 앱 슬러그 |
-| `APPHUB_DATA_BASE_URL` | Data plane base URL |
+| `npm run dev` | 개발 서버 (Turbopack) |
+| `npm run https-dev` | HTTPS 개발 서버 — Meta OAuth 콜백 검증용 |
+| `npm run build` | 프로덕션 빌드 |
+| `npm run lint` | ESLint |
+| `npm test` | Vitest (회귀 안전망) |
 
-`.env.example` 참고. `.env.local` 은 `.gitignore` 에 들어 있어서 안전해요.
+## 환경변수
 
-## 6. 자주 막히는 곳
+`.env.example` 에 전부 주석과 함께 정리돼 있어요. `.env.local` 은 `.gitignore` 로 막혀 있어요 (커밋 금지).
 
-| 증상 | 해결 |
-|------|------|
-| `npm install` 실패 | Node 버전 20+ 인지 `node -v` 확인 |
-| `axhub deploy` 가 "앱을 못 찾아요" | `axhub apps` 로 슬러그 다시 확인 |
-| 빌드 통과한 것 같은데 페이지가 빈 화면 | Server Component 에서 `axhub.isConfigured` 출력해서 환경변수 확인 |
-| Tailwind class 가 안 먹음 | `tailwind.config.ts` 의 `content` 경로에 새 폴더 추가 |
+필수는 `NEXTAUTH_URL` · `NEXTAUTH_SECRET` 둘. 나머지(Meta·Gemini·Notion·Supabase)는 쓰는 기능만 채우면 돼요.
 
-## 7. 관련 자료
+## 문서
 
-- [axhub 가이드](https://github.com/jocoding-ax-partners/axhub)
-- [Next.js 16 docs](https://nextjs.org/docs)
-- [Tailwind 3 docs](https://v3.tailwindcss.com)
-
-## axhub.ts 신뢰 모델 (이 템플릿)
-
-이 (Next.js) 템플릿은 **server-side**. axhub 헬퍼는 6개 템플릿 모두 동일한 외부 API
-(`axhub.fetch / data / slug / isConfigured`) 를 노출해요. Transport 만 달라요:
-이 템플릿은 `Authorization: Bearer ${process.env.APPHUB_API_KEY}`.
-풀 비교 표는 [examples README](../README.md#axhubts-신뢰-모델-모든-템플릿) 참고.
-
-## 8. 라이선스
-
-MIT — 마음껏 쓰세요.
+- [AGENTS.md](./AGENTS.md) — AI 에이전트·기여자 행동 규칙 (디자인 토큰·UX 라이팅·커밋 형식). **작업 전 필독.**
+- [.document/CONTEXT.md](./.document/CONTEXT.md) — 도메인 어휘 단일 소스
+- [.document/adr/](./.document/adr/) — 아키텍처 결정 기록
+- [.document/prd/](./.document/prd/) — 기능별 PRD
+- [supabase/schema.sql](./supabase/schema.sql) — 영속 레이어 스키마

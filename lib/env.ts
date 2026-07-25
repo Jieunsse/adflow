@@ -9,7 +9,7 @@ export function assertRequiredEnv(): void {
   const missing = REQUIRED.filter((k) => !process.env[k])
   if (missing.length > 0) {
     throw new Error(
-      `필수 환경 변수가 비어있어요: ${missing.join(", ")}. .env.local 또는 axhub 배포 환경을 확인해주세요.`,
+      `필수 환경 변수가 비어있어요: ${missing.join(", ")}. .env.local 또는 배포 환경을 확인해주세요.`,
     )
   }
 }

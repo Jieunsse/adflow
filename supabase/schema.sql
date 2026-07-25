@@ -88,23 +88,6 @@ create index if not exists tournaments_status on tournaments (status);
 -- ADR-047 — Hypothesis Ledger 투영 조회(소유 유저의 같은 Brand Profile 토너먼트 평탄화).
 create index if not exists tournaments_brand_profile_id on tournaments (brand_profile_id);
 
--- axhub(Google) 신원에 매달리는 사용자 + Meta 연결 영속 (lib/user-store.ts).
--- 신원=앵커, meta_connection=최초 Facebook 연결로 받은 토큰 묶음(2회차+ 자동 복원), role/workspace=자체 관리.
-create table if not exists app_users (
-  axhub_id        text primary key,
-  email           text not null,
-  name            text,
-  image           text,
-  role            text not null default '팀장',
-  workspace_id    text,
-  meta_connection jsonb,
-  created_at      timestamptz not null default now(),
-  updated_at      timestamptz not null default now()
-);
-
-create index if not exists app_users_email_idx on app_users (email);
-create index if not exists app_users_workspace_idx on app_users (workspace_id);
-
 -- ADR-042 — 토너먼트 폴러 자기기록 관측성 1겹. cron 1회 호출 = 1행(집계 only, PK 없음).
 -- pg_net(트리거 스왑 후)은 fire-and-forget 이라 "요청 보냄"까지만 안다 — 핸들러가 try/finally 끝에서
 -- 직접 실행 요약을 남긴다. health 라우트(2겹)가 마지막 ok=true 의 finished_at 나이로 dead-man's switch 를 건다.

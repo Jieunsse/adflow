@@ -1,8 +1,8 @@
 {
-  "name": "nextjs-axhub",
+  "name": "adflow",
   "version": "0.1.0",
   "private": true,
-  "description": "axhub 위에서 바로 굴러가는 Next.js 16 + React 19 + Tailwind 템플릿",
+  "description": "Meta 광고를 기획부터 게재·성과 회고까지 굴리는 마케팅 워크스페이스",
   "scripts": {
     "dev": "next dev --turbopack",
     "https-dev": "next dev --turbopack --experimental-https",

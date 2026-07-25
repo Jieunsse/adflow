@@ -1,10 +1,8 @@
 // Server-side only — do not import from client components; encryption key & secrets would leak.
 // Meta 앱 자격증명(client_id, client_secret) 저장소.
 //
-// Phase 1: 로컬 암호화 파일 (`.adflow/meta-credentials.enc`) + .env.local 폴백
-// Phase 2 (TODO): Axhub data API 어댑터 — Axhub Data plane 스펙 확정 후 채움
-//
-// CredentialStore 인터페이스를 유지해서 추후 Axhub 어댑터 갈아끼우기 쉽게 설계.
+// 로컬 암호화 파일 (`.adflow/meta-credentials.enc`) + .env.local 폴백.
+// CredentialStore 인터페이스를 유지해서 추후 원격 저장소 어댑터로 갈아끼우기 쉽게 설계.
 
 import { promises as fs } from "node:fs"
 import path from "node:path"

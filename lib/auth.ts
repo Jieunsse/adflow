@@ -2,8 +2,6 @@ import type { AuthOptions } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import FacebookProvider from "next-auth/providers/facebook"
 import { credentialsCache, type MetaCredentials } from "./meta-credentials"
-import { buildAxhubProvider, type AxhubUser } from "./axhub-auth"
-import { upsertUserOnLogin, loadMetaConnection, saveMetaConnection } from "./user-store"
 
 type Providers = NonNullable<AuthOptions["providers"]>
 
@@ -45,10 +43,6 @@ function buildCommonOptions(meta?: MetaCredentials): AuthOptions {
     }),
   ]
 
-  // axhub 플랫폼 로그인(Google 기반). AXHUB_AUTH_MODE 미설정이면 null → 휴면.
-  const axhubProvider = buildAxhubProvider()
-  if (axhubProvider) providers.unshift(axhubProvider)
-
   // Meta 자격증명이 있을 때만 Facebook provider 등록. 없으면 마법사로 강제 이동 (middleware 가드).
   if (meta) {
     providers.unshift(
@@ -86,27 +80,6 @@ function buildCommonOptions(meta?: MetaCredentials): AuthOptions {
           token.browseMode = true
           if (!token.role) token.role = "팀장"
         }
-        // axhub(Google) 로그인 = 신원 앵커. 사용자 upsert(역할 보존) + 저장된 Meta 연결 자동 복원.
-        if (account?.provider === "axhub" && token.email) {
-          const axhubUser: AxhubUser = {
-            axhubId: token.sub ?? token.email,
-            email: token.email,
-            name: token.name ?? undefined,
-            image: (token.picture as string | undefined) ?? undefined,
-          }
-          const appUser = await upsertUserOnLogin(axhubUser)
-          token.axhubId = appUser.axhubId
-          token.role = appUser.role
-          const conn = await loadMetaConnection(appUser.axhubId)
-          if (conn) {
-            if (conn.accessToken) token.accessToken = conn.accessToken
-            if (conn.adAccountId) { token.adAccountId = conn.adAccountId; token.adAccountName = conn.adAccountName }
-            if (conn.pageId) { token.pageId = conn.pageId; token.pageName = conn.pageName }
-            if (conn.pixelId) { token.pixelId = conn.pixelId; token.pixelName = conn.pixelName }
-            if (conn.igUserId) { token.igUserId = conn.igUserId; token.igUsername = conn.igUsername }
-            if (conn.igAccessToken) token.igAccessToken = conn.igAccessToken
-          }
-        }
         if (account?.access_token && meta) {
           token.accessToken = await exchangeForLongLivedToken(
             account.access_token,
@@ -142,21 +115,6 @@ function buildCommonOptions(meta?: MetaCredentials): AuthOptions {
           if (session.role !== undefined) {
             token.role = session.role
           }
-          // axhub 신원이 있으면 Meta 연결 변경(FB·IG 연결, 계정 스위처)을 영속 → 다음 로그인 자동 복원.
-          if (token.axhubId) {
-            await saveMetaConnection(token.axhubId, {
-              accessToken: token.accessToken,
-              adAccountId: token.adAccountId,
-              adAccountName: token.adAccountName,
-              pageId: token.pageId,
-              pageName: token.pageName,
-              pixelId: token.pixelId,
-              pixelName: token.pixelName,
-              igUserId: token.igUserId,
-              igUsername: token.igUsername,
-              igAccessToken: token.igAccessToken,
-            })
-          }
         }
         return token
       },
@@ -173,7 +131,6 @@ function buildCommonOptions(meta?: MetaCredentials): AuthOptions {
         session.igUsername = token.igUsername as string | undefined
         session.browseMode = token.browseMode as boolean | undefined
         session.role = token.role as "팀장" | "팀원·게재" | "팀원·검토" | undefined
-        session.axhubId = token.axhubId as string | undefined
         // 둘러보기 모드: 실제 IG 연결이 없으므로 연결 탭과 동일한 데모 계정명으로 통일
         if (session.browseMode && !session.igUsername) session.igUsername = "greenroutine_official"
         return session

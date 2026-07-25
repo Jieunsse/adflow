@@ -50,9 +50,6 @@ next-env.d.ts
 .adflow/
 # /posts 업로드 — IG Graph 가 가져갈 임시 호스팅
 /public/uploads/
-# axhub quality state (local-only)
-.axhub-state/
-
 # local scratch / agent issue tracker
 .scratch/
 # agent auto-memory (personal — do not commit)

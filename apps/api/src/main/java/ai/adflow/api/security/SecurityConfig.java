@@ -32,6 +32,10 @@ public class SecurityConfig {
                     // 교환·갱신은 JWT 를 받기 전/재발급 단계다. 내부 시크릿으로 따로 지킨다.
                     .requestMatchers("/auth/exchange", "/auth/refresh")
                     .permitAll()
+                    // cron·Meta webhook 은 세션 없이 도는 기계 호출이라 JWT 를 실을 수 없다.
+                    // 여는 것이 아니라 자물쇠를 바꾸는 것이다 — 컨트롤러가 InternalSecret 을 요구한다.
+                    .requestMatchers("/internal/**")
+                    .permitAll()
                     .anyRequest()
                     .authenticated())
         .oauth2ResourceServer(o -> o.jwt(jwt -> jwt.jwtAuthenticationConverter(converter)));

@@ -1,11 +1,10 @@
 package ai.adflow.api.auth;
 
+import ai.adflow.api.internal.InternalSecret;
 import ai.adflow.api.security.JwtConfig;
 import ai.adflow.api.security.Role;
 import ai.adflow.api.security.TokenIssuer;
 import jakarta.validation.Valid;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -33,15 +32,15 @@ public class AuthRefreshController {
 
   private final JwtDecoder refreshJwtDecoder;
   private final TokenIssuer tokenIssuer;
-  private final byte[] internalSecret;
+  private final InternalSecret internalSecret;
 
   public AuthRefreshController(
       @Qualifier("refreshJwtDecoder") JwtDecoder refreshJwtDecoder,
       TokenIssuer tokenIssuer,
-      @Value("${app.internal-secret}") String internalSecret) {
+      InternalSecret internalSecret) {
     this.refreshJwtDecoder = refreshJwtDecoder;
     this.tokenIssuer = tokenIssuer;
-    this.internalSecret = internalSecret.getBytes(StandardCharsets.UTF_8);
+    this.internalSecret = internalSecret;
   }
 
   @PostMapping("/refresh")
@@ -49,7 +48,7 @@ public class AuthRefreshController {
       @RequestHeader(value = "X-Internal-Secret", required = false) String presented,
       @Valid @RequestBody RefreshRequest request) {
 
-    requireInternalSecret(presented);
+    internalSecret.require(presented);
 
     Jwt jwt;
     try {
@@ -69,11 +68,4 @@ public class AuthRefreshController {
             issued.token(), issued.expiresAt(), issued.refreshToken(), issued.refreshExpiresAt()));
   }
 
-  /** 타이밍 공격을 피하려고 상수시간 비교를 쓴다. */
-  private void requireInternalSecret(String presented) {
-    if (presented == null
-        || !MessageDigest.isEqual(presented.getBytes(StandardCharsets.UTF_8), internalSecret)) {
-      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "내부 호출 자격이 없어요.");
-    }
-  }
 }

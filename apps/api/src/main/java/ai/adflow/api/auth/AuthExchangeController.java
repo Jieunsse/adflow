@@ -2,11 +2,10 @@ package ai.adflow.api.auth;
 
 import ai.adflow.api.connection.MetaConnection;
 import ai.adflow.api.connection.MetaConnectionRepository;
+import ai.adflow.api.internal.InternalSecret;
 import ai.adflow.api.security.Role;
 import ai.adflow.api.security.TokenIssuer;
 import jakarta.validation.Valid;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
 import java.time.Instant;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -33,15 +32,15 @@ public class AuthExchangeController {
 
   private final MetaConnectionRepository repository;
   private final TokenIssuer tokenIssuer;
-  private final byte[] internalSecret;
+  private final InternalSecret internalSecret;
 
   public AuthExchangeController(
       MetaConnectionRepository repository,
       TokenIssuer tokenIssuer,
-      @Value("${app.internal-secret}") String internalSecret) {
+      InternalSecret internalSecret) {
     this.repository = repository;
     this.tokenIssuer = tokenIssuer;
-    this.internalSecret = internalSecret.getBytes(StandardCharsets.UTF_8);
+    this.internalSecret = internalSecret;
   }
 
   @PostMapping("/exchange")
@@ -49,7 +48,7 @@ public class AuthExchangeController {
       @RequestHeader(value = "X-Internal-Secret", required = false) String presented,
       @Valid @RequestBody ExchangeRequest request) {
 
-    requireInternalSecret(presented);
+    internalSecret.require(presented);
 
     if (GUEST_OWNER.equals(request.ownerKey()) || GUEST_OWNER.equals(request.email())) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "둘러보기 게스트는 토큰을 발급받지 않아요.");
@@ -64,13 +63,6 @@ public class AuthExchangeController {
             issued.token(), issued.expiresAt(), issued.refreshToken(), issued.refreshExpiresAt()));
   }
 
-  /** 타이밍 공격을 피하려고 상수시간 비교를 쓴다. */
-  private void requireInternalSecret(String presented) {
-    if (presented == null
-        || !MessageDigest.isEqual(presented.getBytes(StandardCharsets.UTF_8), internalSecret)) {
-      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "내부 호출 자격이 없어요.");
-    }
-  }
 
   private void persist(ExchangeRequest request, Role role) {
     MetaConnection entity = repository.findById(request.ownerKey()).orElseGet(MetaConnection::new);

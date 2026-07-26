@@ -1,0 +1,15 @@
+spring:
+  jpa:
+    hibernate:
+      # 컨테이너가 매번 새로 뜨므로 create 로 충분하다. create-drop 은 컨테이너가 먼저 내려간 뒤
+      # drop 을 시도해 종료 로그에 무의미한 에러를 쏟는다.
+      ddl-auto: create
+
+app:
+  internal-secret: it-internal-secret
+  jwt:
+    secret: it-secret-key-for-hs256-at-least-32-bytes
+    ttl: PT1H
+    refresh-ttl: P30D
+  encryption:
+    key: it-encryption-key-32-bytes-okay!

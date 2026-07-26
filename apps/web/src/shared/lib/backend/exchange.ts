@@ -11,6 +11,8 @@ export type ExchangeInput = {
 export type BackendToken = {
   token: string;
   expiresAt: string;
+  refreshToken: string;
+  refreshExpiresAt: string;
 };
 
 // 로그인 직후 1회. 실패해도 로그인을 깨지 않는다 — 단계 1 시점에 프론트 데이터는

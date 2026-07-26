@@ -117,6 +117,7 @@ function buildCommonOptions(meta?: MetaCredentials): AuthOptions {
           if (issued) {
             token.backendToken = issued.token
             token.backendTokenExpiresAt = issued.expiresAt
+            token.backendRefreshToken = issued.refreshToken
           }
         }
         if (trigger === "update" && session) {

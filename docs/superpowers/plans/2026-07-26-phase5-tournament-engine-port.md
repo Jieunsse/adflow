@@ -83,15 +83,15 @@ Java 를 한 줄도 쓰기 전에 한다. 이 태스크가 끝나면 **TS 엔진
 - Create: `packages/contracts/fixtures/tournament/*.json` (5개)
 - Create: `apps/web/src/entities/ab-test/tournament/golden.test.ts`
 
-- [ ] **Step 1: 픽스처 생성 스크립트로 현재 TS 답을 떠낸다**
+- [x] **Step 1: 픽스처 생성 스크립트로 현재 TS 답을 떠낸다**
 
 손으로 기대값을 적지 않는다 — 지금 TS 엔진이 내는 답이 곧 기준이다. 스크립트로 뽑되, **뽑은 값이 상식적인지 눈으로 확인**한다(0.5 만 잔뜩 나오면 입력이 잘못된 것이다).
 
-- [ ] **Step 2: `golden.test.ts` 가 픽스처를 읽어 TS 엔진을 검증한다**
+- [x] **Step 2: `golden.test.ts` 가 픽스처를 읽어 TS 엔진을 검증한다**
 
 이 테스트는 지금 당연히 통과한다. 의미는 **잠금**이다 — 이후 TS 엔진을 건드리면 여기서 깨진다.
 
-- [ ] **Step 3: 검증**
+- [x] **Step 3: 검증**
 
 ```bash
 cd /Users/jieunsse/jieunsse/dev/meta && npm test -- --run 2>&1 | grep -E "Test Files|Tests "
@@ -106,14 +106,14 @@ cd /Users/jieunsse/jieunsse/dev/meta && npm test -- --run 2>&1 | grep -E "Test F
 - Create: `apps/api/src/test/java/ai/adflow/api/tournament/engine/GoldenFixtureTest.java`
 - Modify: `apps/api/build.gradle.kts` (픽스처를 테스트 리소스로)
 
-- [ ] **Step 1: 픽스처를 클래스패스에 올린다**
-- [ ] **Step 2: 실패하는 `GoldenFixtureTest` 를 쓴다** — 5개 파일을 전부 읽는다
-- [ ] **Step 3: `seededUnit` 부터 포팅** — 뿌리부터
-- [ ] **Step 4: 통계 · 판정 코어 포팅** (`stdNormalCdf`·`confidence*`·`judgeRoundKpis`)
-- [ ] **Step 5: 시드 KPI 생성기 포팅** (`roundAdKpis`·`settleRound`)
-- [ ] **Step 6: 상태 판정 포팅** (`deriveBeat` 계열)
-- [ ] **Step 7: 가설 결정 포팅** (`selectNextLever` 계열)
-- [ ] **Step 8: 전체 green 확인**
+- [x] **Step 1: 픽스처를 클래스패스에 올린다**
+- [x] **Step 2: 실패하는 `GoldenFixtureTest` 를 쓴다** — 5개 파일을 전부 읽는다
+- [x] **Step 3: `seededUnit` 부터 포팅** — 뿌리부터
+- [x] **Step 4: 통계 · 판정 코어 포팅** (`stdNormalCdf`·`confidence*`·`judgeRoundKpis`)
+- [x] **Step 5: 시드 KPI 생성기 포팅** (`roundAdKpis`·`settleRound`)
+- [x] **Step 6: 상태 판정 포팅** (`deriveBeat` 계열)
+- [x] **Step 7: 가설 결정 포팅** (`selectNextLever` 계열)
+- [x] **Step 8: 전체 green 확인**
 
 ---
 
@@ -132,6 +132,39 @@ cd /Users/jieunsse/jieunsse/dev/meta && npm test -- --run 2>&1 | grep -E "Test F
 단계 5 의 종착점 — `POST /tournaments/{id}/settle` 이 Java 엔진으로 판정하고, Next 의 cron 은 **얇은 트리거**로 남는다(설계 §9). Meta 게재·KPI 조회는 아직 TS 라 Spring 이 Next 내부 엔드포인트에 역위임한다.
 
 ---
+
+## 진행 상태 (구현 중 실측)
+
+| 태스크 | 상태 | 실측 |
+|---|---|---|
+| Task 1 골든 픽스처 + TS 잠금 | **완료** | 픽스처 5파일 · TS 340 케이스 green |
+| Task 2 Java 엔진 포팅 | **완료** | Java 338 케이스 green. 역검증 3종(시드 곱수 40건·추천 훅 10건·승격 임계 1건)이 각각 깨지는 것 확인 |
+| Task 3 애그리거트 정규화 | **완료** | 단위 10건 · Postgres 통합 4건. 계약 단언 5종 추가 |
+| Task 4 라운드 진행 엔드포인트 + Next 배선 | **미착수** | 아래 §남은 일 |
+
+### 구현 중 알게 된 것
+
+- **`Variant.headline`·`primaryText` 가 계약에서 optional 로 나갔다.** TS 는 required 다. 손으로 쓴 왕복
+  테스트는 값이 있는 경우만 봐서 못 잡았고 **계약 단언이 잡았다.** `@Schema(REQUIRED)` 를 붙여 정정.
+- **`leverPool` 을 traffic 만 픽스처에 담았다가 넓혔다.** 목표별 추천 3훅 표가 TS·Java 양쪽에 사는데
+  픽스처가 한 목표만 덮으면 나머지 3개의 드리프트를 못 잡는다. 5개 목표 × 풀 전체를 박았다.
+- **Postgres 통합 테스트가 트랜잭션 밖에서 `deleteBy…` 를 불러 깨졌다.** 매핑 문제가 아니라 테스트
+  경계 문제였다 — 컨트롤러와 같이 `TransactionTemplate` 으로 감쌌다.
+- **테스트가 레포에 파일을 남겼다**(단계 4 의 `.adflow-files`). 이번엔 골든 픽스처를 테스트 리소스로
+  얹었을 뿐이라 재발하지 않았다.
+
+## 남은 일 — Task 4
+
+단계 5 의 종착점(`POST /tournaments/{id}/settle` + Next cron 을 얇은 트리거로)이 남았다. 지금 상태에서
+멈춰도 **앱은 그대로 동작한다** — Spring 에 엔티티와 엔드포인트가 생겼을 뿐 Next 가 아직 호출하지 않고,
+실유저 토너먼트는 여전히 Supabase 로 돈다. 되돌릴 것이 없는 지점이다.
+
+Task 4 를 할 때 정해야 할 것 둘:
+
+1. **Meta 게재·KPI 조회의 역위임 경로.** 설계 §9 는 Spring 이 Next 내부 엔드포인트에 되부른다고 했다.
+   내부 시크릿 경로(`/internal/*`)가 단계 4 에서 이미 생겼으므로 그 위에 얹으면 된다.
+2. **`tournaments` 데이터 이사 시점.** 지금은 Supabase 와 Spring 에 스키마가 둘 다 있다. 단계 7 ETL
+   전까지 실유저 토너먼트를 어느 쪽이 소유할지 — 둘 다 쓰면 갈라진다.
 
 ## 완료 조건
 

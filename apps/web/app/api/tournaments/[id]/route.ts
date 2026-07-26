@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { withRouteHandler } from "@/lib/route-handler";
-import { getRealTournamentRunner, supabaseTournamentStore, ownerKeyFrom } from "@entities/ab-test/tournament/real";
+import { getRealTournamentRunner, tournamentStore, ownerKeyFrom } from "@entities/ab-test/tournament/real";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -15,7 +15,7 @@ async function ownerGuardedTournament(id: string) {
     return { error: NextResponse.json({ error: "Meta 광고 계정·페이지 연결이 필요해요." }, { status: 409 }) };
   }
   const ownerKey = ownerKeyFrom(session.user?.email, session.accessToken);
-  const t = await supabaseTournamentStore.get(id);
+  const t = await tournamentStore.get(id);
   if (!t || t.delivery?.ownerEmail !== ownerKey) {
     return { error: NextResponse.json({ error: "토너먼트를 찾을 수 없어요." }, { status: 404 }) };
   }

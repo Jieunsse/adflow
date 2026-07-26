@@ -1,17 +1,18 @@
-// 실 유저 토너먼트 조립점 (ADR-038) — server-side only. Supabase store + Meta 어댑터 2종으로
+// 실 유저 토너먼트 조립점 (ADR-038) — server-side only. Spring store + Meta 게재 어댑터로
 // 서버 오케스트레이터를 만든다. cron 폴러·API 라우트가 이 한 곳에서 같은 러너를 얻는다.
+//
+// 단계 5 — 영속과 라운드 판정이 Spring 으로 넘어갔다. 여기 남은 TS 는 게재·크리에이티브 생성뿐이고,
+// 결산은 settleRoundOnBackend 가 Java 엔진을 부른다(설계 §9).
 
 import { createHash } from "node:crypto";
 import { createServerRunner, type ServerRunner } from "./server-runner";
-import { supabaseTournamentStore } from "./supabase-store";
+import { backendTournamentStore } from "./backend-store";
 import { createMetaRoundLauncher } from "./meta-launcher";
-import { createMetaKpiSource } from "./meta-kpi-source";
 
 export function getRealTournamentRunner(): ServerRunner {
   return createServerRunner({
-    store: supabaseTournamentStore,
+    store: backendTournamentStore,
     launcher: createMetaRoundLauncher(),
-    kpiSource: createMetaKpiSource(),
   });
 }
 
@@ -22,4 +23,4 @@ export function ownerKeyFrom(email: string | null | undefined, accessToken: stri
   return createHash("sha256").update(accessToken).digest("hex").slice(0, 24);
 }
 
-export { supabaseTournamentStore };
+export { backendTournamentStore as tournamentStore, settleRoundOnBackend } from "./backend-store";

@@ -1,7 +1,8 @@
 // ADR-038 결정 6 — 데모/실제 공존의 이음매. 순수 엔진(engine.ts)은 양쪽 공유, 갈라지는 건 어댑터 3개뿐.
-// 데모 = localStorage store + 시뮬 게재 + 시드 KPI / 실제 = Supabase store + Meta ad study + Meta insights.
-// 전부 async — 실 토너먼트는 며칠에 걸쳐 서버 폴러가 브라우저 없이 진행하므로 Supabase 가 진실의 원천.
-// 섬1: 인터페이스 + SupabaseTournamentStore 구현. RoundLauncher·KpiSource 의 Meta 구현·UI 배선은 섬2.
+// 데모 = localStorage store + 시뮬 게재 + 시드 KPI / 실제 = Spring store + Meta ad study + Meta insights.
+// 전부 async — 실 토너먼트는 며칠에 걸쳐 서버 폴러가 브라우저 없이 진행하므로 Spring 이 진실의 원천이다
+// (단계 5 에서 Supabase 에서 넘어왔다, backend-store.ts).
+// KpiSource 는 이제 역위임 라우트가 쓴다 — 결산 자체는 Java 가 한다.
 
 import type { AdKpi } from "@entities/insights/ab-verdict";
 import type { Tournament, TourRound, RoundVerdict } from "./engine";

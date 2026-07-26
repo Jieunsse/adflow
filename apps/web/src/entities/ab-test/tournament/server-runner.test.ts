@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { createServerRunner } from "./server-runner";
-import type { TournamentStore, RoundLauncher, KpiSource } from "./adapters";
+import type { TournamentStore, RoundLauncher } from "./adapters";
 import type { Tournament, TournamentDelivery, TourVariant } from "./engine";
-import { MIN_ROUND_DAYS } from "./engine";
+import { resolveHypothesis } from "./hypothesis";
 
 vi.mock("@/lib/gemini-creative", () => ({
   geminiCreative: {
@@ -52,7 +52,6 @@ function baseSetup(over = {}) {
 describe("createServerRunner", () => {
   let store: ReturnType<typeof memStore>;
   let launcher: RoundLauncher;
-  let kpiSource: KpiSource;
   let nowMs: number;
 
   beforeEach(() => {
@@ -60,11 +59,10 @@ describe("createServerRunner", () => {
     store = memStore();
     nowMs = Date.parse("2026-05-31T00:00:00Z");
     launcher = { launch: vi.fn().mockResolvedValue({ campaignId: "camp_1", adIds: ["ad_A", "ad_B"] }) };
-    kpiSource = { roundKpis: vi.fn() };
   });
 
   function runner() {
-    return createServerRunner({ store, launcher, kpiSource, now: () => nowMs });
+    return createServerRunner({ store, launcher, now: () => nowMs });
   }
 
   it("existing 챔피언은 즉시 확정되어 저장된다 (Gemini 미호출)", async () => {
@@ -96,83 +94,6 @@ describe("createServerRunner", () => {
     expect(launcher.launch).toHaveBeenCalledOnce();
   });
 
-  it("MIN_ROUND_DAYS 미달이면 insufficient (결산 보류)", async () => {
-    const r = runner();
-    const id = await r.createTournament(baseSetup());
-    await r.proposeChallenger(id);
-    await r.launchRound(id);
-    // 3일만 경과 (MIN_ROUND_DAYS=4 미달)
-    nowMs += 3 * 86400000;
-    vi.mocked(kpiSource.roundKpis).mockResolvedValue([
-      { ctr: 1.5, impressions: 10000, clicks: 150, spend: 100000 },
-      { ctr: 2.5, impressions: 10000, clicks: 250, spend: 100000 },
-    ]);
-    const res = await r.pollAndSettle(id);
-    expect(res.status).toBe("insufficient");
-  });
-
-  it("기간 충족 + 챌린저 유의 우위면 B 승격하고 챔피언 교체", async () => {
-    const r = runner();
-    const id = await r.createTournament(baseSetup());
-    await r.proposeChallenger(id);
-    const round = await r.launchRound(id);
-    nowMs += (MIN_ROUND_DAYS + 1) * 86400000;
-    // 챌린저(B) CTR·CPLC 우위 + 큰 노출 → z-검정 유의
-    vi.mocked(kpiSource.roundKpis).mockResolvedValue([
-      { ctr: 1.0, impressions: 50000, clicks: 500, spend: 200000 },
-      { ctr: 2.0, impressions: 50000, clicks: 1000, spend: 200000 },
-    ]);
-    const res = await r.pollAndSettle(id);
-    expect(res.status).toBe("settled");
-    if (res.status === "settled") {
-      expect(res.winnerIsB).toBe(true);
-      expect(res.badge).toBe("winner");
-    }
-    const t = await store.get(id);
-    expect(t?.champion).toEqual(round?.challenger);
-  });
-
-  it("roundVerdict(Meta verdict) 가 B winner 면 z-검정 무관하게 settle + 챔피언 교체", async () => {
-    kpiSource = {
-      roundKpis: vi.fn().mockResolvedValue([
-        { ctr: 1.5, impressions: 100, clicks: 2, spend: 1000 }, // 노출 적어 z-검정이면 insufficient/무의미
-        { ctr: 2.5, impressions: 100, clicks: 3, spend: 1000 },
-      ]),
-      roundVerdict: vi.fn().mockResolvedValue({
-        verdict: { state: "winner", ctrA: 1.5, ctrB: 2.5, confidence: 0.95 },
-        winner: "B",
-      }),
-    };
-    const r = runner();
-    const id = await r.createTournament(baseSetup());
-    await r.proposeChallenger(id);
-    const round = await r.launchRound(id);
-    nowMs += 1 * 86400000; // 1일 — z-검정이면 MIN_ROUND_DAYS 미달이지만 Meta verdict 우선
-    const res = await r.pollAndSettle(id);
-
-    expect(res.status).toBe("settled");
-    if (res.status === "settled") expect(res.winnerIsB).toBe(true);
-    const t = await store.get(id);
-    expect(t?.champion).toEqual(round?.challenger);
-  });
-
-  it("roundVerdict 가 null(스터디 진행 중)이면 insufficient", async () => {
-    kpiSource = {
-      roundKpis: vi.fn().mockResolvedValue([
-        { ctr: 1.5, impressions: 50000, clicks: 500, spend: 200000 },
-        { ctr: 2.0, impressions: 50000, clicks: 1000, spend: 200000 },
-      ]),
-      roundVerdict: vi.fn().mockResolvedValue(null),
-    };
-    const r = runner();
-    const id = await r.createTournament(baseSetup());
-    await r.proposeChallenger(id);
-    await r.launchRound(id);
-    nowMs += (MIN_ROUND_DAYS + 5) * 86400000; // 기간은 충분하지만 Meta 미확정
-    const res = await r.pollAndSettle(id);
-    expect(res.status).toBe("insufficient");
-  });
-
   it("autoAdvance 는 챔피언 미확정(championConfirmed=false) 게이트면 게재하지 않는다", async () => {
     const r = runner();
     const id = await r.createTournament(baseSetup());
@@ -196,7 +117,8 @@ describe("createServerRunner", () => {
 
   /* ─── ADR-044/047 가설 생명주기 + Ledger 투영 ─────────────── */
 
-  it("proposeChallenger 가 가설을 세우고(proposed), launch 가 라운드로(testing), settle 이 verdict 로 확정한다", async () => {
+  // resolved 로 넘기는 것은 Spring 결산이다 — 여기는 게재까지가 TS 소관이다.
+  it("proposeChallenger 가 가설을 세우고(proposed), launch 가 라운드로 옮긴다(testing)", async () => {
     const r = runner();
     const id = await r.createTournament(baseSetup());
 
@@ -207,16 +129,6 @@ describe("createServerRunner", () => {
     const live = await store.get(id);
     expect(live?.pendingHypothesis).toBeUndefined();
     expect(live?.rounds[0].hypothesis?.status).toBe("testing");
-
-    nowMs += (MIN_ROUND_DAYS + 1) * 86400000;
-    vi.mocked(kpiSource.roundKpis).mockResolvedValue([
-      { ctr: 1.0, impressions: 50000, clicks: 500, spend: 200000 },
-      { ctr: 2.0, impressions: 50000, clicks: 1000, spend: 200000 },
-    ]);
-    await r.pollAndSettle(id);
-    const settled = await store.get(id);
-    expect(settled?.rounds[0].hypothesis?.status).toBe("resolved");
-    expect(settled?.rounds[0].hypothesis?.verdict).toBe("confirmed"); // B 유의 승 = 입증
   });
 
   it("resume 은 lastError 를 지우고 저장한다 (ADR-053 복구)", async () => {
@@ -231,18 +143,26 @@ describe("createServerRunner", () => {
   });
 
   it("이전 토너먼트에서 반증된 레버는 다음 토너먼트의 가설 생성에서 회피된다 (Ledger 투영이 결정에 반영)", async () => {
-    // 토너먼트 1 — 챔피언(A) 유의 승 → 라운드 가설 반증(refuted)
+    // 토너먼트 1 — 챔피언(A) 유의 승 → 라운드 가설 반증(refuted).
+    // 결산은 Spring 이 하므로 그 결과를 store 에 직접 심는다(같은 순수 함수로 만든다).
     const r = runner();
     const id1 = await r.createTournament(baseSetup());
     await r.proposeChallenger(id1);
     const refutedLever = (await store.get(id1))?.pendingHypothesis?.lever;
     await r.launchRound(id1);
-    nowMs += (MIN_ROUND_DAYS + 1) * 86400000;
-    vi.mocked(kpiSource.roundKpis).mockResolvedValue([
-      { ctr: 2.0, impressions: 50000, clicks: 1000, spend: 200000 }, // A(챔피언) 유의 우위
-      { ctr: 1.0, impressions: 50000, clicks: 500, spend: 200000 },
-    ]);
-    await r.pollAndSettle(id1);
+
+    const t1 = (await store.get(id1))!;
+    const verdict = { state: "winner" as const, ctrA: 2.0, ctrB: 1.0, confidence: 0.97 };
+    t1.rounds[0].status = "settled";
+    t1.rounds[0].verdict = verdict;
+    t1.rounds[0].rawWinner = "A";
+    t1.rounds[0].hypothesis = resolveHypothesis(
+      t1.rounds[0].hypothesis!,
+      verdict,
+      "A",
+      new Date(nowMs).toISOString(),
+    );
+    await store.upsert(t1);
     expect((await store.get(id1))?.rounds[0].hypothesis?.verdict).toBe("refuted");
 
     // 토너먼트 2 — 같은 브랜드·제품·목표·소유자. 투영된 Ledger 가 반증 레버를 가지치기해야 한다.

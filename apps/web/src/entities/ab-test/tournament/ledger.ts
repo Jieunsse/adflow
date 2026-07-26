@@ -1,7 +1,7 @@
 "use client";
 
 // PRD 가설 기반 A/B (ADR-044) — Hypothesis Ledger. Brand Profile 단위로 resolved 가설을 영구 누적하는
-// 브랜드 지식 자산. 데모=localStorage(브랜드별 키) / 실=Supabase 테이블(후속, ADR-038 어댑터 연장).
+// 브랜드 지식 자산. 데모=localStorage(브랜드별 키) / 실은 토너먼트에서 평탄화한다(ADR-047, deriveLedger).
 // 토너먼트 수명을 넘어 유지된다 — 토너먼트 store(tournament.ts)와 별도 키로 분리.
 
 import { filterByContext, type LedgerContext } from "./hypothesis";

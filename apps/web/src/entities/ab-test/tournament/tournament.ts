@@ -3,7 +3,7 @@
 // A/B Tournament Browse Mode 시연 store (localStorage). 흐름2 — 챔피언-챌린저 체인.
 // ADR-038 — 순수 엔진(타입·결정 함수)은 server-safe ./engine 으로 분리. 이 파일은 데모 전용 localStorage
 // store + 엔진 re-export(배럴) 만 둔다. 기존 import 경로(@entities/ab-test/tournament/tournament)는 불변.
-// 실 유저 영속화는 Supabase(supabase-store.ts, TournamentStore 어댑터) — 데모는 종전대로 localStorage.
+// 실 유저 영속화는 Spring(backend-store.ts, TournamentStore 어댑터) — 데모는 종전대로 localStorage.
 
 export * from "./engine";
 import type { Tournament } from "./engine";

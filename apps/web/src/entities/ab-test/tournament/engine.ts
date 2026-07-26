@@ -37,7 +37,7 @@ export type Hypothesis = {
   resolvedAt?: string;
 };
 
-// Brand Profile 단위 누적 — resolved 가설이 영구 적재되는 브랜드 지식 자산. 데모=localStorage / 실=Supabase(후속).
+// Brand Profile 단위 누적 — resolved 가설이 영구 적재되는 브랜드 지식 자산. 데모=localStorage / 실=Spring.
 export type HypothesisLedger = {
   brandProfileId: string;
   entries: Hypothesis[]; // resolved 만 적재
@@ -72,7 +72,8 @@ export type TourRound = {
   hypothesis?: Hypothesis; // ADR-044 — 이 라운드가 검증하는 가설. 동인은 hypothesis.lever, axis 는 표시 파생 유지
 };
 
-// ADR-054 — 완전 무인화: manual-n 폐기, auto 단일. mode 필드는 Supabase 컬럼(NOT NULL)이라 유지하되 값은 항상 auto.
+// ADR-054 — 완전 무인화: manual-n 폐기, auto 단일. 와이어 형태 동결이라 필드는 유지하되 값은 항상 auto
+// (레거시 행 흡수는 Spring 의 Tournament.getMode 가 한다).
 export type TourMode = "auto";
 // ADR-061 — autoRefill(opt-in·기본 OFF): 봉투 소진 시 hardCap 까지 addBudget 자동 충전. stopOnDefendStreak: 챔피언 N회 연속 방어 시 수렴 정지(미지정=DEFAULT_DEFEND_STREAK).
 export type TourEnvelope = {
@@ -84,7 +85,8 @@ export type TourEnvelope = {
 
 // 실 게재 자격증명 + 게재 스펙 (ADR-038 결정 3). 데모는 undefined — cron 폴러가 세션 없이 라운드를
 // 게재·폴링하려면 유저 long-lived 토큰·계정·페이지와 타겟/링크/CTA 를 토너먼트에 박아둬야 한다.
-// Supabase 가 진실의 원천이라 이 봉투째 jsonb 로 저장된다(서버 service-role 뒤).
+// 서버 폴러가 세션 없이 게재·폴링해야 해서 이 봉투째 저장된다. 단계 5 부터 Spring 이 컬럼으로 펼쳐
+// 보관하고 accessToken 은 암호화 컬럼이다.
 export type TournamentDelivery = {
   accessToken: string;
   adAccountId: string; // act_ 프리픽스 포함 형태

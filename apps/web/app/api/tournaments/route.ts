@@ -6,7 +6,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { withRouteHandler, ValidationError } from "@/lib/route-handler";
-import { getRealTournamentRunner, supabaseTournamentStore, ownerKeyFrom } from "@entities/ab-test/tournament/real";
+import { getRealTournamentRunner, tournamentStore, ownerKeyFrom } from "@entities/ab-test/tournament/real";
 import { MIN_ROUND_DAYS, type TournamentDelivery, type TourEnvelope } from "@entities/ab-test/tournament/engine";
 import type { ServerTournamentSetup } from "@entities/ab-test/tournament/server-runner";
 
@@ -41,7 +41,7 @@ export async function GET() {
   const s = await requireRealSession();
   if (s instanceof NextResponse) return s;
   return withRouteHandler(true, "", async () =>
-    NextResponse.json({ tournaments: await supabaseTournamentStore.listByOwner(s.ownerKey) }),
+    NextResponse.json({ tournaments: await tournamentStore.listByOwner(s.ownerKey) }),
   );
 }
 

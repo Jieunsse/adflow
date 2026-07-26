@@ -1,28 +1,27 @@
 // 서버 오케스트레이터 (ADR-038 결정 3·6) — server-side only. 데모용 runner.ts("use client", 동기
-// localStorage, fetch /api)와 대칭인 실 유저 경로. 어댑터 3개(store·launcher·kpiSource)를 주입받아
-// 라운드를 진행하며, cron 폴러(브라우저 없이 동작)와 API 라우트가 공유한다. 엔진(engine.ts) 판정·승격은
-// 데모와 동일 함수를 그대로 쓴다 — 갈라지는 건 부작용(저장·게재·KPI)뿐.
+// localStorage, fetch /api)와 대칭인 실 유저 경로. 어댑터 2개(store·launcher)를 주입받아 라운드를
+// 진행하며, cron 폴러(브라우저 없이 동작)와 API 라우트가 공유한다.
+//
+// 단계 5 — **결산은 여기 없다.** 라운드 판정은 Java 가 소유하고(Spring /internal/tournaments/{id}/settle)
+// cron 이 직접 부른다. 판정을 두 곳에 두면 골든 픽스처가 못 잡는 자리에서 갈라진다. 남은 것은
+// 생성·가설·게재처럼 아직 TS 에 있는 부작용뿐이다.
 
 import { geminiCreative } from "@/lib/gemini-creative";
 import type { ObjectiveId } from "@entities/creative/options";
-import type { TournamentStore, RoundLauncher, KpiSource } from "./adapters";
+import type { TournamentStore, RoundLauncher } from "./adapters";
 import {
   deriveAxis,
   initialChampion,
-  judgeRoundKpis,
   isEnvelopeExhausted,
-  hasConverged,
   canAutoRefill,
   endCompletionReason,
   newTournamentId,
   roundCampaignId,
-  MIN_ROUND_DAYS,
   type Tournament,
   type TourVariant,
   type TourRound,
   type TournamentDelivery,
   type TourEnvelope,
-  type SettleResult,
 } from "./engine";
 import {
   deriveLedger,
@@ -30,7 +29,6 @@ import {
   summarizeLedger,
   buildHypothesis,
   buildLeverChallenger,
-  resolveHypothesis,
 } from "./hypothesis";
 
 type CreativeGen = { headlines: string[]; primaryTexts: string[] };
@@ -47,14 +45,6 @@ async function genCreative(t: Tournament): Promise<CreativeGen> {
     prohibitedWords: t.prohibitedWords, // ADR-054 — 금칙어 구조 차단(생성 단계에서 배제)
   });
   return { headlines: res.headlines, primaryTexts: res.primaryTexts };
-}
-
-// 실 게재 라운드의 경과일 — launchedAt 부터 now 까지(KST 무관, UTC 차분). 미게재면 0.
-function elapsedDays(round: TourRound, nowMs: number): number {
-  if (!round.launchedAt) return 0;
-  const start = Date.parse(round.launchedAt);
-  if (Number.isNaN(start)) return 0;
-  return Math.max(0, Math.floor((nowMs - start) / 86400000));
 }
 
 export type ServerTournamentSetup = {
@@ -76,24 +66,12 @@ export type ServerTournamentSetup = {
   delivery: TournamentDelivery; // 실 게재 봉투 — cron 이 세션 없이 게재·폴링하는 데 필수
 };
 
-export type ServerSettleResult =
-  | { status: "no-active" }
-  | { status: "insufficient" }
-  | {
-      status: "settled";
-      round: TourRound;
-      winnerIsB: boolean;
-      badge: "winner" | "inconclusive";
-      completed: boolean;
-    };
-
 export function createServerRunner(deps: {
   store: TournamentStore;
   launcher: RoundLauncher;
-  kpiSource: KpiSource;
   now?: () => number; // 테스트 주입용 — 미지정 시 Date.now
 }) {
-  const { store, launcher, kpiSource } = deps;
+  const { store, launcher } = deps;
   const now = deps.now ?? (() => Date.now());
 
   // 셋업 → 출발 챔피언 확보. existing = 즉시 확정, ai = Gemini 생성 후 검토 대기(championConfirmed=false).
@@ -221,62 +199,8 @@ export function createServerRunner(deps: {
     await store.upsert(t);
   }
 
-  // cron 핵심 — 활성 라운드를 Meta KPI 로 결산. MIN_ROUND_DAYS 미달이면 insufficient(미종료, 다음 폴에 재시도).
-  // settle 시 챔피언 승격 + 봉투 정지 체크. ADR-054 — 봉투 소진은 winner-handling 브레이크로 surface(자동 완료 X).
-  async function pollAndSettle(id: string): Promise<ServerSettleResult> {
-    const t = await store.get(id);
-    if (!t) return { status: "no-active" };
-    const r = t.rounds.find((x) => x.status === "running");
-    if (!r) return { status: "no-active" };
-
-    const kpis = await kpiSource.roundKpis(t, r);
-    // ADR §4 정석 — ad study 의 Meta verdict 우선. 미확정(진행 중)이면 결산 보류, 다음 폴 재시도.
-    // roundVerdict 미구현 어댑터(데모/폴백)는 엔진 z-검정으로 판정.
-    let result: SettleResult;
-    if (kpiSource.roundVerdict) {
-      const mv = await kpiSource.roundVerdict(t, r, kpis);
-      if (!mv) return { status: "insufficient" };
-      result = { kpis, verdict: mv.verdict, rawWinner: mv.verdict.state === "winner" ? mv.winner : "A" };
-    } else {
-      result = judgeRoundKpis(kpis, elapsedDays(r, now()), t.objective);
-      if (result.verdict.state === "insufficient") return { status: "insufficient" };
-    }
-
-    r.verdict = result.verdict;
-    r.rawWinner = result.rawWinner;
-    r.adKpis = result.kpis;
-    r.status = "settled";
-    // ADR-044/047 — 가설 verdict 확정. resolved 가설은 토너먼트 jsonb 에 박혀 그대로 Ledger 투영 대상이 된다.
-    if (r.hypothesis) {
-      r.hypothesis = resolveHypothesis(r.hypothesis, result.verdict, result.rawWinner, new Date(now()).toISOString());
-    }
-
-    const winnerIsB = result.rawWinner === "B";
-    t.champion = winnerIsB ? r.challenger : r.champion;
-    t.championCtr = winnerIsB ? result.verdict.ctrB : result.verdict.ctrA;
-    t.axisCursor += 1;
-    t.spentBudget += t.dailyBudget * MIN_ROUND_DAYS; // 실 게재 라운드당 최소 기간만큼 봉투 차감(보수적)
-
-    // ADR-061 — 챔피언 N회 연속 방어 = 수렴. 결산 직후 자동 완료(deriveBeat 무변경).
-    if (hasConverged(t)) {
-      t.status = "completed";
-      t.completionReason = "converged";
-    }
-
-    const exhausted = t.status === "completed" || isEnvelopeExhausted(t); // ADR-054 — auto 는 자동 완료 X, winner-handling 으로 사람 대기
-    await store.upsert(t);
-
-    return {
-      status: "settled",
-      round: r,
-      winnerIsB,
-      badge: result.verdict.state === "winner" ? "winner" : "inconclusive",
-      completed: exhausted,
-    };
-  }
-
   // auto 무인 체인 (ADR-054) — 봉투 미소진이면 다음 챌린저 자동 생성·게재. 금칙어 구조 차단·정체 자동 돌파라 정지 없음.
-  // cron 이 pollAndSettle → autoAdvance 순으로 호출. 챌린저 생성 실패는 일시적(swallow·재시도),
+  // cron 이 Spring 결산 → autoAdvance 순으로 호출. 챌린저 생성 실패는 일시적(swallow·재시도),
   // 게재 실패는 split test 규칙 거절이라 사전 탐지 불가 → lastError 에 한국어로 박고 자동 진행 중단(ADR-053).
   async function autoAdvance(id: string): Promise<void> {
     const t = await store.get(id);
@@ -335,7 +259,6 @@ export function createServerRunner(deps: {
     setManualChallenger,
     launchRound,
     endTournament,
-    pollAndSettle,
     autoAdvance,
     refillEnvelope,
     resume,

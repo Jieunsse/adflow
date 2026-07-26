@@ -2,7 +2,7 @@
 
 // ADR-038 — 데모/실 토너먼트 통합 클라이언트. UI(목록·상세·셋업)의 browseMode 분기를 한 곳으로 모은다.
 // demo = 동기 localStorage runner 를 Promise 로 감싼 그대로(변경 이벤트는 runner 내부 upsert 가 발화),
-// real = /api/tournaments/* fetch(서버 오케스트레이터 → Supabase + Meta). 둘 다 mutation 후 최신
+// real = /api/tournaments/* fetch(서버 오케스트레이터 → Spring + Meta). 둘 다 mutation 후 최신
 // Tournament 를 돌려줘 UI 가 setT 한다 — real 은 localStorage 변경 이벤트가 없으므로 반환값이 유일 소스.
 
 import {

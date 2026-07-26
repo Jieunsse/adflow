@@ -5,7 +5,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { supabaseTournamentStore, ownerKeyFrom } from "@entities/ab-test/tournament/real";
+import { tournamentStore, ownerKeyFrom } from "@entities/ab-test/tournament/real";
 import { deriveLedger } from "@entities/ab-test/tournament/hypothesis";
 
 export const dynamic = "force-dynamic";
@@ -21,6 +21,6 @@ export async function GET(req: NextRequest) {
   }
 
   const ownerKey = ownerKeyFrom(session.user?.email, session.accessToken);
-  const tournaments = await supabaseTournamentStore.listByBrandOwner(brandProfileId, ownerKey);
+  const tournaments = await tournamentStore.listByBrandOwner(brandProfileId, ownerKey);
   return NextResponse.json({ ledger: deriveLedger(tournaments) });
 }

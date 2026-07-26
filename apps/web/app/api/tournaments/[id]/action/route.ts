@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { withRouteHandler, ValidationError } from "@/lib/route-handler";
-import { getRealTournamentRunner, supabaseTournamentStore, ownerKeyFrom } from "@entities/ab-test/tournament/real";
+import { getRealTournamentRunner, tournamentStore, ownerKeyFrom } from "@entities/ab-test/tournament/real";
 import type { TourVariant } from "@entities/ab-test/tournament/engine";
 
 export const dynamic = "force-dynamic";
@@ -35,7 +35,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: "Meta 광고 계정·페이지 연결이 필요해요." }, { status: 409 });
   }
   const ownerKey = ownerKeyFrom(session.user?.email, session.accessToken);
-  const existing = await supabaseTournamentStore.get(id);
+  const existing = await tournamentStore.get(id);
   if (!existing || existing.delivery?.ownerEmail !== ownerKey) {
     return NextResponse.json({ error: "토너먼트를 찾을 수 없어요." }, { status: 404 });
   }
@@ -69,6 +69,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       default:
         throw new ValidationError("알 수 없는 액션이에요.");
     }
-    return NextResponse.json({ tournament: await supabaseTournamentStore.get(id) });
+    return NextResponse.json({ tournament: await tournamentStore.get(id) });
   });
 }

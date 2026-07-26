@@ -1,8 +1,14 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getSupabaseServer } from "@shared/lib/supabase-server";
+// ADR-023 Reference Material — 단계 4 에서 Supabase 직접 접근을 Spring 으로 갈아끼웠다.
+// 외부 계약은 동결이다: GET 은 맨 배열, POST 는 FormData(file).
+
+import { NextResponse, type NextRequest } from "next/server";
+import { callBackend } from "@shared/lib/backend/call";
+import { toPublicUrl } from "@shared/lib/backend/files";
+
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 const BUCKET = "reference-materials";
-const TABLE = "reference_materials";
 
 const ACCEPTED_MIME: Record<string, "image" | "pdf" | "txt"> = {
   "image/jpeg": "image",
@@ -12,86 +18,88 @@ const ACCEPTED_MIME: Record<string, "image" | "pdf" | "txt"> = {
   "text/plain": "txt",
 };
 
-const MAX_SIZE = 50 * 1024 * 1024; // 50MB (Supabase Storage 기준)
+const MAX_SIZE = 50 * 1024 * 1024; // 50MB
 
-export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+type MaterialRow = {
+  id: string;
+  brandProfileId: string;
+  name: string;
+  type: "image" | "pdf" | "txt";
+  mimeType: string;
+  sizeBytes: number;
+  storageUrl: string;
+  uploadedAt: number;
+};
+
+function expose(row: MaterialRow): MaterialRow {
+  return { ...row, storageUrl: toPublicUrl(row.storageUrl) ?? row.storageUrl };
+}
+
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const sb = getSupabaseServer();
-  if (!sb) return NextResponse.json([], { status: 200 });
+  const call = await callBackend(
+    req,
+    `/stores/reference-materials?brandProfileId=${encodeURIComponent(id)}`,
+  );
+  if (!call.ok) return NextResponse.json({ error: call.message }, { status: call.status });
+  if (!call.res.ok) {
+    return NextResponse.json({ error: "참고 자료를 불러오지 못했어요." }, { status: call.res.status });
+  }
 
-  const { data, error } = await sb
-    .from(TABLE)
-    .select("*")
-    .eq("brand_profile_id", id)
-    .order("uploaded_at", { ascending: false });
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-
-  const materials = (data ?? []).map((row) => ({
-    id: row.id,
-    brandProfileId: row.brand_profile_id,
-    name: row.name,
-    type: row.type,
-    mimeType: row.mime_type,
-    sizeBytes: row.size_bytes,
-    storageUrl: row.storage_url,
-    uploadedAt: row.uploaded_at,
-  }));
-  return NextResponse.json(materials);
+  const { items } = (await call.res.json()) as { items: MaterialRow[] };
+  return NextResponse.json(items.map(expose));
 }
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const sb = getSupabaseServer();
-  if (!sb) return NextResponse.json({ error: "Supabase not configured" }, { status: 500 });
 
-  const formData = await req.formData();
-  const file = formData.get("file");
+  const form = await req.formData();
+  const file = form.get("file");
   if (!(file instanceof File)) return NextResponse.json({ error: "file required" }, { status: 400 });
 
+  // 신뢰 경계의 입력 검증이다. 이관한다고 줄이지 않는다.
   const type = ACCEPTED_MIME[file.type];
   if (!type) return NextResponse.json({ error: "지원하지 않는 파일 형식이에요" }, { status: 400 });
-  if (file.size > MAX_SIZE) return NextResponse.json({ error: "파일이 너무 커요 (50MB 이하)" }, { status: 400 });
-
-  const materialId = `ref_${crypto.randomUUID()}`;
-  const ext = file.name.split(".").pop() ?? "";
-  const storagePath = `${id}/${materialId}${ext ? `.${ext}` : ""}`;
-
-  const arrayBuffer = await file.arrayBuffer();
-  const { error: uploadError } = await sb.storage
-    .from(BUCKET)
-    .upload(storagePath, arrayBuffer, { contentType: file.type, upsert: false });
-
-  if (uploadError) return NextResponse.json({ error: uploadError.message }, { status: 500 });
-
-  const { data: urlData } = sb.storage.from(BUCKET).getPublicUrl(storagePath);
-  const storageUrl = urlData.publicUrl;
-
-  const row = {
-    id: materialId,
-    brand_profile_id: id,
-    name: file.name,
-    type,
-    mime_type: file.type,
-    size_bytes: file.size,
-    storage_url: storageUrl,
-    uploaded_at: Date.now(),
-  };
-
-  const { error: insertError } = await sb.from(TABLE).insert(row);
-  if (insertError) {
-    await sb.storage.from(BUCKET).remove([storagePath]);
-    return NextResponse.json({ error: insertError.message }, { status: 500 });
+  if (file.size > MAX_SIZE) {
+    return NextResponse.json({ error: "파일이 너무 커요 (50MB 이하)" }, { status: 400 });
   }
 
-  return NextResponse.json({
-    id: row.id,
-    brandProfileId: row.brand_profile_id,
-    name: row.name,
-    type: row.type,
-    mimeType: row.mime_type,
-    sizeBytes: row.size_bytes,
-    storageUrl: row.storage_url,
-    uploadedAt: row.uploaded_at,
+  const materialId = `ref_${crypto.randomUUID()}`;
+  const ext = (file.name.split(".").pop() ?? "").toLowerCase().replace(/[^a-z0-9]/g, "");
+
+  const upload = await callBackend(
+    req,
+    `/files/${BUCKET}/${id}/${materialId}${ext ? `.${ext}` : ""}`,
+    { method: "PUT", body: await file.arrayBuffer(), contentType: file.type },
+  );
+  if (!upload.ok) return NextResponse.json({ error: upload.message }, { status: upload.status });
+  if (!upload.res.ok) {
+    return NextResponse.json({ error: "파일을 올리지 못했어요." }, { status: upload.res.status });
+  }
+  const { path } = (await upload.res.json()) as { path: string };
+
+  const row: MaterialRow = {
+    id: materialId,
+    brandProfileId: id,
+    name: file.name,
+    type,
+    mimeType: file.type,
+    sizeBytes: file.size,
+    storageUrl: path,
+    uploadedAt: Date.now(),
+  };
+
+  const save = await callBackend(req, "/stores/reference-materials", {
+    method: "POST",
+    body: JSON.stringify({ item: row }),
+    contentType: "application/json",
   });
+  if (!save.ok) return NextResponse.json({ error: save.message }, { status: save.status });
+  if (!save.res.ok) {
+    // 행이 없으면 이 파일에 닿을 길이 없다 — 고아를 만들지 않는다.
+    await callBackend(req, `/files/${path}`, { method: "DELETE" });
+    return NextResponse.json({ error: "참고 자료를 저장하지 못했어요." }, { status: save.res.status });
+  }
+
+  return NextResponse.json(expose(row));
 }

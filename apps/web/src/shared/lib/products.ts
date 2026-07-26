@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
+import { isRealOwner } from "@shared/lib/store/ownerKey";
 
 export interface ProductEntry {
   id: string;
@@ -13,8 +14,6 @@ export interface ProductEntry {
   targetUrl?: string;
   createdAt: number;
 }
-
-const useSupabase = typeof window !== "undefined" && !!process.env.NEXT_PUBLIC_SUPABASE_URL;
 
 function localKey(brandProfileId: string) {
   return `adflow:products:${brandProfileId}`;
@@ -36,8 +35,9 @@ function writeLocal(brandProfileId: string, items: ProductEntry[]): void {
 
 export function useProducts(brandProfileId: string) {
   const { data: session } = useSession();
-  const browseMode = !!session?.browseMode;
-  const local = !useSupabase || browseMode;
+  // 단계 4 — NEXT_PUBLIC_SUPABASE_URL 플래그를 걷어냈다. 실유저만 서버를 쓴다(설계 §7).
+  // 게스트 sentinel 도 미로그인(null)도 여기서 걸러져 둘러보기가 백엔드에 닿지 않는다.
+  const local = !isRealOwner(session?.user?.email);
   const [products, setProducts] = useState<ProductEntry[]>([]);
   const [loading, setLoading] = useState(false);
 

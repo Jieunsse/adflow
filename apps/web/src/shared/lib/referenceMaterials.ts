@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
+import { isRealOwner } from "@shared/lib/store/ownerKey";
 
 export interface ReferenceMaterial {
   id: string;
@@ -9,7 +11,7 @@ export interface ReferenceMaterial {
   type: "image" | "pdf" | "txt";
   mimeType: string;
   sizeBytes: number;
-  /** Supabase public URL (Supabase 모드) 또는 base64 data URL (localStorage 폴백) */
+  /** 서버 모드는 /api/files/… URL, localStorage 폴백은 base64 data URL */
   storageUrl: string;
   uploadedAt: number;
 }
@@ -55,15 +57,17 @@ function inferType(mimeType: string): ReferenceMaterial["type"] | null {
   return ACCEPTED_TYPES[mimeType] ?? null;
 }
 
-const useSupabase = typeof window !== "undefined" && !!process.env.NEXT_PUBLIC_SUPABASE_URL;
-
 export function useReferenceMaterials(brandProfileId: string) {
+  const { data: session } = useSession();
+  // 단계 4 — 예전엔 NEXT_PUBLIC_SUPABASE_URL 만 봐서 게스트도 서버 라우트를 때렸다.
+  // isRealOwner 로 바꾸면서 둘러보기가 백엔드에 닿지 않는 게이트가 함께 생긴다(설계 §7).
+  const local = !isRealOwner(session?.user?.email);
   const [materials, setMaterials] = useState<ReferenceMaterial[]>([]);
   const [loading, setLoading] = useState(false);
 
   const refresh = useCallback(async () => {
     if (!brandProfileId) return;
-    if (!useSupabase) {
+    if (local) {
       setMaterials(readLocal(brandProfileId));
       return;
     }
@@ -77,7 +81,7 @@ export function useReferenceMaterials(brandProfileId: string) {
     } finally {
       setLoading(false);
     }
-  }, [brandProfileId]);
+  }, [brandProfileId, local]);
 
   useEffect(() => { refresh(); }, [refresh]);
 
@@ -85,7 +89,7 @@ export function useReferenceMaterials(brandProfileId: string) {
     const type = inferType(file.type);
     if (!type) throw new Error("지원하지 않는 파일 형식이에요 (이미지·PDF·TXT만 가능해요)");
 
-    if (!useSupabase) {
+    if (local) {
       if (file.size > LOCAL_SIZE_LIMIT) throw new Error("로컬 저장 시 파일은 5MB 이하여야 해요");
       const dataUrl = await readFileAsDataUrl(file);
       const item: ReferenceMaterial = {
@@ -132,10 +136,10 @@ export function useReferenceMaterials(brandProfileId: string) {
     const item = (await res.json()) as ReferenceMaterial;
     setMaterials((prev) => [...prev, item]);
     return item;
-  }, [brandProfileId]);
+  }, [brandProfileId, local]);
 
   const remove = useCallback(async (id: string): Promise<void> => {
-    if (!useSupabase) {
+    if (local) {
       const next = readLocal(brandProfileId).filter((m) => m.id !== id);
       writeLocal(brandProfileId, next);
       setMaterials(next);
@@ -148,7 +152,7 @@ export function useReferenceMaterials(brandProfileId: string) {
     const next = readLocal(brandProfileId).filter((m) => m.id !== id);
     writeLocal(brandProfileId, next);
     setMaterials((prev) => prev.filter((m) => m.id !== id));
-  }, [brandProfileId]);
+  }, [brandProfileId, local]);
 
   return { materials, loading, upload, remove, refresh };
 }

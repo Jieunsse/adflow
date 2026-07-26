@@ -1,82 +1,67 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getSupabaseServer } from "@shared/lib/supabase-server";
+// ADR-024 Product 개별 조작 — 단계 4 에서 Spring 으로 재배선.
+// 백엔드가 upsert 라 PUT 과 POST 의 몸통이 같다. 외부 계약(FormData)은 동결이다.
 
-const BUCKET = "product-images";
-const TABLE = "products";
+import { NextResponse, type NextRequest } from "next/server";
+import { callBackend } from "@shared/lib/backend/call";
+import { toPublicUrl, toStoragePath } from "@shared/lib/backend/files";
+import { type ProductRow, deleteProductImage, putProductImage } from "../shared";
+
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string; productId: string }> }
+  { params }: { params: Promise<{ id: string; productId: string }> },
 ) {
   const { id, productId } = await params;
-  const sb = getSupabaseServer();
-  if (!sb) return NextResponse.json({ error: "Supabase not configured" }, { status: 500 });
 
-  const formData = await req.formData();
-  const raw = formData.get("data");
+  const form = await req.formData();
+  const raw = form.get("data");
   if (typeof raw !== "string") return NextResponse.json({ error: "data required" }, { status: 400 });
 
-  const entry = JSON.parse(raw) as {
-    name: string; description: string;
-    price?: string; targetUrl?: string;
-    imageUrl?: string;
-  };
+  const entry = JSON.parse(raw) as Omit<ProductRow, "id" | "brandProfileId">;
+  let imagePath = toStoragePath(entry.imageUrl);
 
-  let imageUrl = entry.imageUrl ?? null;
-  const imageFile = formData.get("image");
-  if (imageFile instanceof File) {
-    const ext = imageFile.name.split(".").pop() ?? "jpg";
-    const path = `${id}/${productId}.${ext}`;
-    const buf = await imageFile.arrayBuffer();
-    const { error: upErr } = await sb.storage.from(BUCKET).upload(path, buf, {
-      contentType: imageFile.type, upsert: true,
-    });
-    if (!upErr) {
-      imageUrl = sb.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
-    }
+  const image = form.get("image");
+  if (image instanceof File) {
+    const uploaded = await putProductImage(req, id, productId, image);
+    if (uploaded.error) return uploaded.error;
+    if (uploaded.path) imagePath = uploaded.path;
   }
 
-  const { data, error } = await sb
-    .from(TABLE)
-    .update({
-      name: entry.name,
-      description: entry.description,
-      image_url: imageUrl,
-      price: entry.price ?? null,
-      target_url: entry.targetUrl ?? null,
-    })
-    .eq("id", productId)
-    .eq("brand_profile_id", id)
-    .select()
-    .single();
+  const row: ProductRow = {
+    ...entry,
+    id: productId,
+    brandProfileId: id,
+    imageUrl: imagePath,
+  };
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-
-  return NextResponse.json({
-    id: data.id,
-    brandProfileId: data.brand_profile_id,
-    name: data.name,
-    description: data.description,
-    imageUrl: data.image_url ?? undefined,
-    price: data.price ?? undefined,
-    targetUrl: data.target_url ?? undefined,
-    createdAt: data.created_at,
+  const save = await callBackend(req, "/stores/products", {
+    method: "POST",
+    body: JSON.stringify({ item: row }),
+    contentType: "application/json",
   });
+  if (!save.ok) return NextResponse.json({ error: save.message }, { status: save.status });
+  if (!save.res.ok) {
+    return NextResponse.json({ error: "제품을 저장하지 못했어요." }, { status: save.res.status });
+  }
+
+  return NextResponse.json({ ...row, imageUrl: toPublicUrl(imagePath) });
 }
 
 export async function DELETE(
-  _req: NextRequest,
-  { params }: { params: Promise<{ id: string; productId: string }> }
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string; productId: string }> },
 ) {
   const { id, productId } = await params;
-  const sb = getSupabaseServer();
-  if (!sb) return NextResponse.json({ error: "Supabase not configured" }, { status: 500 });
 
-  // 이미지 파일 삭제 시도 (실패해도 계속)
-  await sb.storage.from(BUCKET).remove([`${id}/${productId}.jpg`, `${id}/${productId}.png`, `${id}/${productId}.webp`]);
+  // 항목을 지우기 전에 경로를 읽어야 한다 — 지운 뒤엔 어느 파일이었는지 알 길이 없다.
+  await deleteProductImage(req, id, productId);
 
-  const { error } = await sb.from(TABLE).delete().eq("id", productId).eq("brand_profile_id", id);
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  const del = await callBackend(req, `/stores/products?id=${encodeURIComponent(productId)}`, {
+    method: "DELETE",
+  });
+  if (!del.ok) return NextResponse.json({ error: del.message }, { status: del.status });
 
   return NextResponse.json({ ok: true });
 }

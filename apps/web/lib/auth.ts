@@ -2,6 +2,7 @@ import type { AuthOptions } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import FacebookProvider from "next-auth/providers/facebook"
 import { credentialsCache, type MetaCredentials } from "./meta-credentials"
+import { exchangeForBackendToken } from "@shared/lib/backend/exchange"
 
 type Providers = NonNullable<AuthOptions["providers"]>
 
@@ -92,6 +93,31 @@ function buildCommonOptions(meta?: MetaCredentials): AuthOptions {
           )
           // 첫 로그인 시 기본 역할: 팀장 (DB 연동 전 임시)
           if (!token.role) token.role = "팀장"
+        }
+        // 로그인 직후 Spring 백엔드와 1회 교환. 게스트·백엔드 미설정이면 내부에서 건너뛴다.
+        // 실패해도 로그인을 깨지 않는다 — 단계 1 에서 프론트 데이터는 여전히 Supabase.
+        if (account && token.email) {
+          const issued = await exchangeForBackendToken({
+            ownerKey: token.email,
+            email: token.email,
+            role: token.role,
+            metaConnection: {
+              accessToken: token.accessToken,
+              igAccessToken: token.igAccessToken,
+              adAccountId: token.adAccountId,
+              adAccountName: token.adAccountName,
+              pageId: token.pageId,
+              pageName: token.pageName,
+              pixelId: token.pixelId,
+              pixelName: token.pixelName,
+              igUserId: token.igUserId,
+              igUsername: token.igUsername,
+            },
+          })
+          if (issued) {
+            token.backendToken = issued.token
+            token.backendTokenExpiresAt = issued.expiresAt
+          }
         }
         if (trigger === "update" && session) {
           if (session.adAccountId !== undefined) {

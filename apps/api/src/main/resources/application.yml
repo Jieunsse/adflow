@@ -13,6 +13,10 @@ spring:
     properties:
       hibernate:
         format_sql: true
+  jackson:
+    # TS 의 optional(`field?: T`)과 맞추려면 null 필드는 키 자체가 없어야 한다.
+    # 명시적으로 null 을 실어야 하는 필드는 @JsonInclude(ALWAYS) 로 개별 예외 처리한다.
+    default-property-inclusion: non_null
 
 management:
   endpoints:

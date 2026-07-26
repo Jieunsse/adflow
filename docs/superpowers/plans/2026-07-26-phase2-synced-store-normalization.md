@@ -61,6 +61,7 @@
 | `@OneToMany(cascade=ALL, orphanRemoval=true)` + `@JoinColumn` + `@OrderColumn` | 자식 테이블 생성·저장 확인 |
 | `@Version` | 동작 확인(값 0 저장). 이 단계에서는 쓰지 않음 |
 | `AttributeConverter<JsonNode, String>` + `columnDefinition = "text"` | 판별 유니온 배열이 그대로 왕복하고 **Jackson 이 문자열이 아니라 배열로 직렬화** — 와이어 동결 성립 |
+| `@Testcontainers` + `@Container` static 필드 | **IT 클래스가 2개 이상이면 깨진다** — 첫 클래스 종료 시 컨테이너를 멈춰 두 번째가 `Connection refused`. 싱글턴 패턴(`static { postgres.start(); }`, 정지 안 함)으로 해소. 구현 중 실측 |
 | `DelegatingOAuth2TokenValidator` | `org.springframework.security.oauth2.core` (`.jwt` 아님) |
 | `NimbusJwtDecoder.setJwtValidator(...)` 로 `typ` 클레임 강제 | 동작 확인 — access 디코더가 refresh 토큰을 `JwtValidationException` 으로 거부, 그 역도 성립, 만료도 거부 |
 
@@ -715,27 +716,29 @@ package ai.adflow.api;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.test.context.ActiveProfiles;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 
 /**
  * 실제 Postgres 16 위에서 도는 통합 테스트의 공통 바탕.
  *
- * static 컨테이너라 이 클래스를 상속한 모든 IT 가 컨테이너 하나를 공유한다 — 테스트마다
- * 컨테이너를 새로 띄우면 통합 스위트 전체가 분 단위로 늘어난다.
+ * 싱글턴 컨테이너 패턴이다 — @Testcontainers/@Container 를 쓰지 않고 static 초기화로 직접 띄운다.
+ * JUnit 의 @Container 생명주기는 테스트 클래스가 끝날 때 컨테이너를 멈추는데 static 필드는 JVM
+ * 전체에서 공유되므로, 두 번째 IT 클래스가 이미 멈춘 컨테이너의 포트에 붙어 Connection refused 로
+ * 죽는다. 여기서는 멈추지 않고 JVM 종료 시 Ryuk 이 정리하게 둔다.
  *
  * Testcontainers 2.x 주의 — PostgreSQLContainer 는 org.testcontainers.postgresql 에 있고
  * 더 이상 제네릭이 아니다. `new PostgreSQLContainer<>(...)` 는 컴파일되지 않는다.
  */
 @SpringBootTest
-@Testcontainers
 @ActiveProfiles("integration")
 public abstract class IntegrationTestBase {
 
-  @Container
   @ServiceConnection
-  static PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:16-alpine");
+  static final PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:16-alpine");
+
+  static {
+    postgres.start();
+  }
 }
 ```
 

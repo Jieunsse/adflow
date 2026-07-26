@@ -25,12 +25,19 @@
 끝났을 때 아래가 참이어야 한다. 이게 "브라우저 직접 write 소멸"의 정의다.
 
 ```bash
-# 둘 다 0 이어야 한다
-grep -rn "syncUpsert\|syncDelete" apps/web/src apps/web/app apps/web/lib | wc -l
-grep -rn "NEXT_PUBLIC_SUPABASE" apps/web/src apps/web/app apps/web/lib | wc -l
+# 셋 다 0 이어야 한다 — 실제 결합만 센다(주석의 역사 기록은 남겨둔다)
+grep -rn 'from ".*supabase-sync"' apps/web/src apps/web/app apps/web/lib | wc -l
+grep -rn 'getSupabase(' apps/web/src apps/web/app apps/web/lib | wc -l
+ls apps/web/src/shared/lib/supabase-sync.ts apps/web/src/shared/lib/supabase.ts 2>/dev/null | wc -l
 ```
 
 `apps/web/src/shared/lib/supabase-sync.ts` 와 `apps/web/src/shared/lib/supabase.ts` 는 **삭제**된다.
+
+> **정정 (구현 중 실측)** — 계획 초안은 `NEXT_PUBLIC_SUPABASE` 참조도 0 이 돼야 한다고 적었는데 **틀렸다.**
+> 그 값은 아직 세 곳에서 쓰인다: `supabase-server.ts`(서버 클라이언트 URL·폴백 키),
+> `products.ts`·`referenceMaterials.ts`(**"서버 라우트를 쓸까 localStorage 를 쓸까" 를 가르는 플래그**).
+> 지웠다면 제품·참고자료가 조용히 localStorage 전용으로 퇴화했을 것이다. 이 셋은 단계 4 대상이다.
+> 단계 3 이 없애는 것은 **브라우저가 Supabase 클라이언트를 만드는 경로**뿐이다.
 
 ## 실측으로 확인된 사실
 
@@ -47,6 +54,10 @@ grep -rn "NEXT_PUBLIC_SUPABASE" apps/web/src apps/web/app apps/web/lib | wc -l
 | `adflow:sop-index` + `adflow:sop:{id}` | 인덱스 키가 있다. 흡수가 쉽다 |
 | `brandProfileStore.removeProfile` | **`adflow:personas` localStorage 를 직접 조작한다**(프로필 삭제 시 딸린 페르소나 제거). personas 가 store 로 옮겨가면 여기도 같이 고쳐야 한다 |
 | `@JsonIgnoreProperties("id")` + `@JsonProperty("campaignId")` 접근자 쌍 | **동작함.** 탐침 결과 와이어가 `{"campaignId":"c_1","dailyBudget":5000}` — `id`·`ownerKey` 미노출. `campaignId` 를 PK 로 쓰는 두 엔티티가 `OwnerScoped` 를 그대로 상속할 수 있다 |
+| `@ElementCollection` 의 optional 배열 | **Hibernate 가 로드 시 null 을 빈 컬렉션으로 바꾼다.** 그대로 두면 전역 non_null 을 통과해 `[]` 가 나가고 TS 의 optional(키 부재)과 어긋난다. 게터에서 비었으면 null 로 접어야 한다. 구현 중 실측 |
+| `SyncedItem` 제약 | `Record<string, unknown>` 은 과했다 — **interface 로 선언된 도메인 타입**(`Sop`·`PersonaEntry`)은 암묵적 인덱스 시그니처가 없어 만족하지 못한다. `object` 로 풀었다. 구현 중 실측 |
+| Vitest 에서 `snapshot()` | SSR 가드로 `window` 를 보므로 테스트가 `vi.stubGlobal("window", {})` 를 해야 한다. 안 하면 항상 빈 배열. 구현 중 실측 |
+| `/sop` 라우트 | 게스트로 열면 **307 로 `/brand-profile` 에 리다이렉트**된다(기존 동작). SOP 편집은 그 화면 안에 있다. 구현 중 실측 |
 | 기존 테스트 | `usePersonasStorage.test.ts` 만 이 4개를 덮는다. `sops`·`autoRelaunch`·`launched-storage` 테스트는 **없다** |
 
 ## 설계 문서와 다르게 가는 2가지 (검토 요청)
@@ -854,11 +865,14 @@ public class Persona extends OwnerScoped {
   public void setAgeMin(Integer v) { this.ageMin = v; }
   public Integer getAgeMax() { return ageMax; }
   public void setAgeMax(Integer v) { this.ageMax = v; }
-  public List<Integer> getGenders() { return genders; }
+  // Hibernate 는 로드 시 @ElementCollection 의 null 을 빈 컬렉션으로 바꾼다. 그대로 두면
+  // 전역 non_null 정책을 통과해 [] 가 나가고, TS 의 optional(키 부재)과 어긋난다.
+  // 이 필드들은 "미지정"과 "빈 목록"이 같은 뜻이라 비었으면 null 로 접는다.
+  public List<Integer> getGenders() { return genders == null || genders.isEmpty() ? null : genders; }
   public void setGenders(List<Integer> v) { this.genders = v; }
-  public List<String> getLocation() { return location; }
+  public List<String> getLocation() { return location == null || location.isEmpty() ? null : location; }
   public void setLocation(List<String> v) { this.location = v; }
-  public List<String> getInterests() { return interests; }
+  public List<String> getInterests() { return interests == null || interests.isEmpty() ? null : interests; }
   public void setInterests(List<String> v) { this.interests = v; }
   public String getCustomerDescription() { return customerDescription; }
   public void setCustomerDescription(String v) { this.customerDescription = v; }
@@ -1486,7 +1500,10 @@ public class CampaignLaunch extends OwnerScoped {
   public void setAdSetId(String v) { this.adSetId = v; }
   public String getAdId() { return adId; }
   public void setAdId(String v) { this.adId = v; }
-  public List<String> getAdIds() { return adIds; }
+  // Hibernate 는 로드 시 @ElementCollection 의 null 을 빈 컬렉션으로 바꾼다. 그대로 두면
+  // 전역 non_null 정책을 통과해 [] 가 나가고, TS 의 optional(키 부재)과 어긋난다.
+  // 이 필드들은 "미지정"과 "빈 목록"이 같은 뜻이라 비었으면 null 로 접는다.
+  public List<String> getAdIds() { return adIds == null || adIds.isEmpty() ? null : adIds; }
   public void setAdIds(List<String> v) { this.adIds = v; }
   public Double getDailyBudget() { return dailyBudget; }
   public void setDailyBudget(Double v) { this.dailyBudget = v; }
@@ -1650,7 +1667,7 @@ Next 라우트 4개는 단계 2 의 `createStoreRoute` 로 4줄씩이면 끝난�
 
 ```ts
 // ADR-046 Synced Store API(sops) — 단계 3 에서 레거시 미러를 Tier 1 으로 승격하며 신설.
-// 계약(GET → {items}, POST {item}, DELETE ?id=)은 다른 store 와 동일하다.
+// 계약(GET → {items}, POST {item}, DELETE ?id=)은 그대로라 createSyncedStore 는 바뀌지 않는다.
 
 import { createStoreRoute } from "@shared/lib/backend/stores";
 
@@ -2808,8 +2825,8 @@ npm run build
 
 ## 완료 조건
 
-- [ ] `grep -rn "syncUpsert\|syncDelete" apps/web/src apps/web/app apps/web/lib` → **0건**
-- [ ] `grep -rn "NEXT_PUBLIC_SUPABASE" apps/web/src apps/web/app apps/web/lib` → **0건**
+- [ ] `grep -rn 'from ".*supabase-sync"'` → **0건** · `grep -rn 'getSupabase('` → **0건**
+- [ ] `NEXT_PUBLIC_SUPABASE` 는 **남는다** (서버 클라이언트 + 제품·참고자료 플래그, 단계 4 대상)
 - [ ] `apps/web/src/shared/lib/supabase-sync.ts` · `supabase.ts` **삭제됨**
 - [ ] `cd apps/api && ./gradlew test` green (**56건**), **Docker 없이도 통과**
 - [ ] `cd apps/api && ./gradlew integrationTest` green (**15건**)
@@ -2840,6 +2857,8 @@ npm run build
 
 **설계 §5 대비 차이 1건** — `campaign_launches` 를 얕게 다룬다. 근거는 위 §의도된 편차 #1.
 
-**계획 작성 시점에 확인 못 한 것 1건** — Task 9 Step 8 의 타입 불일치가 몇 건 나올지는 **실행해봐야 안다.** 단계 2 에서 같은 지점이 44개 필드의 `@Schema(requiredMode)` 누락으로 드러났으므로 이번에도 비슷한 규모를 예상한다. 처방과 반복 절차를 적어뒀고 추측으로 숫자를 채우지 않았다.
+**계획 작성 시점에 확인 못 한 것 1건 — 구현에서 해소됨.** Task 9 Step 8 의 타입 불일치는 **0건**이었다. 단계 2 에서 44개 필드의 `@Schema(requiredMode)` 누락으로 고생한 경험이 있어 이번엔 계획 단계에서 미리 붙여뒀고, 그 덕에 첫 컴파일에 통과했다. 단언이 실제로 검증하고 있다는 것은 `Omit` 을 일부러 빼서 `TS2344` 가 나는 것으로 역검증했다.
+
+**계획이 틀렸던 것 1건** — 성과 지표에서 `NEXT_PUBLIC_SUPABASE` 를 0 으로 만들라고 적었는데, 그러면 `products.ts`·`referenceMaterials.ts` 가 조용히 localStorage 전용으로 퇴화한다. 위 §성과 지표에 정정을 남겼다.
 
 **타입 일관성 확인** — `snapshot()`(Task 1 산출) 을 Task 7·8 이 소비한다. `scanLegacyKeys<T>`(Task 8 Step 3) 를 같은 Task 의 Step 4·5 가 쓴다. `absorbLegacy*` 세 함수는 각각 자기 모듈에서 export 되고 테스트가 직접 부른다. `removePersonasForProfile`(Task 7) 을 `brandProfileStore`(같은 Task) 가 쓴다.

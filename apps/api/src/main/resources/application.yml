@@ -26,6 +26,10 @@ app:
     secret: ${ADFLOW_JWT_SECRET:}
     # 액세스 토큰 수명. 만료되면 Next.js 가 /auth/exchange 를 다시 호출한다(refresh 토큰 없음).
     ttl: PT1H
+  encryption:
+    # AES-256 컬럼 암호화 키. 정확히 32바이트. 실값은 환경변수로만.
+    # 이 키를 잃으면 저장된 Meta 토큰을 복구할 수 없다 — 재로그인으로 다시 받아야 한다.
+    key: ${ADFLOW_ENCRYPTION_KEY:}
   poller:
     # 운영 기본값 6시간. 로컬 프로필에서 짧게 덮어쓴다 (설계 §6).
     interval: PT6H

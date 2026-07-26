@@ -129,7 +129,45 @@ cd /Users/jieunsse/jieunsse/dev/meta && npm test -- --run 2>&1 | grep -E "Test F
 
 ## Task 4: 라운드 진행 엔드포인트 + Next 배선
 
-단계 5 의 종착점 — `POST /tournaments/{id}/settle` 이 Java 엔진으로 판정하고, Next 의 cron 은 **얇은 트리거**로 남는다(설계 §9). Meta 게재·KPI 조회는 아직 TS 라 Spring 이 Next 내부 엔드포인트에 역위임한다.
+단계 5 의 종착점 — `POST /internal/tournaments/{id}/settle` 이 Java 엔진으로 판정하고, Next 의 cron 은 **얇은 트리거**로 남는다(설계 §9). Meta 게재·KPI 조회는 아직 TS 라 Spring 이 Next 내부 엔드포인트에 역위임한다.
+
+**Files:**
+- Create: `apps/api/.../tournament/TournamentSettleService.java` · `RoundKpiClient.java`
+- Create: `apps/api/.../internal/tournament/InternalTournamentController.java`
+- Create: `apps/web/app/api/internal/tournament/round-kpis/route.ts` (역위임 수신구)
+- Create: `apps/web/src/entities/ab-test/tournament/backend-store.ts`
+- Delete: `apps/web/src/entities/ab-test/tournament/supabase-store.ts`
+- Modify: `real.ts` · `server-runner.ts`(결산 제거) · cron 폴러 · 토너먼트 라우트 5개
+
+### 정해야 했던 것 둘 — 결정과 근거
+
+**1. 역위임 경로 = Spring → Next `POST /api/internal/tournament/round-kpis`.**
+`X-Internal-Secret` 로 지킨다(Spring `InternalSecret` 과 같은 규칙 — 미설정은 곧 잠금).
+**토너먼트·라운드는 Spring 이 요청 바디에 실어 보낸다.** Next 가 조회하러 Spring 을 되부르면
+순환이고, 그 사이 행이 바뀌면 판정과 KPI 가 서로 다른 스냅샷을 보게 된다.
+
+계획서가 "단계 4 의 `/internal/*` 위에 얹으면 된다"고 적은 것은 **반만 맞았다.** 그 경로는
+Spring 쪽 수신구이고 방향이 Next → Spring 이다. 역위임은 반대 방향이라 Next 쪽에 새로 팠다.
+
+**2. `tournaments` 소유권 = 단계 5 에서 Spring 으로 넘긴다.** 단계 2~4 와 같은 처방 — 쓰기 경로를
+통째로 넘기고 Supabase 코드는 지운다. 남은 행은 단계 7 ETL 이 옮긴다. 이중 기록은 하지 않는다.
+
+근거 셋:
+- Task 3 이 만든 `TournamentRepository.findByStatusOrderByCreatedAtDesc` 주석이 이미
+  "cron 폴러의 전역 스캔"이다 — 애그리거트 정규화가 이걸 전제로 설계됐다.
+- 단계 6 의 `@Scheduled` 폴러는 Spring 이 데이터를 쥐어야 돈다. 지금 안 넘기면 단계 6 에서
+  결산 엔드포인트를 무상태에서 유상태로 다시 쓰게 된다.
+- 설계 §9 의 단계 4 종료 상태가 "토너먼트만 Supabase 에 남음", 단계 5 가 "토너먼트 정규화"다.
+
+**cron 은 JWT 를 못 싣는다** — 그래서 `/stores/tournaments`(JWT) 옆에 `/internal/tournaments`
+(내부 시크릿)를 나란히 뒀다. API 라우트도 이쪽을 쓴다. 세션 검증은 라우트가 이미 했고 ownerKey 를
+명시적으로 넘기므로, 통로가 하나라 폴러와 UI 가 같은 행을 본다.
+
+- [x] **Step 1: Spring 결산 서비스 + 역위임 클라이언트** — 판정 9건 green
+- [x] **Step 2: `/internal/tournaments` CRUD + settle** — cron 이 세션 없이 쓰는 통로
+- [x] **Step 3: Next 역위임 수신구 + backend-store** — Supabase store 삭제
+- [x] **Step 4: cron 을 얇은 트리거로** — `pollAndSettle` → `settleRoundOnBackend`
+- [x] **Step 5: 전체 green 확인**
 
 ---
 
@@ -140,7 +178,10 @@ cd /Users/jieunsse/jieunsse/dev/meta && npm test -- --run 2>&1 | grep -E "Test F
 | Task 1 골든 픽스처 + TS 잠금 | **완료** | 픽스처 5파일 · TS 340 케이스 green |
 | Task 2 Java 엔진 포팅 | **완료** | Java 338 케이스 green. 역검증 3종(시드 곱수 40건·추천 훅 10건·승격 임계 1건)이 각각 깨지는 것 확인 |
 | Task 3 애그리거트 정규화 | **완료** | 단위 10건 · Postgres 통합 4건. 계약 단언 5종 추가 |
-| Task 4 라운드 진행 엔드포인트 + Next 배선 | **미착수** | 아래 §남은 일 |
+| Task 4 라운드 진행 엔드포인트 + Next 배선 | **완료** | Java 결산 10건 · Postgres 통합 2건 · TS 15건. 결산이 TS 에서 사라짐 |
+
+최종 실측 — `./gradlew test` **456건** · `./gradlew integrationTest` **23건** · `npm test`
+**1074건 / 74파일** · `tsc --noEmit` 에러 0 · `npm run build` 성공.
 
 ### 구현 중 알게 된 것
 
@@ -153,18 +194,22 @@ cd /Users/jieunsse/jieunsse/dev/meta && npm test -- --run 2>&1 | grep -E "Test F
 - **테스트가 레포에 파일을 남겼다**(단계 4 의 `.adflow-files`). 이번엔 골든 픽스처를 테스트 리소스로
   얹었을 뿐이라 재발하지 않았다.
 
-## 남은 일 — Task 4
+### Task 4 에서 알게 된 것
 
-단계 5 의 종착점(`POST /tournaments/{id}/settle` + Next cron 을 얇은 트리거로)이 남았다. 지금 상태에서
-멈춰도 **앱은 그대로 동작한다** — Spring 에 엔티티와 엔드포인트가 생겼을 뿐 Next 가 아직 호출하지 않고,
-실유저 토너먼트는 여전히 Supabase 로 돈다. 되돌릴 것이 없는 지점이다.
-
-Task 4 를 할 때 정해야 할 것 둘:
-
-1. **Meta 게재·KPI 조회의 역위임 경로.** 설계 §9 는 Spring 이 Next 내부 엔드포인트에 되부른다고 했다.
-   내부 시크릿 경로(`/internal/*`)가 단계 4 에서 이미 생겼으므로 그 위에 얹으면 된다.
-2. **`tournaments` 데이터 이사 시점.** 지금은 Supabase 와 Spring 에 스키마가 둘 다 있다. 단계 7 ETL
-   전까지 실유저 토너먼트를 어느 쪽이 소유할지 — 둘 다 쓰면 갈라진다.
+- **결산 판정을 두 곳에 두지 않으려고 `server-runner.pollAndSettle` 을 지웠다.** 골든 픽스처는
+  `engine.ts` 의 순수 함수를 잠그지 오케스트레이터의 결산 절차를 잠그지 않는다 — 남겨두면 픽스처가
+  못 보는 자리에서 갈라진다. 결산 테스트 4건은 Java 로 옮겼고, 가설·Ledger 테스트 2건은 결산 결과를
+  store 에 직접 심는 방식으로 고쳤다(같은 순수 함수 `resolveHypothesis` 로 만든다).
+- **실 경로에서 `judgeRoundKpis` 는 원래 안 돈다.** Meta 어댑터가 `roundVerdict` 를 구현하므로
+  ad study 의 유의성 결과가 항상 우선이다(ADR §4). Java 가 실제로 소유하게 된 판정은 가설 verdict
+  확정 · 챔피언 승격 · 수렴 · 봉투 소진 · 라운드당 예산 차감이다. z-검정은 폴백으로 남는다.
+- **`RestClient.Builder` 빈이 없다.** Boot 4 의 webmvc starter 는 자동 구성해주지 않아 컨텍스트가
+  통째로 안 떴다. 주입 대신 `RestClient.create()` 로 만든다.
+- **양쪽 테스트가 각자만 보면 역위임 JSON 이 어긋나도 둘 다 green 이다.** Next 라우트가 실제로 뱉는
+  문자열을 Spring `ObjectMapper` 로 읽는 단언을 하나 박아 이음매를 묶었다.
+- **`app/**` 이 vitest include 에 없었다.** `app/api/install/meta-app/route.test.ts` 가 파일만 있고
+  한 번도 안 돌았다. include 를 넓히자 낡은 단언 1건(`fields=name%2Cnamespace` — 코드는 인코딩하지
+  않는다)이 드러나 단언을 고쳤다. 코드는 정상이다.
 
 ## 완료 조건
 
@@ -179,3 +224,12 @@ Task 4 를 할 때 정해야 할 것 둘:
 - **`ledger.ts`·`report.ts` 포팅** — 위 §설계 문서의 포팅 목록이 틀린 곳 참고
 - **TS 엔진 삭제** — 둘러보기가 계속 쓴다. 이중화는 의도된 상태
 - **`notion_connections` 이관** — 단계 4 에서 유예
+- **기존 Supabase 토너먼트 행 이사** — 단계 7 ETL. 단계 2~4 와 같다: 쓰기 경로만 넘기고 옛 행은 남는다
+
+## 단계 6 으로 넘기는 것
+
+- **역위임 왕복 제거** — Meta 클라이언트를 Java 로 옮기면 `RoundKpiClient` 와 Next 의
+  `/api/internal/tournament/round-kpis` 가 함께 사라진다
+- **트리거 흡수** — `@Scheduled` 가 cron 폴러를 대체하면 `autoAdvance`(게재·Gemini)도 Java 로 간다
+- **`/stores/tournaments`(JWT) 의 자리** — 지금은 안 쓴다. UI 가 Spring 을 직접 읽게 되는 시점에
+  쓰거나, 그때까지 안 쓰이면 지운다

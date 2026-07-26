@@ -9,3 +9,4 @@ export type {
   SyncedStoreConfig,
 } from "./createSyncedStore";
 export { GUEST_OWNER, isRealOwner } from "./ownerKey";
+export { scanLegacyKeys } from "./legacyScan";

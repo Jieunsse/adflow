@@ -17,7 +17,7 @@ import ConfirmModal from "@shared/ui/ConfirmModal";
 import { suggestOptimizations, assessAutomationReadiness, deriveVerdict, type Suggestion, type AutomationReadiness, type Verdict } from "@entities/insights/optimization";
 import { isFakePerformance, type FakePerformanceEvidence } from "@entities/insights/fake-performance";
 import { abVariantLabel, type AbTestAxis } from "@entities/campaign/model";
-import { loadLaunchedCampaign } from "@entities/campaign/launched-storage";
+import { campaignLaunches, loadLaunchedCampaign } from "@entities/campaign/launched-storage";
 import { getBrowse, upsertBrowse, BROWSE_CHANGE_EVENT } from "@entities/campaign/browse/store";
 import { createBrowseRelaunchChild } from "@entities/campaign/browse/seed";
 import { browseCampaignToSummary } from "@entities/campaign/browse/summary";
@@ -102,6 +102,7 @@ function CampaignDetailFlow() {
   const [relaunchOnlyOnce, setRelaunchOnlyOnce] = useState(false);
   const [relaunchBusy, setRelaunchBusy] = useState(false);
   const [relaunchError, setRelaunchError] = useState<string | null>(null);
+  campaignLaunches.useSync();
   const { get: getAutoRelaunch, setEnabled: setAutoRelaunch, inheritFromParent } = useAutoRelaunch();
   const { notifs } = useNotifications();
 

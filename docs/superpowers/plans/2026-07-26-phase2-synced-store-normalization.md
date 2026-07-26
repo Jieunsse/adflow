@@ -60,6 +60,13 @@
 | 공유 `@Embeddable` 을 `@ElementCollection` 과 `@Embedded` 양쪽에 | **동작함.** 단 조인 컬럼과 필드 컬럼이 충돌하면 `MappingException: Column 'campaign_id' is duplicated in mapping for collection` — `@AttributeOverride` 로 해소 |
 | `@OneToMany(cascade=ALL, orphanRemoval=true)` + `@JoinColumn` + `@OrderColumn` | 자식 테이블 생성·저장 확인 |
 | `@Version` | 동작 확인(값 0 저장). 이 단계에서는 쓰지 않음 |
+| **Boot 4 의 HTTP 컨버터는 Jackson 3(`tools.jackson`)** | 클래스패스에 Jackson 2.21 과 3.1.4 가 공존한다. `com.fasterxml.jackson.databind.JsonNode` 는 컴파일되지만 런타임에 `HttpMessageConversionException`. 애노테이션(`@JsonIgnore`·`@JsonInclude`)은 Jackson 3 도 `com.fasterxml.jackson.annotation` 을 그대로 쓴다. 구현 중 실측 |
+| `value` 컬럼명 | **H2 예약어.** `create table` 이 문법 에러로 죽는데 `ddl-auto` 가 그것을 삼키고 계속 진행해, 나중에 `Table not found` 로 드러난다. `LibraryItem.primary` 와 같은 부류. 구현 중 실측 |
+| springdoc 의 required 판정 | **아무 필드도 required 로 내지 않는다.** 생성 타입이 전부 optional 이 되어 도메인 타입에 대입되지 않는다. `@Schema(requiredMode = REQUIRED)` 를 필수 필드마다 붙여야 한다. 구현 중 실측 |
+| `@Schema` 중복 | 반복 애노테이션이 아니다. `allowableValues` 와 `requiredMode` 는 한 애노테이션에 합쳐야 컴파일된다. 구현 중 실측 |
+| **`@Schema(allowableValues=...)` 로 하이픈 enum** | **된다.** `LeadMetric.kind` 가 `enum: ['cpc-max','ctr-min']` 로 나왔다 — 계획 작성 시 미해결로 남겼던 항목이 해소됐다. 구현 중 실측 |
+| 필드 수준 `@ArraySchema` 로 `$ref` 덮어쓰기 | **안 된다.** `SpringDocUtils.getConfig().replaceWithClass(JsonNode.class, Object.class)` 전역 치환이 필요하다. 구현 중 실측 |
+| 파생 삭제(`deleteBy...`)를 트랜잭션 밖에서 호출 | `InvalidDataAccessApiUsageException`. 프로덕션은 `StoreController` 가 `@Transactional` 이라 무사하지만, 리포지토리를 직접 부르는 테스트는 자체 트랜잭션이 필요하다. 구현 중 실측 |
 | `AttributeConverter<JsonNode, String>` + `columnDefinition = "text"` | 판별 유니온 배열이 그대로 왕복하고 **Jackson 이 문자열이 아니라 배열로 직렬화** — 와이어 동결 성립 |
 | `@Testcontainers` + `@Container` static 필드 | **IT 클래스가 2개 이상이면 깨진다** — 첫 클래스 종료 시 컨테이너를 멈춰 두 번째가 `Connection refused`. 싱글턴 패턴(`static { postgres.start(); }`, 정지 안 함)으로 해소. 구현 중 실측 |
 | `DelegatingOAuth2TokenValidator` | `org.springframework.security.oauth2.core` (`.jwt` 아님) |
@@ -1027,6 +1034,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
 import java.time.Instant;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
  * Synced Store 엔티티의 공통 바탕.
@@ -1039,7 +1047,9 @@ import java.time.Instant;
 @MappedSuperclass
 public abstract class OwnerScoped {
 
-  @Id private String id;
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
+  @Id
+  private String id;
 
   @JsonIgnore
   @Column(name = "owner_key", nullable = false)
@@ -1188,6 +1198,7 @@ import ai.adflow.api.store.OwnerScoped;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 /** TS: apps/web/src/shared/lib/library.ts 의 LibraryItem 과 필드 1:1. */
 @Entity
@@ -1195,36 +1206,48 @@ import jakarta.persistence.Table;
 public class LibraryItem extends OwnerScoped {
 
   @Column(name = "saved_at", nullable = false)
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   private Long savedAt;
 
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   private String brand;
 
   @Column(length = 1000)
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   private String headline;
 
   // TS 필드명은 primary 지만 PRIMARY 는 SQL 예약어라 컬럼만 바꾼다.
   // Jackson 은 자바 프로퍼티명을 쓰므로 와이어는 그대로 "primary" 다.
   @Column(name = "primary_text", length = 4000)
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   private String primary;
 
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   private String tone;
 
   @Column(name = "tone_label")
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   private String toneLabel;
 
   @Column(name = "cta_id")
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   private String ctaId;
 
   @Column(name = "cta_label")
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   private String ctaLabel;
 
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   private String goal;
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   private String target;
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   private String gradient;
 
   @Column(length = 2000)
   private String image;
 
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   private String tag;
 
   public Long getSavedAt() { return savedAt; }
@@ -1524,6 +1547,7 @@ package ai.adflow.api.store.creator;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
  * TS: CreatorPerformance. Creator.performanceHistory 와 CampaignEntry.performance 가 공유한다.
@@ -1535,6 +1559,7 @@ import jakarta.persistence.Embeddable;
 public class Performance {
 
   @Column(name = "campaign_id")
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   private String campaignId;
 
   private Integer reach;
@@ -1544,6 +1569,7 @@ public class Performance {
   private Double cost;
 
   @Column(name = "recorded_at")
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   private String recordedAt;
 
   public String getCampaignId() { return campaignId; }
@@ -1604,15 +1630,18 @@ import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Table;
 import java.util.ArrayList;
 import java.util.List;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 /** TS: apps/web/src/entities/creator/model.ts 의 Creator 와 필드 1:1. */
 @Entity
 @Table(name = "creators")
 public class Creator extends OwnerScoped {
 
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   private String handle;
 
   @Enumerated(EnumType.STRING)
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   private CreatorPlatform platform;
 
   @Column(name = "display_name")
@@ -1626,6 +1655,7 @@ public class Creator extends OwnerScoped {
   @CollectionTable(name = "creator_categories", joinColumns = @JoinColumn(name = "creator_id"))
   @Column(name = "category")
   @OrderColumn(name = "position")
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   private List<String> category = new ArrayList<>();
 
   @Column(name = "follower_count")
@@ -1639,9 +1669,11 @@ public class Creator extends OwnerScoped {
       name = "creator_performances",
       joinColumns = @JoinColumn(name = "creator_id"))
   @OrderColumn(name = "position")
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   private List<Performance> performanceHistory = new ArrayList<>();
 
   @Column(name = "created_at")
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   private String createdAt;
 
   public String getHandle() { return handle; }
@@ -1916,8 +1948,19 @@ class InfluencerCampaignControllerTest {
 
   @Test
   void 빈_파이프라인도_배열로_나온다() throws Exception {
-    save("c@example.com", ITEM.replace("camp_1", "camp_empty")
-        .replaceAll("(?s)\"entries\": \\[.*?\\n        \\]", "\"entries\": []"));
+    // 텍스트 블록의 들여쓰기 제거 때문에 정규식으로 entries 를 비우면 위치에 따라 빗나간다.
+    // 이 케이스가 보는 것은 "빈 배열이 null 로 뭉개지지 않는가" 하나뿐이라 최소 JSON 을 직접 쓴다.
+    save(
+        "c@example.com",
+        """
+        {
+          "id": "camp_empty",
+          "name": "빈 캠페인",
+          "brandProfileId": "bp_1",
+          "entries": [],
+          "createdAt": "2026-05-01T00:00:00Z"
+        }
+        """);
 
     mockMvc
         .perform(get("/stores/influencer-campaigns").with(owner("c@example.com")))
@@ -1971,15 +2014,18 @@ import jakarta.persistence.Embeddable;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 /** TS: apps/web/src/entities/influencer-campaign/model.ts 의 CampaignEntry. */
 @Embeddable
 public class CampaignEntry {
 
   @Column(name = "creator_id")
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   private String creatorId;
 
   @Enumerated(EnumType.STRING)
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   private CampaignStage stage;
 
   @Column(name = "outreach_draft", length = 4000)
@@ -2004,6 +2050,7 @@ public class CampaignEntry {
   private String paidAt;
 
   @Column(name = "updated_at")
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   private String updatedAt;
 
   public String getCreatorId() { return creatorId; }
@@ -2043,15 +2090,18 @@ import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Table;
 import java.util.ArrayList;
 import java.util.List;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 /** TS: InfluencerCampaign. Meta Campaign 과 별개 엔티티다 (ADR-065 §1). */
 @Entity
 @Table(name = "influencer_campaigns")
 public class InfluencerCampaign extends OwnerScoped {
 
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   private String name;
 
   /** Meta objective 가 아니라 자유 텍스트/칩이다. enum 으로 좁히지 않는다. */
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   private String goal;
 
   @Column(name = "product_id")
@@ -2066,14 +2116,17 @@ public class InfluencerCampaign extends OwnerScoped {
   private String endDate;
 
   @Column(name = "brand_profile_id")
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   private String brandProfileId;
 
   @ElementCollection(fetch = FetchType.EAGER)
   @CollectionTable(name = "campaign_entries", joinColumns = @JoinColumn(name = "campaign_id"))
   @OrderColumn(name = "position")
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   private List<CampaignEntry> entries = new ArrayList<>();
 
   @Column(name = "created_at")
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   private String createdAt;
 
   public String getName() { return name; }
@@ -2382,7 +2435,17 @@ class BrandProfileControllerTest {
   @Test
   void 목표를_지워_저장하면_자식_행도_사라진다() throws Exception {
     save("g@example.com", ITEM.replace("bp_1", "bp_g"));
-    save("g@example.com", ITEM.replace("bp_1", "bp_g").replaceAll("(?s)\"goals\": \\[.*?\\n        \\],", "\"goals\": [],"));
+    // 텍스트 블록의 들여쓰기 제거 때문에 정규식으로 goals 를 비우면 위치에 따라 빗나간다.
+    // 같은 id 로 목표 없는 문서를 다시 저장한다 — 자식 행이 고아로 남는지가 확인 대상이다.
+    save(
+        "g@example.com",
+        """
+        {
+          "id": "bp_g",
+          "name": "기본 프로필",
+          "goals": []
+        }
+        """);
 
     mockMvc
         .perform(get("/stores/brand-profiles").with(owner("g@example.com")))
@@ -2407,10 +2470,11 @@ cd /Users/jieunsse/jieunsse/dev/meta/apps/api && ./gradlew test --no-daemon
 ```java
 package ai.adflow.api.store;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 /**
  * 구조를 서버가 해석하지 않는 필드를 JSON 텍스트로 왕복시킨다.
@@ -2419,11 +2483,16 @@ import jakarta.persistence.Converter;
  * 않으므로 text 로 충분하다. 질의가 필요해지면 컬럼 타입만 jsonb 로 올리면 된다.
  *
  * JsonNode 로 들고 있어야 Jackson 이 문자열이 아니라 원래 구조(배열·객체)로 직렬화한다.
+ *
+ * 패키지가 tools.jackson 인 것에 주의 — Spring Boot 4 의 HTTP 메시지 컨버터는 Jackson 3 을 쓴다.
+ * 클래스패스에 Jackson 2 도 함께 있어서 com.fasterxml.jackson.databind.JsonNode 를 쓰면 컴파일은
+ * 되지만 런타임에 HttpMessageConversionException 으로 죽는다. (애노테이션 @JsonIgnore·@JsonInclude
+ * 는 Jackson 3 도 com.fasterxml.jackson.annotation 을 그대로 쓴다.)
  */
 @Converter
 public class JsonNodeConverter implements AttributeConverter<JsonNode, String> {
 
-  private static final ObjectMapper MAPPER = new ObjectMapper();
+  private static final ObjectMapper MAPPER = JsonMapper.builder().build();
 
   @Override
   public String convertToDatabaseColumn(JsonNode node) {
@@ -2478,21 +2547,26 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 /** TS: CopyReference. id 는 클라이언트가 만든 값이지 PK 가 아니다 — 컬렉션 원소라 PK 가 없다. */
 @Embeddable
 public class CopyReference {
 
   @Column(name = "reference_id")
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   private String id;
 
   @Column(length = 4000)
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   private String text;
 
   @Enumerated(EnumType.STRING)
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   private CopySource source;
 
   @Column(name = "created_at")
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   private String createdAt;
 
   public String getId() { return id; }
@@ -2514,14 +2588,17 @@ package ai.adflow.api.store.brand;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 /** TS: LagTarget = { metric: GoalMetric; target: number }. deprecated AccountGoal 도 같은 형태다. */
 @Embeddable
 public class LagTarget {
 
   @Enumerated(EnumType.STRING)
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   private GoalMetric metric;
 
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   private Double target;
 
   public GoalMetric getMetric() { return metric; }
@@ -2549,17 +2626,21 @@ public class LeadMetric {
    * "cpc-max"·"ctr-min" 은 하이픈이 있어 자바 enum 상수명이 될 수 없다. String 으로 두고
    * 허용값은 스키마에만 적는다 — 생성 TS 타입이 유니온이 되도록.
    */
-  @Schema(allowableValues = {"cpc-max", "ctr-min"})
+  @Schema(allowableValues = {"cpc-max", "ctr-min"}, requiredMode = Schema.RequiredMode.REQUIRED)
   private String kind;
 
   /**
    * TS 에서 number | null 이다 — optional 이 아니라 "null 을 명시하는" 필드다.
    * 전역 non_null 정책의 예외로 두지 않으면 키가 사라져 undefined 가 된다.
    */
+  // VALUE 는 H2 예약어라 컬럼명을 바꾼다(LibraryItem.primary 와 같은 부류).
+  // Jackson 은 자바 프로퍼티명을 쓰므로 와이어는 그대로 "value" 다.
   @JsonInclude(JsonInclude.Include.ALWAYS)
+  @Column(name = "lead_value")
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   private Double value;
 
-  @Schema(allowableValues = {"derived", "custom"})
+  @Schema(allowableValues = {"derived", "custom"}, requiredMode = Schema.RequiredMode.REQUIRED)
   private String source;
 
   @Column(length = 1000)
@@ -2600,6 +2681,7 @@ import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Table;
 import java.util.ArrayList;
 import java.util.List;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
  * TS: Goal. leads 가 중첩 컬렉션이라 @Embeddable 로는 안 되고 엔티티여야 한다.
@@ -2617,22 +2699,27 @@ public class Goal {
   private Long pk;
 
   @Column(name = "goal_id")
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   private String id;
 
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   private String name;
 
   @Embedded
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   private LagTarget lag;
 
   @ElementCollection(fetch = FetchType.EAGER)
   @CollectionTable(name = "brand_profile_goal_leads", joinColumns = @JoinColumn(name = "goal_pk"))
   @OrderColumn(name = "position")
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   private List<LeadMetric> leads = new ArrayList<>();
 
   @Column(name = "period_days")
   private Integer periodDays;
 
   @Column(name = "created_at")
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   private String createdAt;
 
   public String getId() { return id; }
@@ -2659,7 +2746,8 @@ package ai.adflow.api.store.brand;
 
 import ai.adflow.api.store.JsonNodeConverter;
 import ai.adflow.api.store.OwnerScoped;
-import com.fasterxml.jackson.databind.JsonNode;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.CollectionTable;
@@ -2675,12 +2763,15 @@ import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Table;
 import java.util.ArrayList;
 import java.util.List;
+import tools.jackson.databind.JsonNode;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 /** TS: apps/web/src/features/brand-profile/model/useBrandProfileStorage.ts 의 BrandProfileEntry. */
 @Entity
 @Table(name = "brand_profiles")
 public class BrandProfile extends OwnerScoped {
 
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   private String name;
 
   @Column(name = "is_default")
@@ -2732,7 +2823,11 @@ public class BrandProfile extends OwnerScoped {
   /**
    * SopSection[] — type 마다 data 형태가 다른 판별 유니온이라 관계형으로 펼치지 않는다
    * (설계 §5 대비 의도된 편차). 조회 조건으로 쓰이지 않아 잃는 것이 없다.
+   *
+   * 스키마를 손으로 적어주지 않으면 springdoc 이 JsonNode 의 빈 프로퍼티(isArray·isNull…)를
+   * 그대로 노출해 계약이 거짓말을 한다. 서버가 해석하지 않는 값이므로 "객체 배열"까지만 말한다.
    */
+  @ArraySchema(schema = @Schema(implementation = Object.class))
   @Convert(converter = JsonNodeConverter.class)
   @Column(name = "policy", columnDefinition = "text")
   private JsonNode policy;
@@ -2823,13 +2918,14 @@ package ai.adflow.api.store.brand;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import ai.adflow.api.IntegrationTestBase;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import tools.jackson.databind.json.JsonMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.transaction.annotation.Transactional;
 
 class BrandProfilePostgresIT extends IntegrationTestBase {
 
@@ -2869,7 +2965,7 @@ class BrandProfilePostgresIT extends IntegrationTestBase {
     bp.setCopyReferences(new ArrayList<>(List.of(ref)));
     bp.setProofPoints(new ArrayList<>(List.of("재구매율 40%")));
     bp.setGoals(new ArrayList<>(List.of(goal)));
-    bp.setPolicy(new ObjectMapper().readTree(POLICY));
+    bp.setPolicy(JsonMapper.builder().build().readTree(POLICY));
     return bp;
   }
 
@@ -2898,7 +2994,10 @@ class BrandProfilePostgresIT extends IntegrationTestBase {
     assertThat(found.getGoals().get(0).getLeads().get(0).getKind()).isEqualTo("cpc-max");
   }
 
+  // 파생 삭제는 트랜잭션이 있어야 한다. 프로덕션 경로는 StoreController 가 @Transactional 이라
+  // 문제없고, 리포지토리를 직접 부르는 이 테스트만 트랜잭션을 연다.
   @Test
+  @Transactional
   void 프로필을_지우면_자식_행이_함께_사라진다() throws Exception {
     repository.saveAndFlush(sample("bp_del", "del@example.com"));
     assertThat(jdbc.queryForObject("select count(*) from brand_profile_goals", Integer.class))
@@ -3667,8 +3766,16 @@ export type CreatorIsCompatible = Assert<AssignableTo<Api<"Creator">, Creator>>;
 export type CampaignIsCompatible = Assert<
   AssignableTo<Api<"InfluencerCampaign">, InfluencerCampaign>
 >;
+
+// policy 만 예외다. SopSection 은 type 마다 data 형태가 달라지는 판별 유니온이고, 서버는 그 값을
+// 해석하지 않고 JSON 텍스트로 왕복시키기만 한다(설계 문서 대비 의도된 편차 #1). OpenAPI 로 그
+// 유니온을 표현할 수 없으므로 계약이 지켜주지 못하는 유일한 필드다.
+//
+// 대신 policy 를 뺀 나머지 전 필드는 여기서 검증된다. policy 의 왕복 자체는
+// BrandProfileControllerTest.판별유니온_policy_가_배열로_왕복한다 와
+// BrandProfilePostgresIT.판별유니온_policy_가_텍스트로_왕복한다 가 런타임으로 지킨다.
 export type BrandProfileIsCompatible = Assert<
-  AssignableTo<Api<"BrandProfile">, BrandProfileEntry>
+  AssignableTo<Omit<Api<"BrandProfile">, "policy">, Omit<BrandProfileEntry, "policy">>
 >;
 ```
 
@@ -3921,7 +4028,9 @@ cd /Users/jieunsse/jieunsse/dev/meta/apps/api && ./gradlew test --no-daemon 2>&1
 
 **설계 §8 대비 반영** — Testcontainers 는 Task 2. `@WithMockUser` 대신 `SecurityMockMvcRequestPostProcessors.jwt()` 를 쓴다(단계 1 선례). OpenAPI 계약 드리프트 검출은 Task 9.
 
-**미해결로 남기는 것 1건** — Task 9 Step 3 의 `LeadMetric.kind` 하이픈 enum 이 springdoc 에서 어떻게 나오는지는 **실행해봐야 안다.** 계획은 확인 커맨드와 대체 수단, 그리고 "안 되면 예외로 두고 기록한다"까지 적어뒀다. 추측으로 채우지 않았다.
+**계획 작성 시 미해결로 남겼던 1건 — 구현에서 해소됨.** `LeadMetric.kind` 의 하이픈 enum 은 `@Schema(allowableValues = {"cpc-max","ctr-min"})` 로 스펙에 정상 반영됐다(`enum: ['cpc-max','ctr-min']`). 대체 수단이 필요 없었다.
+
+**대신 계약이 지켜주지 못하는 것 1건이 남았다** — `BrandProfile.policy`. `SopSection` 은 판별 유니온이라 OpenAPI 로 표현할 수 없다. `contract-compat.ts` 는 `policy` 를 뺀 전 필드를 검증하고, `policy` 의 왕복은 `BrandProfileControllerTest.판별유니온_policy_가_배열로_왕복한다` 와 `BrandProfilePostgresIT.판별유니온_policy_가_텍스트로_왕복한다` 가 런타임으로 지킨다. 이 예외는 `contract-compat.ts` 안에 이유와 함께 적혀 있다.
 
 ---
 

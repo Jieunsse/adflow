@@ -1,0 +1,348 @@
+{
+  "adStudy": [
+    {
+      "name": "결과 미생성 — 스터디 진행 중",
+      "raw": {
+        "id": "s1"
+      },
+      "expected": null
+    },
+    {
+      "name": "결과 배열이 비어 있음",
+      "raw": {
+        "id": "s1",
+        "results": []
+      },
+      "expected": null
+    },
+    {
+      "name": "top-level results · B 승 · confidence 비율",
+      "raw": {
+        "id": "s1",
+        "results": [
+          {
+            "cell": "B",
+            "winner": true,
+            "confidence": 0.97
+          }
+        ]
+      },
+      "expected": {
+        "winner": "B",
+        "confidence": 0.97
+      }
+    },
+    {
+      "name": "confidence 가 퍼센트로 옴 (97) → 0.97",
+      "raw": {
+        "id": "s1",
+        "results": [
+          {
+            "cell": "A",
+            "is_winner": true,
+            "confidence": 97
+          }
+        ]
+      },
+      "expected": {
+        "winner": "A",
+        "confidence": 0.97
+      }
+    },
+    {
+      "name": "p_value 로 confidence 도출",
+      "raw": {
+        "id": "s1",
+        "results": [
+          {
+            "cell_name": "Cell B",
+            "is_significant": true,
+            "p_value": 0.03
+          }
+        ]
+      },
+      "expected": {
+        "winner": "B",
+        "confidence": 0.97
+      }
+    },
+    {
+      "name": "유의 표시만 있고 수치 없음 → 0.95",
+      "raw": {
+        "id": "s1",
+        "results": [
+          {
+            "name": "B",
+            "significant": true
+          }
+        ]
+      },
+      "expected": {
+        "winner": "B",
+        "confidence": 0.95
+      }
+    },
+    {
+      "name": "cells[].results 에서 셀 이름을 물려받는다",
+      "raw": {
+        "id": "s1",
+        "cells": {
+          "data": [
+            {
+              "name": "챌린저",
+              "results": {
+                "data": [
+                  {
+                    "winner": true,
+                    "confidence": 0.91
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "expected": {
+        "winner": "B",
+        "confidence": 0.91
+      }
+    },
+    {
+      "name": "유의 winner 없음 → inconclusive · 보고된 최대 confidence",
+      "raw": {
+        "id": "s1",
+        "results": [
+          {
+            "cell": "A",
+            "confidence": 0.6
+          },
+          {
+            "cell": "B",
+            "confidence": 0.72
+          }
+        ]
+      },
+      "expected": {
+        "winner": null,
+        "confidence": 0.72
+      }
+    },
+    {
+      "name": "유의 winner 없고 수치도 없음 → 0.5",
+      "raw": {
+        "id": "s1",
+        "results": [
+          {
+            "cell": "A"
+          }
+        ]
+      },
+      "expected": {
+        "winner": null,
+        "confidence": 0.5
+      }
+    },
+    {
+      "name": "셀 이름을 못 읽으면 winner 후보에서 빠진다",
+      "raw": {
+        "id": "s1",
+        "results": [
+          {
+            "cell": "무엇",
+            "winner": true,
+            "confidence": 0.99
+          }
+        ]
+      },
+      "expected": {
+        "winner": null,
+        "confidence": 0.99
+      }
+    }
+  ],
+  "adInsights": [
+    {
+      "name": "두 행 정상",
+      "adIds": [
+        "ad_1",
+        "ad_2"
+      ],
+      "raw": {
+        "data": [
+          {
+            "ad_id": "ad_1",
+            "impressions": "15000",
+            "clicks": "270",
+            "ctr": "1.8",
+            "spend": "91911"
+          },
+          {
+            "ad_id": "ad_2",
+            "impressions": "15000",
+            "clicks": "360",
+            "ctr": "2.4",
+            "spend": "91911"
+          }
+        ]
+      },
+      "expected": [
+        {
+          "adId": "ad_1",
+          "impressions": 15000,
+          "clicks": 270,
+          "ctr": 1.8,
+          "spend": 91911
+        },
+        {
+          "adId": "ad_2",
+          "impressions": 15000,
+          "clicks": 360,
+          "ctr": 2.4,
+          "spend": 91911
+        }
+      ]
+    },
+    {
+      "name": "한 행이 없으면 0 으로 채운다",
+      "adIds": [
+        "ad_1",
+        "ad_2"
+      ],
+      "raw": {
+        "data": [
+          {
+            "ad_id": "ad_1",
+            "impressions": "100",
+            "clicks": "3",
+            "ctr": "3",
+            "spend": "5000"
+          }
+        ]
+      },
+      "expected": [
+        {
+          "adId": "ad_1",
+          "impressions": 100,
+          "clicks": 3,
+          "ctr": 3,
+          "spend": 5000
+        },
+        {
+          "adId": "ad_2",
+          "impressions": 0,
+          "clicks": 0,
+          "ctr": 0,
+          "spend": 0
+        }
+      ]
+    },
+    {
+      "name": "ctr 은 소수 2자리 · spend 는 정수로 반올림",
+      "adIds": [
+        "ad_1",
+        "ad_2"
+      ],
+      "raw": {
+        "data": [
+          {
+            "ad_id": "ad_1",
+            "impressions": "1234.6",
+            "clicks": "12.4",
+            "ctr": "1.23456",
+            "spend": "999.5"
+          },
+          {
+            "ad_id": "ad_2",
+            "impressions": "1",
+            "clicks": "0",
+            "ctr": "0.005",
+            "spend": "0.4"
+          }
+        ]
+      },
+      "expected": [
+        {
+          "adId": "ad_1",
+          "impressions": 1235,
+          "clicks": 12,
+          "ctr": 1.23,
+          "spend": 1000
+        },
+        {
+          "adId": "ad_2",
+          "impressions": 1,
+          "clicks": 0,
+          "ctr": 0.01,
+          "spend": 0
+        }
+      ]
+    },
+    {
+      "name": "빈 응답",
+      "adIds": [
+        "ad_1",
+        "ad_2"
+      ],
+      "raw": {
+        "data": []
+      },
+      "expected": [
+        {
+          "adId": "ad_1",
+          "impressions": 0,
+          "clicks": 0,
+          "ctr": 0,
+          "spend": 0
+        },
+        {
+          "adId": "ad_2",
+          "impressions": 0,
+          "clicks": 0,
+          "ctr": 0,
+          "spend": 0
+        }
+      ]
+    },
+    {
+      "name": "행 순서가 뒤집혀 와도 adIds 순서를 따른다",
+      "adIds": [
+        "ad_1",
+        "ad_2"
+      ],
+      "raw": {
+        "data": [
+          {
+            "ad_id": "ad_2",
+            "impressions": "20",
+            "clicks": "2",
+            "ctr": "10",
+            "spend": "7"
+          },
+          {
+            "ad_id": "ad_1",
+            "impressions": "10",
+            "clicks": "1",
+            "ctr": "10",
+            "spend": "3"
+          }
+        ]
+      },
+      "expected": [
+        {
+          "adId": "ad_1",
+          "impressions": 10,
+          "clicks": 1,
+          "ctr": 10,
+          "spend": 3
+        },
+        {
+          "adId": "ad_2",
+          "impressions": 20,
+          "clicks": 2,
+          "ctr": 10,
+          "spend": 7
+        }
+      ]
+    }
+  ]
+}

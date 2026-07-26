@@ -1,0 +1,1140 @@
+{
+  "splitTestLaunch": [
+    {
+      "name": "traffic · headline 축 · 이미지 없음",
+      "input": {
+        "tournament": {
+          "id": "tourn_fx",
+          "brandProfileId": "bp_1",
+          "productId": "prod_1",
+          "productName": "수분 크림",
+          "tone": "warm",
+          "objective": "traffic",
+          "mode": "auto",
+          "dailyBudget": 30000,
+          "champion": {
+            "headline": "챔피언 헤드",
+            "primaryText": "챔피언 카피"
+          },
+          "championCtr": 1.8,
+          "championConfirmed": true,
+          "axisCursor": 0,
+          "rounds": [],
+          "spentBudget": 0,
+          "status": "running",
+          "createdAt": "2026-07-01T00:00:00Z",
+          "delivery": {
+            "accessToken": "TOKEN",
+            "adAccountId": "act_123",
+            "pageId": "page_1",
+            "ownerEmail": "u@x.com",
+            "goalId": "traffic",
+            "linkUrl": "https://shop.example.com",
+            "ctaType": "LEARN_MORE",
+            "countries": [
+              "KR"
+            ],
+            "ageMin": 25,
+            "ageMax": 44,
+            "genders": [
+              2
+            ],
+            "roundDays": 4
+          }
+        },
+        "round": {
+          "index": 1,
+          "axis": "headline",
+          "campaignId": "placeholder",
+          "champion": {
+            "headline": "챔피언 헤드",
+            "primaryText": "챔피언 카피"
+          },
+          "challenger": {
+            "headline": "챌린저 헤드",
+            "primaryText": "챔피언 카피"
+          },
+          "fastForwardDays": 0,
+          "status": "running"
+        }
+      },
+      "requests": [
+        {
+          "path": "campaigns",
+          "body": {
+            "name": "AdFlow — 수분 크림 — 웹사이트 방문 — 챔피언 헤드 — 0726",
+            "objective": "OUTCOME_TRAFFIC",
+            "status": "ACTIVE",
+            "special_ad_categories": [],
+            "is_adset_budget_sharing_enabled": false
+          }
+        },
+        {
+          "path": "adsets",
+          "body": {
+            "name": "AdFlow AdSet A — 챔피언 헤드",
+            "campaign_id": "camp_1",
+            "billing_event": "IMPRESSIONS",
+            "optimization_goal": "LINK_CLICKS",
+            "bid_strategy": "LOWEST_COST_WITHOUT_CAP",
+            "daily_budget": "15000",
+            "destination_type": "WEBSITE",
+            "targeting": {
+              "age_min": 25,
+              "age_max": 44,
+              "genders": [
+                2
+              ],
+              "geo_locations": {
+                "countries": [
+                  "KR"
+                ]
+              },
+              "targeting_automation": {
+                "advantage_audience": 0
+              }
+            },
+            "start_time": 1784991600,
+            "end_time": 1785423599,
+            "status": "ACTIVE"
+          }
+        },
+        {
+          "path": "adcreatives",
+          "body": {
+            "name": "AdFlow Creative A — 챔피언 헤드",
+            "object_story_spec": {
+              "page_id": "page_1",
+              "link_data": {
+                "message": "챔피언 카피",
+                "link": "https://shop.example.com",
+                "name": "챔피언 헤드",
+                "call_to_action": {
+                  "type": "LEARN_MORE"
+                }
+              }
+            }
+          }
+        },
+        {
+          "path": "ads",
+          "body": {
+            "name": "AdFlow Ad A — 챔피언 헤드",
+            "adset_id": "adset_1",
+            "creative": {
+              "creative_id": "creative_1"
+            },
+            "status": "ACTIVE"
+          }
+        },
+        {
+          "path": "adsets",
+          "body": {
+            "name": "AdFlow AdSet B — 챌린저 헤드",
+            "campaign_id": "camp_1",
+            "billing_event": "IMPRESSIONS",
+            "optimization_goal": "LINK_CLICKS",
+            "bid_strategy": "LOWEST_COST_WITHOUT_CAP",
+            "daily_budget": "15000",
+            "destination_type": "WEBSITE",
+            "targeting": {
+              "age_min": 25,
+              "age_max": 44,
+              "genders": [
+                2
+              ],
+              "geo_locations": {
+                "countries": [
+                  "KR"
+                ]
+              },
+              "targeting_automation": {
+                "advantage_audience": 0
+              }
+            },
+            "start_time": 1784991600,
+            "end_time": 1785423599,
+            "status": "ACTIVE"
+          }
+        },
+        {
+          "path": "adcreatives",
+          "body": {
+            "name": "AdFlow Creative B — 챌린저 헤드",
+            "object_story_spec": {
+              "page_id": "page_1",
+              "link_data": {
+                "message": "챔피언 카피",
+                "link": "https://shop.example.com",
+                "name": "챌린저 헤드",
+                "call_to_action": {
+                  "type": "LEARN_MORE"
+                }
+              }
+            }
+          }
+        },
+        {
+          "path": "ads",
+          "body": {
+            "name": "AdFlow Ad B — 챌린저 헤드",
+            "adset_id": "adset_2",
+            "creative": {
+              "creative_id": "creative_2"
+            },
+            "status": "ACTIVE"
+          }
+        },
+        {
+          "path": "ad_studies",
+          "body": {
+            "name": "AdFlow Split — 챔피언 헤드",
+            "description": "AdFlow A/B 토너먼트 라운드",
+            "type": "SPLIT_TEST",
+            "start_time": 1784991600,
+            "end_time": 1785423599,
+            "cells": [
+              {
+                "name": "A",
+                "treatment_percentage": 50,
+                "adsets": [
+                  "adset_1"
+                ]
+              },
+              {
+                "name": "B",
+                "treatment_percentage": 50,
+                "adsets": [
+                  "adset_2"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "result": {
+        "campaignId": "camp_1",
+        "adIds": [
+          "ad_1",
+          "ad_2"
+        ],
+        "adSetIds": [
+          "adset_1",
+          "adset_2"
+        ],
+        "studyId": "study_1"
+      }
+    },
+    {
+      "name": "traffic · primary_text 축",
+      "input": {
+        "tournament": {
+          "id": "tourn_fx",
+          "brandProfileId": "bp_1",
+          "productId": "prod_1",
+          "productName": "수분 크림",
+          "tone": "warm",
+          "objective": "traffic",
+          "mode": "auto",
+          "dailyBudget": 30000,
+          "champion": {
+            "headline": "챔피언 헤드",
+            "primaryText": "챔피언 카피"
+          },
+          "championCtr": 1.8,
+          "championConfirmed": true,
+          "axisCursor": 0,
+          "rounds": [],
+          "spentBudget": 0,
+          "status": "running",
+          "createdAt": "2026-07-01T00:00:00Z",
+          "delivery": {
+            "accessToken": "TOKEN",
+            "adAccountId": "act_123",
+            "pageId": "page_1",
+            "ownerEmail": "u@x.com",
+            "goalId": "traffic",
+            "linkUrl": "https://shop.example.com",
+            "ctaType": "LEARN_MORE",
+            "countries": [
+              "KR"
+            ],
+            "ageMin": 25,
+            "ageMax": 44,
+            "genders": [
+              2
+            ],
+            "roundDays": 4
+          }
+        },
+        "round": {
+          "index": 1,
+          "axis": "headline",
+          "campaignId": "placeholder",
+          "champion": {
+            "headline": "챔피언 헤드",
+            "primaryText": "챔피언 카피"
+          },
+          "challenger": {
+            "headline": "챔피언 헤드",
+            "primaryText": "챌린저 카피"
+          },
+          "fastForwardDays": 0,
+          "status": "running"
+        }
+      },
+      "requests": [
+        {
+          "path": "campaigns",
+          "body": {
+            "name": "AdFlow — 수분 크림 — 웹사이트 방문 — 챔피언 헤드 — 0726",
+            "objective": "OUTCOME_TRAFFIC",
+            "status": "ACTIVE",
+            "special_ad_categories": [],
+            "is_adset_budget_sharing_enabled": false
+          }
+        },
+        {
+          "path": "adsets",
+          "body": {
+            "name": "AdFlow AdSet A — 챔피언 헤드",
+            "campaign_id": "camp_1",
+            "billing_event": "IMPRESSIONS",
+            "optimization_goal": "LINK_CLICKS",
+            "bid_strategy": "LOWEST_COST_WITHOUT_CAP",
+            "daily_budget": "15000",
+            "destination_type": "WEBSITE",
+            "targeting": {
+              "age_min": 25,
+              "age_max": 44,
+              "genders": [
+                2
+              ],
+              "geo_locations": {
+                "countries": [
+                  "KR"
+                ]
+              },
+              "targeting_automation": {
+                "advantage_audience": 0
+              }
+            },
+            "start_time": 1784991600,
+            "end_time": 1785423599,
+            "status": "ACTIVE"
+          }
+        },
+        {
+          "path": "adcreatives",
+          "body": {
+            "name": "AdFlow Creative A — 챔피언 헤드",
+            "object_story_spec": {
+              "page_id": "page_1",
+              "link_data": {
+                "message": "챔피언 카피",
+                "link": "https://shop.example.com",
+                "name": "챔피언 헤드",
+                "call_to_action": {
+                  "type": "LEARN_MORE"
+                }
+              }
+            }
+          }
+        },
+        {
+          "path": "ads",
+          "body": {
+            "name": "AdFlow Ad A — 챔피언 헤드",
+            "adset_id": "adset_1",
+            "creative": {
+              "creative_id": "creative_1"
+            },
+            "status": "ACTIVE"
+          }
+        },
+        {
+          "path": "adsets",
+          "body": {
+            "name": "AdFlow AdSet B — 챔피언 헤드",
+            "campaign_id": "camp_1",
+            "billing_event": "IMPRESSIONS",
+            "optimization_goal": "LINK_CLICKS",
+            "bid_strategy": "LOWEST_COST_WITHOUT_CAP",
+            "daily_budget": "15000",
+            "destination_type": "WEBSITE",
+            "targeting": {
+              "age_min": 25,
+              "age_max": 44,
+              "genders": [
+                2
+              ],
+              "geo_locations": {
+                "countries": [
+                  "KR"
+                ]
+              },
+              "targeting_automation": {
+                "advantage_audience": 0
+              }
+            },
+            "start_time": 1784991600,
+            "end_time": 1785423599,
+            "status": "ACTIVE"
+          }
+        },
+        {
+          "path": "adcreatives",
+          "body": {
+            "name": "AdFlow Creative B — 챔피언 헤드",
+            "object_story_spec": {
+              "page_id": "page_1",
+              "link_data": {
+                "message": "챌린저 카피",
+                "link": "https://shop.example.com",
+                "name": "챔피언 헤드",
+                "call_to_action": {
+                  "type": "LEARN_MORE"
+                }
+              }
+            }
+          }
+        },
+        {
+          "path": "ads",
+          "body": {
+            "name": "AdFlow Ad B — 챔피언 헤드",
+            "adset_id": "adset_2",
+            "creative": {
+              "creative_id": "creative_2"
+            },
+            "status": "ACTIVE"
+          }
+        },
+        {
+          "path": "ad_studies",
+          "body": {
+            "name": "AdFlow Split — 챔피언 헤드",
+            "description": "AdFlow A/B 토너먼트 라운드",
+            "type": "SPLIT_TEST",
+            "start_time": 1784991600,
+            "end_time": 1785423599,
+            "cells": [
+              {
+                "name": "A",
+                "treatment_percentage": 50,
+                "adsets": [
+                  "adset_1"
+                ]
+              },
+              {
+                "name": "B",
+                "treatment_percentage": 50,
+                "adsets": [
+                  "adset_2"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "result": {
+        "campaignId": "camp_1",
+        "adIds": [
+          "ad_1",
+          "ad_2"
+        ],
+        "adSetIds": [
+          "adset_1",
+          "adset_2"
+        ],
+        "studyId": "study_1"
+      }
+    },
+    {
+      "name": "awareness · 이미지 업로드 · 성별 미지정",
+      "input": {
+        "tournament": {
+          "id": "tourn_fx",
+          "brandProfileId": "bp_1",
+          "productId": "prod_1",
+          "productName": "수분 크림",
+          "tone": "warm",
+          "objective": "awareness",
+          "mode": "auto",
+          "dailyBudget": 50000,
+          "champion": {
+            "headline": "챔피언 헤드",
+            "primaryText": "챔피언 카피"
+          },
+          "championCtr": 1.8,
+          "championConfirmed": true,
+          "axisCursor": 0,
+          "rounds": [],
+          "spentBudget": 0,
+          "status": "running",
+          "createdAt": "2026-07-01T00:00:00Z",
+          "delivery": {
+            "accessToken": "TOKEN",
+            "adAccountId": "act_123",
+            "pageId": "page_1",
+            "ownerEmail": "u@x.com",
+            "goalId": "awareness",
+            "linkUrl": "https://shop.example.com",
+            "ctaType": "LEARN_MORE",
+            "countries": [
+              "KR"
+            ],
+            "ageMin": 25,
+            "ageMax": 44,
+            "roundDays": 4,
+            "imageDataUrl": "data:image/png;base64,QUJD"
+          }
+        },
+        "round": {
+          "index": 1,
+          "axis": "headline",
+          "campaignId": "placeholder",
+          "champion": {
+            "headline": "챔피언 헤드",
+            "primaryText": "챔피언 카피"
+          },
+          "challenger": {
+            "headline": "챌린저 헤드",
+            "primaryText": "챔피언 카피"
+          },
+          "fastForwardDays": 0,
+          "status": "running"
+        }
+      },
+      "requests": [
+        {
+          "path": "adimages",
+          "body": {
+            "bytes": "QUJD"
+          }
+        },
+        {
+          "path": "campaigns",
+          "body": {
+            "name": "AdFlow — 수분 크림 — 인지도 — 챔피언 헤드 — 0726",
+            "objective": "OUTCOME_AWARENESS",
+            "status": "ACTIVE",
+            "special_ad_categories": [],
+            "is_adset_budget_sharing_enabled": false
+          }
+        },
+        {
+          "path": "adsets",
+          "body": {
+            "name": "AdFlow AdSet A — 챔피언 헤드",
+            "campaign_id": "camp_1",
+            "billing_event": "IMPRESSIONS",
+            "optimization_goal": "REACH",
+            "bid_strategy": "LOWEST_COST_WITHOUT_CAP",
+            "daily_budget": "25000",
+            "targeting": {
+              "age_min": 25,
+              "age_max": 44,
+              "geo_locations": {
+                "countries": [
+                  "KR"
+                ]
+              },
+              "targeting_automation": {
+                "advantage_audience": 0
+              }
+            },
+            "start_time": 1784991600,
+            "end_time": 1785423599,
+            "status": "ACTIVE"
+          }
+        },
+        {
+          "path": "adcreatives",
+          "body": {
+            "name": "AdFlow Creative A — 챔피언 헤드",
+            "object_story_spec": {
+              "page_id": "page_1",
+              "link_data": {
+                "message": "챔피언 카피",
+                "link": "https://shop.example.com",
+                "name": "챔피언 헤드",
+                "call_to_action": {
+                  "type": "LEARN_MORE"
+                },
+                "image_hash": "img_hash_1"
+              }
+            }
+          }
+        },
+        {
+          "path": "ads",
+          "body": {
+            "name": "AdFlow Ad A — 챔피언 헤드",
+            "adset_id": "adset_1",
+            "creative": {
+              "creative_id": "creative_1"
+            },
+            "status": "ACTIVE"
+          }
+        },
+        {
+          "path": "adsets",
+          "body": {
+            "name": "AdFlow AdSet B — 챌린저 헤드",
+            "campaign_id": "camp_1",
+            "billing_event": "IMPRESSIONS",
+            "optimization_goal": "REACH",
+            "bid_strategy": "LOWEST_COST_WITHOUT_CAP",
+            "daily_budget": "25000",
+            "targeting": {
+              "age_min": 25,
+              "age_max": 44,
+              "geo_locations": {
+                "countries": [
+                  "KR"
+                ]
+              },
+              "targeting_automation": {
+                "advantage_audience": 0
+              }
+            },
+            "start_time": 1784991600,
+            "end_time": 1785423599,
+            "status": "ACTIVE"
+          }
+        },
+        {
+          "path": "adcreatives",
+          "body": {
+            "name": "AdFlow Creative B — 챌린저 헤드",
+            "object_story_spec": {
+              "page_id": "page_1",
+              "link_data": {
+                "message": "챔피언 카피",
+                "link": "https://shop.example.com",
+                "name": "챌린저 헤드",
+                "call_to_action": {
+                  "type": "LEARN_MORE"
+                },
+                "image_hash": "img_hash_1"
+              }
+            }
+          }
+        },
+        {
+          "path": "ads",
+          "body": {
+            "name": "AdFlow Ad B — 챌린저 헤드",
+            "adset_id": "adset_2",
+            "creative": {
+              "creative_id": "creative_2"
+            },
+            "status": "ACTIVE"
+          }
+        },
+        {
+          "path": "ad_studies",
+          "body": {
+            "name": "AdFlow Split — 챔피언 헤드",
+            "description": "AdFlow A/B 토너먼트 라운드",
+            "type": "SPLIT_TEST",
+            "start_time": 1784991600,
+            "end_time": 1785423599,
+            "cells": [
+              {
+                "name": "A",
+                "treatment_percentage": 50,
+                "adsets": [
+                  "adset_1"
+                ]
+              },
+              {
+                "name": "B",
+                "treatment_percentage": 50,
+                "adsets": [
+                  "adset_2"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "result": {
+        "campaignId": "camp_1",
+        "adIds": [
+          "ad_1",
+          "ad_2"
+        ],
+        "adSetIds": [
+          "adset_1",
+          "adset_2"
+        ],
+        "studyId": "study_1"
+      }
+    },
+    {
+      "name": "leads_call · 국가 2개 · roundDays 7",
+      "input": {
+        "tournament": {
+          "id": "tourn_fx",
+          "brandProfileId": "bp_1",
+          "productId": "prod_1",
+          "productName": "수분 크림",
+          "tone": "warm",
+          "objective": "traffic",
+          "mode": "auto",
+          "dailyBudget": 41000,
+          "champion": {
+            "headline": "챔피언 헤드",
+            "primaryText": "챔피언 카피"
+          },
+          "championCtr": 1.8,
+          "championConfirmed": true,
+          "axisCursor": 0,
+          "rounds": [],
+          "spentBudget": 0,
+          "status": "running",
+          "createdAt": "2026-07-01T00:00:00Z",
+          "delivery": {
+            "accessToken": "TOKEN",
+            "adAccountId": "act_123",
+            "pageId": "page_1",
+            "ownerEmail": "u@x.com",
+            "goalId": "leads_call",
+            "linkUrl": "https://shop.example.com",
+            "ctaType": "CALL_NOW",
+            "countries": [
+              "KR",
+              "JP"
+            ],
+            "ageMin": 25,
+            "ageMax": 44,
+            "genders": [
+              2
+            ],
+            "roundDays": 7
+          }
+        },
+        "round": {
+          "index": 1,
+          "axis": "headline",
+          "campaignId": "placeholder",
+          "champion": {
+            "headline": "챔피언 헤드",
+            "primaryText": "챔피언 카피"
+          },
+          "challenger": {
+            "headline": "챌린저 헤드",
+            "primaryText": "챔피언 카피"
+          },
+          "fastForwardDays": 0,
+          "status": "running"
+        }
+      },
+      "requests": [
+        {
+          "path": "campaigns",
+          "body": {
+            "name": "AdFlow — 수분 크림 — 전화 받기 — 챔피언 헤드 — 0726",
+            "objective": "OUTCOME_LEADS",
+            "status": "ACTIVE",
+            "special_ad_categories": [],
+            "is_adset_budget_sharing_enabled": false
+          }
+        },
+        {
+          "path": "adsets",
+          "body": {
+            "name": "AdFlow AdSet A — 챔피언 헤드",
+            "campaign_id": "camp_1",
+            "billing_event": "IMPRESSIONS",
+            "optimization_goal": "QUALITY_CALL",
+            "bid_strategy": "LOWEST_COST_WITHOUT_CAP",
+            "daily_budget": "20500",
+            "destination_type": "PHONE_CALL",
+            "promoted_object": {
+              "page_id": "page_1"
+            },
+            "targeting": {
+              "age_min": 25,
+              "age_max": 44,
+              "genders": [
+                2
+              ],
+              "geo_locations": {
+                "countries": [
+                  "KR",
+                  "JP"
+                ]
+              },
+              "targeting_automation": {
+                "advantage_audience": 0
+              }
+            },
+            "start_time": 1784991600,
+            "end_time": 1785682799,
+            "status": "ACTIVE"
+          }
+        },
+        {
+          "path": "adcreatives",
+          "body": {
+            "name": "AdFlow Creative A — 챔피언 헤드",
+            "object_story_spec": {
+              "page_id": "page_1",
+              "link_data": {
+                "message": "챔피언 카피",
+                "link": "https://shop.example.com",
+                "name": "챔피언 헤드",
+                "call_to_action": {
+                  "type": "CALL_NOW"
+                }
+              }
+            }
+          }
+        },
+        {
+          "path": "ads",
+          "body": {
+            "name": "AdFlow Ad A — 챔피언 헤드",
+            "adset_id": "adset_1",
+            "creative": {
+              "creative_id": "creative_1"
+            },
+            "status": "ACTIVE"
+          }
+        },
+        {
+          "path": "adsets",
+          "body": {
+            "name": "AdFlow AdSet B — 챌린저 헤드",
+            "campaign_id": "camp_1",
+            "billing_event": "IMPRESSIONS",
+            "optimization_goal": "QUALITY_CALL",
+            "bid_strategy": "LOWEST_COST_WITHOUT_CAP",
+            "daily_budget": "20500",
+            "destination_type": "PHONE_CALL",
+            "promoted_object": {
+              "page_id": "page_1"
+            },
+            "targeting": {
+              "age_min": 25,
+              "age_max": 44,
+              "genders": [
+                2
+              ],
+              "geo_locations": {
+                "countries": [
+                  "KR",
+                  "JP"
+                ]
+              },
+              "targeting_automation": {
+                "advantage_audience": 0
+              }
+            },
+            "start_time": 1784991600,
+            "end_time": 1785682799,
+            "status": "ACTIVE"
+          }
+        },
+        {
+          "path": "adcreatives",
+          "body": {
+            "name": "AdFlow Creative B — 챌린저 헤드",
+            "object_story_spec": {
+              "page_id": "page_1",
+              "link_data": {
+                "message": "챔피언 카피",
+                "link": "https://shop.example.com",
+                "name": "챌린저 헤드",
+                "call_to_action": {
+                  "type": "CALL_NOW"
+                }
+              }
+            }
+          }
+        },
+        {
+          "path": "ads",
+          "body": {
+            "name": "AdFlow Ad B — 챌린저 헤드",
+            "adset_id": "adset_2",
+            "creative": {
+              "creative_id": "creative_2"
+            },
+            "status": "ACTIVE"
+          }
+        },
+        {
+          "path": "ad_studies",
+          "body": {
+            "name": "AdFlow Split — 챔피언 헤드",
+            "description": "AdFlow A/B 토너먼트 라운드",
+            "type": "SPLIT_TEST",
+            "start_time": 1784991600,
+            "end_time": 1785682799,
+            "cells": [
+              {
+                "name": "A",
+                "treatment_percentage": 50,
+                "adsets": [
+                  "adset_1"
+                ]
+              },
+              {
+                "name": "B",
+                "treatment_percentage": 50,
+                "adsets": [
+                  "adset_2"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "result": {
+        "campaignId": "camp_1",
+        "adIds": [
+          "ad_1",
+          "ad_2"
+        ],
+        "adSetIds": [
+          "adset_1",
+          "adset_2"
+        ],
+        "studyId": "study_1"
+      }
+    },
+    {
+      "name": "engagement · 축 동일(변화 없음) → headline 폴백",
+      "input": {
+        "tournament": {
+          "id": "tourn_fx",
+          "brandProfileId": "bp_1",
+          "productId": "prod_1",
+          "productName": "수분 크림",
+          "tone": "warm",
+          "objective": "traffic",
+          "mode": "auto",
+          "dailyBudget": 30000,
+          "champion": {
+            "headline": "챔피언 헤드",
+            "primaryText": "챔피언 카피"
+          },
+          "championCtr": 1.8,
+          "championConfirmed": true,
+          "axisCursor": 0,
+          "rounds": [],
+          "spentBudget": 0,
+          "status": "running",
+          "createdAt": "2026-07-01T00:00:00Z",
+          "delivery": {
+            "accessToken": "TOKEN",
+            "adAccountId": "act_123",
+            "pageId": "page_1",
+            "ownerEmail": "u@x.com",
+            "goalId": "engagement",
+            "linkUrl": "https://shop.example.com",
+            "ctaType": "MESSAGE_PAGE",
+            "countries": [
+              "KR"
+            ],
+            "ageMin": 25,
+            "ageMax": 44,
+            "genders": [
+              2
+            ],
+            "roundDays": 4
+          }
+        },
+        "round": {
+          "index": 1,
+          "axis": "headline",
+          "campaignId": "placeholder",
+          "champion": {
+            "headline": "챔피언 헤드",
+            "primaryText": "챔피언 카피"
+          },
+          "challenger": {
+            "headline": "챔피언 헤드",
+            "primaryText": "챔피언 카피"
+          },
+          "fastForwardDays": 0,
+          "status": "running"
+        }
+      },
+      "requests": [
+        {
+          "path": "campaigns",
+          "body": {
+            "name": "AdFlow — 수분 크림 — 게시물 참여 — 챔피언 헤드 — 0726",
+            "objective": "OUTCOME_ENGAGEMENT",
+            "status": "ACTIVE",
+            "special_ad_categories": [],
+            "is_adset_budget_sharing_enabled": false
+          }
+        },
+        {
+          "path": "adsets",
+          "body": {
+            "name": "AdFlow AdSet A — 챔피언 헤드",
+            "campaign_id": "camp_1",
+            "billing_event": "IMPRESSIONS",
+            "optimization_goal": "POST_ENGAGEMENT",
+            "bid_strategy": "LOWEST_COST_WITHOUT_CAP",
+            "daily_budget": "15000",
+            "targeting": {
+              "age_min": 25,
+              "age_max": 44,
+              "genders": [
+                2
+              ],
+              "geo_locations": {
+                "countries": [
+                  "KR"
+                ]
+              },
+              "targeting_automation": {
+                "advantage_audience": 0
+              }
+            },
+            "start_time": 1784991600,
+            "end_time": 1785423599,
+            "status": "ACTIVE"
+          }
+        },
+        {
+          "path": "adcreatives",
+          "body": {
+            "name": "AdFlow Creative A — 챔피언 헤드",
+            "object_story_spec": {
+              "page_id": "page_1",
+              "link_data": {
+                "message": "챔피언 카피",
+                "link": "https://shop.example.com",
+                "name": "챔피언 헤드",
+                "call_to_action": {
+                  "type": "MESSAGE_PAGE",
+                  "value": {
+                    "app_destination": "MESSENGER"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "path": "ads",
+          "body": {
+            "name": "AdFlow Ad A — 챔피언 헤드",
+            "adset_id": "adset_1",
+            "creative": {
+              "creative_id": "creative_1"
+            },
+            "status": "ACTIVE"
+          }
+        },
+        {
+          "path": "adsets",
+          "body": {
+            "name": "AdFlow AdSet B — 챔피언 헤드",
+            "campaign_id": "camp_1",
+            "billing_event": "IMPRESSIONS",
+            "optimization_goal": "POST_ENGAGEMENT",
+            "bid_strategy": "LOWEST_COST_WITHOUT_CAP",
+            "daily_budget": "15000",
+            "targeting": {
+              "age_min": 25,
+              "age_max": 44,
+              "genders": [
+                2
+              ],
+              "geo_locations": {
+                "countries": [
+                  "KR"
+                ]
+              },
+              "targeting_automation": {
+                "advantage_audience": 0
+              }
+            },
+            "start_time": 1784991600,
+            "end_time": 1785423599,
+            "status": "ACTIVE"
+          }
+        },
+        {
+          "path": "adcreatives",
+          "body": {
+            "name": "AdFlow Creative B — 챔피언 헤드",
+            "object_story_spec": {
+              "page_id": "page_1",
+              "link_data": {
+                "message": "챔피언 카피",
+                "link": "https://shop.example.com",
+                "name": "챔피언 헤드",
+                "call_to_action": {
+                  "type": "MESSAGE_PAGE",
+                  "value": {
+                    "app_destination": "MESSENGER"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "path": "ads",
+          "body": {
+            "name": "AdFlow Ad B — 챔피언 헤드",
+            "adset_id": "adset_2",
+            "creative": {
+              "creative_id": "creative_2"
+            },
+            "status": "ACTIVE"
+          }
+        },
+        {
+          "path": "ad_studies",
+          "body": {
+            "name": "AdFlow Split — 챔피언 헤드",
+            "description": "AdFlow A/B 토너먼트 라운드",
+            "type": "SPLIT_TEST",
+            "start_time": 1784991600,
+            "end_time": 1785423599,
+            "cells": [
+              {
+                "name": "A",
+                "treatment_percentage": 50,
+                "adsets": [
+                  "adset_1"
+                ]
+              },
+              {
+                "name": "B",
+                "treatment_percentage": 50,
+                "adsets": [
+                  "adset_2"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "result": {
+        "campaignId": "camp_1",
+        "adIds": [
+          "ad_1",
+          "ad_2"
+        ],
+        "adSetIds": [
+          "adset_1",
+          "adset_2"
+        ],
+        "studyId": "study_1"
+      }
+    }
+  ]
+}

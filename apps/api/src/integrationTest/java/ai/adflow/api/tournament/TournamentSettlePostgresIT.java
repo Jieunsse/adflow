@@ -26,11 +26,11 @@ import org.springframework.jdbc.core.JdbcTemplate;
 class TournamentSettlePostgresIT extends IntegrationTestBase {
 
   /** ad study 응답 스텁 — Meta 를 실제로 부르지 않는다. */
-  static class StubKpiClient extends RoundKpiClient {
+  static class StubKpiSource extends TournamentKpiSource {
     static Reading next;
 
-    StubKpiClient() {
-      super("", "");
+    StubKpiSource() {
+      super(null);
     }
 
     @Override
@@ -43,8 +43,8 @@ class TournamentSettlePostgresIT extends IntegrationTestBase {
   static class Stubs {
     @Bean
     @Primary
-    RoundKpiClient stubKpiClient() {
-      return new StubKpiClient();
+    TournamentKpiSource stubKpiSource() {
+      return new StubKpiSource();
     }
   }
 
@@ -121,8 +121,8 @@ class TournamentSettlePostgresIT extends IntegrationTestBase {
   @Test
   void 결산이_라운드와_챔피언을_고치고_자식이_누적되지_않는다() {
     save("tourn_pg_settle");
-    StubKpiClient.next =
-        new RoundKpiClient.Reading(
+    StubKpiSource.next =
+        new TournamentKpiSource.Reading(
             List.of(new AdKpi(15000, 270, 1.8, 91911), new AdKpi(15000, 360, 2.4, 91911)),
             new RoundVerdict("winner", 1.8, 2.4, 0.97),
             "B");
@@ -152,7 +152,7 @@ class TournamentSettlePostgresIT extends IntegrationTestBase {
   @Test
   void 스터디_미확정이면_아무것도_고치지_않는다() {
     save("tourn_pg_pending");
-    StubKpiClient.next = new RoundKpiClient.Reading(List.of(), null, null);
+    StubKpiSource.next = new TournamentKpiSource.Reading(List.of(), null, null);
 
     assertThat(settleService.settle("tourn_pg_pending").status()).isEqualTo("insufficient");
 

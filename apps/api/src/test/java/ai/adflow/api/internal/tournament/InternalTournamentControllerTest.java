@@ -5,7 +5,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import ai.adflow.api.tournament.RoundKpiClient;
+import ai.adflow.api.tournament.TournamentKpiSource;
 import ai.adflow.api.tournament.Tournament;
 import ai.adflow.api.tournament.TourRound;
 import ai.adflow.api.tournament.engine.AdKpi;
@@ -26,8 +26,9 @@ import org.springframework.test.web.servlet.MockMvc;
 /**
  * 결산 엔드포인트 — 단계 5 의 종착점.
  *
- * <p>Meta 조회는 역위임이라 실제 HTTP 를 태우지 않는다. RoundKpiClient 를 갈아끼워 "ad study 가 뭐라고
- * 답했는가"만 주입하고, 그 뒤 <b>Java 가 내리는 판정</b>(가설 verdict·챔피언 승격·수렴·예산)을 본다.
+ * <p>Meta 를 실제로 부르지 않는다. TournamentKpiSource 를 갈아끼워 "ad study 가 뭐라고 답했는가"만
+ * 주입하고, 그 뒤 <b>Java 가 내리는 판정</b>(가설 verdict·챔피언 승격·수렴·예산)을 본다.
+ * 조회 자체의 정확성은 MetaInsightsGoldenTest 가 픽스처로 지킨다.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -36,12 +37,12 @@ class InternalTournamentControllerTest {
 
   private static final String SECRET = "test-internal-secret";
 
-  /** ad study 응답 스텁. null 이면 "아직 유의성 없음" = 결산 보류. */
-  static class StubKpiClient extends RoundKpiClient {
-    static RoundKpiClient.Reading next;
+  /** ad study 응답 스텁. verdict 이 null 이면 "아직 유의성 없음" = 결산 보류. */
+  static class StubKpiSource extends TournamentKpiSource {
+    static TournamentKpiSource.Reading next;
 
-    StubKpiClient() {
-      super("", "");
+    StubKpiSource() {
+      super(null);
     }
 
     @Override
@@ -54,17 +55,16 @@ class InternalTournamentControllerTest {
   static class Stubs {
     @Bean
     @Primary
-    RoundKpiClient stubKpiClient() {
-      return new StubKpiClient();
+    TournamentKpiSource stubKpiSource() {
+      return new StubKpiSource();
     }
   }
 
   @Autowired private MockMvc mockMvc;
-  @Autowired private tools.jackson.databind.ObjectMapper json;
 
   @BeforeEach
   void reset() {
-    StubKpiClient.next = null;
+    StubKpiSource.next = null;
   }
 
   /** 라운드 1은 파라미터로 받아 방어/승격 이력을 갈아끼운다. 라운드 2가 결산 대상(running)이다. */
@@ -125,8 +125,8 @@ class InternalTournamentControllerTest {
         .andExpect(status().isOk());
   }
 
-  private static RoundKpiClient.Reading reading(String state, double ctrA, double ctrB, String winner) {
-    return new RoundKpiClient.Reading(
+  private static TournamentKpiSource.Reading reading(String state, double ctrA, double ctrB, String winner) {
+    return new TournamentKpiSource.Reading(
         List.of(new AdKpi(15000, 270, ctrA, 91911), new AdKpi(15000, 360, ctrB, 91911)),
         new RoundVerdict(state, ctrA, ctrB, 0.97),
         winner);
@@ -135,35 +135,6 @@ class InternalTournamentControllerTest {
   @Test
   void 시크릿이_없으면_401() throws Exception {
     mockMvc.perform(post("/internal/tournaments/x/settle")).andExpect(status().isUnauthorized());
-  }
-
-  /**
-   * 역위임의 유일한 미검증 이음매 — Next 라우트가 뱉는 JSON 을 Spring 이 읽을 수 있는가.
-   *
-   * <p>양쪽 테스트가 각자만 보면 필드 이름이 어긋나도 둘 다 green 이다. 여기 문자열은 round-kpis
-   * 라우트가 실제로 만드는 모양(kpis·verdict·winner)이다.
-   */
-  @Test
-  void Next_가_돌려주는_KPI_응답을_그대로_읽는다() throws Exception {
-    String fromNext =
-        """
-        {"kpis":[{"ctr":1.8,"impressions":15000,"clicks":270,"spend":91911},
-                 {"ctr":2.4,"impressions":15000,"clicks":360,"spend":91911}],
-         "verdict":{"state":"winner","ctrA":1.8,"ctrB":2.4,"confidence":0.97},
-         "winner":"B"}
-        """;
-
-    RoundKpiClient.Reading r = json.readValue(fromNext, RoundKpiClient.Reading.class);
-    org.junit.jupiter.api.Assertions.assertEquals(2, r.kpis().size());
-    org.junit.jupiter.api.Assertions.assertEquals(360, r.kpis().get(1).clicks());
-    org.junit.jupiter.api.Assertions.assertEquals("winner", r.verdict().state());
-    org.junit.jupiter.api.Assertions.assertEquals(2.4, r.verdict().ctrB());
-    org.junit.jupiter.api.Assertions.assertEquals("B", r.winner());
-
-    // 스터디 진행 중 — 결산 보류로 읽혀야 한다.
-    RoundKpiClient.Reading pending =
-        json.readValue("{\"kpis\":[],\"verdict\":null,\"winner\":null}", RoundKpiClient.Reading.class);
-    org.junit.jupiter.api.Assertions.assertNull(pending.verdict());
   }
 
   @Test
@@ -177,7 +148,7 @@ class InternalTournamentControllerTest {
   @Test
   void 스터디가_유의성을_못_내면_결산을_보류한다() throws Exception {
     seed("a@example.com", tournament("t_pending", "B", "winner"));
-    StubKpiClient.next = new RoundKpiClient.Reading(List.of(), null, null);
+    StubKpiSource.next = new TournamentKpiSource.Reading(List.of(), null, null);
 
     mockMvc
         .perform(post("/internal/tournaments/t_pending/settle").header("X-Internal-Secret", SECRET))
@@ -193,7 +164,7 @@ class InternalTournamentControllerTest {
   @Test
   void 챌린저가_이기면_챔피언이_승격되고_가설이_입증된다() throws Exception {
     seed("a@example.com", tournament("t_promote", "B", "winner"));
-    StubKpiClient.next = reading("winner", 1.8, 2.4, "B");
+    StubKpiSource.next = reading("winner", 1.8, 2.4, "B");
 
     mockMvc
         .perform(post("/internal/tournaments/t_promote/settle").header("X-Internal-Secret", SECRET))
@@ -223,7 +194,7 @@ class InternalTournamentControllerTest {
   @Test
   void 챔피언이_유의하게_방어하면_가설이_반증된다() throws Exception {
     seed("a@example.com", tournament("t_defend", "B", "winner"));
-    StubKpiClient.next = reading("winner", 2.4, 1.8, "A");
+    StubKpiSource.next = reading("winner", 2.4, 1.8, "A");
 
     mockMvc
         .perform(post("/internal/tournaments/t_defend/settle").header("X-Internal-Secret", SECRET))
@@ -239,7 +210,7 @@ class InternalTournamentControllerTest {
   void 챔피언_2연속_방어면_수렴으로_자동_완료된다() throws Exception {
     // ADR-061 — DEFAULT_DEFEND_STREAK = 2. 라운드 1이 이미 A 방어라 이번 방어로 채워진다.
     seed("a@example.com", tournament("t_converge", "A", "winner"));
-    StubKpiClient.next = reading("winner", 2.4, 1.8, "A");
+    StubKpiSource.next = reading("winner", 2.4, 1.8, "A");
 
     mockMvc
         .perform(post("/internal/tournaments/t_converge/settle").header("X-Internal-Secret", SECRET))
@@ -255,7 +226,7 @@ class InternalTournamentControllerTest {
   @Test
   void 판정이_갈리지_않으면_챔피언이_남고_가설은_미결이다() throws Exception {
     seed("a@example.com", tournament("t_incon", "B", "winner"));
-    StubKpiClient.next = reading("inconclusive", 2.0, 2.05, "A");
+    StubKpiSource.next = reading("inconclusive", 2.0, 2.05, "A");
 
     mockMvc
         .perform(post("/internal/tournaments/t_incon/settle").header("X-Internal-Secret", SECRET))
@@ -270,7 +241,7 @@ class InternalTournamentControllerTest {
   @Test
   void 진행_중인_라운드가_없으면_no_active() throws Exception {
     seed("a@example.com", tournament("t_done", "B", "winner"));
-    StubKpiClient.next = reading("winner", 1.8, 2.4, "B");
+    StubKpiSource.next = reading("winner", 1.8, 2.4, "B");
     mockMvc
         .perform(post("/internal/tournaments/t_done/settle").header("X-Internal-Secret", SECRET))
         .andExpect(jsonPath("$.status").value("settled"));

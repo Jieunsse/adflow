@@ -17,7 +17,7 @@ import org.springframework.stereotype.Service;
  * 라운드 결산 — 단계 5 의 종착점. TS server-runner 의 pollAndSettle 을 Java 가 인수한다.
  *
  * <p>Java 가 소유하는 판정: 가설 verdict 확정(ADR-044) · 챔피언 승격 · 수렴(ADR-061) · 봉투 소진
- * (ADR-054) · 라운드당 예산 차감. Meta 유의성 결과 자체는 아직 TS 가 조회해 온다(RoundKpiClient).
+ * (ADR-054) · 라운드당 예산 차감. 단계 6 부터 Meta 조회도 Java 다(TournamentKpiSource).
  *
  * <p>ad study 가 유의성을 못 냈으면 결산하지 않고 insufficient 로 돌려보낸다 — 다음 폴이 재시도한다.
  */
@@ -33,11 +33,11 @@ public class TournamentSettleService {
   }
 
   private final TournamentRepository repository;
-  private final RoundKpiClient kpiClient;
+  private final TournamentKpiSource kpiSource;
 
-  public TournamentSettleService(TournamentRepository repository, RoundKpiClient kpiClient) {
+  public TournamentSettleService(TournamentRepository repository, TournamentKpiSource kpiSource) {
     this.repository = repository;
-    this.kpiClient = kpiClient;
+    this.kpiSource = kpiSource;
   }
 
   @Transactional
@@ -49,7 +49,7 @@ public class TournamentSettleService {
         t.getRounds().stream().filter(x -> "running".equals(x.getStatus())).findFirst().orElse(null);
     if (r == null) return Outcome.NO_ACTIVE;
 
-    RoundKpiClient.Reading reading = kpiClient.read(t, r);
+    TournamentKpiSource.Reading reading = kpiSource.read(t, r);
     if (reading == null || reading.verdict() == null) return Outcome.INSUFFICIENT;
 
     RoundVerdict verdict = reading.verdict();

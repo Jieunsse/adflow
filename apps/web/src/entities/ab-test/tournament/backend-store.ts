@@ -87,8 +87,7 @@ export const backendTournamentStore: TournamentStore = {
   },
 };
 
-// 단계 5 의 종착점 — 라운드 판정은 Java 가 한다. cron 은 이걸 부르는 얇은 트리거로 남는다(설계 §9).
-// Spring 이 결산 중에 Meta KPI 가 필요하면 /api/internal/tournament/round-kpis 로 되묻는다.
+// 라운드 판정은 Java 가 한다. 단계 6 부터 Meta 게재·KPI 조회도 Java 라 왕복이 없다.
 export type BackendSettleResult =
   | { status: "no-active" }
   | { status: "insufficient" }

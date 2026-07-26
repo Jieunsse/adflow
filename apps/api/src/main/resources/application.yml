@@ -27,9 +27,6 @@ management:
 app:
   # Next.js 서버만 아는 값. /auth/exchange 호출자를 식별한다.
   internal-secret: ${ADFLOW_INTERNAL_SECRET:}
-  # 역위임 대상 (설계 §9) — Meta 게재·KPI 조회가 아직 TS 라 결산 중에 되묻는다.
-  # 단계 6 에서 Meta 클라이언트를 Java 로 옮기면 이 값이 필요 없어진다.
-  next-internal-url: ${ADFLOW_NEXT_INTERNAL_URL:http://localhost:3000}
   jwt:
     # HS256 서명키. 32바이트 이상. 실값은 환경변수 ADFLOW_JWT_SECRET 로만 준다.
     secret: ${ADFLOW_JWT_SECRET:}

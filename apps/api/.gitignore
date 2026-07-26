@@ -35,3 +35,7 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### AdFlow ###
+# 버킷 파일 루트 (app.storage.root). 사용자가 올린 이미지·참고 자료가 여기 쌓인다.
+.adflow-files/

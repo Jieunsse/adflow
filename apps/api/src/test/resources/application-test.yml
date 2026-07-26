@@ -16,3 +16,6 @@ app:
     refresh-ttl: P30D
   encryption:
     key: test-encryption-key-32-bytes-ok!
+  storage:
+    # 테스트가 레포에 파일을 남기지 않게 build 아래로 뺀다 (gradle clean 이 쓸어간다).
+    root: build/test-files

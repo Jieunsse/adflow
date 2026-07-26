@@ -41,6 +41,10 @@ app:
   poller:
     # 운영 기본값 6시간. 로컬 프로필에서 짧게 덮어쓴다 (설계 §6).
     interval: PT6H
+  storage:
+    # 버킷 파일 루트. 로컬은 파일시스템, 배포하면 S3 호환으로 교체 (설계 §5).
+    # 레포 밖에 두려면 ADFLOW_STORAGE_ROOT 로 덮어쓴다.
+    root: ${ADFLOW_STORAGE_ROOT:./.adflow-files}
 
 ---
 spring:

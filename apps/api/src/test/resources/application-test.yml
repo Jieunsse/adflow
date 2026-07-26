@@ -13,5 +13,6 @@ app:
   jwt:
     secret: test-secret-key-for-hs256-at-least-32-bytes
     ttl: PT1H
+    refresh-ttl: P30D
   encryption:
     key: test-encryption-key-32-bytes-ok!

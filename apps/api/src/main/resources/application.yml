@@ -26,8 +26,10 @@ app:
   jwt:
     # HS256 서명키. 32바이트 이상. 실값은 환경변수 ADFLOW_JWT_SECRET 로만 준다.
     secret: ${ADFLOW_JWT_SECRET:}
-    # 액세스 토큰 수명. 만료되면 Next.js 가 /auth/exchange 를 다시 호출한다(refresh 토큰 없음).
+    # 액세스 토큰 수명. 만료되면 Next.js 가 /auth/refresh 로 재발급받는다.
     ttl: PT1H
+    # 무상태 갱신 토큰 수명. 서버가 기억하지 않으므로 개별 회수 수단은 서명키 교체뿐이다.
+    refresh-ttl: P30D
   encryption:
     # AES-256 컬럼 암호화 키. 정확히 32바이트. 실값은 환경변수로만.
     # 이 키를 잃으면 저장된 Meta 토큰을 복구할 수 없다 — 재로그인으로 다시 받아야 한다.

@@ -29,8 +29,8 @@ public class SecurityConfig {
                     .permitAll()
                     .requestMatchers("/actuator/**", "/v3/api-docs/**", "/swagger-ui/**")
                     .permitAll()
-                    // 교환은 JWT 를 받기 전 단계다. 내부 시크릿으로 따로 지킨다.
-                    .requestMatchers("/auth/exchange")
+                    // 교환·갱신은 JWT 를 받기 전/재발급 단계다. 내부 시크릿으로 따로 지킨다.
+                    .requestMatchers("/auth/exchange", "/auth/refresh")
                     .permitAll()
                     .anyRequest()
                     .authenticated())

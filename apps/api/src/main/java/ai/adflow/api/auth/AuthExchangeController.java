@@ -59,7 +59,9 @@ public class AuthExchangeController {
     persist(request, role);
 
     TokenIssuer.Issued issued = tokenIssuer.issue(request.ownerKey(), request.email(), role);
-    return ResponseEntity.ok(new ExchangeResponse(issued.token(), issued.expiresAt()));
+    return ResponseEntity.ok(
+        new ExchangeResponse(
+            issued.token(), issued.expiresAt(), issued.refreshToken(), issued.refreshExpiresAt()));
   }
 
   /** 타이밍 공격을 피하려고 상수시간 비교를 쓴다. */

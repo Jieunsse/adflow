@@ -68,7 +68,7 @@ describe("POST /api/install/meta-app", () => {
     expect(fetchMock.mock.calls[0][0]).toContain("client_id=1234567890")
     expect(fetchMock.mock.calls[0][0]).toContain("grant_type=client_credentials")
     expect(fetchMock.mock.calls[1][0]).toContain("/1234567890")
-    expect(fetchMock.mock.calls[1][0]).toContain("fields=name%2Cnamespace")
+    expect(fetchMock.mock.calls[1][0]).toContain("fields=name,namespace")
   })
 
   it("Meta 토큰 발급 실패 시 400 + 에러 메시지", async () => {

@@ -16,6 +16,7 @@ export default defineConfig({
   },
   test: {
     // co-located *.test.ts — slice locality.
-    include: ["src/**/*.test.ts", "lib/**/*.test.ts"],
+    // app/ 도 포함한다 — 라우트 옆 테스트가 여기 없으면 파일만 있고 영영 안 돌았다.
+    include: ["src/**/*.test.ts", "lib/**/*.test.ts", "app/**/*.test.ts"],
   },
 });

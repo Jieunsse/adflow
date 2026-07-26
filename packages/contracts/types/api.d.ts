@@ -4,7 +4,7 @@
  */
 
 export interface paths {
-    "/stores/library": {
+    "/stores/sops": {
         parameters: {
             query?: never;
             header?: never;
@@ -20,7 +20,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/stores/influencer-campaigns": {
+    "/stores/personas": {
         parameters: {
             query?: never;
             header?: never;
@@ -36,7 +36,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/stores/creators": {
+    "/stores/library": {
         parameters: {
             query?: never;
             header?: never;
@@ -52,7 +52,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/stores/brand-profiles": {
+    "/stores/influencer-campaigns": {
         parameters: {
             query?: never;
             header?: never;
@@ -63,6 +63,70 @@ export interface paths {
         put?: never;
         post: operations["upsert_3"];
         delete: operations["remove_3"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/stores/creators": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_4"];
+        put?: never;
+        post: operations["upsert_4"];
+        delete: operations["remove_4"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/stores/campaign-launches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_5"];
+        put?: never;
+        post: operations["upsert_5"];
+        delete: operations["remove_5"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/stores/brand-profiles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_6"];
+        put?: never;
+        post: operations["upsert_6"];
+        delete: operations["remove_6"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/stores/auto-relaunch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_7"];
+        put?: never;
+        post: operations["upsert_7"];
+        delete: operations["remove_7"];
         options?: never;
         head?: never;
         patch?: never;
@@ -136,6 +200,33 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        ItemRequestSop: {
+            item?: components["schemas"]["Sop"];
+        };
+        Sop: {
+            id: string;
+            name: string;
+            description?: string;
+            sections: Record<string, never>;
+            createdAt: string;
+            updatedAt: string;
+        };
+        ItemRequestPersona: {
+            item?: components["schemas"]["Persona"];
+        };
+        Persona: {
+            id: string;
+            brandProfileId: string;
+            name: string;
+            /** Format: int32 */
+            ageMin?: number;
+            /** Format: int32 */
+            ageMax?: number;
+            genders?: number[];
+            location?: string[];
+            interests?: string[];
+            customerDescription?: string;
+        };
         ItemRequestLibraryItem: {
             item?: components["schemas"]["LibraryItem"];
         };
@@ -214,6 +305,29 @@ export interface components {
         ItemRequestCreator: {
             item?: components["schemas"]["Creator"];
         };
+        CampaignLaunch: {
+            adSetId: string;
+            adId?: string;
+            adIds?: string[];
+            /** Format: double */
+            dailyBudget: number;
+            startDate: string;
+            endDate: string;
+            /** @enum {string} */
+            status: "ACTIVE" | "PAUSED";
+            /** @enum {string} */
+            objective?: "OUTCOME_TRAFFIC" | "OUTCOME_AWARENESS" | "OUTCOME_ENGAGEMENT" | "OUTCOME_LEADS" | "OUTCOME_SALES" | "OUTCOME_APP_PROMOTION";
+            goalId?: string;
+            skipped?: boolean;
+            /** @enum {string} */
+            abTestAxis?: "headline" | "primary_text" | "image";
+            abTestVariantA?: string;
+            abTestVariantB?: Record<string, never>;
+            campaignId: string;
+        };
+        ItemRequestCampaignLaunch: {
+            item?: components["schemas"]["CampaignLaunch"];
+        };
         BrandProfile: {
             id: string;
             name: string;
@@ -265,6 +379,18 @@ export interface components {
             source: "derived" | "custom";
             reason?: string;
         };
+        AutoRelaunchState: {
+            enabled: boolean;
+            /** Format: int32 */
+            cycleCount: number;
+            parentCampaignId?: string;
+            createdAt: string;
+            updatedAt: string;
+            campaignId: string;
+        };
+        ItemRequestAutoRelaunchState: {
+            item?: components["schemas"]["AutoRelaunchState"];
+        };
         RefreshRequest: {
             refreshToken?: string;
         };
@@ -294,6 +420,12 @@ export interface components {
             igUserId?: string;
             igUsername?: string;
         };
+        ItemsResponseSop: {
+            items?: components["schemas"]["Sop"][];
+        };
+        ItemsResponsePersona: {
+            items?: components["schemas"]["Persona"][];
+        };
         ItemsResponseLibraryItem: {
             items?: components["schemas"]["LibraryItem"][];
         };
@@ -303,8 +435,14 @@ export interface components {
         ItemsResponseCreator: {
             items?: components["schemas"]["Creator"][];
         };
+        ItemsResponseCampaignLaunch: {
+            items?: components["schemas"]["CampaignLaunch"][];
+        };
         ItemsResponseBrandProfile: {
             items?: components["schemas"]["BrandProfile"][];
+        };
+        ItemsResponseAutoRelaunchState: {
+            items?: components["schemas"]["AutoRelaunchState"][];
         };
     };
     responses: never;
@@ -330,7 +468,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ItemsResponseLibraryItem"];
+                    "*/*": components["schemas"]["ItemsResponseSop"];
                 };
             };
         };
@@ -344,7 +482,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ItemRequestLibraryItem"];
+                "application/json": components["schemas"]["ItemRequestSop"];
             };
         };
         responses: {
@@ -400,7 +538,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ItemsResponseInfluencerCampaign"];
+                    "*/*": components["schemas"]["ItemsResponsePersona"];
                 };
             };
         };
@@ -414,7 +552,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ItemRequestInfluencerCampaign"];
+                "application/json": components["schemas"]["ItemRequestPersona"];
             };
         };
         responses: {
@@ -470,7 +608,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ItemsResponseCreator"];
+                    "*/*": components["schemas"]["ItemsResponseLibraryItem"];
                 };
             };
         };
@@ -484,7 +622,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ItemRequestCreator"];
+                "application/json": components["schemas"]["ItemRequestLibraryItem"];
             };
         };
         responses: {
@@ -540,12 +678,222 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ItemsResponseBrandProfile"];
+                    "*/*": components["schemas"]["ItemsResponseInfluencerCampaign"];
                 };
             };
         };
     };
     upsert_3: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ItemRequestInfluencerCampaign"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: boolean;
+                    };
+                };
+            };
+        };
+    };
+    remove_3: {
+        parameters: {
+            query: {
+                id: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: boolean;
+                    };
+                };
+            };
+        };
+    };
+    list_4: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ItemsResponseCreator"];
+                };
+            };
+        };
+    };
+    upsert_4: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ItemRequestCreator"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: boolean;
+                    };
+                };
+            };
+        };
+    };
+    remove_4: {
+        parameters: {
+            query: {
+                id: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: boolean;
+                    };
+                };
+            };
+        };
+    };
+    list_5: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ItemsResponseCampaignLaunch"];
+                };
+            };
+        };
+    };
+    upsert_5: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ItemRequestCampaignLaunch"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: boolean;
+                    };
+                };
+            };
+        };
+    };
+    remove_5: {
+        parameters: {
+            query: {
+                id: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: boolean;
+                    };
+                };
+            };
+        };
+    };
+    list_6: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ItemsResponseBrandProfile"];
+                };
+            };
+        };
+    };
+    upsert_6: {
         parameters: {
             query?: never;
             header?: never;
@@ -571,7 +919,77 @@ export interface operations {
             };
         };
     };
-    remove_3: {
+    remove_6: {
+        parameters: {
+            query: {
+                id: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: boolean;
+                    };
+                };
+            };
+        };
+    };
+    list_7: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ItemsResponseAutoRelaunchState"];
+                };
+            };
+        };
+    };
+    upsert_7: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ItemRequestAutoRelaunchState"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: boolean;
+                    };
+                };
+            };
+        };
+    };
+    remove_7: {
         parameters: {
             query: {
                 id: string;

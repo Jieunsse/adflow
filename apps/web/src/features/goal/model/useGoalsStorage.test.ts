@@ -1,10 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("@shared/lib/supabase-sync", () => ({
-  syncUpsert: vi.fn(),
-  syncDelete: vi.fn(),
-}));
-
 // node 환경에 localStorage 없으므로 Map 기반 스텁 주입
 const ls = new Map<string, string>();
 vi.stubGlobal("window", {});

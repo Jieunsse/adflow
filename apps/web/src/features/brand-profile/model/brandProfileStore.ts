@@ -6,7 +6,7 @@
 
 import { useEffect } from "react";
 import { useSession } from "next-auth/react";
-import { createSyncedStore, isRealOwner } from "@shared/lib/store";
+import { createSyncedStore, isRealOwner, useSyncErrorToast } from "@shared/lib/store";
 import type { BrandProfile, BrandProfileEntry } from "./useBrandProfileStorage";
 
 const PROFILES_KEY = "adflow:brand-profiles:v2"; // zustand persist 봉투. 레거시 bare-array 키는 1회 흡수 후 폐기.
@@ -68,6 +68,7 @@ export function useSyncBrandProfiles(): void {
       }
     })();
   }, [owner]);
+  useSyncErrorToast(useStore);
 }
 
 // 동기 스냅샷 — 워밍된 getState().items. 서버에서는 빈 배열.

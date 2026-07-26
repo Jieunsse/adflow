@@ -144,4 +144,43 @@ describe("createSyncedStore", () => {
     useStore.getState().upsert({ id: "u1", v: 5 });
     expect(fetchMock).toHaveBeenCalledWith("/api/test", expect.objectContaining({ method: "POST" }));
   });
+  it("쓰기가 실패하면 lastError 로 드러나요", async () => {
+    fetchMock.mockResolvedValue({ ok: false, status: 500, json: async () => ({}) });
+    const { useStore } = freshStore();
+    await useStore.getState().hydrate("real@x.com");
+    useStore.getState().add({ id: "a", v: 1 });
+    await vi.waitFor(() => expect(useStore.getState().lastError).toBeTruthy());
+    // 로컬 값은 그대로 남는다 — 저장은 실패해도 사용자가 쓴 내용을 지우지 않는다.
+    expect(useStore.getState().items).toHaveLength(1);
+  });
+
+  it("네트워크가 끊겨도 lastError 로 드러나요", async () => {
+    fetchMock.mockRejectedValue(new Error("offline"));
+    const { useStore } = freshStore();
+    await useStore.getState().hydrate("real@x.com");
+    useStore.getState().removeById("a");
+    await vi.waitFor(() => expect(useStore.getState().lastError).toBeTruthy());
+  });
+
+  it("다음 쓰기가 성공하면 lastError 가 비워져요", async () => {
+    const { useStore } = freshStore();
+    await useStore.getState().hydrate("real@x.com");
+
+    fetchMock.mockResolvedValue({ ok: false, status: 500, json: async () => ({}) });
+    useStore.getState().add({ id: "a", v: 1 });
+    await vi.waitFor(() => expect(useStore.getState().lastError).toBeTruthy());
+
+    fetchMock.mockResolvedValue({ ok: true, json: async () => ({ ok: true }) });
+    useStore.getState().add({ id: "b", v: 2 });
+    await vi.waitFor(() => expect(useStore.getState().lastError).toBeNull());
+  });
+
+  it("게스트는 쓰기를 단락하므로 에러도 안 생겨요", async () => {
+    const { useStore } = freshStore();
+    await useStore.getState().hydrate("guest@adflow.local");
+    useStore.getState().add({ id: "a", v: 1 });
+    await new Promise((r) => setTimeout(r, 10));
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(useStore.getState().lastError).toBeNull();
+  });
 });

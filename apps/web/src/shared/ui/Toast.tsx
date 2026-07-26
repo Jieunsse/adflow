@@ -87,3 +87,10 @@ export function useToast() {
   if (!ctx) throw new Error("useToast must be used inside ToastProvider");
   return ctx.showToast;
 }
+
+// Provider 밖(테스트 렌더·비인증 셸)에서도 터지지 않는 변형. store 배선처럼
+// 토스트가 있으면 좋지만 없다고 화면이 죽으면 안 되는 자리에서 쓴다.
+export function useToastOptional(): ((message: string) => void) | null {
+  const ctx = useContext(ToastContext);
+  return ctx ? ctx.showToast : null;
+}

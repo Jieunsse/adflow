@@ -9,6 +9,7 @@ import { useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { create, type StoreApi, type UseBoundStore } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
+import { useToastOptional } from "@shared/ui/Toast";
 import { isRealOwner } from "./ownerKey";
 
 export interface SyncedItem {
@@ -21,10 +22,13 @@ export interface SyncedState<T extends SyncedItem> {
   items: T[];
   status: SyncStatus;
   owner: string | null;
+  // 마지막 서버 쓰기의 실패 사유. 성공하면 null 로 돌아간다.
+  lastError: string | null;
   add: (item: T) => void;
   upsert: (item: T) => void;
   removeById: (id: string) => void;
   setAll: (items: T[]) => void;
+  clearError: () => void;
   hydrate: (owner: string | null) => Promise<void>;
 }
 
@@ -49,22 +53,39 @@ export function createSyncedStore<T extends SyncedItem>(
   const useStore = create<SyncedState<T>>()(
     persist(
       (set, get) => {
-        // best-effort 서버 확정(V1, 롤백·재시도 없음). 게스트/미로그인은 단락 — 로컬·persist 캐시만.
+        // 서버 확정. 실패를 삼키지 않는다 — supabase-sync 의 .then(()=>{},()=>{}) 가
+        // persona 미러 실패를 몇 달간 숨긴 전례가 있다(설계 §5).
+        const settle = (res: Response | null, action: string) => {
+          if (res && res.ok) {
+            if (get().lastError) set({ lastError: null });
+            return;
+          }
+          const detail = res ? ` (${res.status})` : "";
+          set({ lastError: `${action}이 서버에 닿지 않았어요${detail}. 잠시 뒤 다시 시도해 주세요.` });
+        };
+
+        // 게스트/미로그인은 단락 — 로컬·persist 캐시만.
         const postItem = (item: T) => {
           if (!isRealOwner(get().owner)) return;
           void fetch(config.endpoint, {
             method: "POST",
             headers: { "content-type": "application/json" },
             body: JSON.stringify({ item }),
-          }).catch(() => {});
+          }).then(
+            (res) => settle(res, "저장"),
+            () => settle(null, "저장"),
+          );
         };
 
         return {
         items: [],
         status: "idle",
         owner: null,
+        lastError: null,
 
         setAll: (items) => set({ items }),
+
+        clearError: () => set({ lastError: null }),
 
         add: (item) => {
           // optimistic — 로컬 즉시 반영(id 중복 제거 후 prepend) 뒤 서버 확정.
@@ -89,7 +110,10 @@ export function createSyncedStore<T extends SyncedItem>(
           if (isRealOwner(get().owner)) {
             void fetch(`${config.endpoint}?id=${encodeURIComponent(id)}`, {
               method: "DELETE",
-            }).catch(() => {});
+            }).then(
+              (res) => settle(res, "삭제"),
+              () => settle(null, "삭제"),
+            );
           }
         },
 
@@ -131,10 +155,11 @@ export function createSyncedStore<T extends SyncedItem>(
     const { data: session } = useSession();
     const owner = session?.user?.email ?? null;
     useEffect(() => {
-      // persist 캐시 먼저 복원(오프라인 폴백) → 그 위에 Supabase 하이드레이션.
+      // persist 캐시 먼저 복원(오프라인 폴백) → 그 위에 서버 하이드레이션.
       void useStore.persist.rehydrate();
       void useStore.getState().hydrate(owner);
     }, [owner]);
+    useSyncErrorToast(useStore);
   }
 
   return {
@@ -144,4 +169,18 @@ export function createSyncedStore<T extends SyncedItem>(
       void useStore.persist.rehydrate();
     },
   };
+}
+
+// 쓰기 실패를 화면으로 흘린다. 훅이라 도메인 store 가 자체 useSync 를 쓰더라도 재사용된다.
+export function useSyncErrorToast<T extends SyncedItem>(
+  useStore: UseBoundStore<StoreApi<SyncedState<T>>>,
+): void {
+  const showToast = useToastOptional();
+  const lastError = useStore((s) => s.lastError);
+  useEffect(() => {
+    if (!lastError) return;
+    if (showToast) showToast(lastError);
+    else console.error("[synced-store]", lastError);
+    useStore.getState().clearError();
+  }, [lastError, showToast, useStore]);
 }

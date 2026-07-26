@@ -7,3 +7,8 @@ spring:
   jpa:
     hibernate:
       ddl-auto: create-drop
+
+app:
+  jwt:
+    secret: test-secret-key-for-hs256-at-least-32-bytes
+    ttl: PT1H

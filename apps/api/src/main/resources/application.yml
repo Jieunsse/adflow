@@ -21,6 +21,11 @@ management:
         include: health, info
 
 app:
+  jwt:
+    # HS256 서명키. 32바이트 이상. 실값은 환경변수 ADFLOW_JWT_SECRET 로만 준다.
+    secret: ${ADFLOW_JWT_SECRET:}
+    # 액세스 토큰 수명. 만료되면 Next.js 가 /auth/exchange 를 다시 호출한다(refresh 토큰 없음).
+    ttl: PT1H
   poller:
     # 운영 기본값 6시간. 로컬 프로필에서 짧게 덮어쓴다 (설계 §6).
     interval: PT6H

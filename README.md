@@ -44,6 +44,10 @@ npm run dev
 `local` 프로필은 폴러 주기를 1분으로 줄여요(운영 기본 6시간). 한 사이클을 바로 돌리려면
 `POST /internal/poller/run` 에 `X-Internal-Secret` 헤더를 실어 보내요.
 
+포트 3000 이 사용 중이면 `npm run dev` 가 3001·3002… 로 옮겨 띄우고 `NEXTAUTH_URL` 도 같이 맞춰요.
+그때 **Facebook 로그인만 안 돼요** — Meta 콘솔에 등록한 redirect_uri 가 3000 이라서요. 둘러보기와
+저장 기능은 그대로 돼요. Facebook OAuth 를 검증할 땐 3000 을 비우고 `npm run https-dev` 를 쓰세요.
+
 Meta 앱 자격증명은 `.env.local` 대신 `/install` 마법사로 넣는 게 기본이에요 (로컬 암호화 파일에 저장).
 자격증명이 없으면 `middleware.ts` 가 `/install` 로 보내요. 로그인 없이 훑어보려면 `둘러보기` 모드를 쓰세요.
 
@@ -51,8 +55,8 @@ Meta 앱 자격증명은 `.env.local` 대신 `/install` 마법사로 넣는 게 
 
 | 명령 | 용도 |
 |------|------|
-| `npm run dev` | 개발 서버 (Turbopack) |
-| `npm run https-dev` | HTTPS 개발 서버 — Meta OAuth 콜백 검증용 |
+| `npm run dev` | 개발 서버 (Turbopack) — 빈 포트를 골라 `NEXTAUTH_URL` 을 맞춰요 |
+| `npm run https-dev` | HTTPS 개발 서버 — Meta OAuth 콜백 검증용 (포트 3000 고정) |
 | `npm run build` | 프로덕션 빌드 |
 | `npm run lint` | ESLint (next/core-web-vitals + typescript) |
 | `npm test` | Vitest (회귀 안전망) |

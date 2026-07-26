@@ -4,7 +4,7 @@
   "private": true,
   "description": "Meta 광고를 기획부터 게재·성과 회고까지 굴리는 마케팅 워크스페이스",
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "node scripts/dev.mjs",
     "https-dev": "next dev --turbopack --experimental-https",
     "build": "next build",
     "start": "next start",

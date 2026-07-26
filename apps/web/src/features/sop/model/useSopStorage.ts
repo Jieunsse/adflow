@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { syncDelete, syncUpsert } from "@shared/lib/supabase-sync";
+import { useCallback } from "react";
+import { createSyncedStore } from "@shared/lib/store";
 
 export type SopItemType =
   | "prohibited_words"
@@ -71,11 +71,6 @@ export interface Sop {
   updatedAt: string;
 }
 
-const INDEX_KEY = "adflow:sop-index";
-const itemKey = (id: string) => `adflow:sop:${id}`;
-const VERSION_KEY = "adflow:sop:version";
-const CURRENT_VERSION = "2";
-
 export function isSectionFilled(s: SopSection): boolean {
   switch (s.type) {
     case "prohibited_words":
@@ -121,148 +116,121 @@ export function sectionPreviewText(s: SopSection): string {
   }
 }
 
-function readIndex(): string[] {
-  if (typeof window === "undefined") return [];
-  try {
-    return JSON.parse(localStorage.getItem(INDEX_KEY) ?? "[]") as string[];
-  } catch {
-    return [];
-  }
-}
+const LEGACY_INDEX_KEY = "adflow:sop-index";
+const legacyItemKey = (id: string) => `adflow:sop:${id}`;
+const VERSION_KEY = "adflow:sop:version";
+const CURRENT_VERSION = "2";
 
-function writeIndex(ids: string[]): void {
-  try {
-    localStorage.setItem(INDEX_KEY, JSON.stringify(ids));
-  } catch {}
-}
-
-function readSop(id: string): Sop | null {
-  try {
-    const raw = localStorage.getItem(itemKey(id));
-    return raw ? (JSON.parse(raw) as Sop) : null;
-  } catch {
-    return null;
-  }
-}
-
-function writeSop(sop: Sop): void {
-  try {
-    localStorage.setItem(itemKey(sop.id), JSON.stringify(sop));
-  } catch {}
-  syncUpsert("sops", {
-    id: sop.id,
-    name: sop.name,
-    description: sop.description ?? null,
-    sections: sop.sections,
-    created_at: sop.createdAt,
-    updated_at: sop.updatedAt,
-  });
-}
-
-function deleteSopFromStorage(id: string): void {
-  try {
-    localStorage.removeItem(itemKey(id));
-  } catch {}
-  syncDelete("sops", "id", id);
-}
+const SOPS_KEY = "adflow:sops:v1"; // zustand persist 봉투
 
 /**
- * v0.6 schema bump (ADR-020).
- * v1/v0.5 entries (`content: string` 모양) 를 전부 폐기. 자동 변환 X — 실유저 데이터 없음 전제.
- * 멱등 — `adflow:sop:version === '2'` 면 no-op.
+ * 레거시 localStorage(인덱스 + 개별 키)에서 SOP 을 건져 올린 뒤 옛 키를 지운다.
+ *
+ * ADR-020 의 버전 리셋을 먼저 본다 — 옛 모양(content: string)이 서버로 올라가면
+ * 되돌릴 방법이 없다. 버전이 낮으면 전부 폐기하고 빈 배열을 준다.
  */
-function runVersionReset(): void {
-  if (typeof window === "undefined") return;
-  if (localStorage.getItem(VERSION_KEY) === CURRENT_VERSION) return;
-  const ids = readIndex();
+export function absorbLegacySops(): Sop[] {
+  if (typeof window === "undefined") return [];
+
+  let ids: string[] = [];
+  try {
+    ids = JSON.parse(localStorage.getItem(LEGACY_INDEX_KEY) ?? "[]") as string[];
+  } catch {
+    ids = [];
+  }
+
+  const stale = localStorage.getItem(VERSION_KEY) !== CURRENT_VERSION;
+
+  const absorbed: Sop[] = [];
   for (const id of ids) {
+    if (!stale) {
+      try {
+        const raw = localStorage.getItem(legacyItemKey(id));
+        if (raw) absorbed.push(JSON.parse(raw) as Sop);
+      } catch {}
+    }
     try {
-      localStorage.removeItem(itemKey(id));
+      localStorage.removeItem(legacyItemKey(id));
     } catch {}
   }
-  writeIndex([]);
+
   try {
+    localStorage.removeItem(LEGACY_INDEX_KEY);
     localStorage.setItem(VERSION_KEY, CURRENT_VERSION);
   } catch {}
+
+  return absorbed;
 }
 
-export function useSopStorage() {
-  const [sops, setSops] = useState<Sop[]>([]);
+export const sops = createSyncedStore<Sop>({
+  name: SOPS_KEY,
+  endpoint: "/api/stores/sops",
+  migrate: absorbLegacySops,
+});
 
-  useEffect(() => {
-    runVersionReset();
-    const ids = readIndex();
-    setSops(ids.map((id) => readSop(id)).filter(Boolean) as Sop[]);
-  }, []);
+const { useStore } = sops;
+
+export function useSopStorage() {
+  sops.useSync();
+  const list = useStore((s) => s.items);
+  const upsert = useStore((s) => s.upsert);
+  const removeById = useStore((s) => s.removeById);
 
   const createSop = useCallback(
     (data: Omit<Sop, "id" | "createdAt" | "updatedAt">): Sop => {
       const now = new Date().toISOString();
-      const sop: Sop = {
-        id: crypto.randomUUID(),
-        createdAt: now,
-        updatedAt: now,
-        ...data,
-      };
-      writeSop(sop);
-      const ids = [sop.id, ...readIndex()];
-      writeIndex(ids);
-      setSops((prev) => [sop, ...prev]);
+      const sop: Sop = { id: crypto.randomUUID(), createdAt: now, updatedAt: now, ...data };
+      useStore.getState().add(sop);
       return sop;
     },
     [],
   );
 
+  // 편집 계열은 전부 "현재 항목을 읽어 → 바꾼 뒤 → upsert" 로 같다.
+  const patchSop = useCallback(
+    (id: string, change: (existing: Sop) => Sop | null): void => {
+      const existing = useStore.getState().items.find((s) => s.id === id);
+      if (!existing) return;
+      const next = change(existing);
+      if (next) upsert({ ...next, updatedAt: new Date().toISOString() });
+    },
+    [upsert],
+  );
+
   const updateSop = useCallback(
     (id: string, patch: Partial<Omit<Sop, "id" | "createdAt">>): void => {
-      const existing = readSop(id);
-      if (!existing) return;
-      const updated: Sop = { ...existing, ...patch, updatedAt: new Date().toISOString() };
-      writeSop(updated);
-      setSops((prev) => prev.map((s) => (s.id === id ? updated : s)));
+      patchSop(id, (existing) => ({ ...existing, ...patch }));
     },
-    [],
+    [patchSop],
   );
 
   /** 단일 section upsert. data 가 비어있으면 자동으로 sections 에서 제거. */
-  const setSection = useCallback((id: string, section: SopSection): void => {
-    const existing = readSop(id);
-    if (!existing) return;
-    const others = existing.sections.filter((s) => s.type !== section.type);
-    const next = isSectionFilled(section) ? [...others, section] : others;
-    const updated: Sop = {
-      ...existing,
-      sections: next,
-      updatedAt: new Date().toISOString(),
-    };
-    writeSop(updated);
-    setSops((prev) => prev.map((s) => (s.id === id ? updated : s)));
-  }, []);
+  const setSection = useCallback(
+    (id: string, section: SopSection): void => {
+      patchSop(id, (existing) => {
+        const others = existing.sections.filter((s) => s.type !== section.type);
+        return { ...existing, sections: isSectionFilled(section) ? [...others, section] : others };
+      });
+    },
+    [patchSop],
+  );
 
-  const clearSection = useCallback((id: string, type: SopItemType): void => {
-    const existing = readSop(id);
-    if (!existing) return;
-    const next = existing.sections.filter((s) => s.type !== type);
-    if (next.length === existing.sections.length) return;
-    const updated: Sop = {
-      ...existing,
-      sections: next,
-      updatedAt: new Date().toISOString(),
-    };
-    writeSop(updated);
-    setSops((prev) => prev.map((s) => (s.id === id ? updated : s)));
-  }, []);
+  const clearSection = useCallback(
+    (id: string, type: SopItemType): void => {
+      patchSop(id, (existing) => {
+        const next = existing.sections.filter((s) => s.type !== type);
+        return next.length === existing.sections.length ? null : { ...existing, sections: next };
+      });
+    },
+    [patchSop],
+  );
 
-  const deleteSop = useCallback((id: string): void => {
-    deleteSopFromStorage(id);
-    const ids = readIndex().filter((i) => i !== id);
-    writeIndex(ids);
-    setSops((prev) => prev.filter((s) => s.id !== id));
-  }, []);
+  const deleteSop = useCallback((id: string): void => removeById(id), [removeById]);
 
-  const getSop = useCallback((id: string): Sop | undefined => {
-    return readSop(id) ?? undefined;
-  }, []);
+  const getSop = useCallback(
+    (id: string): Sop | undefined => useStore.getState().items.find((s) => s.id === id),
+    [],
+  );
 
-  return { sops, createSop, updateSop, setSection, clearSection, deleteSop, getSop };
+  return { sops: list, createSop, updateSop, setSection, clearSection, deleteSop, getSop };
 }

@@ -183,4 +183,62 @@ describe("createSyncedStore", () => {
     expect(fetchMock).not.toHaveBeenCalled();
     expect(useStore.getState().lastError).toBeNull();
   });
+  it("idOf 로 id 가 아닌 키를 쓸 수 있어요", async () => {
+    interface KeyedItem {
+      campaignId: string;
+      enabled: boolean;
+    }
+    const { useStore } = createSyncedStore<KeyedItem>({
+      name: "test_keyed_" + Math.random().toString(36).slice(2),
+      endpoint: "/api/test-keyed",
+      idOf: (i) => i.campaignId,
+    });
+    fetchMock.mockResolvedValue({ ok: true, json: async () => ({ ok: true }) });
+    await useStore.getState().hydrate("real@x.com");
+
+    useStore.getState().add({ campaignId: "c1", enabled: true });
+    useStore.getState().add({ campaignId: "c1", enabled: false });
+    // 같은 campaignId 는 중복되지 않고 교체돼야 한다.
+    expect(useStore.getState().items).toHaveLength(1);
+    expect(useStore.getState().items[0].enabled).toBe(false);
+
+    useStore.getState().removeById("c1");
+    expect(useStore.getState().items).toHaveLength(0);
+    // DELETE 쿼리도 campaignId 로 나가야 한다.
+    const deleteCall = fetchMock.mock.calls.find((c) => c[1]?.method === "DELETE");
+    expect(deleteCall?.[0]).toBe("/api/test-keyed?id=c1");
+  });
+
+  it("persist 캐시가 비면 migrate 로 레거시 데이터를 한 번 흡수해요", () => {
+    const migrate = vi.fn(() => [{ id: "legacy1", v: 9 }]);
+    const { useStore, rehydrate } = createSyncedStore<TItem>({
+      name: "test_migrate_" + Math.random().toString(36).slice(2),
+      endpoint: "/api/test",
+      migrate,
+    });
+    rehydrate();
+    expect(migrate).toHaveBeenCalledTimes(1);
+    expect(useStore.getState().items).toEqual([{ id: "legacy1", v: 9 }]);
+
+    // 두 번째 rehydrate 에서는 캐시가 차 있으므로 다시 흡수하지 않는다.
+    rehydrate();
+    expect(migrate).toHaveBeenCalledTimes(1);
+  });
+
+  it("snapshot 은 워밍된 items 를 동기로 돌려줘요", () => {
+    const { useStore, snapshot } = createSyncedStore<TItem>({
+      name: "test_snapshot_" + Math.random().toString(36).slice(2),
+      endpoint: "/api/test",
+    });
+    // snapshot 은 SSR 가드로 window 를 본다. 이 케이스에서만 스텁하고 되돌린다 —
+    // 파일 전역에 window 를 넣으면 zustand persist 의 분기가 바뀌어 다른 테스트가 흔들린다.
+    vi.stubGlobal("window", {});
+    try {
+      expect(snapshot()).toEqual([]);
+      useStore.getState().setAll([{ id: "a", v: 1 }]);
+      expect(snapshot()).toEqual([{ id: "a", v: 1 }]);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
 });

@@ -12,9 +12,11 @@ import { persist, createJSONStorage } from "zustand/middleware";
 import { useToastOptional } from "@shared/ui/Toast";
 import { isRealOwner } from "./ownerKey";
 
-export interface SyncedItem {
-  id: string;
-}
+// idOf 로 식별자를 뽑을 수 있으면 되므로 id 필드를 강제하지 않는다.
+// 기본값이 (i) => i.id 라 기존 store 4개는 그대로 동작한다.
+// Record<string, unknown> 이 아니라 object 인 이유 — interface 로 선언된 도메인 타입은
+// 암묵적 인덱스 시그니처가 없어 Record 제약을 만족하지 못한다(Sop·PersonaEntry).
+export type SyncedItem = object;
 
 export type SyncStatus = "idle" | "hydrating" | "ready";
 
@@ -32,24 +34,32 @@ export interface SyncedState<T extends SyncedItem> {
   hydrate: (owner: string | null) => Promise<void>;
 }
 
-export interface SyncedStoreConfig {
+export interface SyncedStoreConfig<T = unknown> {
   // persist 키(localStorage). 도메인 store 의 기존 키를 유지하면 오프라인 캐시 승계.
   name: string;
   // per-entity API 라우트. GET→{items}, POST {item}, DELETE ?id=.
   endpoint: string;
+  // 식별자 추출. campaignId 처럼 id 가 아닌 키를 쓰는 도메인 타입을 위해 위임받는다.
+  idOf?: (item: T) => string;
+  // persist 캐시가 비었을 때 1회 호출. 레거시 localStorage 키에서 데이터를 건져 올린다.
+  migrate?: () => T[];
 }
 
 export interface SyncedStore<T extends SyncedItem> {
   useStore: UseBoundStore<StoreApi<SyncedState<T>>>;
   // 세션→하이드레이션 배선. 도메인 훅에서 1회 호출.
   useSync: () => void;
-  // persist 캐시 수동 복원(skipHydration). 동기 리더 워밍용 — persist 미들웨어 증강이 export 타입엔 없어 헬퍼로 노출.
+  // persist 캐시 수동 복원(skipHydration) + 최초 1회 레거시 흡수. 동기 리더 워밍용.
   rehydrate: () => void;
+  // 훅 밖 동기 리더용. 워밍된 items 를 그대로 준다. 서버에서는 빈 배열.
+  snapshot: () => T[];
 }
 
 export function createSyncedStore<T extends SyncedItem>(
-  config: SyncedStoreConfig,
+  config: SyncedStoreConfig<T>,
 ): SyncedStore<T> {
+  const idOf = config.idOf ?? ((item: T) => (item as { id: string }).id);
+
   const useStore = create<SyncedState<T>>()(
     persist(
       (set, get) => {
@@ -89,14 +99,14 @@ export function createSyncedStore<T extends SyncedItem>(
 
         add: (item) => {
           // optimistic — 로컬 즉시 반영(id 중복 제거 후 prepend) 뒤 서버 확정.
-          set((s) => ({ items: [item, ...s.items.filter((x) => x.id !== item.id)] }));
+          set((s) => ({ items: [item, ...s.items.filter((x) => idOf(x) !== idOf(item))] }));
           postItem(item);
         },
 
         upsert: (item) => {
           // add 와 달리 기존 위치 보존(편집·플래그 토글용) — id 있으면 제자리 교체, 없으면 prepend.
           set((s) => {
-            const idx = s.items.findIndex((x) => x.id === item.id);
+            const idx = s.items.findIndex((x) => idOf(x) === idOf(item));
             if (idx < 0) return { items: [item, ...s.items] };
             const next = s.items.slice();
             next[idx] = item;
@@ -106,7 +116,7 @@ export function createSyncedStore<T extends SyncedItem>(
         },
 
         removeById: (id) => {
-          set((s) => ({ items: s.items.filter((x) => x.id !== id) }));
+          set((s) => ({ items: s.items.filter((x) => idOf(x) !== id) }));
           if (isRealOwner(get().owner)) {
             void fetch(`${config.endpoint}?id=${encodeURIComponent(id)}`, {
               method: "DELETE",
@@ -155,19 +165,27 @@ export function createSyncedStore<T extends SyncedItem>(
     const { data: session } = useSession();
     const owner = session?.user?.email ?? null;
     useEffect(() => {
-      // persist 캐시 먼저 복원(오프라인 폴백) → 그 위에 서버 하이드레이션.
-      void useStore.persist.rehydrate();
+      // persist 캐시 먼저 복원(+ 레거시 흡수) → 그 위에 서버 하이드레이션.
+      rehydrate();
       void useStore.getState().hydrate(owner);
     }, [owner]);
     useSyncErrorToast(useStore);
   }
 
+  // persist 캐시 복원 + 최초 1회 레거시 흡수. 캐시가 이미 차 있으면 흡수하지 않는다.
+  function rehydrate(): void {
+    void useStore.persist.rehydrate();
+    if (!config.migrate) return;
+    if (useStore.getState().items.length > 0) return;
+    const legacy = config.migrate();
+    if (legacy.length > 0) useStore.getState().setAll(legacy);
+  }
+
   return {
     useStore,
     useSync,
-    rehydrate: () => {
-      void useStore.persist.rehydrate();
-    },
+    rehydrate,
+    snapshot: () => (typeof window === "undefined" ? [] : useStore.getState().items),
   };
 }
 

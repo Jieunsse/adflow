@@ -14,6 +14,7 @@ class MetaConnectionPostgresIT extends IntegrationTestBase {
   private static final String PLAIN_TOKEN = "EAAG-super-secret-meta-token";
 
   @Autowired private MetaConnectionRepository repository;
+  @Autowired private NotionConnectionRepository notionRepository;
   @Autowired private JdbcTemplate jdbcTemplate;
 
   @Test
@@ -42,5 +43,27 @@ class MetaConnectionPostgresIT extends IntegrationTestBase {
             "pg@example.com");
     assertThat(stored).isNotEqualTo(PLAIN_TOKEN);
     assertThat(stored).doesNotContain("EAAG");
+  }
+
+  @Test
+  void Notion_토큰도_평문으로_저장되지_않는다() {
+    // 단계 7 — Supabase 시절엔 평문이었다. 옮기면서 MetaConnection 과 같은 처방을 걸었다.
+    NotionConnection n = new NotionConnection();
+    n.setUserKey("pg-notion@example.com");
+    n.setAccessToken("secret_notion_token");
+    n.setWorkspaceName("내 워크스페이스");
+    n.setUpdatedAt(Instant.now());
+    notionRepository.saveAndFlush(n);
+
+    assertThat(notionRepository.findById("pg-notion@example.com").orElseThrow().getAccessToken())
+        .isEqualTo("secret_notion_token");
+
+    String stored =
+        jdbcTemplate.queryForObject(
+            "select access_token from notion_connections where user_key = ?",
+            String.class,
+            "pg-notion@example.com");
+    assertThat(stored).isNotEqualTo("secret_notion_token");
+    assertThat(stored).doesNotContain("secret_notion");
   }
 }

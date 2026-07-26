@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { syncUpsert, syncDelete } from "@shared/lib/supabase-sync";
+import { useCallback } from "react";
+import { createSyncedStore } from "@shared/lib/store";
 
 export interface PersonaEntry {
   id: string;
@@ -15,99 +15,68 @@ export interface PersonaEntry {
   customerDescription?: string;
 }
 
-const PERSONAS_KEY = "adflow:personas";
+const LEGACY_KEY = "adflow:personas";
+const PERSONAS_KEY = "adflow:personas:v2"; // zustand persist 봉투
 
-export function readPersonas(): PersonaEntry[] {
+/** 레거시 bare-array 키를 1회 흡수하고 지운다. 남기면 다음 로그인에서 다시 올라온다. */
+export function absorbLegacyPersonas(): PersonaEntry[] {
   if (typeof window === "undefined") return [];
   try {
-    return JSON.parse(localStorage.getItem(PERSONAS_KEY) ?? "[]") as PersonaEntry[];
+    const raw = localStorage.getItem(LEGACY_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as PersonaEntry[];
+    localStorage.removeItem(LEGACY_KEY);
+    return Array.isArray(parsed) ? parsed : [];
   } catch {
     return [];
   }
 }
 
-function persistPersonas(personas: PersonaEntry[]): void {
-  try {
-    localStorage.setItem(PERSONAS_KEY, JSON.stringify(personas));
-  } catch {}
+export const personas = createSyncedStore<PersonaEntry>({
+  name: PERSONAS_KEY,
+  endpoint: "/api/stores/personas",
+  migrate: absorbLegacyPersonas,
+});
+
+const { useStore } = personas;
+
+// 모듈 로드 시 워밍 — readPersonas 가 훅 밖 동기 리더라 items 가 채워져 있어야 한다.
+if (typeof window !== "undefined") personas.rehydrate();
+
+/** 동기 리더. 렌더 중 직접 호출되므로 시그니처를 바꾸지 않는다. */
+export function readPersonas(): PersonaEntry[] {
+  return personas.snapshot();
 }
 
-// 미러 컬럼은 snake_case — PostgREST 가 키를 컬럼명으로 그대로 쓰므로 camelCase 를 넘기면 조용히 실패한다.
-function personaRow(entry: PersonaEntry): Record<string, unknown> {
-  return {
-    id: entry.id,
-    brand_profile_id: entry.brandProfileId,
-    name: entry.name,
-    age_min: entry.ageMin ?? null,
-    age_max: entry.ageMax ?? null,
-    genders: entry.genders ?? null,
-    location: entry.location ?? null,
-    interests: entry.interests ?? null,
-    customer_description: entry.customerDescription ?? null,
-  };
+/** 프로필 삭제 시 딸린 페르소나 정리. 이전에는 brandProfileStore 가 localStorage 를 직접 만졌다. */
+export function removePersonasForProfile(brandProfileId: string): void {
+  for (const p of readPersonas().filter((p) => p.brandProfileId === brandProfileId)) {
+    useStore.getState().removeById(p.id);
+  }
 }
 
 export function usePersonasStorage() {
-  const [personas, setPersonas] = useState<PersonaEntry[]>([]);
+  personas.useSync();
+  const list = useStore((s) => s.items);
+  const upsert = useStore((s) => s.upsert);
+  const removeById = useStore((s) => s.removeById);
 
-  useEffect(() => {
-    setPersonas(readPersonas());
-  }, []);
+  const savePersona = useCallback((entry: PersonaEntry): void => upsert(entry), [upsert]);
+  const deletePersona = useCallback((id: string): void => removeById(id), [removeById]);
 
-  const savePersona = useCallback((entry: PersonaEntry): void => {
-    setPersonas((prev) => {
-      const idx = prev.findIndex((p) => p.id === entry.id);
-      const next = idx >= 0 ? prev.map((p, i) => (i === idx ? entry : p)) : [...prev, entry];
-      persistPersonas(next);
-      syncUpsert("personas", personaRow(entry));
-      return next;
-    });
-  }, []);
-
-  const deletePersona = useCallback((id: string): void => {
-    setPersonas((prev) => {
-      const next = prev.filter((p) => p.id !== id);
-      persistPersonas(next);
-      syncDelete("personas", "id", id);
-      return next;
-    });
-  }, []);
-
-  return { personas, savePersona, deletePersona };
+  return { personas: list, savePersona, deletePersona };
 }
 
 export function usePersonasForProfile(brandProfileId: string) {
-  const [personas, setPersonas] = useState<PersonaEntry[]>([]);
+  personas.useSync();
+  // 전체 목록에서 걸러 낸다 — 이전 구현이 "필터된 뷰"와 "전체"를 각각 들고 있어
+  // 두 상태가 어긋나던 문제를 store 하나로 없앤다.
+  const list = useStore((s) => s.items.filter((p) => p.brandProfileId === brandProfileId));
+  const upsert = useStore((s) => s.upsert);
+  const removeById = useStore((s) => s.removeById);
 
-  useEffect(() => {
-    setPersonas(readPersonas().filter((p) => p.brandProfileId === brandProfileId));
-  }, [brandProfileId]);
+  const savePersona = useCallback((entry: PersonaEntry): void => upsert(entry), [upsert]);
+  const deletePersona = useCallback((id: string): void => removeById(id), [removeById]);
 
-  const savePersona = useCallback(
-    (entry: PersonaEntry): void => {
-      setPersonas((prev) => {
-        const idx = prev.findIndex((p) => p.id === entry.id);
-        const next = idx >= 0 ? prev.map((p, i) => (i === idx ? entry : p)) : [...prev, entry];
-        const all = readPersonas();
-        const allIdx = all.findIndex((p) => p.id === entry.id);
-        const allNext = allIdx >= 0 ? all.map((p, i) => (i === allIdx ? entry : p)) : [...all, entry];
-        persistPersonas(allNext);
-        syncUpsert("personas", personaRow(entry));
-        return next;
-      });
-    },
-    [],
-  );
-
-  const deletePersona = useCallback((id: string): void => {
-    setPersonas((prev) => {
-      const next = prev.filter((p) => p.id !== id);
-      const all = readPersonas().filter((p) => p.id !== id);
-      persistPersonas(all);
-      syncDelete("personas", "id", id);
-      return next;
-    });
-  }, []);
-
-  return { personas, savePersona, deletePersona };
+  return { personas: list, savePersona, deletePersona };
 }

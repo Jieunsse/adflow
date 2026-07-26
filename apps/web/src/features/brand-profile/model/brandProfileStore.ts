@@ -7,6 +7,7 @@
 import { useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { createSyncedStore, isRealOwner, useSyncErrorToast } from "@shared/lib/store";
+import { removePersonasForProfile } from "./usePersonasStorage";
 import type { BrandProfile, BrandProfileEntry } from "./useBrandProfileStorage";
 
 const PROFILES_KEY = "adflow:brand-profiles:v2"; // zustand persist 봉투. 레거시 bare-array 키는 1회 흡수 후 폐기.
@@ -87,8 +88,6 @@ export function upsertProfile(entry: BrandProfileEntry): void {
   useStore.getState().upsert(entry);
 }
 
-const PERSONAS_KEY = "adflow:personas";
-
 export function removeProfile(id: string): void {
   const items = useStore.getState().items;
   const removed = items.find((p) => p.id === id);
@@ -105,16 +104,9 @@ export function removeProfile(id: string): void {
     if (remaining.length > 0) setDefaultProfile(remaining[0].id);
   }
 
-  try {
-    const raw = localStorage.getItem(PERSONAS_KEY);
-    if (raw) {
-      const personas = JSON.parse(raw) as { brandProfileId: string }[];
-      const next = personas.filter((p) => p.brandProfileId !== id);
-      if (next.length !== personas.length) {
-        localStorage.setItem(PERSONAS_KEY, JSON.stringify(next));
-      }
-    }
-  } catch {}
+  // personas 가 Tier 1 store 로 옮겨갔다(단계 3). localStorage 를 직접 만지면
+  // store 와 서버가 모르는 채로 지워져 다음 하이드레이션에 되살아난다.
+  removePersonasForProfile(id);
 }
 
 export function setDefaultProfile(id: string): void {

@@ -1,7 +1,19 @@
 {
   "selectNextLever": [
     {
-      "name": "빈 Ledger · seed=1",
+      "name": "빈 Ledger · traffic · seed=0",
+      "input": {
+        "entries": [],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "traffic"
+        },
+        "seed": 0
+      },
+      "expected": "number"
+    },
+    {
+      "name": "빈 Ledger · traffic · seed=1",
       "input": {
         "entries": [],
         "ctx": {
@@ -13,7 +25,7 @@
       "expected": "trust"
     },
     {
-      "name": "빈 Ledger · seed=2",
+      "name": "빈 Ledger · traffic · seed=2",
       "input": {
         "entries": [],
         "ctx": {
@@ -25,7 +37,7 @@
       "expected": "benefit"
     },
     {
-      "name": "빈 Ledger · seed=3",
+      "name": "빈 Ledger · traffic · seed=3",
       "input": {
         "entries": [],
         "ctx": {
@@ -37,7 +49,7 @@
       "expected": "rush"
     },
     {
-      "name": "빈 Ledger · seed=7",
+      "name": "빈 Ledger · traffic · seed=7",
       "input": {
         "entries": [],
         "ctx": {
@@ -49,7 +61,335 @@
       "expected": "story"
     },
     {
-      "name": "refuted 하나 — 가지치기 · seed=1",
+      "name": "빈 Ledger · traffic · seed=11",
+      "input": {
+        "entries": [],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "traffic"
+        },
+        "seed": 11
+      },
+      "expected": "format"
+    },
+    {
+      "name": "빈 Ledger · awareness · seed=0",
+      "input": {
+        "entries": [],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "awareness"
+        },
+        "seed": 0
+      },
+      "expected": "surprise"
+    },
+    {
+      "name": "빈 Ledger · awareness · seed=1",
+      "input": {
+        "entries": [],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "awareness"
+        },
+        "seed": 1
+      },
+      "expected": "story"
+    },
+    {
+      "name": "빈 Ledger · awareness · seed=2",
+      "input": {
+        "entries": [],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "awareness"
+        },
+        "seed": 2
+      },
+      "expected": "unique"
+    },
+    {
+      "name": "빈 Ledger · awareness · seed=3",
+      "input": {
+        "entries": [],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "awareness"
+        },
+        "seed": 3
+      },
+      "expected": "benefit"
+    },
+    {
+      "name": "빈 Ledger · awareness · seed=7",
+      "input": {
+        "entries": [],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "awareness"
+        },
+        "seed": 7
+      },
+      "expected": "trendy"
+    },
+    {
+      "name": "빈 Ledger · awareness · seed=11",
+      "input": {
+        "entries": [],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "awareness"
+        },
+        "seed": 11
+      },
+      "expected": "format"
+    },
+    {
+      "name": "빈 Ledger · engagement · seed=0",
+      "input": {
+        "entries": [],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "engagement"
+        },
+        "seed": 0
+      },
+      "expected": "trendy"
+    },
+    {
+      "name": "빈 Ledger · engagement · seed=1",
+      "input": {
+        "entries": [],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "engagement"
+        },
+        "seed": 1
+      },
+      "expected": "story"
+    },
+    {
+      "name": "빈 Ledger · engagement · seed=2",
+      "input": {
+        "entries": [],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "engagement"
+        },
+        "seed": 2
+      },
+      "expected": "surprise"
+    },
+    {
+      "name": "빈 Ledger · engagement · seed=3",
+      "input": {
+        "entries": [],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "engagement"
+        },
+        "seed": 3
+      },
+      "expected": "benefit"
+    },
+    {
+      "name": "빈 Ledger · engagement · seed=7",
+      "input": {
+        "entries": [],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "engagement"
+        },
+        "seed": 7
+      },
+      "expected": "unique"
+    },
+    {
+      "name": "빈 Ledger · engagement · seed=11",
+      "input": {
+        "entries": [],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "engagement"
+        },
+        "seed": 11
+      },
+      "expected": "format"
+    },
+    {
+      "name": "빈 Ledger · leads_call · seed=0",
+      "input": {
+        "entries": [],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "leads_call"
+        },
+        "seed": 0
+      },
+      "expected": "trust"
+    },
+    {
+      "name": "빈 Ledger · leads_call · seed=1",
+      "input": {
+        "entries": [],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "leads_call"
+        },
+        "seed": 1
+      },
+      "expected": "number"
+    },
+    {
+      "name": "빈 Ledger · leads_call · seed=2",
+      "input": {
+        "entries": [],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "leads_call"
+        },
+        "seed": 2
+      },
+      "expected": "benefit"
+    },
+    {
+      "name": "빈 Ledger · leads_call · seed=3",
+      "input": {
+        "entries": [],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "leads_call"
+        },
+        "seed": 3
+      },
+      "expected": "rush"
+    },
+    {
+      "name": "빈 Ledger · leads_call · seed=7",
+      "input": {
+        "entries": [],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "leads_call"
+        },
+        "seed": 7
+      },
+      "expected": "story"
+    },
+    {
+      "name": "빈 Ledger · leads_call · seed=11",
+      "input": {
+        "entries": [],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "leads_call"
+        },
+        "seed": 11
+      },
+      "expected": "format"
+    },
+    {
+      "name": "빈 Ledger · 없는목표 · seed=0",
+      "input": {
+        "entries": [],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "없는목표"
+        },
+        "seed": 0
+      },
+      "expected": "number"
+    },
+    {
+      "name": "빈 Ledger · 없는목표 · seed=1",
+      "input": {
+        "entries": [],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "없는목표"
+        },
+        "seed": 1
+      },
+      "expected": "trust"
+    },
+    {
+      "name": "빈 Ledger · 없는목표 · seed=2",
+      "input": {
+        "entries": [],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "없는목표"
+        },
+        "seed": 2
+      },
+      "expected": "benefit"
+    },
+    {
+      "name": "빈 Ledger · 없는목표 · seed=3",
+      "input": {
+        "entries": [],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "없는목표"
+        },
+        "seed": 3
+      },
+      "expected": "rush"
+    },
+    {
+      "name": "빈 Ledger · 없는목표 · seed=7",
+      "input": {
+        "entries": [],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "없는목표"
+        },
+        "seed": 7
+      },
+      "expected": "story"
+    },
+    {
+      "name": "빈 Ledger · 없는목표 · seed=11",
+      "input": {
+        "entries": [],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "없는목표"
+        },
+        "seed": 11
+      },
+      "expected": "format"
+    },
+    {
+      "name": "refuted 하나 — 가지치기 · traffic · seed=0",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "traffic"
+        },
+        "seed": 0
+      },
+      "expected": "number"
+    },
+    {
+      "name": "refuted 하나 — 가지치기 · traffic · seed=1",
       "input": {
         "entries": [
           {
@@ -77,7 +417,7 @@
       "expected": "trust"
     },
     {
-      "name": "refuted 하나 — 가지치기 · seed=2",
+      "name": "refuted 하나 — 가지치기 · traffic · seed=2",
       "input": {
         "entries": [
           {
@@ -105,7 +445,7 @@
       "expected": "benefit"
     },
     {
-      "name": "refuted 하나 — 가지치기 · seed=3",
+      "name": "refuted 하나 — 가지치기 · traffic · seed=3",
       "input": {
         "entries": [
           {
@@ -133,7 +473,7 @@
       "expected": "unique"
     },
     {
-      "name": "refuted 하나 — 가지치기 · seed=7",
+      "name": "refuted 하나 — 가지치기 · traffic · seed=7",
       "input": {
         "entries": [
           {
@@ -161,7 +501,735 @@
       "expected": "audience-framing"
     },
     {
-      "name": "confirmed 하나 — 후순위 · seed=1",
+      "name": "refuted 하나 — 가지치기 · traffic · seed=11",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "traffic"
+        },
+        "seed": 11
+      },
+      "expected": "number"
+    },
+    {
+      "name": "refuted 하나 — 가지치기 · awareness · seed=0",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "awareness"
+        },
+        "seed": 0
+      },
+      "expected": "surprise"
+    },
+    {
+      "name": "refuted 하나 — 가지치기 · awareness · seed=1",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "awareness"
+        },
+        "seed": 1
+      },
+      "expected": "story"
+    },
+    {
+      "name": "refuted 하나 — 가지치기 · awareness · seed=2",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "awareness"
+        },
+        "seed": 2
+      },
+      "expected": "unique"
+    },
+    {
+      "name": "refuted 하나 — 가지치기 · awareness · seed=3",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "awareness"
+        },
+        "seed": 3
+      },
+      "expected": "benefit"
+    },
+    {
+      "name": "refuted 하나 — 가지치기 · awareness · seed=7",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "awareness"
+        },
+        "seed": 7
+      },
+      "expected": "trendy"
+    },
+    {
+      "name": "refuted 하나 — 가지치기 · awareness · seed=11",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "awareness"
+        },
+        "seed": 11
+      },
+      "expected": "format"
+    },
+    {
+      "name": "refuted 하나 — 가지치기 · engagement · seed=0",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "engagement"
+        },
+        "seed": 0
+      },
+      "expected": "trendy"
+    },
+    {
+      "name": "refuted 하나 — 가지치기 · engagement · seed=1",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "engagement"
+        },
+        "seed": 1
+      },
+      "expected": "story"
+    },
+    {
+      "name": "refuted 하나 — 가지치기 · engagement · seed=2",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "engagement"
+        },
+        "seed": 2
+      },
+      "expected": "surprise"
+    },
+    {
+      "name": "refuted 하나 — 가지치기 · engagement · seed=3",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "engagement"
+        },
+        "seed": 3
+      },
+      "expected": "benefit"
+    },
+    {
+      "name": "refuted 하나 — 가지치기 · engagement · seed=7",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "engagement"
+        },
+        "seed": 7
+      },
+      "expected": "unique"
+    },
+    {
+      "name": "refuted 하나 — 가지치기 · engagement · seed=11",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "engagement"
+        },
+        "seed": 11
+      },
+      "expected": "format"
+    },
+    {
+      "name": "refuted 하나 — 가지치기 · leads_call · seed=0",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "leads_call"
+        },
+        "seed": 0
+      },
+      "expected": "trust"
+    },
+    {
+      "name": "refuted 하나 — 가지치기 · leads_call · seed=1",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "leads_call"
+        },
+        "seed": 1
+      },
+      "expected": "number"
+    },
+    {
+      "name": "refuted 하나 — 가지치기 · leads_call · seed=2",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "leads_call"
+        },
+        "seed": 2
+      },
+      "expected": "benefit"
+    },
+    {
+      "name": "refuted 하나 — 가지치기 · leads_call · seed=3",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "leads_call"
+        },
+        "seed": 3
+      },
+      "expected": "rush"
+    },
+    {
+      "name": "refuted 하나 — 가지치기 · leads_call · seed=7",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "leads_call"
+        },
+        "seed": 7
+      },
+      "expected": "story"
+    },
+    {
+      "name": "refuted 하나 — 가지치기 · leads_call · seed=11",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "leads_call"
+        },
+        "seed": 11
+      },
+      "expected": "format"
+    },
+    {
+      "name": "refuted 하나 — 가지치기 · 없는목표 · seed=0",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "없는목표"
+        },
+        "seed": 0
+      },
+      "expected": "number"
+    },
+    {
+      "name": "refuted 하나 — 가지치기 · 없는목표 · seed=1",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "없는목표"
+        },
+        "seed": 1
+      },
+      "expected": "trust"
+    },
+    {
+      "name": "refuted 하나 — 가지치기 · 없는목표 · seed=2",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "없는목표"
+        },
+        "seed": 2
+      },
+      "expected": "benefit"
+    },
+    {
+      "name": "refuted 하나 — 가지치기 · 없는목표 · seed=3",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "없는목표"
+        },
+        "seed": 3
+      },
+      "expected": "rush"
+    },
+    {
+      "name": "refuted 하나 — 가지치기 · 없는목표 · seed=7",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "없는목표"
+        },
+        "seed": 7
+      },
+      "expected": "story"
+    },
+    {
+      "name": "refuted 하나 — 가지치기 · 없는목표 · seed=11",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "없는목표"
+        },
+        "seed": 11
+      },
+      "expected": "format"
+    },
+    {
+      "name": "confirmed 하나 — 후순위 · traffic · seed=0",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_number_confirmed",
+            "lever": "number",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "confirmed"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "traffic"
+        },
+        "seed": 0
+      },
+      "expected": "trust"
+    },
+    {
+      "name": "confirmed 하나 — 후순위 · traffic · seed=1",
       "input": {
         "entries": [
           {
@@ -189,7 +1257,7 @@
       "expected": "benefit"
     },
     {
-      "name": "confirmed 하나 — 후순위 · seed=2",
+      "name": "confirmed 하나 — 후순위 · traffic · seed=2",
       "input": {
         "entries": [
           {
@@ -217,7 +1285,7 @@
       "expected": "rush"
     },
     {
-      "name": "confirmed 하나 — 후순위 · seed=3",
+      "name": "confirmed 하나 — 후순위 · traffic · seed=3",
       "input": {
         "entries": [
           {
@@ -245,7 +1313,7 @@
       "expected": "unique"
     },
     {
-      "name": "confirmed 하나 — 후순위 · seed=7",
+      "name": "confirmed 하나 — 후순위 · traffic · seed=7",
       "input": {
         "entries": [
           {
@@ -273,7 +1341,765 @@
       "expected": "audience-framing"
     },
     {
-      "name": "confirmed + refuted 혼합 · seed=1",
+      "name": "confirmed 하나 — 후순위 · traffic · seed=11",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_number_confirmed",
+            "lever": "number",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "confirmed"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "traffic"
+        },
+        "seed": 11
+      },
+      "expected": "trust"
+    },
+    {
+      "name": "confirmed 하나 — 후순위 · awareness · seed=0",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_number_confirmed",
+            "lever": "number",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "confirmed"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "awareness"
+        },
+        "seed": 0
+      },
+      "expected": "surprise"
+    },
+    {
+      "name": "confirmed 하나 — 후순위 · awareness · seed=1",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_number_confirmed",
+            "lever": "number",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "confirmed"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "awareness"
+        },
+        "seed": 1
+      },
+      "expected": "story"
+    },
+    {
+      "name": "confirmed 하나 — 후순위 · awareness · seed=2",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_number_confirmed",
+            "lever": "number",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "confirmed"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "awareness"
+        },
+        "seed": 2
+      },
+      "expected": "unique"
+    },
+    {
+      "name": "confirmed 하나 — 후순위 · awareness · seed=3",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_number_confirmed",
+            "lever": "number",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "confirmed"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "awareness"
+        },
+        "seed": 3
+      },
+      "expected": "benefit"
+    },
+    {
+      "name": "confirmed 하나 — 후순위 · awareness · seed=7",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_number_confirmed",
+            "lever": "number",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "confirmed"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "awareness"
+        },
+        "seed": 7
+      },
+      "expected": "trendy"
+    },
+    {
+      "name": "confirmed 하나 — 후순위 · awareness · seed=11",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_number_confirmed",
+            "lever": "number",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "confirmed"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "awareness"
+        },
+        "seed": 11
+      },
+      "expected": "format"
+    },
+    {
+      "name": "confirmed 하나 — 후순위 · engagement · seed=0",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_number_confirmed",
+            "lever": "number",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "confirmed"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "engagement"
+        },
+        "seed": 0
+      },
+      "expected": "trendy"
+    },
+    {
+      "name": "confirmed 하나 — 후순위 · engagement · seed=1",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_number_confirmed",
+            "lever": "number",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "confirmed"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "engagement"
+        },
+        "seed": 1
+      },
+      "expected": "story"
+    },
+    {
+      "name": "confirmed 하나 — 후순위 · engagement · seed=2",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_number_confirmed",
+            "lever": "number",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "confirmed"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "engagement"
+        },
+        "seed": 2
+      },
+      "expected": "surprise"
+    },
+    {
+      "name": "confirmed 하나 — 후순위 · engagement · seed=3",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_number_confirmed",
+            "lever": "number",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "confirmed"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "engagement"
+        },
+        "seed": 3
+      },
+      "expected": "benefit"
+    },
+    {
+      "name": "confirmed 하나 — 후순위 · engagement · seed=7",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_number_confirmed",
+            "lever": "number",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "confirmed"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "engagement"
+        },
+        "seed": 7
+      },
+      "expected": "unique"
+    },
+    {
+      "name": "confirmed 하나 — 후순위 · engagement · seed=11",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_number_confirmed",
+            "lever": "number",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "confirmed"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "engagement"
+        },
+        "seed": 11
+      },
+      "expected": "format"
+    },
+    {
+      "name": "confirmed 하나 — 후순위 · leads_call · seed=0",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_number_confirmed",
+            "lever": "number",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "confirmed"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "leads_call"
+        },
+        "seed": 0
+      },
+      "expected": "trust"
+    },
+    {
+      "name": "confirmed 하나 — 후순위 · leads_call · seed=1",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_number_confirmed",
+            "lever": "number",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "confirmed"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "leads_call"
+        },
+        "seed": 1
+      },
+      "expected": "number"
+    },
+    {
+      "name": "confirmed 하나 — 후순위 · leads_call · seed=2",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_number_confirmed",
+            "lever": "number",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "confirmed"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "leads_call"
+        },
+        "seed": 2
+      },
+      "expected": "benefit"
+    },
+    {
+      "name": "confirmed 하나 — 후순위 · leads_call · seed=3",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_number_confirmed",
+            "lever": "number",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "confirmed"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "leads_call"
+        },
+        "seed": 3
+      },
+      "expected": "rush"
+    },
+    {
+      "name": "confirmed 하나 — 후순위 · leads_call · seed=7",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_number_confirmed",
+            "lever": "number",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "confirmed"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "leads_call"
+        },
+        "seed": 7
+      },
+      "expected": "story"
+    },
+    {
+      "name": "confirmed 하나 — 후순위 · leads_call · seed=11",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_number_confirmed",
+            "lever": "number",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "confirmed"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "leads_call"
+        },
+        "seed": 11
+      },
+      "expected": "format"
+    },
+    {
+      "name": "confirmed 하나 — 후순위 · 없는목표 · seed=0",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_number_confirmed",
+            "lever": "number",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "confirmed"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "없는목표"
+        },
+        "seed": 0
+      },
+      "expected": "number"
+    },
+    {
+      "name": "confirmed 하나 — 후순위 · 없는목표 · seed=1",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_number_confirmed",
+            "lever": "number",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "confirmed"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "없는목표"
+        },
+        "seed": 1
+      },
+      "expected": "trust"
+    },
+    {
+      "name": "confirmed 하나 — 후순위 · 없는목표 · seed=2",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_number_confirmed",
+            "lever": "number",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "confirmed"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "없는목표"
+        },
+        "seed": 2
+      },
+      "expected": "benefit"
+    },
+    {
+      "name": "confirmed 하나 — 후순위 · 없는목표 · seed=3",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_number_confirmed",
+            "lever": "number",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "confirmed"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "없는목표"
+        },
+        "seed": 3
+      },
+      "expected": "rush"
+    },
+    {
+      "name": "confirmed 하나 — 후순위 · 없는목표 · seed=7",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_number_confirmed",
+            "lever": "number",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "confirmed"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "없는목표"
+        },
+        "seed": 7
+      },
+      "expected": "story"
+    },
+    {
+      "name": "confirmed 하나 — 후순위 · 없는목표 · seed=11",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_number_confirmed",
+            "lever": "number",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "confirmed"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "없는목표"
+        },
+        "seed": 11
+      },
+      "expected": "format"
+    },
+    {
+      "name": "confirmed + refuted 혼합 · traffic · seed=0",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_number_confirmed",
+            "lever": "number",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "confirmed"
+          },
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          },
+          {
+            "id": "hyp_trust_inconclusive",
+            "lever": "trust",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "inconclusive"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "traffic"
+        },
+        "seed": 0
+      },
+      "expected": "benefit"
+    },
+    {
+      "name": "confirmed + refuted 혼합 · traffic · seed=1",
       "input": {
         "entries": [
           {
@@ -331,7 +2157,7 @@
       "expected": "unique"
     },
     {
-      "name": "confirmed + refuted 혼합 · seed=2",
+      "name": "confirmed + refuted 혼합 · traffic · seed=2",
       "input": {
         "entries": [
           {
@@ -389,7 +2215,7 @@
       "expected": "trendy"
     },
     {
-      "name": "confirmed + refuted 혼합 · seed=3",
+      "name": "confirmed + refuted 혼합 · traffic · seed=3",
       "input": {
         "entries": [
           {
@@ -447,7 +2273,7 @@
       "expected": "surprise"
     },
     {
-      "name": "confirmed + refuted 혼합 · seed=7",
+      "name": "confirmed + refuted 혼합 · traffic · seed=7",
       "input": {
         "entries": [
           {
@@ -505,7 +2331,1485 @@
       "expected": "proof"
     },
     {
-      "name": "다른 제품 — 컨텍스트 불일치라 무시 · seed=1",
+      "name": "confirmed + refuted 혼합 · traffic · seed=11",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_number_confirmed",
+            "lever": "number",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "confirmed"
+          },
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          },
+          {
+            "id": "hyp_trust_inconclusive",
+            "lever": "trust",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "inconclusive"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "traffic"
+        },
+        "seed": 11
+      },
+      "expected": "trendy"
+    },
+    {
+      "name": "confirmed + refuted 혼합 · awareness · seed=0",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_number_confirmed",
+            "lever": "number",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "confirmed"
+          },
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          },
+          {
+            "id": "hyp_trust_inconclusive",
+            "lever": "trust",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "inconclusive"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "awareness"
+        },
+        "seed": 0
+      },
+      "expected": "surprise"
+    },
+    {
+      "name": "confirmed + refuted 혼합 · awareness · seed=1",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_number_confirmed",
+            "lever": "number",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "confirmed"
+          },
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          },
+          {
+            "id": "hyp_trust_inconclusive",
+            "lever": "trust",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "inconclusive"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "awareness"
+        },
+        "seed": 1
+      },
+      "expected": "story"
+    },
+    {
+      "name": "confirmed + refuted 혼합 · awareness · seed=2",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_number_confirmed",
+            "lever": "number",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "confirmed"
+          },
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          },
+          {
+            "id": "hyp_trust_inconclusive",
+            "lever": "trust",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "inconclusive"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "awareness"
+        },
+        "seed": 2
+      },
+      "expected": "unique"
+    },
+    {
+      "name": "confirmed + refuted 혼합 · awareness · seed=3",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_number_confirmed",
+            "lever": "number",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "confirmed"
+          },
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          },
+          {
+            "id": "hyp_trust_inconclusive",
+            "lever": "trust",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "inconclusive"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "awareness"
+        },
+        "seed": 3
+      },
+      "expected": "benefit"
+    },
+    {
+      "name": "confirmed + refuted 혼합 · awareness · seed=7",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_number_confirmed",
+            "lever": "number",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "confirmed"
+          },
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          },
+          {
+            "id": "hyp_trust_inconclusive",
+            "lever": "trust",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "inconclusive"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "awareness"
+        },
+        "seed": 7
+      },
+      "expected": "trendy"
+    },
+    {
+      "name": "confirmed + refuted 혼합 · awareness · seed=11",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_number_confirmed",
+            "lever": "number",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "confirmed"
+          },
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          },
+          {
+            "id": "hyp_trust_inconclusive",
+            "lever": "trust",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "inconclusive"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "awareness"
+        },
+        "seed": 11
+      },
+      "expected": "format"
+    },
+    {
+      "name": "confirmed + refuted 혼합 · engagement · seed=0",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_number_confirmed",
+            "lever": "number",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "confirmed"
+          },
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          },
+          {
+            "id": "hyp_trust_inconclusive",
+            "lever": "trust",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "inconclusive"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "engagement"
+        },
+        "seed": 0
+      },
+      "expected": "trendy"
+    },
+    {
+      "name": "confirmed + refuted 혼합 · engagement · seed=1",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_number_confirmed",
+            "lever": "number",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "confirmed"
+          },
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          },
+          {
+            "id": "hyp_trust_inconclusive",
+            "lever": "trust",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "inconclusive"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "engagement"
+        },
+        "seed": 1
+      },
+      "expected": "story"
+    },
+    {
+      "name": "confirmed + refuted 혼합 · engagement · seed=2",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_number_confirmed",
+            "lever": "number",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "confirmed"
+          },
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          },
+          {
+            "id": "hyp_trust_inconclusive",
+            "lever": "trust",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "inconclusive"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "engagement"
+        },
+        "seed": 2
+      },
+      "expected": "surprise"
+    },
+    {
+      "name": "confirmed + refuted 혼합 · engagement · seed=3",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_number_confirmed",
+            "lever": "number",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "confirmed"
+          },
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          },
+          {
+            "id": "hyp_trust_inconclusive",
+            "lever": "trust",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "inconclusive"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "engagement"
+        },
+        "seed": 3
+      },
+      "expected": "benefit"
+    },
+    {
+      "name": "confirmed + refuted 혼합 · engagement · seed=7",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_number_confirmed",
+            "lever": "number",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "confirmed"
+          },
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          },
+          {
+            "id": "hyp_trust_inconclusive",
+            "lever": "trust",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "inconclusive"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "engagement"
+        },
+        "seed": 7
+      },
+      "expected": "unique"
+    },
+    {
+      "name": "confirmed + refuted 혼합 · engagement · seed=11",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_number_confirmed",
+            "lever": "number",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "confirmed"
+          },
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          },
+          {
+            "id": "hyp_trust_inconclusive",
+            "lever": "trust",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "inconclusive"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "engagement"
+        },
+        "seed": 11
+      },
+      "expected": "format"
+    },
+    {
+      "name": "confirmed + refuted 혼합 · leads_call · seed=0",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_number_confirmed",
+            "lever": "number",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "confirmed"
+          },
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          },
+          {
+            "id": "hyp_trust_inconclusive",
+            "lever": "trust",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "inconclusive"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "leads_call"
+        },
+        "seed": 0
+      },
+      "expected": "trust"
+    },
+    {
+      "name": "confirmed + refuted 혼합 · leads_call · seed=1",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_number_confirmed",
+            "lever": "number",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "confirmed"
+          },
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          },
+          {
+            "id": "hyp_trust_inconclusive",
+            "lever": "trust",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "inconclusive"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "leads_call"
+        },
+        "seed": 1
+      },
+      "expected": "number"
+    },
+    {
+      "name": "confirmed + refuted 혼합 · leads_call · seed=2",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_number_confirmed",
+            "lever": "number",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "confirmed"
+          },
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          },
+          {
+            "id": "hyp_trust_inconclusive",
+            "lever": "trust",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "inconclusive"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "leads_call"
+        },
+        "seed": 2
+      },
+      "expected": "benefit"
+    },
+    {
+      "name": "confirmed + refuted 혼합 · leads_call · seed=3",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_number_confirmed",
+            "lever": "number",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "confirmed"
+          },
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          },
+          {
+            "id": "hyp_trust_inconclusive",
+            "lever": "trust",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "inconclusive"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "leads_call"
+        },
+        "seed": 3
+      },
+      "expected": "rush"
+    },
+    {
+      "name": "confirmed + refuted 혼합 · leads_call · seed=7",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_number_confirmed",
+            "lever": "number",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "confirmed"
+          },
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          },
+          {
+            "id": "hyp_trust_inconclusive",
+            "lever": "trust",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "inconclusive"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "leads_call"
+        },
+        "seed": 7
+      },
+      "expected": "story"
+    },
+    {
+      "name": "confirmed + refuted 혼합 · leads_call · seed=11",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_number_confirmed",
+            "lever": "number",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "confirmed"
+          },
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          },
+          {
+            "id": "hyp_trust_inconclusive",
+            "lever": "trust",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "inconclusive"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "leads_call"
+        },
+        "seed": 11
+      },
+      "expected": "format"
+    },
+    {
+      "name": "confirmed + refuted 혼합 · 없는목표 · seed=0",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_number_confirmed",
+            "lever": "number",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "confirmed"
+          },
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          },
+          {
+            "id": "hyp_trust_inconclusive",
+            "lever": "trust",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "inconclusive"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "없는목표"
+        },
+        "seed": 0
+      },
+      "expected": "number"
+    },
+    {
+      "name": "confirmed + refuted 혼합 · 없는목표 · seed=1",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_number_confirmed",
+            "lever": "number",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "confirmed"
+          },
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          },
+          {
+            "id": "hyp_trust_inconclusive",
+            "lever": "trust",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "inconclusive"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "없는목표"
+        },
+        "seed": 1
+      },
+      "expected": "trust"
+    },
+    {
+      "name": "confirmed + refuted 혼합 · 없는목표 · seed=2",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_number_confirmed",
+            "lever": "number",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "confirmed"
+          },
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          },
+          {
+            "id": "hyp_trust_inconclusive",
+            "lever": "trust",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "inconclusive"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "없는목표"
+        },
+        "seed": 2
+      },
+      "expected": "benefit"
+    },
+    {
+      "name": "confirmed + refuted 혼합 · 없는목표 · seed=3",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_number_confirmed",
+            "lever": "number",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "confirmed"
+          },
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          },
+          {
+            "id": "hyp_trust_inconclusive",
+            "lever": "trust",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "inconclusive"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "없는목표"
+        },
+        "seed": 3
+      },
+      "expected": "rush"
+    },
+    {
+      "name": "confirmed + refuted 혼합 · 없는목표 · seed=7",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_number_confirmed",
+            "lever": "number",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "confirmed"
+          },
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          },
+          {
+            "id": "hyp_trust_inconclusive",
+            "lever": "trust",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "inconclusive"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "없는목표"
+        },
+        "seed": 7
+      },
+      "expected": "story"
+    },
+    {
+      "name": "confirmed + refuted 혼합 · 없는목표 · seed=11",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_number_confirmed",
+            "lever": "number",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "confirmed"
+          },
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          },
+          {
+            "id": "hyp_trust_inconclusive",
+            "lever": "trust",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "inconclusive"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "없는목표"
+        },
+        "seed": 11
+      },
+      "expected": "format"
+    },
+    {
+      "name": "다른 제품 — 컨텍스트 불일치라 무시 · traffic · seed=0",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_other",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "traffic"
+        },
+        "seed": 0
+      },
+      "expected": "number"
+    },
+    {
+      "name": "다른 제품 — 컨텍스트 불일치라 무시 · traffic · seed=1",
       "input": {
         "entries": [
           {
@@ -533,7 +3837,7 @@
       "expected": "trust"
     },
     {
-      "name": "다른 제품 — 컨텍스트 불일치라 무시 · seed=2",
+      "name": "다른 제품 — 컨텍스트 불일치라 무시 · traffic · seed=2",
       "input": {
         "entries": [
           {
@@ -561,7 +3865,7 @@
       "expected": "benefit"
     },
     {
-      "name": "다른 제품 — 컨텍스트 불일치라 무시 · seed=3",
+      "name": "다른 제품 — 컨텍스트 불일치라 무시 · traffic · seed=3",
       "input": {
         "entries": [
           {
@@ -589,7 +3893,7 @@
       "expected": "rush"
     },
     {
-      "name": "다른 제품 — 컨텍스트 불일치라 무시 · seed=7",
+      "name": "다른 제품 — 컨텍스트 불일치라 무시 · traffic · seed=7",
       "input": {
         "entries": [
           {
@@ -617,7 +3921,735 @@
       "expected": "story"
     },
     {
-      "name": "다른 목표 — 컨텍스트 불일치라 무시 · seed=1",
+      "name": "다른 제품 — 컨텍스트 불일치라 무시 · traffic · seed=11",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_other",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "traffic"
+        },
+        "seed": 11
+      },
+      "expected": "format"
+    },
+    {
+      "name": "다른 제품 — 컨텍스트 불일치라 무시 · awareness · seed=0",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_other",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "awareness"
+        },
+        "seed": 0
+      },
+      "expected": "surprise"
+    },
+    {
+      "name": "다른 제품 — 컨텍스트 불일치라 무시 · awareness · seed=1",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_other",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "awareness"
+        },
+        "seed": 1
+      },
+      "expected": "story"
+    },
+    {
+      "name": "다른 제품 — 컨텍스트 불일치라 무시 · awareness · seed=2",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_other",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "awareness"
+        },
+        "seed": 2
+      },
+      "expected": "unique"
+    },
+    {
+      "name": "다른 제품 — 컨텍스트 불일치라 무시 · awareness · seed=3",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_other",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "awareness"
+        },
+        "seed": 3
+      },
+      "expected": "benefit"
+    },
+    {
+      "name": "다른 제품 — 컨텍스트 불일치라 무시 · awareness · seed=7",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_other",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "awareness"
+        },
+        "seed": 7
+      },
+      "expected": "trendy"
+    },
+    {
+      "name": "다른 제품 — 컨텍스트 불일치라 무시 · awareness · seed=11",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_other",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "awareness"
+        },
+        "seed": 11
+      },
+      "expected": "format"
+    },
+    {
+      "name": "다른 제품 — 컨텍스트 불일치라 무시 · engagement · seed=0",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_other",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "engagement"
+        },
+        "seed": 0
+      },
+      "expected": "trendy"
+    },
+    {
+      "name": "다른 제품 — 컨텍스트 불일치라 무시 · engagement · seed=1",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_other",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "engagement"
+        },
+        "seed": 1
+      },
+      "expected": "story"
+    },
+    {
+      "name": "다른 제품 — 컨텍스트 불일치라 무시 · engagement · seed=2",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_other",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "engagement"
+        },
+        "seed": 2
+      },
+      "expected": "surprise"
+    },
+    {
+      "name": "다른 제품 — 컨텍스트 불일치라 무시 · engagement · seed=3",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_other",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "engagement"
+        },
+        "seed": 3
+      },
+      "expected": "benefit"
+    },
+    {
+      "name": "다른 제품 — 컨텍스트 불일치라 무시 · engagement · seed=7",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_other",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "engagement"
+        },
+        "seed": 7
+      },
+      "expected": "unique"
+    },
+    {
+      "name": "다른 제품 — 컨텍스트 불일치라 무시 · engagement · seed=11",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_other",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "engagement"
+        },
+        "seed": 11
+      },
+      "expected": "format"
+    },
+    {
+      "name": "다른 제품 — 컨텍스트 불일치라 무시 · leads_call · seed=0",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_other",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "leads_call"
+        },
+        "seed": 0
+      },
+      "expected": "trust"
+    },
+    {
+      "name": "다른 제품 — 컨텍스트 불일치라 무시 · leads_call · seed=1",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_other",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "leads_call"
+        },
+        "seed": 1
+      },
+      "expected": "number"
+    },
+    {
+      "name": "다른 제품 — 컨텍스트 불일치라 무시 · leads_call · seed=2",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_other",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "leads_call"
+        },
+        "seed": 2
+      },
+      "expected": "benefit"
+    },
+    {
+      "name": "다른 제품 — 컨텍스트 불일치라 무시 · leads_call · seed=3",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_other",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "leads_call"
+        },
+        "seed": 3
+      },
+      "expected": "rush"
+    },
+    {
+      "name": "다른 제품 — 컨텍스트 불일치라 무시 · leads_call · seed=7",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_other",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "leads_call"
+        },
+        "seed": 7
+      },
+      "expected": "story"
+    },
+    {
+      "name": "다른 제품 — 컨텍스트 불일치라 무시 · leads_call · seed=11",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_other",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "leads_call"
+        },
+        "seed": 11
+      },
+      "expected": "format"
+    },
+    {
+      "name": "다른 제품 — 컨텍스트 불일치라 무시 · 없는목표 · seed=0",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_other",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "없는목표"
+        },
+        "seed": 0
+      },
+      "expected": "number"
+    },
+    {
+      "name": "다른 제품 — 컨텍스트 불일치라 무시 · 없는목표 · seed=1",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_other",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "없는목표"
+        },
+        "seed": 1
+      },
+      "expected": "trust"
+    },
+    {
+      "name": "다른 제품 — 컨텍스트 불일치라 무시 · 없는목표 · seed=2",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_other",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "없는목표"
+        },
+        "seed": 2
+      },
+      "expected": "benefit"
+    },
+    {
+      "name": "다른 제품 — 컨텍스트 불일치라 무시 · 없는목표 · seed=3",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_other",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "없는목표"
+        },
+        "seed": 3
+      },
+      "expected": "rush"
+    },
+    {
+      "name": "다른 제품 — 컨텍스트 불일치라 무시 · 없는목표 · seed=7",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_other",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "없는목표"
+        },
+        "seed": 7
+      },
+      "expected": "story"
+    },
+    {
+      "name": "다른 제품 — 컨텍스트 불일치라 무시 · 없는목표 · seed=11",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_other",
+              "objective": "traffic"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "없는목표"
+        },
+        "seed": 11
+      },
+      "expected": "format"
+    },
+    {
+      "name": "다른 목표 — 컨텍스트 불일치라 무시 · traffic · seed=0",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "awareness"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "traffic"
+        },
+        "seed": 0
+      },
+      "expected": "number"
+    },
+    {
+      "name": "다른 목표 — 컨텍스트 불일치라 무시 · traffic · seed=1",
       "input": {
         "entries": [
           {
@@ -645,7 +4677,7 @@
       "expected": "trust"
     },
     {
-      "name": "다른 목표 — 컨텍스트 불일치라 무시 · seed=2",
+      "name": "다른 목표 — 컨텍스트 불일치라 무시 · traffic · seed=2",
       "input": {
         "entries": [
           {
@@ -673,7 +4705,7 @@
       "expected": "benefit"
     },
     {
-      "name": "다른 목표 — 컨텍스트 불일치라 무시 · seed=3",
+      "name": "다른 목표 — 컨텍스트 불일치라 무시 · traffic · seed=3",
       "input": {
         "entries": [
           {
@@ -701,7 +4733,7 @@
       "expected": "rush"
     },
     {
-      "name": "다른 목표 — 컨텍스트 불일치라 무시 · seed=7",
+      "name": "다른 목표 — 컨텍스트 불일치라 무시 · traffic · seed=7",
       "input": {
         "entries": [
           {
@@ -727,6 +4759,808 @@
         "seed": 7
       },
       "expected": "story"
+    },
+    {
+      "name": "다른 목표 — 컨텍스트 불일치라 무시 · traffic · seed=11",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "awareness"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "traffic"
+        },
+        "seed": 11
+      },
+      "expected": "format"
+    },
+    {
+      "name": "다른 목표 — 컨텍스트 불일치라 무시 · awareness · seed=0",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "awareness"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "awareness"
+        },
+        "seed": 0
+      },
+      "expected": "surprise"
+    },
+    {
+      "name": "다른 목표 — 컨텍스트 불일치라 무시 · awareness · seed=1",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "awareness"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "awareness"
+        },
+        "seed": 1
+      },
+      "expected": "story"
+    },
+    {
+      "name": "다른 목표 — 컨텍스트 불일치라 무시 · awareness · seed=2",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "awareness"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "awareness"
+        },
+        "seed": 2
+      },
+      "expected": "unique"
+    },
+    {
+      "name": "다른 목표 — 컨텍스트 불일치라 무시 · awareness · seed=3",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "awareness"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "awareness"
+        },
+        "seed": 3
+      },
+      "expected": "benefit"
+    },
+    {
+      "name": "다른 목표 — 컨텍스트 불일치라 무시 · awareness · seed=7",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "awareness"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "awareness"
+        },
+        "seed": 7
+      },
+      "expected": "audience-framing"
+    },
+    {
+      "name": "다른 목표 — 컨텍스트 불일치라 무시 · awareness · seed=11",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "awareness"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "awareness"
+        },
+        "seed": 11
+      },
+      "expected": "surprise"
+    },
+    {
+      "name": "다른 목표 — 컨텍스트 불일치라 무시 · engagement · seed=0",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "awareness"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "engagement"
+        },
+        "seed": 0
+      },
+      "expected": "trendy"
+    },
+    {
+      "name": "다른 목표 — 컨텍스트 불일치라 무시 · engagement · seed=1",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "awareness"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "engagement"
+        },
+        "seed": 1
+      },
+      "expected": "story"
+    },
+    {
+      "name": "다른 목표 — 컨텍스트 불일치라 무시 · engagement · seed=2",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "awareness"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "engagement"
+        },
+        "seed": 2
+      },
+      "expected": "surprise"
+    },
+    {
+      "name": "다른 목표 — 컨텍스트 불일치라 무시 · engagement · seed=3",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "awareness"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "engagement"
+        },
+        "seed": 3
+      },
+      "expected": "benefit"
+    },
+    {
+      "name": "다른 목표 — 컨텍스트 불일치라 무시 · engagement · seed=7",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "awareness"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "engagement"
+        },
+        "seed": 7
+      },
+      "expected": "unique"
+    },
+    {
+      "name": "다른 목표 — 컨텍스트 불일치라 무시 · engagement · seed=11",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "awareness"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "engagement"
+        },
+        "seed": 11
+      },
+      "expected": "format"
+    },
+    {
+      "name": "다른 목표 — 컨텍스트 불일치라 무시 · leads_call · seed=0",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "awareness"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "leads_call"
+        },
+        "seed": 0
+      },
+      "expected": "trust"
+    },
+    {
+      "name": "다른 목표 — 컨텍스트 불일치라 무시 · leads_call · seed=1",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "awareness"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "leads_call"
+        },
+        "seed": 1
+      },
+      "expected": "number"
+    },
+    {
+      "name": "다른 목표 — 컨텍스트 불일치라 무시 · leads_call · seed=2",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "awareness"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "leads_call"
+        },
+        "seed": 2
+      },
+      "expected": "benefit"
+    },
+    {
+      "name": "다른 목표 — 컨텍스트 불일치라 무시 · leads_call · seed=3",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "awareness"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "leads_call"
+        },
+        "seed": 3
+      },
+      "expected": "rush"
+    },
+    {
+      "name": "다른 목표 — 컨텍스트 불일치라 무시 · leads_call · seed=7",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "awareness"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "leads_call"
+        },
+        "seed": 7
+      },
+      "expected": "story"
+    },
+    {
+      "name": "다른 목표 — 컨텍스트 불일치라 무시 · leads_call · seed=11",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "awareness"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "leads_call"
+        },
+        "seed": 11
+      },
+      "expected": "format"
+    },
+    {
+      "name": "다른 목표 — 컨텍스트 불일치라 무시 · 없는목표 · seed=0",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "awareness"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "없는목표"
+        },
+        "seed": 0
+      },
+      "expected": "number"
+    },
+    {
+      "name": "다른 목표 — 컨텍스트 불일치라 무시 · 없는목표 · seed=1",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "awareness"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "없는목표"
+        },
+        "seed": 1
+      },
+      "expected": "trust"
+    },
+    {
+      "name": "다른 목표 — 컨텍스트 불일치라 무시 · 없는목표 · seed=2",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "awareness"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "없는목표"
+        },
+        "seed": 2
+      },
+      "expected": "benefit"
+    },
+    {
+      "name": "다른 목표 — 컨텍스트 불일치라 무시 · 없는목표 · seed=3",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "awareness"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "없는목표"
+        },
+        "seed": 3
+      },
+      "expected": "rush"
+    },
+    {
+      "name": "다른 목표 — 컨텍스트 불일치라 무시 · 없는목표 · seed=7",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "awareness"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "없는목표"
+        },
+        "seed": 7
+      },
+      "expected": "story"
+    },
+    {
+      "name": "다른 목표 — 컨텍스트 불일치라 무시 · 없는목표 · seed=11",
+      "input": {
+        "entries": [
+          {
+            "id": "hyp_rush_refuted",
+            "lever": "rush",
+            "statement": "s",
+            "predictedMetric": "CTR",
+            "predictedDirection": "up",
+            "rationale": "r",
+            "rationaleSource": "ledger",
+            "contextTags": {
+              "productId": "prod_1",
+              "objective": "awareness"
+            },
+            "status": "resolved",
+            "verdict": "refuted"
+          }
+        ],
+        "ctx": {
+          "productId": "prod_1",
+          "objective": "없는목표"
+        },
+        "seed": 11
+      },
+      "expected": "format"
+    }
+  ],
+  "leverPool": [
+    {
+      "name": "traffic",
+      "input": {
+        "objective": "traffic"
+      },
+      "expected": [
+        "number",
+        "trust",
+        "benefit",
+        "rush",
+        "unique",
+        "trendy",
+        "surprise",
+        "story",
+        "audience-framing",
+        "value-prop",
+        "proof",
+        "format"
+      ]
+    },
+    {
+      "name": "awareness",
+      "input": {
+        "objective": "awareness"
+      },
+      "expected": [
+        "surprise",
+        "story",
+        "unique",
+        "benefit",
+        "trust",
+        "number",
+        "rush",
+        "trendy",
+        "audience-framing",
+        "value-prop",
+        "proof",
+        "format"
+      ]
+    },
+    {
+      "name": "engagement",
+      "input": {
+        "objective": "engagement"
+      },
+      "expected": [
+        "trendy",
+        "story",
+        "surprise",
+        "benefit",
+        "trust",
+        "number",
+        "rush",
+        "unique",
+        "audience-framing",
+        "value-prop",
+        "proof",
+        "format"
+      ]
+    },
+    {
+      "name": "leads_call",
+      "input": {
+        "objective": "leads_call"
+      },
+      "expected": [
+        "trust",
+        "number",
+        "benefit",
+        "rush",
+        "unique",
+        "trendy",
+        "surprise",
+        "story",
+        "audience-framing",
+        "value-prop",
+        "proof",
+        "format"
+      ]
+    },
+    {
+      "name": "없는목표",
+      "input": {
+        "objective": "없는목표"
+      },
+      "expected": [
+        "number",
+        "trust",
+        "benefit",
+        "rush",
+        "unique",
+        "trendy",
+        "surprise",
+        "story",
+        "audience-framing",
+        "value-prop",
+        "proof",
+        "format"
+      ]
     }
   ],
   "summarizeLedger": [

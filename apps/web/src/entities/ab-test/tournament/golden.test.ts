@@ -33,6 +33,7 @@ import {
 import {
   buildHypothesis,
   demoLeverFactor,
+  leverPool,
   resolveHypothesis,
   selectNextLever,
   summarizeLedger,
@@ -168,6 +169,7 @@ describe("골든 픽스처 — 상태 판정", () => {
 describe("골든 픽스처 — 가설 결정", () => {
   const f = fixture<{
     selectNextLever: Case<{ entries: unknown[]; ctx: never; seed: number }, string>[];
+    leverPool: Case<{ objective: string }, string[]>[];
     summarizeLedger: Case<{ entries: unknown[]; ctx: never }, Record<string, string[]>>[];
     buildHypothesis: Case<{ lever: Lever; ctx: never; rationaleSource: never; idSeed: string }, unknown>[];
     resolveHypothesis: Case<{ hypothesis: never; verdict: never; rawWinner: "A" | "B"; resolvedAt: string }, unknown>[];
@@ -175,6 +177,11 @@ describe("골든 픽스처 — 가설 결정", () => {
     leverMeta: Case<{ lever: Lever }, { label: string; isCopy: boolean; swapsHeadline: boolean }>[];
     tourMetricSpec: Case<{ objective: string }, Record<string, unknown>>[];
   }>("hypothesis");
+
+  // 추천 3훅의 순서까지 계약이다 — 목표별로 풀 전체를 박아 Java 의 추천 표 드리프트를 잡는다.
+  it.each(f.leverPool)("leverPool — $name", ({ input, expected }) => {
+    expect(leverPool(input.objective)).toEqual(expected);
+  });
 
   it.each(f.selectNextLever)("selectNextLever — $name", ({ input, expected }) => {
     expect(selectNextLever(input.entries as never, input.ctx, input.seed)).toBe(expected);
@@ -240,7 +247,7 @@ describe("골든 픽스처 자체", () => {
       state: fixture<{ cases: unknown[] }>("tournament-state").cases.length,
       lever: fixture<{ selectNextLever: unknown[] }>("hypothesis").selectNextLever.length,
     };
-    expect(counts).toEqual({ seededUnit: 12, judge: 17, kpis: 10, state: 17, lever: 24 });
+    expect(counts).toEqual({ seededUnit: 12, judge: 17, kpis: 10, state: 17, lever: 180 });
   });
 });
 

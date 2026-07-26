@@ -17,6 +17,16 @@ repositories {
 	mavenCentral()
 }
 
+sourceSets {
+	test {
+		resources {
+			// 골든 픽스처 (설계 §8) — TS 와 **같은 파일**을 읽어야 두 엔진의 동등성이 증명된다.
+			// 복사본을 두면 한쪽만 갱신되는 순간 검증이 거짓말을 시작한다.
+			srcDir("../../packages/contracts/fixtures")
+		}
+	}
+}
+
 dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-actuator")
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")

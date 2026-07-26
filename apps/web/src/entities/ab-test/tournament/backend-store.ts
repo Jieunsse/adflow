@@ -9,7 +9,7 @@
 // ADR-054 의 manual-n → auto 흡수는 Spring 이 한다(Tournament.getMode). 여기 normalize 는 없다.
 
 import { backendBaseUrl, internalSecret } from "@shared/lib/backend/client";
-import type { Tournament, TourRound } from "./engine";
+import type { Tournament, TourRound, TourVariant } from "./engine";
 import type { TournamentStore } from "./adapters";
 
 const PATH = "/internal/tournaments";
@@ -108,5 +108,28 @@ export async function settleRoundOnBackend(id: string): Promise<BackendSettleRes
 // 라운드와 폴러가 띄운 라운드가 다른 규칙으로 만들어진다 — 진짜 광고가 만들어지는 경로라 특히 위험하다.
 export async function advanceOnBackend(id: string, step: "propose" | "launch"): Promise<Tournament> {
   const res = await call(`${PATH}/${encodeURIComponent(id)}/advance?step=${step}`, { method: "POST" });
+  return (await res.json()) as Tournament;
+}
+
+// 사람이 누르는 편집. 전에는 애그리거트를 통째로 upsert 했는데, upsert 는 지우고 새로 넣어서
+// 낙관적 락(@Version)을 지나간다 — 폴러 틱과 겹치면 앞선 변경이 조용히 사라졌다. 이제 Spring 이
+// 필요한 필드만 고친다.
+export type EditAction =
+  | "confirm-champion"
+  | "replace-champion"
+  | "set-challenger"
+  | "refill-envelope"
+  | "resume"
+  | "end";
+
+export async function editOnBackend(
+  id: string,
+  action: EditAction,
+  body: { variant?: TourVariant; addBudget?: number } = {},
+): Promise<Tournament> {
+  const res = await call(`${PATH}/${encodeURIComponent(id)}/edit?action=${action}`, {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
   return (await res.json()) as Tournament;
 }

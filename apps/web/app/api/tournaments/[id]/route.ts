@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { withRouteHandler } from "@/lib/route-handler";
-import { getRealTournamentRunner, tournamentStore, ownerKeyFrom } from "@entities/ab-test/tournament/real";
+import { tournamentStore, editOnBackend, ownerKeyFrom } from "@entities/ab-test/tournament/real";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -35,7 +35,7 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
   const guard = await ownerGuardedTournament(id);
   if (guard.error) return guard.error;
   return withRouteHandler(true, "", async () => {
-    await getRealTournamentRunner().endTournament(id);
+    await editOnBackend(id, "end");
     return NextResponse.json({ ok: true });
   });
 }

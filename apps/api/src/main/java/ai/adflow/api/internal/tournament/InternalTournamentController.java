@@ -5,6 +5,7 @@ import ai.adflow.api.store.ItemRequest;
 import ai.adflow.api.store.ItemsResponse;
 import ai.adflow.api.tournament.Tournament;
 import ai.adflow.api.tournament.TournamentAdvanceService;
+import ai.adflow.api.tournament.TournamentEditService;
 import ai.adflow.api.tournament.TournamentRepository;
 import ai.adflow.api.tournament.TournamentSettleService;
 import jakarta.transaction.Transactional;
@@ -38,16 +39,19 @@ public class InternalTournamentController {
   private final TournamentRepository repository;
   private final TournamentSettleService settleService;
   private final TournamentAdvanceService advanceService;
+  private final TournamentEditService editService;
   private final InternalSecret internalSecret;
 
   public InternalTournamentController(
       TournamentRepository repository,
       TournamentSettleService settleService,
       TournamentAdvanceService advanceService,
+      TournamentEditService editService,
       InternalSecret internalSecret) {
     this.repository = repository;
     this.settleService = settleService;
     this.advanceService = advanceService;
+    this.editService = editService;
     this.internalSecret = internalSecret;
   }
 
@@ -86,6 +90,10 @@ public class InternalTournamentController {
     return repository.findById(id).map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
   }
 
+  /**
+   * <b>생성 전용이다.</b> 애그리거트를 통째로 받아 지우고 새로 넣으므로 {@code @Version} 비교를
+   * 지나간다 — 이미 있는 행을 이 경로로 고치면 폴러가 방금 쓴 결과를 덮을 수 있다. 편집은 /edit 로 간다.
+   */
   @PostMapping
   @Transactional
   public Map<String, Boolean> upsert(
@@ -160,5 +168,35 @@ public class InternalTournamentController {
       default -> throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "알 수 없는 액션이에요.");
     }
     return repository.save(t);
+  }
+
+  /** 편집 바디 — 액션마다 쓰는 필드가 다르다. 둘 다 optional 이다. */
+  public record EditRequest(TournamentEditService.Variant variant, Double addBudget) {}
+
+  /**
+   * 사람이 누르는 편집. 필요한 필드만 고쳐 저장하므로 낙관적 락이 실제로 걸린다.
+   *
+   * <p>전에는 Next 가 애그리거트를 통째로 다시 upsert 했다 — 폴러 틱과 겹치면 앞선 변경이 조용히
+   * 사라지는 경로였다.
+   */
+  @PostMapping("/{id}/edit")
+  public Tournament edit(
+      @RequestHeader(value = "X-Internal-Secret", required = false) String presented,
+      @PathVariable String id,
+      @RequestParam("action") String action,
+      @RequestBody(required = false) EditRequest body) {
+
+    internalSecret.require(presented);
+    EditRequest b = body == null ? new EditRequest(null, null) : body;
+
+    return switch (action) {
+      case "confirm-champion" -> editService.confirmChampion(id, b.variant());
+      case "replace-champion" -> editService.replaceChampion(id, b.variant());
+      case "set-challenger" -> editService.setChallenger(id, b.variant());
+      case "refill-envelope" -> editService.refillEnvelope(id, b.addBudget());
+      case "resume" -> editService.resume(id);
+      case "end" -> editService.end(id);
+      default -> throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "알 수 없는 액션이에요.");
+    };
   }
 }

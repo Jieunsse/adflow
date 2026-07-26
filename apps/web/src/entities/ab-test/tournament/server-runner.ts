@@ -1,17 +1,16 @@
-// 실 유저 토너먼트 편집 — server-side only. 세션이 있어야 하는 것만 남았다.
+// 실 유저 토너먼트 생성 — server-side only.
 //
-// 단계 6 — **판정·게재·자동 진행은 여기 없다.** 라운드를 만드는 일은 전부 Java 가 소유한다
-// (Spring 폴러 + /internal/tournaments/{id}/advance). 실제 광고가 만들어지는 경로를 두 곳에 두면
-// 사람이 누른 라운드와 폴러가 띄운 라운드가 다른 규칙으로 만들어진다.
+// 여기 남은 것은 **생성과 챔피언 카피 뽑기뿐**이다. 판정·게재·자동 진행은 Java 로 갔고, 사람이 누르는
+// 편집(챔피언 확정·수동 챌린저·봉투 충전·복구·종료)도 Spring 의 좁은 엔드포인트로 갔다 — 애그리거트를
+// 통째로 다시 저장하면 낙관적 락을 지나가서 폴러가 방금 쓴 결과를 덮을 수 있기 때문이다.
 //
-// 남은 것은 챔피언 확정·재생성·수동 챌린저·봉투 충전·복구 — 전부 저장만 하는 편집이다.
+// 생성만 upsert 로 남는다. 새 id 라 덮을 것이 없다.
 
 import { geminiCreative } from "@/lib/gemini-creative";
 import type { ObjectiveId } from "@entities/creative/options";
 import type { TournamentStore } from "./adapters";
 import {
   initialChampion,
-  endCompletionReason,
   newTournamentId,
   type Tournament,
   type TourVariant,
@@ -61,7 +60,7 @@ export function createServerRunner(deps: {
   const { store } = deps;
   const now = deps.now ?? (() => Date.now());
 
-  // 셋업 → 출발 챔피언 확보. existing = 즉시 확정, ai = Gemini 생성 후 검토 대기(championConfirmed=false).
+  // 셋업 → 출발 챔피언 확보. existing = 실 카피 그대로, ai = Gemini 부트스트랩.
   async function createTournament(setup: ServerTournamentSetup): Promise<string> {
     const id = newTournamentId();
     const fromExisting = setup.championSource === "existing" && !!setup.startingChampion;
@@ -93,72 +92,18 @@ export function createServerRunner(deps: {
     if (fromExisting) {
       draft.champion = setup.startingChampion!;
     } else {
-      const gen = await genCreative(draft);
-      draft.champion = initialChampion(gen);
+      draft.champion = initialChampion(await genCreative(draft));
     }
     await store.upsert(draft);
     return id;
   }
 
-  async function regenerateChampion(id: string): Promise<TourVariant | null> {
-    const t = await store.get(id);
-    if (!t || t.championConfirmed) return null;
-    const gen = await genCreative(t);
-    t.champion = initialChampion(gen);
-    await store.upsert(t);
-    return t.champion;
+  // 확정 전 AI 챔피언 다시 뽑기 — 생성만 여기서 하고 저장은 Spring 이 한다.
+  async function regenerateChampion(t: Tournament): Promise<TourVariant> {
+    return initialChampion(await genCreative(t));
   }
 
-  async function confirmChampion(id: string, edited?: TourVariant): Promise<void> {
-    const t = await store.get(id);
-    if (!t) return;
-    if (edited) t.champion = edited;
-    t.championConfirmed = true;
-    await store.upsert(t);
-  }
-
-  async function setManualChallenger(id: string, variant: TourVariant): Promise<void> {
-    const t = await store.get(id);
-    if (!t) return;
-    t.pendingChallenger = variant;
-    await store.upsert(t);
-  }
-
-  async function endTournament(id: string): Promise<void> {
-    const t = await store.get(id);
-    if (!t) return;
-    t.status = "completed";
-    t.completionReason = endCompletionReason(t); // ADR-061
-    t.pendingChallenger = undefined;
-    await store.upsert(t);
-  }
-
-  async function refillEnvelope(id: string, addBudget = 300000): Promise<void> {
-    const t = await store.get(id);
-    if (!t) return;
-    const env = t.envelope ?? {};
-    t.envelope = { ...env, totalBudget: (env.totalBudget ?? t.spentBudget) + addBudget };
-    await store.upsert(t);
-  }
-
-  // ADR-053 복구 — 게재 실패로 멈춘 토너먼트(lastError)를 사람이 확인 후 재시도. lastError 제거만 하면
-  // 다음 폴에서 Spring 이 자동 진행을 다시 태운다.
-  async function resume(id: string): Promise<void> {
-    const t = await store.get(id);
-    if (!t || !t.lastError) return;
-    t.lastError = undefined;
-    await store.upsert(t);
-  }
-
-  return {
-    createTournament,
-    regenerateChampion,
-    confirmChampion,
-    setManualChallenger,
-    endTournament,
-    refillEnvelope,
-    resume,
-  };
+  return { createTournament, regenerateChampion };
 }
 
 export type ServerRunner = ReturnType<typeof createServerRunner>;

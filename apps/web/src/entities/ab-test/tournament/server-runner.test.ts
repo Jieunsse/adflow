@@ -79,15 +79,15 @@ describe("createServerRunner", () => {
     expect(t?.champion.headline).toBe("AI 헤드라인1");
   });
 
-  it("resume 은 lastError 를 지우고 저장한다 (ADR-053 복구)", async () => {
+  // 저장은 Spring 이 한다 — 여기는 카피를 뽑아 돌려주기만 한다.
+  it("regenerateChampion 은 새 카피를 돌려주고 저장하지 않는다", async () => {
     const r = runner();
     const id = await r.createTournament(baseSetup());
-    const gated = await store.get(id);
-    await store.upsert({ ...gated!, lastError: "게재 실패: 테스트" });
+    const t = (await store.get(id))!;
 
-    await r.resume(id);
-    const t = await store.get(id);
-    expect(t?.lastError).toBeUndefined();
+    const next = await r.regenerateChampion(t);
+    expect(next.headline).toBe("AI 헤드라인1");
+    // 저장은 editOnBackend(replace-champion) 이 한다. 여기서 덮어쓰면 낙관적 락을 지나간다.
+    expect((await store.get(id))?.champion).toEqual(champion);
   });
-
 });

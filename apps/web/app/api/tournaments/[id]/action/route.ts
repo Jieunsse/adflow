@@ -11,6 +11,7 @@ import {
   getRealTournamentRunner,
   tournamentStore,
   advanceOnBackend,
+  editOnBackend,
   ownerKeyFrom,
 } from "@entities/ab-test/tournament/real";
 import type { TourVariant } from "@entities/ab-test/tournament/engine";
@@ -45,33 +46,37 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: "토너먼트를 찾을 수 없어요." }, { status: 404 });
   }
 
+  // 저장은 전부 Spring 이 한다 — 필요한 필드만 고쳐야 낙관적 락이 걸린다. 애그리거트를 통째로
+  // 다시 올리면 폴러가 방금 쓴 결과를 덮는다.
   return withRouteHandler(true, "", async () => {
     const b = (await req.json()) as Partial<ActionBody>;
-    const r = getRealTournamentRunner();
     switch (b.action) {
       case "confirm-champion":
-        await r.confirmChampion(id, b.variant);
+        await editOnBackend(id, "confirm-champion", { variant: b.variant });
         break;
-      case "regenerate-champion":
-        await r.regenerateChampion(id);
+      case "regenerate-champion": {
+        // 카피 생성만 여기서(Gemini). 확정 전에만 허용하는 판단은 Spring 이 한다.
+        const champion = await getRealTournamentRunner().regenerateChampion(existing);
+        await editOnBackend(id, "replace-champion", { variant: champion });
         break;
+      }
       case "propose-challenger":
         // 폴러와 같은 함수를 탄다 — 레버 선택이 두 곳에 있으면 사람이 만든 라운드와 규칙이 갈린다.
         await advanceOnBackend(id, "propose");
         break;
       case "set-challenger":
         if (!b.variant) throw new ValidationError("챌린저 내용이 없어요.");
-        await r.setManualChallenger(id, b.variant);
+        await editOnBackend(id, "set-challenger", { variant: b.variant });
         break;
       case "launch":
         // 실제 Meta 게재 — 폴러와 같은 경로여야 광고가 같은 규칙으로 만들어진다.
         await advanceOnBackend(id, "launch");
         break;
       case "refill-envelope":
-        await r.refillEnvelope(id, b.addBudget);
+        await editOnBackend(id, "refill-envelope", { addBudget: b.addBudget });
         break;
       case "resume":
-        await r.resume(id);
+        await editOnBackend(id, "resume");
         break;
       default:
         throw new ValidationError("알 수 없는 액션이에요.");

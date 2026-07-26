@@ -13,6 +13,12 @@ spring:
     properties:
       hibernate:
         format_sql: true
+        hbm2ddl:
+          # ddl-auto 실패는 기본값에서 로그만 남기고 넘어간다 — 2026-07-26 에 실제로 물렸다.
+          # 기존 행이 있어 `tournaments.version`(@Version) 추가가 거부됐는데 앱은 그냥 떴고,
+          # 폴러만 매 틱 "column version does not exist" 로 죽었다. 조용한 고장을 기동 실패로 바꾼다.
+          # Flyway 를 도입하면(배포 결정 시점, 설계 §10) ddl-auto 와 함께 이 줄도 사라진다.
+          halt_on_error: true
   jackson:
     # TS 의 optional(`field?: T`)과 맞추려면 null 필드는 키 자체가 없어야 한다.
     # 명시적으로 null 을 실어야 하는 필드는 @JsonInclude(ALWAYS) 로 개별 예외 처리한다.

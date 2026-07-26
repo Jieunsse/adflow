@@ -1,0 +1,100 @@
+{
+  "seededUnit": [
+    {
+      "name": "빈 문자열",
+      "input": {
+        "seed": "",
+        "index": 0
+      },
+      "expected": 0.328
+    },
+    {
+      "name": "ASCII 단문",
+      "input": {
+        "seed": "abc",
+        "index": 0
+      },
+      "expected": 0.1834
+    },
+    {
+      "name": "같은 시드 다른 index",
+      "input": {
+        "seed": "abc",
+        "index": 1
+      },
+      "expected": 0.1131
+    },
+    {
+      "name": "큰 index",
+      "input": {
+        "seed": "abc",
+        "index": 97
+      },
+      "expected": 0.3643
+    },
+    {
+      "name": "음수 index",
+      "input": {
+        "seed": "abc",
+        "index": -3
+      },
+      "expected": 0.3943
+    },
+    {
+      "name": "한글 (charCode 2바이트)",
+      "input": {
+        "seed": "한글시드",
+        "index": 0
+      },
+      "expected": 0.0068
+    },
+    {
+      "name": "이모지 (서로게이트 페어)",
+      "input": {
+        "seed": "🔥",
+        "index": 0
+      },
+      "expected": 0.0776
+    },
+    {
+      "name": "긴 시드 — int32 오버플로 경유",
+      "input": {
+        "seed": "browse_tourn_tourn_abcd1234_r7f",
+        "index": 0
+      },
+      "expected": 0.0289
+    },
+    {
+      "name": "엔진 내부 접미사 f",
+      "input": {
+        "seed": "browse_tourn_t1_r1f",
+        "index": 0
+      },
+      "expected": 0.1375
+    },
+    {
+      "name": "엔진 내부 접미사 i",
+      "input": {
+        "seed": "browse_tourn_t1_r1i",
+        "index": 0
+      },
+      "expected": 0.9278
+    },
+    {
+      "name": "엔진 내부 접미사 pace",
+      "input": {
+        "seed": "browse_tourn_t1_r1pace",
+        "index": 0
+      },
+      "expected": 0.1534
+    },
+    {
+      "name": "엔진 내부 접미사 lf",
+      "input": {
+        "seed": "browse_tourn_t1_r1lf",
+        "index": 0
+      },
+      "expected": 0.5617
+    }
+  ]
+}

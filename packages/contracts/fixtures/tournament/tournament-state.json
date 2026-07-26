@@ -1,0 +1,1048 @@
+{
+  "cases": [
+    {
+      "name": "챔피언 미확정 — champion-review",
+      "input": {
+        "id": "t_state",
+        "brandProfileId": "bp_1",
+        "productId": "prod_1",
+        "productName": "제품",
+        "tone": "warm",
+        "objective": "traffic",
+        "mode": "auto",
+        "dailyBudget": 30000,
+        "champion": {
+          "headline": "챔피언",
+          "primaryText": "카피"
+        },
+        "championCtr": 1.8,
+        "championConfirmed": false,
+        "axisCursor": 0,
+        "rounds": [],
+        "spentBudget": 0,
+        "status": "running",
+        "createdAt": "2026-07-01T00:00:00.000Z"
+      },
+      "expected": {
+        "deriveBeat": "champion-review",
+        "championDefendStreak": 0,
+        "hasConverged": false,
+        "isEnvelopeExhausted": false,
+        "canAutoRefill": false,
+        "endCompletionReason": "budget-exhausted"
+      }
+    },
+    {
+      "name": "빈 토너먼트 진행중",
+      "input": {
+        "id": "t_state",
+        "brandProfileId": "bp_1",
+        "productId": "prod_1",
+        "productName": "제품",
+        "tone": "warm",
+        "objective": "traffic",
+        "mode": "auto",
+        "dailyBudget": 30000,
+        "champion": {
+          "headline": "챔피언",
+          "primaryText": "카피"
+        },
+        "championCtr": 1.8,
+        "championConfirmed": true,
+        "axisCursor": 0,
+        "rounds": [],
+        "spentBudget": 0,
+        "status": "running",
+        "createdAt": "2026-07-01T00:00:00.000Z"
+      },
+      "expected": {
+        "deriveBeat": "auto-running",
+        "championDefendStreak": 0,
+        "hasConverged": false,
+        "isEnvelopeExhausted": false,
+        "canAutoRefill": false,
+        "endCompletionReason": "budget-exhausted"
+      }
+    },
+    {
+      "name": "완료됨 — done",
+      "input": {
+        "id": "t_state",
+        "brandProfileId": "bp_1",
+        "productId": "prod_1",
+        "productName": "제품",
+        "tone": "warm",
+        "objective": "traffic",
+        "mode": "auto",
+        "dailyBudget": 30000,
+        "champion": {
+          "headline": "챔피언",
+          "primaryText": "카피"
+        },
+        "championCtr": 1.8,
+        "championConfirmed": true,
+        "axisCursor": 0,
+        "rounds": [],
+        "spentBudget": 0,
+        "status": "completed",
+        "createdAt": "2026-07-01T00:00:00.000Z"
+      },
+      "expected": {
+        "deriveBeat": "done",
+        "championDefendStreak": 0,
+        "hasConverged": false,
+        "isEnvelopeExhausted": false,
+        "canAutoRefill": false,
+        "endCompletionReason": "budget-exhausted"
+      }
+    },
+    {
+      "name": "예산 소진 — winner-handling",
+      "input": {
+        "id": "t_state",
+        "brandProfileId": "bp_1",
+        "productId": "prod_1",
+        "productName": "제품",
+        "tone": "warm",
+        "objective": "traffic",
+        "mode": "auto",
+        "dailyBudget": 30000,
+        "champion": {
+          "headline": "챔피언",
+          "primaryText": "카피"
+        },
+        "championCtr": 1.8,
+        "championConfirmed": true,
+        "axisCursor": 0,
+        "rounds": [],
+        "spentBudget": 200000,
+        "status": "running",
+        "createdAt": "2026-07-01T00:00:00.000Z",
+        "envelope": {
+          "totalBudget": 150000
+        }
+      },
+      "expected": {
+        "deriveBeat": "winner-handling",
+        "championDefendStreak": 0,
+        "hasConverged": false,
+        "isEnvelopeExhausted": true,
+        "canAutoRefill": false,
+        "endCompletionReason": "budget-exhausted"
+      }
+    },
+    {
+      "name": "예산 경계 (같음)",
+      "input": {
+        "id": "t_state",
+        "brandProfileId": "bp_1",
+        "productId": "prod_1",
+        "productName": "제품",
+        "tone": "warm",
+        "objective": "traffic",
+        "mode": "auto",
+        "dailyBudget": 30000,
+        "champion": {
+          "headline": "챔피언",
+          "primaryText": "카피"
+        },
+        "championCtr": 1.8,
+        "championConfirmed": true,
+        "axisCursor": 0,
+        "rounds": [],
+        "spentBudget": 150000,
+        "status": "running",
+        "createdAt": "2026-07-01T00:00:00.000Z",
+        "envelope": {
+          "totalBudget": 150000
+        }
+      },
+      "expected": {
+        "deriveBeat": "winner-handling",
+        "championDefendStreak": 0,
+        "hasConverged": false,
+        "isEnvelopeExhausted": true,
+        "canAutoRefill": false,
+        "endCompletionReason": "budget-exhausted"
+      }
+    },
+    {
+      "name": "예산 미달",
+      "input": {
+        "id": "t_state",
+        "brandProfileId": "bp_1",
+        "productId": "prod_1",
+        "productName": "제품",
+        "tone": "warm",
+        "objective": "traffic",
+        "mode": "auto",
+        "dailyBudget": 30000,
+        "champion": {
+          "headline": "챔피언",
+          "primaryText": "카피"
+        },
+        "championCtr": 1.8,
+        "championConfirmed": true,
+        "axisCursor": 0,
+        "rounds": [],
+        "spentBudget": 149999,
+        "status": "running",
+        "createdAt": "2026-07-01T00:00:00.000Z",
+        "envelope": {
+          "totalBudget": 150000
+        }
+      },
+      "expected": {
+        "deriveBeat": "auto-running",
+        "championDefendStreak": 0,
+        "hasConverged": false,
+        "isEnvelopeExhausted": false,
+        "canAutoRefill": false,
+        "endCompletionReason": "budget-exhausted"
+      }
+    },
+    {
+      "name": "목표일 도달",
+      "input": {
+        "id": "t_state",
+        "brandProfileId": "bp_1",
+        "productId": "prod_1",
+        "productName": "제품",
+        "tone": "warm",
+        "objective": "traffic",
+        "mode": "auto",
+        "dailyBudget": 30000,
+        "champion": {
+          "headline": "챔피언",
+          "primaryText": "카피"
+        },
+        "championCtr": 1.8,
+        "championConfirmed": true,
+        "axisCursor": 0,
+        "rounds": [
+          {
+            "index": 1,
+            "axis": "headline",
+            "campaignId": "browse_tourn_ts_r1",
+            "champion": {
+              "headline": "챔피언",
+              "primaryText": "챔피언 카피"
+            },
+            "challenger": {
+              "headline": "챌린저",
+              "primaryText": "챌린저 카피"
+            },
+            "fastForwardDays": 7,
+            "status": "settled",
+            "rawWinner": "B",
+            "verdict": {
+              "state": "winner",
+              "ctrA": 1.8,
+              "ctrB": 2.1,
+              "confidence": 0.95
+            }
+          },
+          {
+            "index": 2,
+            "axis": "headline",
+            "campaignId": "browse_tourn_ts_r2",
+            "champion": {
+              "headline": "챔피언",
+              "primaryText": "챔피언 카피"
+            },
+            "challenger": {
+              "headline": "챌린저",
+              "primaryText": "챌린저 카피"
+            },
+            "fastForwardDays": 7,
+            "status": "settled",
+            "rawWinner": "A",
+            "verdict": {
+              "state": "winner",
+              "ctrA": 1.8,
+              "ctrB": 2.1,
+              "confidence": 0.95
+            }
+          }
+        ],
+        "spentBudget": 0,
+        "status": "running",
+        "createdAt": "2026-07-01T00:00:00.000Z",
+        "envelope": {
+          "targetDate": "2026-07-08"
+        }
+      },
+      "expected": {
+        "deriveBeat": "winner-handling",
+        "championDefendStreak": 1,
+        "hasConverged": false,
+        "isEnvelopeExhausted": true,
+        "canAutoRefill": false,
+        "endCompletionReason": "budget-exhausted"
+      }
+    },
+    {
+      "name": "목표일 미달",
+      "input": {
+        "id": "t_state",
+        "brandProfileId": "bp_1",
+        "productId": "prod_1",
+        "productName": "제품",
+        "tone": "warm",
+        "objective": "traffic",
+        "mode": "auto",
+        "dailyBudget": 30000,
+        "champion": {
+          "headline": "챔피언",
+          "primaryText": "카피"
+        },
+        "championCtr": 1.8,
+        "championConfirmed": true,
+        "axisCursor": 0,
+        "rounds": [
+          {
+            "index": 1,
+            "axis": "headline",
+            "campaignId": "browse_tourn_ts_r1",
+            "champion": {
+              "headline": "챔피언",
+              "primaryText": "챔피언 카피"
+            },
+            "challenger": {
+              "headline": "챌린저",
+              "primaryText": "챌린저 카피"
+            },
+            "fastForwardDays": 7,
+            "status": "settled",
+            "rawWinner": "B",
+            "verdict": {
+              "state": "winner",
+              "ctrA": 1.8,
+              "ctrB": 2.1,
+              "confidence": 0.95
+            }
+          }
+        ],
+        "spentBudget": 0,
+        "status": "running",
+        "createdAt": "2026-07-01T00:00:00.000Z",
+        "envelope": {
+          "targetDate": "2026-08-30"
+        }
+      },
+      "expected": {
+        "deriveBeat": "auto-running",
+        "championDefendStreak": 0,
+        "hasConverged": false,
+        "isEnvelopeExhausted": false,
+        "canAutoRefill": false,
+        "endCompletionReason": "budget-exhausted"
+      }
+    },
+    {
+      "name": "A 방어 1회",
+      "input": {
+        "id": "t_state",
+        "brandProfileId": "bp_1",
+        "productId": "prod_1",
+        "productName": "제품",
+        "tone": "warm",
+        "objective": "traffic",
+        "mode": "auto",
+        "dailyBudget": 30000,
+        "champion": {
+          "headline": "챔피언",
+          "primaryText": "카피"
+        },
+        "championCtr": 1.8,
+        "championConfirmed": true,
+        "axisCursor": 0,
+        "rounds": [
+          {
+            "index": 1,
+            "axis": "headline",
+            "campaignId": "browse_tourn_ts_r1",
+            "champion": {
+              "headline": "챔피언",
+              "primaryText": "챔피언 카피"
+            },
+            "challenger": {
+              "headline": "챌린저",
+              "primaryText": "챌린저 카피"
+            },
+            "fastForwardDays": 7,
+            "status": "settled",
+            "rawWinner": "A",
+            "verdict": {
+              "state": "winner",
+              "ctrA": 1.8,
+              "ctrB": 2.1,
+              "confidence": 0.95
+            }
+          }
+        ],
+        "spentBudget": 0,
+        "status": "running",
+        "createdAt": "2026-07-01T00:00:00.000Z"
+      },
+      "expected": {
+        "deriveBeat": "auto-running",
+        "championDefendStreak": 1,
+        "hasConverged": false,
+        "isEnvelopeExhausted": false,
+        "canAutoRefill": false,
+        "endCompletionReason": "budget-exhausted"
+      }
+    },
+    {
+      "name": "A 방어 2회 — 수렴",
+      "input": {
+        "id": "t_state",
+        "brandProfileId": "bp_1",
+        "productId": "prod_1",
+        "productName": "제품",
+        "tone": "warm",
+        "objective": "traffic",
+        "mode": "auto",
+        "dailyBudget": 30000,
+        "champion": {
+          "headline": "챔피언",
+          "primaryText": "카피"
+        },
+        "championCtr": 1.8,
+        "championConfirmed": true,
+        "axisCursor": 0,
+        "rounds": [
+          {
+            "index": 1,
+            "axis": "headline",
+            "campaignId": "browse_tourn_ts_r1",
+            "champion": {
+              "headline": "챔피언",
+              "primaryText": "챔피언 카피"
+            },
+            "challenger": {
+              "headline": "챌린저",
+              "primaryText": "챌린저 카피"
+            },
+            "fastForwardDays": 7,
+            "status": "settled",
+            "rawWinner": "A",
+            "verdict": {
+              "state": "winner",
+              "ctrA": 1.8,
+              "ctrB": 2.1,
+              "confidence": 0.95
+            }
+          },
+          {
+            "index": 2,
+            "axis": "headline",
+            "campaignId": "browse_tourn_ts_r2",
+            "champion": {
+              "headline": "챔피언",
+              "primaryText": "챔피언 카피"
+            },
+            "challenger": {
+              "headline": "챌린저",
+              "primaryText": "챌린저 카피"
+            },
+            "fastForwardDays": 7,
+            "status": "settled",
+            "rawWinner": "A",
+            "verdict": {
+              "state": "winner",
+              "ctrA": 1.8,
+              "ctrB": 2.1,
+              "confidence": 0.95
+            }
+          }
+        ],
+        "spentBudget": 0,
+        "status": "running",
+        "createdAt": "2026-07-01T00:00:00.000Z"
+      },
+      "expected": {
+        "deriveBeat": "auto-running",
+        "championDefendStreak": 2,
+        "hasConverged": true,
+        "isEnvelopeExhausted": false,
+        "canAutoRefill": false,
+        "endCompletionReason": "budget-exhausted"
+      }
+    },
+    {
+      "name": "A 방어 2회 사이에 B — 끊김",
+      "input": {
+        "id": "t_state",
+        "brandProfileId": "bp_1",
+        "productId": "prod_1",
+        "productName": "제품",
+        "tone": "warm",
+        "objective": "traffic",
+        "mode": "auto",
+        "dailyBudget": 30000,
+        "champion": {
+          "headline": "챔피언",
+          "primaryText": "카피"
+        },
+        "championCtr": 1.8,
+        "championConfirmed": true,
+        "axisCursor": 0,
+        "rounds": [
+          {
+            "index": 1,
+            "axis": "headline",
+            "campaignId": "browse_tourn_ts_r1",
+            "champion": {
+              "headline": "챔피언",
+              "primaryText": "챔피언 카피"
+            },
+            "challenger": {
+              "headline": "챌린저",
+              "primaryText": "챌린저 카피"
+            },
+            "fastForwardDays": 7,
+            "status": "settled",
+            "rawWinner": "A",
+            "verdict": {
+              "state": "winner",
+              "ctrA": 1.8,
+              "ctrB": 2.1,
+              "confidence": 0.95
+            }
+          },
+          {
+            "index": 2,
+            "axis": "headline",
+            "campaignId": "browse_tourn_ts_r2",
+            "champion": {
+              "headline": "챔피언",
+              "primaryText": "챔피언 카피"
+            },
+            "challenger": {
+              "headline": "챌린저",
+              "primaryText": "챌린저 카피"
+            },
+            "fastForwardDays": 7,
+            "status": "settled",
+            "rawWinner": "B",
+            "verdict": {
+              "state": "winner",
+              "ctrA": 1.8,
+              "ctrB": 2.1,
+              "confidence": 0.95
+            }
+          },
+          {
+            "index": 3,
+            "axis": "headline",
+            "campaignId": "browse_tourn_ts_r3",
+            "champion": {
+              "headline": "챔피언",
+              "primaryText": "챔피언 카피"
+            },
+            "challenger": {
+              "headline": "챌린저",
+              "primaryText": "챌린저 카피"
+            },
+            "fastForwardDays": 7,
+            "status": "settled",
+            "rawWinner": "A",
+            "verdict": {
+              "state": "winner",
+              "ctrA": 1.8,
+              "ctrB": 2.1,
+              "confidence": 0.95
+            }
+          }
+        ],
+        "spentBudget": 0,
+        "status": "running",
+        "createdAt": "2026-07-01T00:00:00.000Z"
+      },
+      "expected": {
+        "deriveBeat": "auto-running",
+        "championDefendStreak": 1,
+        "hasConverged": false,
+        "isEnvelopeExhausted": false,
+        "canAutoRefill": false,
+        "endCompletionReason": "budget-exhausted"
+      }
+    },
+    {
+      "name": "insufficient 는 streak 을 끊지 않고 건너뜀",
+      "input": {
+        "id": "t_state",
+        "brandProfileId": "bp_1",
+        "productId": "prod_1",
+        "productName": "제품",
+        "tone": "warm",
+        "objective": "traffic",
+        "mode": "auto",
+        "dailyBudget": 30000,
+        "champion": {
+          "headline": "챔피언",
+          "primaryText": "카피"
+        },
+        "championCtr": 1.8,
+        "championConfirmed": true,
+        "axisCursor": 0,
+        "rounds": [
+          {
+            "index": 1,
+            "axis": "headline",
+            "campaignId": "browse_tourn_ts_r1",
+            "champion": {
+              "headline": "챔피언",
+              "primaryText": "챔피언 카피"
+            },
+            "challenger": {
+              "headline": "챌린저",
+              "primaryText": "챌린저 카피"
+            },
+            "fastForwardDays": 7,
+            "status": "settled",
+            "rawWinner": "A",
+            "verdict": {
+              "state": "winner",
+              "ctrA": 1.8,
+              "ctrB": 2.1,
+              "confidence": 0.95
+            }
+          },
+          {
+            "index": 2,
+            "axis": "headline",
+            "campaignId": "browse_tourn_ts_r2",
+            "champion": {
+              "headline": "챔피언",
+              "primaryText": "챔피언 카피"
+            },
+            "challenger": {
+              "headline": "챌린저",
+              "primaryText": "챌린저 카피"
+            },
+            "fastForwardDays": 7,
+            "status": "settled",
+            "rawWinner": "A",
+            "verdict": {
+              "state": "insufficient",
+              "ctrA": 1.8,
+              "ctrB": 2.1,
+              "confidence": 0.6
+            }
+          },
+          {
+            "index": 3,
+            "axis": "headline",
+            "campaignId": "browse_tourn_ts_r3",
+            "champion": {
+              "headline": "챔피언",
+              "primaryText": "챔피언 카피"
+            },
+            "challenger": {
+              "headline": "챌린저",
+              "primaryText": "챌린저 카피"
+            },
+            "fastForwardDays": 7,
+            "status": "settled",
+            "rawWinner": "A",
+            "verdict": {
+              "state": "winner",
+              "ctrA": 1.8,
+              "ctrB": 2.1,
+              "confidence": 0.95
+            }
+          }
+        ],
+        "spentBudget": 0,
+        "status": "running",
+        "createdAt": "2026-07-01T00:00:00.000Z"
+      },
+      "expected": {
+        "deriveBeat": "auto-running",
+        "championDefendStreak": 2,
+        "hasConverged": true,
+        "isEnvelopeExhausted": false,
+        "canAutoRefill": false,
+        "endCompletionReason": "budget-exhausted"
+      }
+    },
+    {
+      "name": "running 라운드는 건너뜀",
+      "input": {
+        "id": "t_state",
+        "brandProfileId": "bp_1",
+        "productId": "prod_1",
+        "productName": "제품",
+        "tone": "warm",
+        "objective": "traffic",
+        "mode": "auto",
+        "dailyBudget": 30000,
+        "champion": {
+          "headline": "챔피언",
+          "primaryText": "카피"
+        },
+        "championCtr": 1.8,
+        "championConfirmed": true,
+        "axisCursor": 0,
+        "rounds": [
+          {
+            "index": 1,
+            "axis": "headline",
+            "campaignId": "browse_tourn_ts_r1",
+            "champion": {
+              "headline": "챔피언",
+              "primaryText": "챔피언 카피"
+            },
+            "challenger": {
+              "headline": "챌린저",
+              "primaryText": "챌린저 카피"
+            },
+            "fastForwardDays": 7,
+            "status": "settled",
+            "rawWinner": "A",
+            "verdict": {
+              "state": "winner",
+              "ctrA": 1.8,
+              "ctrB": 2.1,
+              "confidence": 0.95
+            }
+          },
+          {
+            "index": 2,
+            "axis": "headline",
+            "campaignId": "browse_tourn_ts_r2",
+            "champion": {
+              "headline": "챔피언",
+              "primaryText": "챔피언 카피"
+            },
+            "challenger": {
+              "headline": "챌린저",
+              "primaryText": "챌린저 카피"
+            },
+            "fastForwardDays": 3,
+            "status": "running"
+          }
+        ],
+        "spentBudget": 0,
+        "status": "running",
+        "createdAt": "2026-07-01T00:00:00.000Z"
+      },
+      "expected": {
+        "deriveBeat": "auto-running",
+        "championDefendStreak": 1,
+        "hasConverged": false,
+        "isEnvelopeExhausted": false,
+        "canAutoRefill": false,
+        "endCompletionReason": "budget-exhausted"
+      }
+    },
+    {
+      "name": "stopOnDefendStreak=3 — 2회로는 미수렴",
+      "input": {
+        "id": "t_state",
+        "brandProfileId": "bp_1",
+        "productId": "prod_1",
+        "productName": "제품",
+        "tone": "warm",
+        "objective": "traffic",
+        "mode": "auto",
+        "dailyBudget": 30000,
+        "champion": {
+          "headline": "챔피언",
+          "primaryText": "카피"
+        },
+        "championCtr": 1.8,
+        "championConfirmed": true,
+        "axisCursor": 0,
+        "rounds": [
+          {
+            "index": 1,
+            "axis": "headline",
+            "campaignId": "browse_tourn_ts_r1",
+            "champion": {
+              "headline": "챔피언",
+              "primaryText": "챔피언 카피"
+            },
+            "challenger": {
+              "headline": "챌린저",
+              "primaryText": "챌린저 카피"
+            },
+            "fastForwardDays": 7,
+            "status": "settled",
+            "rawWinner": "A",
+            "verdict": {
+              "state": "winner",
+              "ctrA": 1.8,
+              "ctrB": 2.1,
+              "confidence": 0.95
+            }
+          },
+          {
+            "index": 2,
+            "axis": "headline",
+            "campaignId": "browse_tourn_ts_r2",
+            "champion": {
+              "headline": "챔피언",
+              "primaryText": "챔피언 카피"
+            },
+            "challenger": {
+              "headline": "챌린저",
+              "primaryText": "챌린저 카피"
+            },
+            "fastForwardDays": 7,
+            "status": "settled",
+            "rawWinner": "A",
+            "verdict": {
+              "state": "winner",
+              "ctrA": 1.8,
+              "ctrB": 2.1,
+              "confidence": 0.95
+            }
+          }
+        ],
+        "spentBudget": 0,
+        "status": "running",
+        "createdAt": "2026-07-01T00:00:00.000Z",
+        "envelope": {
+          "stopOnDefendStreak": 3
+        }
+      },
+      "expected": {
+        "deriveBeat": "auto-running",
+        "championDefendStreak": 2,
+        "hasConverged": false,
+        "isEnvelopeExhausted": false,
+        "canAutoRefill": false,
+        "endCompletionReason": "budget-exhausted"
+      }
+    },
+    {
+      "name": "autoRefill 여유 있음",
+      "input": {
+        "id": "t_state",
+        "brandProfileId": "bp_1",
+        "productId": "prod_1",
+        "productName": "제품",
+        "tone": "warm",
+        "objective": "traffic",
+        "mode": "auto",
+        "dailyBudget": 30000,
+        "champion": {
+          "headline": "챔피언",
+          "primaryText": "카피"
+        },
+        "championCtr": 1.8,
+        "championConfirmed": true,
+        "axisCursor": 0,
+        "rounds": [],
+        "spentBudget": 100000,
+        "status": "running",
+        "createdAt": "2026-07-01T00:00:00.000Z",
+        "envelope": {
+          "totalBudget": 90000,
+          "autoRefill": {
+            "addBudget": 50000,
+            "hardCap": 300000
+          }
+        }
+      },
+      "expected": {
+        "deriveBeat": "winner-handling",
+        "championDefendStreak": 0,
+        "hasConverged": false,
+        "isEnvelopeExhausted": true,
+        "canAutoRefill": true,
+        "endCompletionReason": "budget-exhausted"
+      }
+    },
+    {
+      "name": "autoRefill hardCap 도달",
+      "input": {
+        "id": "t_state",
+        "brandProfileId": "bp_1",
+        "productId": "prod_1",
+        "productName": "제품",
+        "tone": "warm",
+        "objective": "traffic",
+        "mode": "auto",
+        "dailyBudget": 30000,
+        "champion": {
+          "headline": "챔피언",
+          "primaryText": "카피"
+        },
+        "championCtr": 1.8,
+        "championConfirmed": true,
+        "axisCursor": 0,
+        "rounds": [],
+        "spentBudget": 300000,
+        "status": "running",
+        "createdAt": "2026-07-01T00:00:00.000Z",
+        "envelope": {
+          "totalBudget": 90000,
+          "autoRefill": {
+            "addBudget": 50000,
+            "hardCap": 300000
+          }
+        }
+      },
+      "expected": {
+        "deriveBeat": "winner-handling",
+        "championDefendStreak": 0,
+        "hasConverged": false,
+        "isEnvelopeExhausted": true,
+        "canAutoRefill": false,
+        "endCompletionReason": "cap-reached"
+      }
+    },
+    {
+      "name": "autoRefill 없음",
+      "input": {
+        "id": "t_state",
+        "brandProfileId": "bp_1",
+        "productId": "prod_1",
+        "productName": "제품",
+        "tone": "warm",
+        "objective": "traffic",
+        "mode": "auto",
+        "dailyBudget": 30000,
+        "champion": {
+          "headline": "챔피언",
+          "primaryText": "카피"
+        },
+        "championCtr": 1.8,
+        "championConfirmed": true,
+        "axisCursor": 0,
+        "rounds": [],
+        "spentBudget": 100000,
+        "status": "running",
+        "createdAt": "2026-07-01T00:00:00.000Z",
+        "envelope": {
+          "totalBudget": 90000
+        }
+      },
+      "expected": {
+        "deriveBeat": "winner-handling",
+        "championDefendStreak": 0,
+        "hasConverged": false,
+        "isEnvelopeExhausted": true,
+        "canAutoRefill": false,
+        "endCompletionReason": "budget-exhausted"
+      }
+    }
+  ],
+  "deriveAxis": [
+    {
+      "name": "deriveAxis #1",
+      "input": {
+        "champion": {
+          "headline": "A",
+          "primaryText": "P"
+        },
+        "challenger": {
+          "headline": "B",
+          "primaryText": "P"
+        }
+      },
+      "expected": "headline"
+    },
+    {
+      "name": "deriveAxis #2",
+      "input": {
+        "champion": {
+          "headline": "A",
+          "primaryText": "P"
+        },
+        "challenger": {
+          "headline": "A",
+          "primaryText": "Q"
+        }
+      },
+      "expected": "primary_text"
+    },
+    {
+      "name": "deriveAxis #3",
+      "input": {
+        "champion": {
+          "headline": "A",
+          "primaryText": "P",
+          "imageUrl": "x.png"
+        },
+        "challenger": {
+          "headline": "A",
+          "primaryText": "P",
+          "imageUrl": "y.png"
+        }
+      },
+      "expected": "image"
+    },
+    {
+      "name": "deriveAxis #4",
+      "input": {
+        "champion": {
+          "headline": "A",
+          "primaryText": "P"
+        },
+        "challenger": {
+          "headline": "A",
+          "primaryText": "P",
+          "imageUrl": "y.png"
+        }
+      },
+      "expected": "image"
+    },
+    {
+      "name": "deriveAxis #5",
+      "input": {
+        "champion": {
+          "headline": "A",
+          "primaryText": "P"
+        },
+        "challenger": {
+          "headline": "A",
+          "primaryText": "P"
+        }
+      },
+      "expected": "primary_text"
+    }
+  ],
+  "nextAxis": [
+    {
+      "name": "cursor=0",
+      "input": {
+        "cursor": 0
+      },
+      "expected": "headline"
+    },
+    {
+      "name": "cursor=1",
+      "input": {
+        "cursor": 1
+      },
+      "expected": "primary_text"
+    },
+    {
+      "name": "cursor=2",
+      "input": {
+        "cursor": 2
+      },
+      "expected": "headline"
+    },
+    {
+      "name": "cursor=3",
+      "input": {
+        "cursor": 3
+      },
+      "expected": "primary_text"
+    },
+    {
+      "name": "cursor=97",
+      "input": {
+        "cursor": 97
+      },
+      "expected": "primary_text"
+    }
+  ]
+}

@@ -1,0 +1,674 @@
+{
+  "roundAdKpis": [
+    {
+      "name": "ff=0 — 데이터 없음",
+      "input": {
+        "round": {
+          "index": 1,
+          "campaignId": "browse_tourn_t1_r1",
+          "fastForwardDays": 0
+        },
+        "championCtr": 1.8,
+        "dailyBudget": 30000,
+        "factorOverride": null,
+        "objective": "traffic"
+      },
+      "expected": [
+        {
+          "ctr": 0,
+          "impressions": 0,
+          "clicks": 0,
+          "spend": 0
+        },
+        {
+          "ctr": 0,
+          "impressions": 0,
+          "clicks": 0,
+          "spend": 0
+        }
+      ]
+    },
+    {
+      "name": "라운드1 traffic 7일",
+      "input": {
+        "round": {
+          "index": 1,
+          "campaignId": "browse_tourn_t1_r1",
+          "fastForwardDays": 7
+        },
+        "championCtr": 1.8,
+        "dailyBudget": 30000,
+        "factorOverride": null,
+        "objective": "traffic"
+      },
+      "expected": [
+        {
+          "impressions": 16718,
+          "clicks": 301,
+          "ctr": 1.8,
+          "spend": 91911
+        },
+        {
+          "impressions": 16718,
+          "clicks": 289,
+          "ctr": 1.73,
+          "spend": 91911
+        }
+      ]
+    },
+    {
+      "name": "라운드2 traffic 7일 (idxBoost)",
+      "input": {
+        "round": {
+          "index": 2,
+          "campaignId": "browse_tourn_t1_r2",
+          "fastForwardDays": 7
+        },
+        "championCtr": 1.8,
+        "dailyBudget": 30000,
+        "factorOverride": null,
+        "objective": "traffic"
+      },
+      "expected": [
+        {
+          "impressions": 16204,
+          "clicks": 292,
+          "ctr": 1.8,
+          "spend": 96351
+        },
+        {
+          "impressions": 16204,
+          "clicks": 404,
+          "ctr": 2.49,
+          "spend": 96351
+        }
+      ]
+    },
+    {
+      "name": "라운드7 traffic — idxBoost 상한",
+      "input": {
+        "round": {
+          "index": 7,
+          "campaignId": "browse_tourn_t1_r7",
+          "fastForwardDays": 7
+        },
+        "championCtr": 1.8,
+        "dailyBudget": 30000,
+        "factorOverride": null,
+        "objective": "traffic"
+      },
+      "expected": [
+        {
+          "impressions": 16713,
+          "clicks": 301,
+          "ctr": 1.8,
+          "spend": 97553
+        },
+        {
+          "impressions": 16713,
+          "clicks": 349,
+          "ctr": 2.09,
+          "spend": 97553
+        }
+      ]
+    },
+    {
+      "name": "factorOverride 강한 lift",
+      "input": {
+        "round": {
+          "index": 3,
+          "campaignId": "browse_tourn_t1_r3",
+          "fastForwardDays": 7
+        },
+        "championCtr": 1.8,
+        "dailyBudget": 30000,
+        "factorOverride": 1.25,
+        "objective": "traffic"
+      },
+      "expected": [
+        {
+          "impressions": 15690,
+          "clicks": 282,
+          "ctr": 1.8,
+          "spend": 100792
+        },
+        {
+          "impressions": 15690,
+          "clicks": 353,
+          "ctr": 2.25,
+          "spend": 100792
+        }
+      ]
+    },
+    {
+      "name": "factorOverride 반증",
+      "input": {
+        "round": {
+          "index": 3,
+          "campaignId": "browse_tourn_t1_r3",
+          "fastForwardDays": 7
+        },
+        "championCtr": 1.8,
+        "dailyBudget": 30000,
+        "factorOverride": 0.82,
+        "objective": "traffic"
+      },
+      "expected": [
+        {
+          "impressions": 15690,
+          "clicks": 282,
+          "ctr": 1.8,
+          "spend": 100792
+        },
+        {
+          "impressions": 15690,
+          "clicks": 232,
+          "ctr": 1.48,
+          "spend": 100792
+        }
+      ]
+    },
+    {
+      "name": "awareness CPM 경로",
+      "input": {
+        "round": {
+          "index": 1,
+          "campaignId": "browse_tourn_t2_r1",
+          "fastForwardDays": 7
+        },
+        "championCtr": 8000,
+        "dailyBudget": 50000,
+        "factorOverride": null,
+        "objective": "awareness"
+      },
+      "expected": [
+        {
+          "impressions": 19020,
+          "clicks": 114,
+          "ctr": 0.6,
+          "spend": 154464
+        },
+        {
+          "impressions": 21914,
+          "clicks": 131,
+          "ctr": 0.6,
+          "spend": 154464
+        }
+      ]
+    },
+    {
+      "name": "awareness championCtr=0 — 0 나눗셈 가드",
+      "input": {
+        "round": {
+          "index": 1,
+          "campaignId": "browse_tourn_t2_r1",
+          "fastForwardDays": 7
+        },
+        "championCtr": 0,
+        "dailyBudget": 50000,
+        "factorOverride": null,
+        "objective": "awareness"
+      },
+      "expected": [
+        {
+          "impressions": 0,
+          "clicks": 0,
+          "ctr": 0.6,
+          "spend": 154464
+        },
+        {
+          "impressions": 0,
+          "clicks": 0,
+          "ctr": 0.6,
+          "spend": 154464
+        }
+      ]
+    },
+    {
+      "name": "ff=1 단일일",
+      "input": {
+        "round": {
+          "index": 1,
+          "campaignId": "browse_tourn_t3_r1",
+          "fastForwardDays": 1
+        },
+        "championCtr": 1.8,
+        "dailyBudget": 10000,
+        "factorOverride": null,
+        "objective": "traffic"
+      },
+      "expected": [
+        {
+          "impressions": 2320,
+          "clicks": 42,
+          "ctr": 1.81,
+          "spend": 4450
+        },
+        {
+          "impressions": 2320,
+          "clicks": 56,
+          "ctr": 2.41,
+          "spend": 4450
+        }
+      ]
+    },
+    {
+      "name": "음수 ff — 0 으로 clamp",
+      "input": {
+        "round": {
+          "index": 1,
+          "campaignId": "browse_tourn_t3_r1",
+          "fastForwardDays": -5
+        },
+        "championCtr": 1.8,
+        "dailyBudget": 10000,
+        "factorOverride": null,
+        "objective": "traffic"
+      },
+      "expected": [
+        {
+          "ctr": 0,
+          "impressions": 0,
+          "clicks": 0,
+          "spend": 0
+        },
+        {
+          "ctr": 0,
+          "impressions": 0,
+          "clicks": 0,
+          "spend": 0
+        }
+      ]
+    }
+  ],
+  "settleRound": [
+    {
+      "name": "ff=0 — 데이터 없음",
+      "input": {
+        "round": {
+          "index": 1,
+          "campaignId": "browse_tourn_t1_r1",
+          "fastForwardDays": 0
+        },
+        "championCtr": 1.8,
+        "dailyBudget": 30000,
+        "factorOverride": null,
+        "objective": "traffic"
+      },
+      "expected": {
+        "kpis": [
+          {
+            "ctr": 0,
+            "impressions": 0,
+            "clicks": 0,
+            "spend": 0
+          },
+          {
+            "ctr": 0,
+            "impressions": 0,
+            "clicks": 0,
+            "spend": 0
+          }
+        ],
+        "verdict": {
+          "state": "insufficient",
+          "ctrA": 0,
+          "ctrB": 0,
+          "confidence": 0
+        },
+        "rawWinner": "A"
+      }
+    },
+    {
+      "name": "라운드1 traffic 7일",
+      "input": {
+        "round": {
+          "index": 1,
+          "campaignId": "browse_tourn_t1_r1",
+          "fastForwardDays": 7
+        },
+        "championCtr": 1.8,
+        "dailyBudget": 30000,
+        "factorOverride": null,
+        "objective": "traffic"
+      },
+      "expected": {
+        "kpis": [
+          {
+            "impressions": 16718,
+            "clicks": 301,
+            "ctr": 1.8,
+            "spend": 91911
+          },
+          {
+            "impressions": 16718,
+            "clicks": 289,
+            "ctr": 1.73,
+            "spend": 91911
+          }
+        ],
+        "verdict": {
+          "state": "inconclusive",
+          "ctrA": 1.8,
+          "ctrB": 1.73,
+          "confidence": 0.6909163743123707
+        },
+        "rawWinner": "A"
+      }
+    },
+    {
+      "name": "라운드2 traffic 7일 (idxBoost)",
+      "input": {
+        "round": {
+          "index": 2,
+          "campaignId": "browse_tourn_t1_r2",
+          "fastForwardDays": 7
+        },
+        "championCtr": 1.8,
+        "dailyBudget": 30000,
+        "factorOverride": null,
+        "objective": "traffic"
+      },
+      "expected": {
+        "kpis": [
+          {
+            "impressions": 16204,
+            "clicks": 292,
+            "ctr": 1.8,
+            "spend": 96351
+          },
+          {
+            "impressions": 16204,
+            "clicks": 404,
+            "ctr": 2.49,
+            "spend": 96351
+          }
+        ],
+        "verdict": {
+          "state": "winner",
+          "ctrA": 1.8,
+          "ctrB": 2.49,
+          "confidence": 0.9999911275471834
+        },
+        "rawWinner": "B"
+      }
+    },
+    {
+      "name": "라운드7 traffic — idxBoost 상한",
+      "input": {
+        "round": {
+          "index": 7,
+          "campaignId": "browse_tourn_t1_r7",
+          "fastForwardDays": 7
+        },
+        "championCtr": 1.8,
+        "dailyBudget": 30000,
+        "factorOverride": null,
+        "objective": "traffic"
+      },
+      "expected": {
+        "kpis": [
+          {
+            "impressions": 16713,
+            "clicks": 301,
+            "ctr": 1.8,
+            "spend": 97553
+          },
+          {
+            "impressions": 16713,
+            "clicks": 349,
+            "ctr": 2.09,
+            "spend": 97553
+          }
+        ],
+        "verdict": {
+          "state": "winner",
+          "ctrA": 1.8,
+          "ctrB": 2.09,
+          "confidence": 0.9713681695292816
+        },
+        "rawWinner": "B"
+      }
+    },
+    {
+      "name": "factorOverride 강한 lift",
+      "input": {
+        "round": {
+          "index": 3,
+          "campaignId": "browse_tourn_t1_r3",
+          "fastForwardDays": 7
+        },
+        "championCtr": 1.8,
+        "dailyBudget": 30000,
+        "factorOverride": 1.25,
+        "objective": "traffic"
+      },
+      "expected": {
+        "kpis": [
+          {
+            "impressions": 15690,
+            "clicks": 282,
+            "ctr": 1.8,
+            "spend": 100792
+          },
+          {
+            "impressions": 15690,
+            "clicks": 353,
+            "ctr": 2.25,
+            "spend": 100792
+          }
+        ],
+        "verdict": {
+          "state": "winner",
+          "ctrA": 1.8,
+          "ctrB": 2.25,
+          "confidence": 0.9977897777537952
+        },
+        "rawWinner": "B"
+      }
+    },
+    {
+      "name": "factorOverride 반증",
+      "input": {
+        "round": {
+          "index": 3,
+          "campaignId": "browse_tourn_t1_r3",
+          "fastForwardDays": 7
+        },
+        "championCtr": 1.8,
+        "dailyBudget": 30000,
+        "factorOverride": 0.82,
+        "objective": "traffic"
+      },
+      "expected": {
+        "kpis": [
+          {
+            "impressions": 15690,
+            "clicks": 282,
+            "ctr": 1.8,
+            "spend": 100792
+          },
+          {
+            "impressions": 15690,
+            "clicks": 232,
+            "ctr": 1.48,
+            "spend": 100792
+          }
+        ],
+        "verdict": {
+          "state": "winner",
+          "ctrA": 1.8,
+          "ctrB": 1.48,
+          "confidence": 0.9869154754858799
+        },
+        "rawWinner": "A"
+      }
+    },
+    {
+      "name": "awareness CPM 경로",
+      "input": {
+        "round": {
+          "index": 1,
+          "campaignId": "browse_tourn_t2_r1",
+          "fastForwardDays": 7
+        },
+        "championCtr": 8000,
+        "dailyBudget": 50000,
+        "factorOverride": null,
+        "objective": "awareness"
+      },
+      "expected": {
+        "kpis": [
+          {
+            "impressions": 19020,
+            "clicks": 114,
+            "ctr": 0.6,
+            "spend": 154464
+          },
+          {
+            "impressions": 21914,
+            "clicks": 131,
+            "ctr": 0.6,
+            "spend": 154464
+          }
+        ],
+        "verdict": {
+          "state": "winner",
+          "ctrA": 8121.135646687698,
+          "ctrB": 7048.644702016975,
+          "confidence": 0.9236983263390474
+        },
+        "rawWinner": "B"
+      }
+    },
+    {
+      "name": "awareness championCtr=0 — 0 나눗셈 가드",
+      "input": {
+        "round": {
+          "index": 1,
+          "campaignId": "browse_tourn_t2_r1",
+          "fastForwardDays": 7
+        },
+        "championCtr": 0,
+        "dailyBudget": 50000,
+        "factorOverride": null,
+        "objective": "awareness"
+      },
+      "expected": {
+        "kpis": [
+          {
+            "impressions": 0,
+            "clicks": 0,
+            "ctr": 0.6,
+            "spend": 154464
+          },
+          {
+            "impressions": 0,
+            "clicks": 0,
+            "ctr": 0.6,
+            "spend": 154464
+          }
+        ],
+        "verdict": {
+          "state": "insufficient",
+          "ctrA": 0,
+          "ctrB": 0,
+          "confidence": 0
+        },
+        "rawWinner": "A"
+      }
+    },
+    {
+      "name": "ff=1 단일일",
+      "input": {
+        "round": {
+          "index": 1,
+          "campaignId": "browse_tourn_t3_r1",
+          "fastForwardDays": 1
+        },
+        "championCtr": 1.8,
+        "dailyBudget": 10000,
+        "factorOverride": null,
+        "objective": "traffic"
+      },
+      "expected": {
+        "kpis": [
+          {
+            "impressions": 2320,
+            "clicks": 42,
+            "ctr": 1.81,
+            "spend": 4450
+          },
+          {
+            "impressions": 2320,
+            "clicks": 56,
+            "ctr": 2.41,
+            "spend": 4450
+          }
+        ],
+        "verdict": {
+          "state": "insufficient",
+          "ctrA": 1.81,
+          "ctrB": 2.41,
+          "confidence": 0
+        },
+        "rawWinner": "A"
+      }
+    },
+    {
+      "name": "음수 ff — 0 으로 clamp",
+      "input": {
+        "round": {
+          "index": 1,
+          "campaignId": "browse_tourn_t3_r1",
+          "fastForwardDays": -5
+        },
+        "championCtr": 1.8,
+        "dailyBudget": 10000,
+        "factorOverride": null,
+        "objective": "traffic"
+      },
+      "expected": {
+        "kpis": [
+          {
+            "ctr": 0,
+            "impressions": 0,
+            "clicks": 0,
+            "spend": 0
+          },
+          {
+            "ctr": 0,
+            "impressions": 0,
+            "clicks": 0,
+            "spend": 0
+          }
+        ],
+        "verdict": {
+          "state": "insufficient",
+          "ctrA": 0,
+          "ctrB": 0,
+          "confidence": 0
+        },
+        "rawWinner": "A"
+      }
+    }
+  ],
+  "roundCampaignId": [
+    {
+      "name": "t1#1",
+      "input": {
+        "tournamentId": "t1",
+        "index": 1
+      },
+      "expected": "browse_tourn_t1_r1"
+    },
+    {
+      "name": "tourn_abcd1234#12",
+      "input": {
+        "tournamentId": "tourn_abcd1234",
+        "index": 12
+      },
+      "expected": "browse_tourn_tourn_abcd1234_r12"
+    }
+  ]
+}

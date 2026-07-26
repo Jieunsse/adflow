@@ -1,0 +1,1118 @@
+{
+  "judgeRoundKpis": [
+    {
+      "name": "노출 0 — insufficient",
+      "input": {
+        "kpis": [
+          {
+            "impressions": 0,
+            "clicks": 0,
+            "spend": 0,
+            "ctr": 0
+          },
+          {
+            "impressions": 0,
+            "clicks": 0,
+            "spend": 0,
+            "ctr": 0
+          }
+        ],
+        "elapsedDays": 7,
+        "objective": "traffic"
+      },
+      "expected": {
+        "kpis": [
+          {
+            "impressions": 0,
+            "clicks": 0,
+            "spend": 0,
+            "ctr": 0
+          },
+          {
+            "impressions": 0,
+            "clicks": 0,
+            "spend": 0,
+            "ctr": 0
+          }
+        ],
+        "verdict": {
+          "state": "insufficient",
+          "ctrA": 0,
+          "ctrB": 0,
+          "confidence": 0
+        },
+        "rawWinner": "A"
+      }
+    },
+    {
+      "name": "A 노출만 0 — insufficient",
+      "input": {
+        "kpis": [
+          {
+            "impressions": 0,
+            "clicks": 0,
+            "spend": 0,
+            "ctr": 0
+          },
+          {
+            "impressions": 10000,
+            "clicks": 200,
+            "spend": 5000,
+            "ctr": 2
+          }
+        ],
+        "elapsedDays": 7,
+        "objective": "traffic"
+      },
+      "expected": {
+        "kpis": [
+          {
+            "impressions": 0,
+            "clicks": 0,
+            "spend": 0,
+            "ctr": 0
+          },
+          {
+            "impressions": 10000,
+            "clicks": 200,
+            "spend": 5000,
+            "ctr": 2
+          }
+        ],
+        "verdict": {
+          "state": "insufficient",
+          "ctrA": 0,
+          "ctrB": 2,
+          "confidence": 0
+        },
+        "rawWinner": "A"
+      }
+    },
+    {
+      "name": "최소 게재 기간 미달 — insufficient",
+      "input": {
+        "kpis": [
+          {
+            "impressions": 10000,
+            "clicks": 100,
+            "spend": 5000,
+            "ctr": 1
+          },
+          {
+            "impressions": 10000,
+            "clicks": 300,
+            "spend": 5000,
+            "ctr": 3
+          }
+        ],
+        "elapsedDays": 3,
+        "objective": "traffic"
+      },
+      "expected": {
+        "kpis": [
+          {
+            "impressions": 10000,
+            "clicks": 100,
+            "spend": 5000,
+            "ctr": 1
+          },
+          {
+            "impressions": 10000,
+            "clicks": 300,
+            "spend": 5000,
+            "ctr": 3
+          }
+        ],
+        "verdict": {
+          "state": "insufficient",
+          "ctrA": 1,
+          "ctrB": 3,
+          "confidence": 0
+        },
+        "rawWinner": "A"
+      }
+    },
+    {
+      "name": "최소 게재 기간 경계 (4일) — 판정함",
+      "input": {
+        "kpis": [
+          {
+            "impressions": 10000,
+            "clicks": 100,
+            "spend": 5000,
+            "ctr": 1
+          },
+          {
+            "impressions": 10000,
+            "clicks": 300,
+            "spend": 5000,
+            "ctr": 3
+          }
+        ],
+        "elapsedDays": 4,
+        "objective": "traffic"
+      },
+      "expected": {
+        "kpis": [
+          {
+            "impressions": 10000,
+            "clicks": 100,
+            "spend": 5000,
+            "ctr": 1
+          },
+          {
+            "impressions": 10000,
+            "clicks": 300,
+            "spend": 5000,
+            "ctr": 3
+          }
+        ],
+        "verdict": {
+          "state": "winner",
+          "ctrA": 1,
+          "ctrB": 3,
+          "confidence": 1
+        },
+        "rawWinner": "B"
+      }
+    },
+    {
+      "name": "챌린저 압도 — B 승격",
+      "input": {
+        "kpis": [
+          {
+            "impressions": 15000,
+            "clicks": 150,
+            "spend": 6000,
+            "ctr": 1
+          },
+          {
+            "impressions": 15000,
+            "clicks": 450,
+            "spend": 6000,
+            "ctr": 3
+          }
+        ],
+        "elapsedDays": 7,
+        "objective": "traffic"
+      },
+      "expected": {
+        "kpis": [
+          {
+            "impressions": 15000,
+            "clicks": 150,
+            "spend": 6000,
+            "ctr": 1
+          },
+          {
+            "impressions": 15000,
+            "clicks": 450,
+            "spend": 6000,
+            "ctr": 3
+          }
+        ],
+        "verdict": {
+          "state": "winner",
+          "ctrA": 1,
+          "ctrB": 3,
+          "confidence": 1
+        },
+        "rawWinner": "B"
+      }
+    },
+    {
+      "name": "근소한 차이 — inconclusive",
+      "input": {
+        "kpis": [
+          {
+            "impressions": 15000,
+            "clicks": 300,
+            "spend": 6000,
+            "ctr": 2
+          },
+          {
+            "impressions": 15000,
+            "clicks": 305,
+            "spend": 6000,
+            "ctr": 2.03
+          }
+        ],
+        "elapsedDays": 7,
+        "objective": "traffic"
+      },
+      "expected": {
+        "kpis": [
+          {
+            "impressions": 15000,
+            "clicks": 300,
+            "spend": 6000,
+            "ctr": 2
+          },
+          {
+            "impressions": 15000,
+            "clicks": 305,
+            "spend": 6000,
+            "ctr": 2.03
+          }
+        ],
+        "verdict": {
+          "state": "inconclusive",
+          "ctrA": 2,
+          "ctrB": 2.03,
+          "confidence": 0.5813546059023771
+        },
+        "rawWinner": "A"
+      }
+    },
+    {
+      "name": "챔피언 우세 — A 방어",
+      "input": {
+        "kpis": [
+          {
+            "impressions": 15000,
+            "clicks": 450,
+            "spend": 6000,
+            "ctr": 3
+          },
+          {
+            "impressions": 15000,
+            "clicks": 150,
+            "spend": 6000,
+            "ctr": 1
+          }
+        ],
+        "elapsedDays": 7,
+        "objective": "traffic"
+      },
+      "expected": {
+        "kpis": [
+          {
+            "impressions": 15000,
+            "clicks": 450,
+            "spend": 6000,
+            "ctr": 3
+          },
+          {
+            "impressions": 15000,
+            "clicks": 150,
+            "spend": 6000,
+            "ctr": 1
+          }
+        ],
+        "verdict": {
+          "state": "winner",
+          "ctrA": 3,
+          "ctrB": 1,
+          "confidence": 1
+        },
+        "rawWinner": "A"
+      }
+    },
+    {
+      "name": "동률 — inconclusive",
+      "input": {
+        "kpis": [
+          {
+            "impressions": 15000,
+            "clicks": 300,
+            "spend": 6000,
+            "ctr": 2
+          },
+          {
+            "impressions": 15000,
+            "clicks": 300,
+            "spend": 6000,
+            "ctr": 2
+          }
+        ],
+        "elapsedDays": 7,
+        "objective": "traffic"
+      },
+      "expected": {
+        "kpis": [
+          {
+            "impressions": 15000,
+            "clicks": 300,
+            "spend": 6000,
+            "ctr": 2
+          },
+          {
+            "impressions": 15000,
+            "clicks": 300,
+            "spend": 6000,
+            "ctr": 2
+          }
+        ],
+        "verdict": {
+          "state": "inconclusive",
+          "ctrA": 2,
+          "ctrB": 2,
+          "confidence": 0.50000000102793
+        },
+        "rawWinner": "A"
+      }
+    },
+    {
+      "name": "챌린저 클릭 0 — CPC 무한대라 방어",
+      "input": {
+        "kpis": [
+          {
+            "impressions": 15000,
+            "clicks": 300,
+            "spend": 6000,
+            "ctr": 2
+          },
+          {
+            "impressions": 15000,
+            "clicks": 0,
+            "spend": 6000,
+            "ctr": 0
+          }
+        ],
+        "elapsedDays": 7,
+        "objective": "traffic"
+      },
+      "expected": {
+        "kpis": [
+          {
+            "impressions": 15000,
+            "clicks": 300,
+            "spend": 6000,
+            "ctr": 2
+          },
+          {
+            "impressions": 15000,
+            "clicks": 0,
+            "spend": 6000,
+            "ctr": 0
+          }
+        ],
+        "verdict": {
+          "state": "winner",
+          "ctrA": 2,
+          "ctrB": 0,
+          "confidence": 1
+        },
+        "rawWinner": "A"
+      }
+    },
+    {
+      "name": "양쪽 클릭 0",
+      "input": {
+        "kpis": [
+          {
+            "impressions": 15000,
+            "clicks": 0,
+            "spend": 6000,
+            "ctr": 0
+          },
+          {
+            "impressions": 15000,
+            "clicks": 0,
+            "spend": 6000,
+            "ctr": 0
+          }
+        ],
+        "elapsedDays": 7,
+        "objective": "traffic"
+      },
+      "expected": {
+        "kpis": [
+          {
+            "impressions": 15000,
+            "clicks": 0,
+            "spend": 6000,
+            "ctr": 0
+          },
+          {
+            "impressions": 15000,
+            "clicks": 0,
+            "spend": 6000,
+            "ctr": 0
+          }
+        ],
+        "verdict": {
+          "state": "inconclusive",
+          "ctrA": 0,
+          "ctrB": 0,
+          "confidence": 0.5
+        },
+        "rawWinner": "A"
+      }
+    },
+    {
+      "name": "챌린저 클릭 많지만 지출도 많음 — CPC 로 방어",
+      "input": {
+        "kpis": [
+          {
+            "impressions": 15000,
+            "clicks": 300,
+            "spend": 3000,
+            "ctr": 2
+          },
+          {
+            "impressions": 15000,
+            "clicks": 330,
+            "spend": 9000,
+            "ctr": 2.2
+          }
+        ],
+        "elapsedDays": 7,
+        "objective": "traffic"
+      },
+      "expected": {
+        "kpis": [
+          {
+            "impressions": 15000,
+            "clicks": 300,
+            "spend": 3000,
+            "ctr": 2
+          },
+          {
+            "impressions": 15000,
+            "clicks": 330,
+            "spend": 9000,
+            "ctr": 2.2
+          }
+        ],
+        "verdict": {
+          "state": "inconclusive",
+          "ctrA": 2,
+          "ctrB": 2.2,
+          "confidence": 0.8864724013574972
+        },
+        "rawWinner": "A"
+      }
+    },
+    {
+      "name": "awareness — 챌린저 노출 우세로 승격",
+      "input": {
+        "kpis": [
+          {
+            "impressions": 8000,
+            "clicks": 48,
+            "spend": 60000,
+            "ctr": 0.6
+          },
+          {
+            "impressions": 14000,
+            "clicks": 84,
+            "spend": 60000,
+            "ctr": 0.6
+          }
+        ],
+        "elapsedDays": 7,
+        "objective": "awareness"
+      },
+      "expected": {
+        "kpis": [
+          {
+            "impressions": 8000,
+            "clicks": 48,
+            "spend": 60000,
+            "ctr": 0.6
+          },
+          {
+            "impressions": 14000,
+            "clicks": 84,
+            "spend": 60000,
+            "ctr": 0.6
+          }
+        ],
+        "verdict": {
+          "state": "winner",
+          "ctrA": 7500,
+          "ctrB": 4285.714285714285,
+          "confidence": 0.9999738475932959
+        },
+        "rawWinner": "B"
+      }
+    },
+    {
+      "name": "awareness — 노출 근소 차이",
+      "input": {
+        "kpis": [
+          {
+            "impressions": 10000,
+            "clicks": 60,
+            "spend": 60000,
+            "ctr": 0.6
+          },
+          {
+            "impressions": 10100,
+            "clicks": 61,
+            "spend": 60000,
+            "ctr": 0.6
+          }
+        ],
+        "elapsedDays": 7,
+        "objective": "awareness"
+      },
+      "expected": {
+        "kpis": [
+          {
+            "impressions": 10000,
+            "clicks": 60,
+            "spend": 60000,
+            "ctr": 0.6
+          },
+          {
+            "impressions": 10100,
+            "clicks": 61,
+            "spend": 60000,
+            "ctr": 0.6
+          }
+        ],
+        "verdict": {
+          "state": "inconclusive",
+          "ctrA": 6000,
+          "ctrB": 5940.59405940594,
+          "confidence": 0.5281159745466253
+        },
+        "rawWinner": "A"
+      }
+    },
+    {
+      "name": "awareness — 챔피언 노출 우세",
+      "input": {
+        "kpis": [
+          {
+            "impressions": 14000,
+            "clicks": 84,
+            "spend": 60000,
+            "ctr": 0.6
+          },
+          {
+            "impressions": 8000,
+            "clicks": 48,
+            "spend": 60000,
+            "ctr": 0.6
+          }
+        ],
+        "elapsedDays": 7,
+        "objective": "awareness"
+      },
+      "expected": {
+        "kpis": [
+          {
+            "impressions": 14000,
+            "clicks": 84,
+            "spend": 60000,
+            "ctr": 0.6
+          },
+          {
+            "impressions": 8000,
+            "clicks": 48,
+            "spend": 60000,
+            "ctr": 0.6
+          }
+        ],
+        "verdict": {
+          "state": "winner",
+          "ctrA": 4285.714285714285,
+          "ctrB": 7500,
+          "confidence": 0.9999738475932959
+        },
+        "rawWinner": "A"
+      }
+    },
+    {
+      "name": "engagement — rate 취급",
+      "input": {
+        "kpis": [
+          {
+            "impressions": 12000,
+            "clicks": 120,
+            "spend": 5000,
+            "ctr": 1
+          },
+          {
+            "impressions": 12000,
+            "clicks": 360,
+            "spend": 5000,
+            "ctr": 3
+          }
+        ],
+        "elapsedDays": 7,
+        "objective": "engagement"
+      },
+      "expected": {
+        "kpis": [
+          {
+            "impressions": 12000,
+            "clicks": 120,
+            "spend": 5000,
+            "ctr": 1
+          },
+          {
+            "impressions": 12000,
+            "clicks": 360,
+            "spend": 5000,
+            "ctr": 3
+          }
+        ],
+        "verdict": {
+          "state": "winner",
+          "ctrA": 1,
+          "ctrB": 3,
+          "confidence": 1
+        },
+        "rawWinner": "B"
+      }
+    },
+    {
+      "name": "leads_call — rate 취급",
+      "input": {
+        "kpis": [
+          {
+            "impressions": 12000,
+            "clicks": 120,
+            "spend": 5000,
+            "ctr": 1
+          },
+          {
+            "impressions": 12000,
+            "clicks": 360,
+            "spend": 5000,
+            "ctr": 3
+          }
+        ],
+        "elapsedDays": 7,
+        "objective": "leads_call"
+      },
+      "expected": {
+        "kpis": [
+          {
+            "impressions": 12000,
+            "clicks": 120,
+            "spend": 5000,
+            "ctr": 1
+          },
+          {
+            "impressions": 12000,
+            "clicks": 360,
+            "spend": 5000,
+            "ctr": 3
+          }
+        ],
+        "verdict": {
+          "state": "winner",
+          "ctrA": 1,
+          "ctrB": 3,
+          "confidence": 1
+        },
+        "rawWinner": "B"
+      }
+    },
+    {
+      "name": "알 수 없는 objective — traffic 폴백",
+      "input": {
+        "kpis": [
+          {
+            "impressions": 12000,
+            "clicks": 120,
+            "spend": 5000,
+            "ctr": 1
+          },
+          {
+            "impressions": 12000,
+            "clicks": 360,
+            "spend": 5000,
+            "ctr": 3
+          }
+        ],
+        "elapsedDays": 7,
+        "objective": "누가봐도없는목표"
+      },
+      "expected": {
+        "kpis": [
+          {
+            "impressions": 12000,
+            "clicks": 120,
+            "spend": 5000,
+            "ctr": 1
+          },
+          {
+            "impressions": 12000,
+            "clicks": 360,
+            "spend": 5000,
+            "ctr": 3
+          }
+        ],
+        "verdict": {
+          "state": "winner",
+          "ctrA": 1,
+          "ctrB": 3,
+          "confidence": 1
+        },
+        "rawWinner": "B"
+      }
+    }
+  ],
+  "confidenceFromZTest": [
+    {
+      "name": "노출 0 — insufficient",
+      "input": {
+        "a": {
+          "impressions": 0,
+          "clicks": 0,
+          "spend": 0,
+          "ctr": 0
+        },
+        "b": {
+          "impressions": 0,
+          "clicks": 0,
+          "spend": 0,
+          "ctr": 0
+        }
+      },
+      "expected": 0.5
+    },
+    {
+      "name": "A 노출만 0 — insufficient",
+      "input": {
+        "a": {
+          "impressions": 0,
+          "clicks": 0,
+          "spend": 0,
+          "ctr": 0
+        },
+        "b": {
+          "impressions": 10000,
+          "clicks": 200,
+          "spend": 5000,
+          "ctr": 2
+        }
+      },
+      "expected": 0.5
+    },
+    {
+      "name": "최소 게재 기간 미달 — insufficient",
+      "input": {
+        "a": {
+          "impressions": 10000,
+          "clicks": 100,
+          "spend": 5000,
+          "ctr": 1
+        },
+        "b": {
+          "impressions": 10000,
+          "clicks": 300,
+          "spend": 5000,
+          "ctr": 3
+        }
+      },
+      "expected": 1
+    },
+    {
+      "name": "최소 게재 기간 경계 (4일) — 판정함",
+      "input": {
+        "a": {
+          "impressions": 10000,
+          "clicks": 100,
+          "spend": 5000,
+          "ctr": 1
+        },
+        "b": {
+          "impressions": 10000,
+          "clicks": 300,
+          "spend": 5000,
+          "ctr": 3
+        }
+      },
+      "expected": 1
+    },
+    {
+      "name": "챌린저 압도 — B 승격",
+      "input": {
+        "a": {
+          "impressions": 15000,
+          "clicks": 150,
+          "spend": 6000,
+          "ctr": 1
+        },
+        "b": {
+          "impressions": 15000,
+          "clicks": 450,
+          "spend": 6000,
+          "ctr": 3
+        }
+      },
+      "expected": 1
+    },
+    {
+      "name": "근소한 차이 — inconclusive",
+      "input": {
+        "a": {
+          "impressions": 15000,
+          "clicks": 300,
+          "spend": 6000,
+          "ctr": 2
+        },
+        "b": {
+          "impressions": 15000,
+          "clicks": 305,
+          "spend": 6000,
+          "ctr": 2.03
+        }
+      },
+      "expected": 0.5813546059023771
+    },
+    {
+      "name": "챔피언 우세 — A 방어",
+      "input": {
+        "a": {
+          "impressions": 15000,
+          "clicks": 450,
+          "spend": 6000,
+          "ctr": 3
+        },
+        "b": {
+          "impressions": 15000,
+          "clicks": 150,
+          "spend": 6000,
+          "ctr": 1
+        }
+      },
+      "expected": 1
+    },
+    {
+      "name": "동률 — inconclusive",
+      "input": {
+        "a": {
+          "impressions": 15000,
+          "clicks": 300,
+          "spend": 6000,
+          "ctr": 2
+        },
+        "b": {
+          "impressions": 15000,
+          "clicks": 300,
+          "spend": 6000,
+          "ctr": 2
+        }
+      },
+      "expected": 0.50000000102793
+    },
+    {
+      "name": "챌린저 클릭 0 — CPC 무한대라 방어",
+      "input": {
+        "a": {
+          "impressions": 15000,
+          "clicks": 300,
+          "spend": 6000,
+          "ctr": 2
+        },
+        "b": {
+          "impressions": 15000,
+          "clicks": 0,
+          "spend": 6000,
+          "ctr": 0
+        }
+      },
+      "expected": 1
+    },
+    {
+      "name": "양쪽 클릭 0",
+      "input": {
+        "a": {
+          "impressions": 15000,
+          "clicks": 0,
+          "spend": 6000,
+          "ctr": 0
+        },
+        "b": {
+          "impressions": 15000,
+          "clicks": 0,
+          "spend": 6000,
+          "ctr": 0
+        }
+      },
+      "expected": 0.5
+    },
+    {
+      "name": "챌린저 클릭 많지만 지출도 많음 — CPC 로 방어",
+      "input": {
+        "a": {
+          "impressions": 15000,
+          "clicks": 300,
+          "spend": 3000,
+          "ctr": 2
+        },
+        "b": {
+          "impressions": 15000,
+          "clicks": 330,
+          "spend": 9000,
+          "ctr": 2.2
+        }
+      },
+      "expected": 0.8864724013574972
+    },
+    {
+      "name": "awareness — 챌린저 노출 우세로 승격",
+      "input": {
+        "a": {
+          "impressions": 8000,
+          "clicks": 48,
+          "spend": 60000,
+          "ctr": 0.6
+        },
+        "b": {
+          "impressions": 14000,
+          "clicks": 84,
+          "spend": 60000,
+          "ctr": 0.6
+        }
+      },
+      "expected": 0.50000000102793
+    },
+    {
+      "name": "awareness — 노출 근소 차이",
+      "input": {
+        "a": {
+          "impressions": 10000,
+          "clicks": 60,
+          "spend": 60000,
+          "ctr": 0.6
+        },
+        "b": {
+          "impressions": 10100,
+          "clicks": 61,
+          "spend": 60000,
+          "ctr": 0.6
+        }
+      },
+      "expected": 0.5144755249106263
+    },
+    {
+      "name": "awareness — 챔피언 노출 우세",
+      "input": {
+        "a": {
+          "impressions": 14000,
+          "clicks": 84,
+          "spend": 60000,
+          "ctr": 0.6
+        },
+        "b": {
+          "impressions": 8000,
+          "clicks": 48,
+          "spend": 60000,
+          "ctr": 0.6
+        }
+      },
+      "expected": 0.50000000102793
+    },
+    {
+      "name": "engagement — rate 취급",
+      "input": {
+        "a": {
+          "impressions": 12000,
+          "clicks": 120,
+          "spend": 5000,
+          "ctr": 1
+        },
+        "b": {
+          "impressions": 12000,
+          "clicks": 360,
+          "spend": 5000,
+          "ctr": 3
+        }
+      },
+      "expected": 1
+    },
+    {
+      "name": "leads_call — rate 취급",
+      "input": {
+        "a": {
+          "impressions": 12000,
+          "clicks": 120,
+          "spend": 5000,
+          "ctr": 1
+        },
+        "b": {
+          "impressions": 12000,
+          "clicks": 360,
+          "spend": 5000,
+          "ctr": 3
+        }
+      },
+      "expected": 1
+    },
+    {
+      "name": "알 수 없는 objective — traffic 폴백",
+      "input": {
+        "a": {
+          "impressions": 12000,
+          "clicks": 120,
+          "spend": 5000,
+          "ctr": 1
+        },
+        "b": {
+          "impressions": 12000,
+          "clicks": 360,
+          "spend": 5000,
+          "ctr": 3
+        }
+      },
+      "expected": 1
+    }
+  ],
+  "confidenceFromCountTest": [
+    {
+      "name": "impA=0 impB=0",
+      "input": {
+        "impA": 0,
+        "impB": 0
+      },
+      "expected": 0.5
+    },
+    {
+      "name": "impA=10000 impB=0",
+      "input": {
+        "impA": 10000,
+        "impB": 0
+      },
+      "expected": 0.5
+    },
+    {
+      "name": "impA=10000 impB=10000",
+      "input": {
+        "impA": 10000,
+        "impB": 10000
+      },
+      "expected": 0.50000000102793
+    },
+    {
+      "name": "impA=10000 impB=10500",
+      "input": {
+        "impA": 10000,
+        "impB": 10500
+      },
+      "expected": 0.6365360420527143
+    },
+    {
+      "name": "impA=8000 impB=14000",
+      "input": {
+        "impA": 8000,
+        "impB": 14000
+      },
+      "expected": 0.9999738475932959
+    },
+    {
+      "name": "impA=14000 impB=8000",
+      "input": {
+        "impA": 14000,
+        "impB": 8000
+      },
+      "expected": 0.9999738475932959
+    },
+    {
+      "name": "impA=1 impB=2",
+      "input": {
+        "impA": 1,
+        "impB": 2
+      },
+      "expected": 0.5230202244373663
+    }
+  ]
+}

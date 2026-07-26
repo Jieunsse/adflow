@@ -39,9 +39,11 @@ public class Tournament extends OwnerScoped {
   /** 크리에이티브 변형. TS: TourVariant. 라운드에서도 같은 모양으로 재사용한다. */
   @Embeddable
   public static class Variant {
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
     @Column(length = 1000)
     private String headline;
 
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
     @Column(name = "primary_text", length = 4000)
     private String primaryText;
 
@@ -131,6 +133,7 @@ public class Tournament extends OwnerScoped {
   @Column(name = "daily_budget")
   private Double dailyBudget;
 
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   @Embedded
   @AttributeOverrides({
     @AttributeOverride(name = "headline", column = @Column(name = "champion_headline", length = 1000)),

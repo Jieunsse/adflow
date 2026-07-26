@@ -207,6 +207,7 @@ public class TourRound {
   @Column(name = "campaign_id")
   private String campaignId;
 
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   @Embedded
   @AttributeOverrides({
     @AttributeOverride(name = "headline", column = @Column(name = "champion_headline", length = 1000)),
@@ -215,6 +216,7 @@ public class TourRound {
   })
   private Tournament.Variant champion;
 
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   @Embedded
   @AttributeOverrides({
     @AttributeOverride(name = "headline", column = @Column(name = "challenger_headline", length = 1000)),

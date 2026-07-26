@@ -20,7 +20,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/stores/sops": {
+    "/stores/tournaments": {
         parameters: {
             query?: never;
             header?: never;
@@ -36,7 +36,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/stores/reference-materials": {
+    "/stores/sops": {
         parameters: {
             query?: never;
             header?: never;
@@ -52,7 +52,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/stores/products": {
+    "/stores/reference-materials": {
         parameters: {
             query?: never;
             header?: never;
@@ -68,7 +68,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/stores/personas": {
+    "/stores/products": {
         parameters: {
             query?: never;
             header?: never;
@@ -79,6 +79,22 @@ export interface paths {
         put?: never;
         post: operations["upsert_3"];
         delete: operations["remove_4"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/stores/personas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_4"];
+        put?: never;
+        post: operations["upsert_4"];
+        delete: operations["remove_5"];
         options?: never;
         head?: never;
         patch?: never;
@@ -107,22 +123,6 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_4"];
-        put?: never;
-        post: operations["upsert_4"];
-        delete: operations["remove_5"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/stores/influencer-campaigns": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
         get: operations["list_5"];
         put?: never;
         post: operations["upsert_5"];
@@ -132,7 +132,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/stores/creators": {
+    "/stores/influencer-campaigns": {
         parameters: {
             query?: never;
             header?: never;
@@ -148,7 +148,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/stores/campaign-launches": {
+    "/stores/creators": {
         parameters: {
             query?: never;
             header?: never;
@@ -164,7 +164,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/stores/brand-profiles": {
+    "/stores/campaign-launches": {
         parameters: {
             query?: never;
             header?: never;
@@ -180,7 +180,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/stores/auto-relaunch": {
+    "/stores/brand-profiles": {
         parameters: {
             query?: never;
             header?: never;
@@ -196,7 +196,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/internal/ig-messages": {
+    "/stores/auto-relaunch": {
         parameters: {
             query?: never;
             header?: never;
@@ -206,6 +206,22 @@ export interface paths {
         get: operations["list_10"];
         put?: never;
         post: operations["upsert_10"];
+        delete: operations["remove_11"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/internal/ig-messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_11"];
+        put?: never;
+        post: operations["upsert_11"];
         delete?: never;
         options?: never;
         head?: never;
@@ -254,6 +270,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["exchange"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/stores/tournaments/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -328,6 +360,139 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        AutoRefill: {
+            /** Format: double */
+            addBudget: number;
+            /** Format: double */
+            hardCap: number;
+        };
+        ContextTags: {
+            productId: string;
+            personaId?: string;
+            objective: string;
+        };
+        Envelope: {
+            /** Format: double */
+            totalBudget?: number;
+            targetDate?: string;
+            autoRefill?: components["schemas"]["AutoRefill"];
+            /** Format: int32 */
+            stopOnDefendStreak?: number;
+        };
+        HypothesisData: {
+            id: string;
+            lever: string;
+            statement: string;
+            predictedMetric: string;
+            predictedDirection: string;
+            rationale: string;
+            rationaleSource: string;
+            contextTags: components["schemas"]["ContextTags"];
+            status: string;
+            verdict?: string;
+            /** Format: double */
+            effectSize?: number;
+            resolvedAt?: string;
+        };
+        ItemRequestTournament: {
+            item?: components["schemas"]["Tournament"];
+        };
+        Kpi: {
+            /** Format: double */
+            ctr: number;
+            /** Format: int32 */
+            impressions: number;
+            /** Format: int32 */
+            clicks: number;
+            /** Format: double */
+            spend: number;
+        };
+        TourRound: {
+            /** Format: int32 */
+            index: number;
+            axis: string;
+            campaignId: string;
+            champion: components["schemas"]["Variant"];
+            challenger: components["schemas"]["Variant"];
+            /** Format: int32 */
+            fastForwardDays: number;
+            verdict?: components["schemas"]["Verdict"];
+            rawWinner?: string;
+            adKpis?: components["schemas"]["Kpi"][];
+            adIds?: string[];
+            adSetIds?: string[];
+            studyId?: string;
+            launchedAt?: string;
+            status: string;
+            hypothesis?: components["schemas"]["HypothesisData"];
+        };
+        Tournament: {
+            id: string;
+            brandProfileId: string;
+            productId: string;
+            productName: string;
+            tone: string;
+            objective: string;
+            /** Format: double */
+            dailyBudget: number;
+            champion: components["schemas"]["Variant"];
+            /** Format: double */
+            championCtr: number;
+            championSource?: string;
+            championSourceName?: string;
+            championConfirmed?: boolean;
+            pendingChallenger?: components["schemas"]["Variant"];
+            pendingHypothesis?: components["schemas"]["HypothesisData"];
+            envelope?: components["schemas"]["Envelope"];
+            prohibitedWords?: string[];
+            brandDescription?: string;
+            productDescription?: string;
+            variationIntensity?: string;
+            /** Format: int32 */
+            axisCursor: number;
+            rounds: components["schemas"]["TourRound"][];
+            /** Format: double */
+            spentBudget: number;
+            status: string;
+            completionReason?: string;
+            createdAt: string;
+            delivery?: components["schemas"]["TournamentDelivery"];
+            lastError?: string;
+            /** @enum {string} */
+            mode: "auto";
+        };
+        TournamentDelivery: {
+            accessToken: string;
+            adAccountId: string;
+            pageId: string;
+            ownerEmail: string;
+            goalId?: string;
+            linkUrl: string;
+            ctaType: string;
+            countries: string[];
+            /** Format: int32 */
+            ageMin: number;
+            /** Format: int32 */
+            ageMax: number;
+            genders?: number[];
+            /** Format: int32 */
+            roundDays: number;
+            imageDataUrl?: string;
+        };
+        Variant: {
+            headline: string;
+            primaryText: string;
+            imageUrl?: string;
+        };
+        Verdict: {
+            state: string;
+            /** Format: double */
+            ctrA: number;
+            /** Format: double */
+            ctrB: number;
+            /** Format: double */
+            confidence: number;
+        };
         ItemRequestSop: {
             item?: components["schemas"]["Sop"];
         };
@@ -606,6 +771,9 @@ export interface components {
             igUserId?: string;
             igUsername?: string;
         };
+        ItemsResponseTournament: {
+            items?: components["schemas"]["Tournament"][];
+        };
         ItemsResponseSop: {
             items?: components["schemas"]["Sop"][];
         };
@@ -730,7 +898,9 @@ export interface operations {
     };
     list: {
         parameters: {
-            query?: never;
+            query?: {
+                brandProfileId?: string;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -743,7 +913,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ItemsResponseSop"];
+                    "*/*": components["schemas"]["ItemsResponseTournament"];
                 };
             };
         };
@@ -757,7 +927,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ItemRequestSop"];
+                "application/json": components["schemas"]["ItemRequestTournament"];
             };
         };
         responses: {
@@ -800,9 +970,7 @@ export interface operations {
     };
     list_1: {
         parameters: {
-            query: {
-                brandProfileId: string;
-            };
+            query?: never;
             header?: never;
             path?: never;
             cookie?: never;
@@ -815,7 +983,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ItemsResponseReferenceMaterial"];
+                    "*/*": components["schemas"]["ItemsResponseSop"];
                 };
             };
         };
@@ -829,7 +997,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ItemRequestReferenceMaterial"];
+                "application/json": components["schemas"]["ItemRequestSop"];
             };
         };
         responses: {
@@ -887,7 +1055,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ItemsResponseProduct"];
+                    "*/*": components["schemas"]["ItemsResponseReferenceMaterial"];
                 };
             };
         };
@@ -901,7 +1069,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ItemRequestProduct"];
+                "application/json": components["schemas"]["ItemRequestReferenceMaterial"];
             };
         };
         responses: {
@@ -944,6 +1112,78 @@ export interface operations {
     };
     list_3: {
         parameters: {
+            query: {
+                brandProfileId: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ItemsResponseProduct"];
+                };
+            };
+        };
+    };
+    upsert_3: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ItemRequestProduct"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: boolean;
+                    };
+                };
+            };
+        };
+    };
+    remove_4: {
+        parameters: {
+            query: {
+                id: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: boolean;
+                    };
+                };
+            };
+        };
+    };
+    list_4: {
+        parameters: {
             query?: never;
             header?: never;
             path?: never;
@@ -962,7 +1202,7 @@ export interface operations {
             };
         };
     };
-    upsert_3: {
+    upsert_4: {
         parameters: {
             query?: never;
             header?: never;
@@ -988,7 +1228,7 @@ export interface operations {
             };
         };
     };
-    remove_4: {
+    remove_5: {
         parameters: {
             query: {
                 id: string;
@@ -1078,7 +1318,7 @@ export interface operations {
             };
         };
     };
-    list_4: {
+    list_5: {
         parameters: {
             query?: never;
             header?: never;
@@ -1098,76 +1338,6 @@ export interface operations {
             };
         };
     };
-    upsert_4: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ItemRequestLibraryItem"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": {
-                        [key: string]: boolean;
-                    };
-                };
-            };
-        };
-    };
-    remove_5: {
-        parameters: {
-            query: {
-                id: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": {
-                        [key: string]: boolean;
-                    };
-                };
-            };
-        };
-    };
-    list_5: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ItemsResponseInfluencerCampaign"];
-                };
-            };
-        };
-    };
     upsert_5: {
         parameters: {
             query?: never;
@@ -1177,7 +1347,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ItemRequestInfluencerCampaign"];
+                "application/json": components["schemas"]["ItemRequestLibraryItem"];
             };
         };
         responses: {
@@ -1233,7 +1403,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ItemsResponseCreator"];
+                    "*/*": components["schemas"]["ItemsResponseInfluencerCampaign"];
                 };
             };
         };
@@ -1247,7 +1417,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ItemRequestCreator"];
+                "application/json": components["schemas"]["ItemRequestInfluencerCampaign"];
             };
         };
         responses: {
@@ -1303,7 +1473,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ItemsResponseCampaignLaunch"];
+                    "*/*": components["schemas"]["ItemsResponseCreator"];
                 };
             };
         };
@@ -1317,7 +1487,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ItemRequestCampaignLaunch"];
+                "application/json": components["schemas"]["ItemRequestCreator"];
             };
         };
         responses: {
@@ -1373,7 +1543,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ItemsResponseBrandProfile"];
+                    "*/*": components["schemas"]["ItemsResponseCampaignLaunch"];
                 };
             };
         };
@@ -1387,7 +1557,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ItemRequestBrandProfile"];
+                "application/json": components["schemas"]["ItemRequestCampaignLaunch"];
             };
         };
         responses: {
@@ -1443,7 +1613,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ItemsResponseAutoRelaunchState"];
+                    "*/*": components["schemas"]["ItemsResponseBrandProfile"];
                 };
             };
         };
@@ -1457,7 +1627,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ItemRequestAutoRelaunchState"];
+                "application/json": components["schemas"]["ItemRequestBrandProfile"];
             };
         };
         responses: {
@@ -1500,6 +1670,76 @@ export interface operations {
     };
     list_10: {
         parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ItemsResponseAutoRelaunchState"];
+                };
+            };
+        };
+    };
+    upsert_10: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ItemRequestAutoRelaunchState"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: boolean;
+                    };
+                };
+            };
+        };
+    };
+    remove_11: {
+        parameters: {
+            query: {
+                id: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: boolean;
+                    };
+                };
+            };
+        };
+    };
+    list_11: {
+        parameters: {
             query: {
                 igUserId: string;
                 conversationId?: string;
@@ -1523,7 +1763,7 @@ export interface operations {
             };
         };
     };
-    upsert_10: {
+    upsert_11: {
         parameters: {
             query?: never;
             header?: {
@@ -1627,6 +1867,28 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["ExchangeResponse"];
+                };
+            };
+        };
+    };
+    get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Tournament"];
                 };
             };
         };

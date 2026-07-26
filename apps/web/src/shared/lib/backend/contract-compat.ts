@@ -16,6 +16,13 @@ import type { PersonaEntry } from "@features/brand-profile/model/usePersonasStor
 import type { Sop } from "@features/sop/model/useSopStorage";
 import type { ProductEntry } from "@shared/lib/products";
 import type { ReferenceMaterial } from "@shared/lib/referenceMaterials";
+import type {
+  Tournament as TournamentEntity,
+  TourRound as TourRoundEntity,
+  TournamentDelivery,
+  TourEnvelope,
+  TourVariant,
+} from "@entities/ab-test/tournament/engine";
 
 type Api<K extends keyof components["schemas"]> = components["schemas"][K];
 
@@ -74,3 +81,35 @@ export type ProductIsCompatible = Assert<AssignableTo<Api<"Product">, ProductEnt
 export type ReferenceMaterialIsCompatible = Assert<
   AssignableTo<Omit<Api<"ReferenceMaterial">, "type">, Omit<ReferenceMaterial, "type">>
 >;
+
+// 단계 5 — 토너먼트 애그리거트. 29필드 + 중첩 6종이라 이 단언이 잡아주는 범위가 가장 넓다.
+//
+// 문자열 유니온은 계약이 못 지킨다. Java 로 enum 을 옮기면 목록이 두 곳에 살아 드리프트하므로
+// String 으로 두는 쪽을 택했다(단계 3 의 goalId·단계 4 의 ReferenceMaterial.type 과 같은 판단).
+// 값의 정확성은 골든 픽스처와 컨트롤러 왕복 테스트가 런타임으로 지킨다.
+type TourOpaque =
+  | "mode" | "status" | "championSource" | "variationIntensity" | "completionReason"
+  // rounds·pendingHypothesis 는 안쪽이 다시 유니온·튜플이라 통째로 뺀다(아래 TourRound 단언 참고).
+  | "rounds" | "pendingHypothesis";
+export type TournamentIsCompatible = Assert<
+  AssignableTo<Omit<Api<"Tournament">, TourOpaque>, Omit<TournamentEntity, TourOpaque>>
+>;
+
+// 라운드도 같은 이유로 유니온·튜플이 예외다.
+//   axis·rawWinner·status  — 문자열 유니온
+//   adIds·adSetIds·adKpis  — TS 튜플 [T, T]. springdoc 이 prefixItems 를 내지 않는다
+//   verdict·hypothesis     — 안쪽이 다시 유니온이라 통째로 뺀다
+type RoundOpaque =
+  | "axis" | "rawWinner" | "status" | "adIds" | "adSetIds" | "adKpis" | "verdict" | "hypothesis";
+export type TourRoundIsCompatible = Assert<
+  AssignableTo<Omit<Api<"TourRound">, RoundOpaque>, Omit<TourRoundEntity, RoundOpaque>>
+>;
+
+// 게재 봉투는 유니온이 없어 전 필드가 지켜진다 — 장기 토큰이 든 곳이라 여기가 가장 엄격해야 한다.
+export type TournamentDeliveryIsCompatible = Assert<
+  AssignableTo<Api<"TournamentDelivery">, TournamentDelivery>
+>;
+
+// 봉투·변형도 전 필드 검증된다.
+export type TourEnvelopeIsCompatible = Assert<AssignableTo<Api<"Envelope">, TourEnvelope>>;
+export type TourVariantIsCompatible = Assert<AssignableTo<Api<"Variant">, TourVariant>>;

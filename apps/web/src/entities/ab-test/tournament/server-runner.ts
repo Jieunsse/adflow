@@ -1,35 +1,23 @@
-// 서버 오케스트레이터 (ADR-038 결정 3·6) — server-side only. 데모용 runner.ts("use client", 동기
-// localStorage, fetch /api)와 대칭인 실 유저 경로. 어댑터 2개(store·launcher)를 주입받아 라운드를
-// 진행하며, cron 폴러(브라우저 없이 동작)와 API 라우트가 공유한다.
+// 실 유저 토너먼트 편집 — server-side only. 세션이 있어야 하는 것만 남았다.
 //
-// 단계 5 — **결산은 여기 없다.** 라운드 판정은 Java 가 소유하고(Spring /internal/tournaments/{id}/settle)
-// cron 이 직접 부른다. 판정을 두 곳에 두면 골든 픽스처가 못 잡는 자리에서 갈라진다. 남은 것은
-// 생성·가설·게재처럼 아직 TS 에 있는 부작용뿐이다.
+// 단계 6 — **판정·게재·자동 진행은 여기 없다.** 라운드를 만드는 일은 전부 Java 가 소유한다
+// (Spring 폴러 + /internal/tournaments/{id}/advance). 실제 광고가 만들어지는 경로를 두 곳에 두면
+// 사람이 누른 라운드와 폴러가 띄운 라운드가 다른 규칙으로 만들어진다.
+//
+// 남은 것은 챔피언 확정·재생성·수동 챌린저·봉투 충전·복구 — 전부 저장만 하는 편집이다.
 
 import { geminiCreative } from "@/lib/gemini-creative";
 import type { ObjectiveId } from "@entities/creative/options";
-import type { TournamentStore, RoundLauncher } from "./adapters";
+import type { TournamentStore } from "./adapters";
 import {
-  deriveAxis,
   initialChampion,
-  isEnvelopeExhausted,
-  canAutoRefill,
   endCompletionReason,
   newTournamentId,
-  roundCampaignId,
   type Tournament,
   type TourVariant,
-  type TourRound,
   type TournamentDelivery,
   type TourEnvelope,
 } from "./engine";
-import {
-  deriveLedger,
-  selectNextLever,
-  summarizeLedger,
-  buildHypothesis,
-  buildLeverChallenger,
-} from "./hypothesis";
 
 type CreativeGen = { headlines: string[]; primaryTexts: string[] };
 
@@ -63,15 +51,14 @@ export type ServerTournamentSetup = {
   startingChampion?: TourVariant;
   championSourceName?: string;
   prohibitedWords?: string[]; // ADR-054 — 브랜드 금칙어. 챌린저 생성 프롬프트에 구조 주입
-  delivery: TournamentDelivery; // 실 게재 봉투 — cron 이 세션 없이 게재·폴링하는 데 필수
+  delivery: TournamentDelivery; // 실 게재 봉투 — 폴러가 세션 없이 게재·폴링하는 데 필수
 };
 
 export function createServerRunner(deps: {
   store: TournamentStore;
-  launcher: RoundLauncher;
   now?: () => number; // 테스트 주입용 — 미지정 시 Date.now
 }) {
-  const { store, launcher } = deps;
+  const { store } = deps;
   const now = deps.now ?? (() => Date.now());
 
   // 셋업 → 출발 챔피언 확보. existing = 즉시 확정, ai = Gemini 생성 후 검토 대기(championConfirmed=false).
@@ -130,64 +117,11 @@ export function createServerRunner(deps: {
     await store.upsert(t);
   }
 
-  // ADR-044/047 — Ledger 구동 가설 생성. 소유 유저의 같은 브랜드 토너먼트를 투영해 다음 레버를 고르고
-  // (ⓐ재탕 회피 ⓑ미탐색 우선 ⓒ음성 가지치기) 가설 + 챌린저를 pending 으로 보관. 데모 runner 와 대칭.
-  async function proposeChallenger(id: string): Promise<TourVariant | null> {
-    const t = await store.get(id);
-    if (!t || t.status === "completed" || t.rounds.some((r) => r.status === "running")) return null;
-    const gen = await genCreative(t);
-    const index = t.rounds.length + 1;
-    const ctx = { productId: t.productId, objective: t.objective };
-    const ownerKey = t.delivery?.ownerEmail;
-    const ledger = ownerKey ? deriveLedger(await store.listByBrandOwner(t.brandProfileId, ownerKey)) : [];
-    const lever = selectNextLever(ledger, ctx, index);
-    const hasPrior = summarizeLedger(ledger, ctx).relevant.length > 0;
-    t.pendingHypothesis = buildHypothesis({
-      lever,
-      ctx,
-      rationaleSource: hasPrior ? "ledger" : "platform-prior",
-      idSeed: `${t.id}_r${index}`,
-    });
-    t.pendingChallenger = buildLeverChallenger(t.champion, lever, gen);
-    await store.upsert(t);
-    return t.pendingChallenger;
-  }
-
   async function setManualChallenger(id: string, variant: TourVariant): Promise<void> {
     const t = await store.get(id);
     if (!t) return;
     t.pendingChallenger = variant;
     await store.upsert(t);
-  }
-
-  // 게재 결정 → pending 챌린저를 실 Meta A/B 게재. campaignId·adIds·launchedAt 을 라운드에 박아둔다.
-  async function launchRound(id: string): Promise<TourRound | null> {
-    const t = await store.get(id);
-    if (!t || t.status === "completed" || t.rounds.some((r) => r.status === "running") || !t.pendingChallenger) {
-      return null;
-    }
-    const index = t.rounds.length + 1;
-    const round: TourRound = {
-      index,
-      axis: deriveAxis(t.champion, t.pendingChallenger),
-      campaignId: roundCampaignId(t.id, index),
-      champion: t.champion,
-      challenger: t.pendingChallenger,
-      fastForwardDays: 0,
-      status: "running",
-      hypothesis: t.pendingHypothesis ? { ...t.pendingHypothesis, status: "testing" } : undefined, // ADR-044
-    };
-    const { campaignId, adIds, adSetIds, studyId } = await launcher.launch(t, round);
-    round.campaignId = campaignId;
-    round.adIds = adIds;
-    round.adSetIds = adSetIds;
-    round.studyId = studyId;
-    round.launchedAt = new Date(now()).toISOString();
-    t.rounds = [...t.rounds, round];
-    t.pendingChallenger = undefined;
-    t.pendingHypothesis = undefined;
-    await store.upsert(t);
-    return round;
   }
 
   async function endTournament(id: string): Promise<void> {
@@ -199,41 +133,6 @@ export function createServerRunner(deps: {
     await store.upsert(t);
   }
 
-  // auto 무인 체인 (ADR-054) — 봉투 미소진이면 다음 챌린저 자동 생성·게재. 금칙어 구조 차단·정체 자동 돌파라 정지 없음.
-  // cron 이 Spring 결산 → autoAdvance 순으로 호출. 챌린저 생성 실패는 일시적(swallow·재시도),
-  // 게재 실패는 split test 규칙 거절이라 사전 탐지 불가 → lastError 에 한국어로 박고 자동 진행 중단(ADR-053).
-  async function autoAdvance(id: string): Promise<void> {
-    const t = await store.get(id);
-    if (!t || t.status === "completed") return;
-    if (t.lastError) return; // ADR-053 — 게재 실패로 멈춘 토너먼트는 사람이 손볼 때까지 자동 진행 안 함 (자동충전보다 먼저)
-    if (!t.championConfirmed) return;
-    if (t.rounds.some((r) => r.status === "running")) return;
-    // ADR-061 — 봉투 소진 시 autoRefill opt-in & hardCap 미만이면 자동 충전. hardCap 도달이면 미충전 → winner-handling.
-    if (isEnvelopeExhausted(t) && canAutoRefill(t)) {
-      const env = t.envelope!;
-      t.envelope = { ...env, totalBudget: (env.totalBudget ?? t.spentBudget) + env.autoRefill!.addBudget };
-      await store.upsert(t);
-    }
-    if (isEnvelopeExhausted(t)) return;
-    try {
-      if (!t.pendingChallenger) await proposeChallenger(id);
-    } catch {
-      // 챌린저 생성(Gemini) 실패는 일시적 — 다음 폴에 재시도.
-      return;
-    }
-    try {
-      await launchRound(id);
-    } catch (e) {
-      // ADR-053 — Meta 가 split test 게재를 거절(예산·기간·목표). createSplitTestStudy 가 mapSplitTestError 로
-      // 이미 한국어 Error 를 던진다. 저장 후 다음 폴부터 skip — 조용히 방치되지 않게 상세 배너로 surface.
-      const fresh = await store.get(id);
-      if (fresh) {
-        fresh.lastError = e instanceof Error ? e.message : String(e);
-        await store.upsert(fresh);
-      }
-    }
-  }
-
   async function refillEnvelope(id: string, addBudget = 300000): Promise<void> {
     const t = await store.get(id);
     if (!t) return;
@@ -243,7 +142,7 @@ export function createServerRunner(deps: {
   }
 
   // ADR-053 복구 — 게재 실패로 멈춘 토너먼트(lastError)를 사람이 확인 후 재시도. lastError 제거만 하면
-  // 다음 cron 폴이 autoAdvance 를 다시 태운다.
+  // 다음 폴에서 Spring 이 자동 진행을 다시 태운다.
   async function resume(id: string): Promise<void> {
     const t = await store.get(id);
     if (!t || !t.lastError) return;
@@ -255,11 +154,8 @@ export function createServerRunner(deps: {
     createTournament,
     regenerateChampion,
     confirmChampion,
-    proposeChallenger,
     setManualChallenger,
-    launchRound,
     endTournament,
-    autoAdvance,
     refillEnvelope,
     resume,
   };

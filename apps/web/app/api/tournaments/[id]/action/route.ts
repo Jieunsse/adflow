@@ -7,7 +7,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { withRouteHandler, ValidationError } from "@/lib/route-handler";
-import { getRealTournamentRunner, tournamentStore, ownerKeyFrom } from "@entities/ab-test/tournament/real";
+import {
+  getRealTournamentRunner,
+  tournamentStore,
+  advanceOnBackend,
+  ownerKeyFrom,
+} from "@entities/ab-test/tournament/real";
 import type { TourVariant } from "@entities/ab-test/tournament/engine";
 
 export const dynamic = "force-dynamic";
@@ -51,14 +56,16 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         await r.regenerateChampion(id);
         break;
       case "propose-challenger":
-        await r.proposeChallenger(id);
+        // 폴러와 같은 함수를 탄다 — 레버 선택이 두 곳에 있으면 사람이 만든 라운드와 규칙이 갈린다.
+        await advanceOnBackend(id, "propose");
         break;
       case "set-challenger":
         if (!b.variant) throw new ValidationError("챌린저 내용이 없어요.");
         await r.setManualChallenger(id, b.variant);
         break;
       case "launch":
-        await r.launchRound(id);
+        // 실제 Meta 게재 — 폴러와 같은 경로여야 광고가 같은 규칙으로 만들어진다.
+        await advanceOnBackend(id, "launch");
         break;
       case "refill-envelope":
         await r.refillEnvelope(id, b.addBudget);

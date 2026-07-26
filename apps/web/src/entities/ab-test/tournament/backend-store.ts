@@ -103,3 +103,10 @@ export async function settleRoundOnBackend(id: string): Promise<BackendSettleRes
   const res = await call(`${PATH}/${encodeURIComponent(id)}/settle`, { method: "POST" });
   return (await res.json()) as BackendSettleResult;
 }
+
+// 화면의 수동 액션도 폴러와 **같은 함수**를 탄다. 레버 선택과 실 게재를 TS 에도 두면 사람이 누른
+// 라운드와 폴러가 띄운 라운드가 다른 규칙으로 만들어진다 — 진짜 광고가 만들어지는 경로라 특히 위험하다.
+export async function advanceOnBackend(id: string, step: "propose" | "launch"): Promise<Tournament> {
+  const res = await call(`${PATH}/${encodeURIComponent(id)}/advance?step=${step}`, { method: "POST" });
+  return (await res.json()) as Tournament;
+}

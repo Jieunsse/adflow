@@ -6,7 +6,6 @@ import ai.adflow.api.tournament.engine.RoundVerdict;
 import ai.adflow.api.tournament.engine.SettleResult;
 import ai.adflow.api.tournament.engine.TourEngine;
 import ai.adflow.api.tournament.engine.TourHypothesis;
-import ai.adflow.api.tournament.engine.TourState;
 import jakarta.transaction.Transactional;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -62,7 +61,7 @@ public class TournamentSettleService {
     if (r.getHypothesis() != null) {
       Hypothesis resolved =
           TourHypothesis.resolveHypothesis(
-              toEngine(r.getHypothesis()), verdict, rawWinner, Instant.now().toString());
+              TourStates.hypothesisOf(r.getHypothesis()), verdict, rawWinner, Instant.now().toString());
       applyResolved(r.getHypothesis(), resolved);
     }
 
@@ -74,13 +73,13 @@ public class TournamentSettleService {
     t.setSpentBudget(nz(t.getSpentBudget()) + nz(t.getDailyBudget()) * TourEngine.MIN_ROUND_DAYS);
 
     // ADR-061 — 챔피언 N회 연속 방어 = 수렴. 방금 결산한 라운드가 포함된 상태로 본다.
-    if (TourEngine.hasConverged(stateOf(t))) {
+    if (TourEngine.hasConverged(TourStates.of(t))) {
       t.setStatus("completed");
       t.setCompletionReason("converged");
     }
 
     // ADR-054 — 봉투 소진은 자동 완료가 아니라 winner-handling 으로 사람에게 넘긴다.
-    boolean completed = "completed".equals(t.getStatus()) || TourEngine.isEnvelopeExhausted(stateOf(t));
+    boolean completed = "completed".equals(t.getStatus()) || TourEngine.isEnvelopeExhausted(TourStates.of(t));
     repository.save(t);
 
     return new Outcome(
@@ -92,57 +91,6 @@ public class TournamentSettleService {
   }
 
   /* ─── 엔티티 ↔ 엔진 뷰 ─────────────────────────────────────── */
-
-  /** 엔진은 JPA 를 모른다(TourState javadoc) — 상태 판정에 쓰는 6필드만 옮긴다. */
-  private static TourState stateOf(Tournament t) {
-    List<TourState.Round> rounds = new ArrayList<>();
-    for (TourRound r : t.getRounds()) {
-      rounds.add(
-          new TourState.Round(
-              r.getStatus(),
-              r.getRawWinner(),
-              r.getVerdict() == null ? null : r.getVerdict().getState(),
-              nz(r.getFastForwardDays())));
-    }
-
-    Tournament.Envelope e = t.getEnvelope();
-    TourState.Envelope env = null;
-    if (e != null) {
-      Tournament.AutoRefill ar = e.getAutoRefill();
-      TourState.AutoRefill refill =
-          ar == null || ar.getAddBudget() == null || ar.getHardCap() == null
-              ? null
-              : new TourState.AutoRefill(ar.getAddBudget(), ar.getHardCap());
-      env =
-          new TourState.Envelope(
-              e.getTotalBudget(), e.getTargetDate(), refill, e.getStopOnDefendStreak());
-    }
-
-    return new TourState(
-        Boolean.TRUE.equals(t.getChampionConfirmed()),
-        t.getStatus(),
-        nz(t.getSpentBudget()),
-        t.getCreatedAt(),
-        env,
-        rounds);
-  }
-
-  private static Hypothesis toEngine(TourRound.HypothesisData h) {
-    TourRound.ContextTags c = h.getContextTags();
-    return new Hypothesis(
-        h.getId(),
-        h.getLever(),
-        h.getStatement(),
-        h.getPredictedMetric(),
-        h.getPredictedDirection(),
-        h.getRationale(),
-        h.getRationaleSource(),
-        c == null ? null : new Hypothesis.ContextTags(c.getProductId(), c.getPersonaId(), c.getObjective()),
-        h.getStatus(),
-        h.getVerdict(),
-        h.getEffectSize(),
-        h.getResolvedAt());
-  }
 
   /** resolveHypothesis 가 바꾸는 것은 뒤 4필드뿐이다 — 나머지를 되쓰지 않고 제자리에서 갱신한다. */
   private static void applyResolved(TourRound.HypothesisData target, Hypothesis resolved) {

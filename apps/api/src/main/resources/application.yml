@@ -25,8 +25,11 @@ management:
         include: health, info
 
 app:
-  # Next.js 서버만 아는 값. /auth/exchange 호출자를 식별한다.
+  # Next.js 서버만 아는 값. /auth/exchange 호출자를 식별한다. 양방향 내부 호출이 같은 값을 쓴다.
   internal-secret: ${ADFLOW_INTERNAL_SECRET:}
+  # Spring → Next 내부 호출 (설계 §6) — 챌린저 카피 생성(Gemini)과 SSE 알림 다리.
+  # Meta 역위임은 단계 6 에서 사라졌다. 남은 둘은 각각 프롬프트 단일화·프로세스 메모리 때문이다.
+  next-internal-url: ${ADFLOW_NEXT_INTERNAL_URL:http://localhost:3000}
   jwt:
     # HS256 서명키. 32바이트 이상. 실값은 환경변수 ADFLOW_JWT_SECRET 로만 준다.
     secret: ${ADFLOW_JWT_SECRET:}
@@ -40,6 +43,7 @@ app:
     key: ${ADFLOW_ENCRYPTION_KEY:}
   poller:
     # 운영 기본값 6시간. 로컬 프로필에서 짧게 덮어쓴다 (설계 §6).
+    # 개발 머신은 늘 켜져 있지 않아 주기만으로는 검증이 안 된다 — POST /internal/poller/run 을 같이 쓴다.
     interval: PT6H
   storage:
     # 버킷 파일 루트. 로컬은 파일시스템, 배포하면 S3 호환으로 교체 (설계 §5).

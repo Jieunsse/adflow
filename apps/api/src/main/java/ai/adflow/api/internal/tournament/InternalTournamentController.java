@@ -4,6 +4,7 @@ import ai.adflow.api.internal.InternalSecret;
 import ai.adflow.api.store.ItemRequest;
 import ai.adflow.api.store.ItemsResponse;
 import ai.adflow.api.tournament.Tournament;
+import ai.adflow.api.tournament.TournamentAdvanceService;
 import ai.adflow.api.tournament.TournamentRepository;
 import ai.adflow.api.tournament.TournamentSettleService;
 import jakarta.transaction.Transactional;
@@ -36,14 +37,17 @@ public class InternalTournamentController {
 
   private final TournamentRepository repository;
   private final TournamentSettleService settleService;
+  private final TournamentAdvanceService advanceService;
   private final InternalSecret internalSecret;
 
   public InternalTournamentController(
       TournamentRepository repository,
       TournamentSettleService settleService,
+      TournamentAdvanceService advanceService,
       InternalSecret internalSecret) {
     this.repository = repository;
     this.settleService = settleService;
+    this.advanceService = advanceService;
     this.internalSecret = internalSecret;
   }
 
@@ -121,7 +125,7 @@ public class InternalTournamentController {
     return Map.of("ok", true);
   }
 
-  /** 단계 5 의 종착점 — Java 엔진이 라운드를 결산한다. cron 은 이걸 부르는 얇은 트리거로 남는다. */
+  /** Java 엔진이 라운드를 결산한다. 단계 6 부터는 Spring 폴러가 스스로 부르고, 화면은 결과만 읽는다. */
   @PostMapping("/{id}/settle")
   public TournamentSettleService.Outcome settle(
       @RequestHeader(value = "X-Internal-Secret", required = false) String presented,
@@ -129,5 +133,32 @@ public class InternalTournamentController {
 
     internalSecret.require(presented);
     return settleService.settle(id);
+  }
+
+  /**
+   * 화면의 수동 액션 — 다음 챌린저 세우기 · 게재.
+   *
+   * <p>폴러가 쓰는 코드와 <b>같은 함수</b>다. 레버 선택과 실 게재를 TS 에도 두면 사람이 누른 라운드와
+   * 폴러가 띄운 라운드가 다른 규칙으로 만들어진다 — 실제 광고가 만들어지는 경로라 특히 위험하다.
+   */
+  @PostMapping("/{id}/advance")
+  @Transactional
+  public Tournament advance(
+      @RequestHeader(value = "X-Internal-Secret", required = false) String presented,
+      @PathVariable String id,
+      @RequestParam("step") String step) {
+
+    internalSecret.require(presented);
+    Tournament t =
+        repository
+            .findById(id)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "토너먼트를 찾을 수 없어요."));
+
+    switch (step) {
+      case "propose" -> advanceService.propose(t);
+      case "launch" -> advanceService.launch(t);
+      default -> throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "알 수 없는 액션이에요.");
+    }
+    return repository.save(t);
   }
 }

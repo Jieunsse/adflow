@@ -150,6 +150,25 @@ class TournamentSettlePostgresIT extends IntegrationTestBase {
   }
 
   @Test
+  void 동시_수정은_낙관적_락이_잡는다() {
+    // 설계 §6 — 폴러와 화면이 같은 토너먼트를 동시에 고칠 수 있다. 버전이 없으면 나중에 저장한 쪽이
+    // 앞선 변경을 조용히 덮는다.
+    save("tourn_pg_lock");
+
+    Tournament a = repository.findById("tourn_pg_lock").orElseThrow();
+    Tournament b = repository.findById("tourn_pg_lock").orElseThrow();
+
+    a.setChampionCtr(9.9);
+    repository.saveAndFlush(a);
+
+    b.setChampionCtr(1.1);
+    org.assertj.core.api.Assertions.assertThatThrownBy(() -> repository.saveAndFlush(b))
+        .isInstanceOf(org.springframework.orm.ObjectOptimisticLockingFailureException.class);
+
+    assertThat(repository.findById("tourn_pg_lock").orElseThrow().getChampionCtr()).isEqualTo(9.9);
+  }
+
+  @Test
   void 스터디_미확정이면_아무것도_고치지_않는다() {
     save("tourn_pg_pending");
     StubKpiSource.next = new TournamentKpiSource.Reading(List.of(), null, null);

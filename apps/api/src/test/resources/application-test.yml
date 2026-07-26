@@ -19,3 +19,6 @@ app:
   storage:
     # 테스트가 레포에 파일을 남기지 않게 build 아래로 뺀다 (gradle clean 이 쓸어간다).
     root: build/test-files
+  poller:
+    enabled: false
+    interval: PT6H

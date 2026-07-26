@@ -13,3 +13,6 @@ app:
     refresh-ttl: P30D
   encryption:
     key: it-encryption-key-32-bytes-okay!
+  poller:
+    enabled: false
+    interval: PT6H

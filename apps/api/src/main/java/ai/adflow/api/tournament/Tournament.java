@@ -1,6 +1,7 @@
 package ai.adflow.api.tournament;
 
 import ai.adflow.api.store.OwnerScoped;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.AttributeOverride;
@@ -18,6 +19,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -216,6 +218,19 @@ public class Tournament extends OwnerScoped {
   private String lastError;
 
   /**
+   * 낙관적 락 (설계 §6). 폴러와 화면이 같은 토너먼트를 동시에 고칠 수 있다 — 6시간마다 무인으로 도는
+   * 쪽과 사람이 누르는 쪽이라 겹치는 순간이 실제로 온다.
+   *
+   * <p>TS 타입에 없는 필드라 와이어에서는 감춘다(와이어 형태 동결).
+   *
+   * <p><b>지켜지지 않는 경로가 하나 남아 있다</b> — Next 의 전체 애그리거트 upsert 는 지우고 새로
+   * 넣으므로 버전 비교를 지나친다. 챔피언 확정·봉투 충전 같은 편집이 아직 그 경로다.
+   */
+  @Version
+  @JsonIgnore
+  private Long version;
+
+  /**
    * ADR-054 — manual-n 은 폐기됐고 값은 항상 auto 다. 레거시 행을 읽을 때 흡수하지 않으면 폴러가
    * mode=="auto" 만 진행하므로 옛 토너먼트가 조용히 멈춘다(supabase-store 의 normalize 와 같은 일).
    */
@@ -298,6 +313,18 @@ public class Tournament extends OwnerScoped {
   public List<TourRound> getRounds() { return rounds == null ? List.of() : rounds; }
 
   public void setRounds(List<TourRound> v) { this.rounds = v == null ? new ArrayList<>() : v; }
+
+  /**
+   * 라운드를 제자리에 더한다.
+   *
+   * <p>영속 상태의 엔티티에서 컬렉션 인스턴스를 통째로 갈아끼우면 Hibernate 가 orphanRemoval 대상을
+   * 놓쳐 "A collection with orphan deletion was no longer referenced" 로 터진다. 폴러는 관리 중인
+   * 엔티티를 고치므로 setRounds 를 쓰면 안 된다.
+   */
+  public void addRound(TourRound round) {
+    if (rounds == null) rounds = new ArrayList<>();
+    rounds.add(round);
+  }
   public Double getSpentBudget() { return spentBudget; }
   public void setSpentBudget(Double v) { this.spentBudget = v; }
   public String getStatus() { return status; }
@@ -310,4 +337,6 @@ public class Tournament extends OwnerScoped {
   public void setDelivery(TournamentDelivery v) { this.delivery = v; }
   public String getLastError() { return lastError; }
   public void setLastError(String v) { this.lastError = v; }
+  public Long getVersion() { return version; }
+  public void setVersion(Long v) { this.version = v; }
 }

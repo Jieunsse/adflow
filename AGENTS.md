@@ -102,4 +102,7 @@
 
 ### Domain docs
 
-단일 컨텍스트: 루트에 `CONTEXT.md` + `.document/adr/` 하나. `.document/agents/domain.md` 참고.
+단일 컨텍스트: `.document/CONTEXT.md` + `.document/adr/` 하나. `.document/agents/domain.md` 참고.
+
+**`.document/` 는 git 에 없다** — `.gitignore` 로 막힌 로컬 전용 문서다(1인 개발이라 의도된 배치).
+클론에는 따라오지 않으므로, 없으면 "지워졌다"가 아니라 "이 체크아웃에 없다"로 읽어라.

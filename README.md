@@ -54,7 +54,7 @@ Meta 앱 자격증명은 `.env.local` 대신 `/install` 마법사로 넣는 게 
 | `npm run dev` | 개발 서버 (Turbopack) |
 | `npm run https-dev` | HTTPS 개발 서버 — Meta OAuth 콜백 검증용 |
 | `npm run build` | 프로덕션 빌드 |
-| `npm run lint` | ESLint |
+| `npm run lint` | ESLint (next/core-web-vitals + typescript) |
 | `npm test` | Vitest (회귀 안전망) |
 | `npm run contracts:generate` | OpenAPI 스냅샷 + TS 타입 재생성 (**Spring 이 떠 있어야 해요**) |
 
@@ -62,7 +62,11 @@ Meta 앱 자격증명은 `.env.local` 대신 `/install` 마법사로 넣는 게 
 Postgres) · `./gradlew bootRun`. 계약이 어긋나면 `./gradlew test` 가 깨져요 — `OpenApiSnapshotTest` 가
 커밋된 `packages/contracts/openapi.json` 을 현재 컨트롤러와 비교해요.
 
-세 커맨드(`tsc` · `vitest` · `gradlew test`)는 [CI](./.github/workflows/ci.yml) 에서도 돌아요.
+네 커맨드(`tsc` · `vitest` · `eslint` · `gradlew test`)는 [CI](./.github/workflows/ci.yml) 에서도 돌아요.
+
+lint 는 기존 위반 80건을 `apps/web/eslint-suppressions.json` 에 **기준선**으로 박아두고 켰어요.
+그래서 깨지면 새로 생긴 위반이에요. 밀린 것을 갚으려면 그 파일에서 항목을 지우고 고치면 되고,
+`npx eslint . --prune-suppressions` 로 이미 사라진 항목을 정리할 수 있어요.
 
 ## 환경변수
 
@@ -75,6 +79,7 @@ Postgres) · `./gradlew bootRun`. 계약이 어긋나면 `./gradlew test` 가 �
 ## 문서
 
 - [AGENTS.md](./AGENTS.md) — AI 에이전트·기여자 행동 규칙 (디자인 토큰·UX 라이팅·커밋 형식). **작업 전 필독.**
+- **`.document/` 는 git 에 없어요** — 로컬 전용 문서예요(1인 개발). 클론에는 안 따라와요.
 - [.document/CONTEXT.md](./.document/CONTEXT.md) — 도메인 어휘 단일 소스
 - [.document/adr/](./.document/adr/) — 아키텍처 결정 기록
 - [.document/prd/](./.document/prd/) — 기능별 PRD

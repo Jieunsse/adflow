@@ -1,0 +1,197 @@
+{
+  "app/(workspace)/ab-tests/page.tsx": {
+    "react-hooks/static-components": {
+      "count": 7
+    }
+  },
+  "app/(workspace)/brand-profile/[id]/edit/page.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "app/(workspace)/brand-profile/[id]/page.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 2
+    }
+  },
+  "app/(workspace)/campaigns/[id]/page.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "app/(workspace)/campaigns/page.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "app/(workspace)/create/page.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 7
+    }
+  },
+  "app/(workspace)/goals/page.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "app/(workspace)/instagram/comments/page.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    },
+    "react/no-unescaped-entities": {
+      "count": 4
+    }
+  },
+  "app/(workspace)/instagram/posts/page.tsx": {
+    "react-hooks/preserve-manual-memoization": {
+      "count": 1
+    },
+    "react-hooks/set-state-in-effect": {
+      "count": 3
+    }
+  },
+  "app/(workspace)/library/page.tsx": {
+    "react-hooks/purity": {
+      "count": 1
+    }
+  },
+  "app/install/page.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    },
+    "react/no-unescaped-entities": {
+      "count": 14
+    }
+  },
+  "app/onboarding/page.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "app/setup/page.tsx": {
+    "react-hooks/immutability": {
+      "count": 1
+    }
+  },
+  "src/features/brand-profile/model/useBrandProfileStorage.ts": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/features/brand-profile/ui/BrandProfilePickerModal.tsx": {
+    "@next/next/no-html-link-for-pages": {
+      "count": 1
+    }
+  },
+  "src/features/brand-profile/ui/NotionImportModal.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/features/brand-profile/ui/PersonaQuickCreateModal.tsx": {
+    "@next/next/no-html-link-for-pages": {
+      "count": 1
+    }
+  },
+  "src/features/channel-suggestion-action/AiDraftModal.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/features/creator-pipeline/OutreachDraftModal.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/features/goal/ui/GoalSetupForm.tsx": {
+    "@next/next/no-html-link-for-pages": {
+      "count": 1
+    },
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/shared/lib/notifications.ts": {
+    "react-hooks/set-state-in-effect": {
+      "count": 2
+    }
+  },
+  "src/shared/lib/products.ts": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/shared/lib/referenceMaterials.ts": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/shared/lib/storage/useScopedStorage.ts": {
+    "react-hooks/refs": {
+      "count": 1
+    }
+  },
+  "src/shared/ui/DatePicker.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/widgets/business-portfolio/Messages.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/widgets/business-portfolio/MessagesPermissionBanner.tsx": {
+    "@next/next/no-html-link-for-pages": {
+      "count": 1
+    }
+  },
+  "src/widgets/business-portfolio/PromotedContent.tsx": {
+    "react/no-unescaped-entities": {
+      "count": 2
+    }
+  },
+  "src/widgets/creative-step/AiImageBlock.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/widgets/creative-step/InputForm.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/widgets/creative-step/TextOverlayEditor.tsx": {
+    "react-hooks/immutability": {
+      "count": 1
+    },
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/widgets/launch-step/index.tsx": {
+    "react-hooks/purity": {
+      "count": 1
+    }
+  },
+  "src/widgets/performance-step/index.tsx": {
+    "react-hooks/rules-of-hooks": {
+      "count": 3
+    }
+  },
+  "src/widgets/post-launch-checklist/index.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 2
+    }
+  },
+  "src/widgets/sidebar/index.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/widgets/tournament-setup/index.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 4
+    }
+  }
+}

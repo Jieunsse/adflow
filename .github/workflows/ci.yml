@@ -32,8 +32,9 @@ jobs:
       - run: npx tsc --noEmit
       # vitest 는 CI 환경변수를 보고 watch 를 끈다.
       - run: npm test
-      # lint 는 일부러 안 돌린다 — 디자인 토큰·UX 라이팅은 lint 아닌 컨벤션이고(AGENTS.md),
-      # `eslint .` 이 green 인지 확인된 적이 없다. green 을 확인한 뒤 넣는다.
+      # 기존 위반 80건은 eslint-suppressions.json 에 기준선으로 박혀 있다 — 여기서 깨지는 것은
+      # **새 위반**이다. 경고 67건은 실패시키지 않는다(--max-warnings 없음).
+      - run: npm run lint
 
   api:
     name: api — gradlew test (골든 픽스처 · OpenAPI 스냅샷)

@@ -21,6 +21,8 @@ management:
         include: health, info
 
 app:
+  # Next.js 서버만 아는 값. /auth/exchange 호출자를 식별한다.
+  internal-secret: ${ADFLOW_INTERNAL_SECRET:}
   jwt:
     # HS256 서명키. 32바이트 이상. 실값은 환경변수 ADFLOW_JWT_SECRET 로만 준다.
     secret: ${ADFLOW_JWT_SECRET:}

@@ -2,6 +2,8 @@
 -- localStorage 가 primary, 아래 테이블은 fire-and-forget 백그라운드 미러.
 -- Supabase 대시보드 > SQL Editor 에 통째로 붙여서 실행하세요.
 
+-- [단계 4] Spring 으로 이관됨. 아래 정의는 이관 전 데이터를 읽는 참조용이다(단계 7 ETL 원본).
+-- 앱은 더 이상 이 테이블에 쓰지 않는다.
 create table if not exists ig_messages (
   id                text        primary key,
   ig_user_id        text        not null,
@@ -65,6 +67,8 @@ create table if not exists sops (
   synced_at timestamptz default now()
 );
 
+-- [단계 4] Spring 으로 이관됨. 아래 정의는 이관 전 데이터를 읽는 참조용이다(단계 7 ETL 원본).
+-- 앱은 더 이상 이 테이블에 쓰지 않는다.
 create table if not exists onboarded_users (
   user_email   text primary key,
   onboarded_at timestamptz not null default now()
@@ -91,6 +95,8 @@ create index if not exists tournaments_brand_profile_id on tournaments (brand_pr
 -- ADR-042 — 토너먼트 폴러 자기기록 관측성 1겹. cron 1회 호출 = 1행(집계 only, PK 없음).
 -- pg_net(트리거 스왑 후)은 fire-and-forget 이라 "요청 보냄"까지만 안다 — 핸들러가 try/finally 끝에서
 -- 직접 실행 요약을 남긴다. health 라우트(2겹)가 마지막 ok=true 의 finished_at 나이로 dead-man's switch 를 건다.
+-- [단계 4] Spring 으로 이관됨. 아래 정의는 이관 전 데이터를 읽는 참조용이다(단계 7 ETL 원본).
+-- 앱은 더 이상 이 테이블에 쓰지 않는다.
 create table if not exists cron_runs (
   job          text        not null,
   ok           boolean     not null,
@@ -109,6 +115,8 @@ create index if not exists cron_runs_job_ok_finished
 -- ADR-024 — Product. Brand Profile 1:N. 라우트가 진실의 원천(localStorage 미러 아님):
 -- /api/brand-profile/[id]/products 가 직접 읽고 쓴다. created_at = epoch ms(클라 entry.createdAt) → bigint.
 -- 이미지는 storage 버킷 product-images, image_url 은 public URL.
+-- [단계 4] Spring 으로 이관됨. 아래 정의는 이관 전 데이터를 읽는 참조용이다(단계 7 ETL 원본).
+-- 앱은 더 이상 이 테이블에 쓰지 않는다.
 create table if not exists products (
   id               text   primary key,
   brand_profile_id text   not null,
@@ -126,6 +134,8 @@ create index if not exists products_brand_profile_created
 -- ADR-023 — Reference Material. Brand Profile 1:N 참고 자료(PDF·이미지·TXT).
 -- /api/brand-profile/[id]/reference-materials 가 직접 읽고 쓴다. uploaded_at = epoch ms(Date.now()) → bigint.
 -- 파일은 storage 버킷 reference-materials, storage_url 은 public URL.
+-- [단계 4] Spring 으로 이관됨. 아래 정의는 이관 전 데이터를 읽는 참조용이다(단계 7 ETL 원본).
+-- 앱은 더 이상 이 테이블에 쓰지 않는다.
 create table if not exists reference_materials (
   id               text   primary key,
   brand_profile_id text   not null,
@@ -144,6 +154,8 @@ create index if not exists reference_materials_brand_profile_uploaded
 -- 다른 OAuth(meta_connection JSONB)와 달리 별도 테이블: server-side only, 광고 세션(JWT)과 무관하게
 -- import 시에만 server 가 읽는다. user_key = NextAuth sub/email (callback 에서 getToken 으로 해석).
 -- 토큰 만료·refresh 없음(결정 9), 연결=지속, 동기화 X(1회 import).
+-- [단계 4] 이관 유예. user_key 가 Owner Key(email)가 아니라 NextAuth sub 이라 옮기면 재연결이
+-- 필요하다(설계 §4). 앱은 아직 이 테이블을 쓴다.
 create table if not exists notion_connections (
   user_key       text primary key,
   access_token   text not null,

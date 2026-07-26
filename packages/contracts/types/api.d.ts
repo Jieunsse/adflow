@@ -4,6 +4,22 @@
  */
 
 export interface paths {
+    "/files/{bucket}/{brandProfileId}/{name}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["read"];
+        put: operations["write"];
+        post?: never;
+        delete: operations["remove"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/stores/sops": {
         parameters: {
             query?: never;
@@ -14,7 +30,39 @@ export interface paths {
         get: operations["list"];
         put?: never;
         post: operations["upsert"];
-        delete: operations["remove"];
+        delete: operations["remove_1"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/stores/reference-materials": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_1"];
+        put?: never;
+        post: operations["upsert_1"];
+        delete: operations["remove_2"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/stores/products": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_2"];
+        put?: never;
+        post: operations["upsert_2"];
+        delete: operations["remove_3"];
         options?: never;
         head?: never;
         patch?: never;
@@ -27,10 +75,26 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_1"];
+        get: operations["list_3"];
         put?: never;
-        post: operations["upsert_1"];
-        delete: operations["remove_1"];
+        post: operations["upsert_3"];
+        delete: operations["remove_4"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/stores/onboarding": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["status"];
+        put?: never;
+        post: operations["complete"];
+        delete: operations["reset"];
         options?: never;
         head?: never;
         patch?: never;
@@ -43,10 +107,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_2"];
+        get: operations["list_4"];
         put?: never;
-        post: operations["upsert_2"];
-        delete: operations["remove_2"];
+        post: operations["upsert_4"];
+        delete: operations["remove_5"];
         options?: never;
         head?: never;
         patch?: never;
@@ -59,10 +123,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_3"];
+        get: operations["list_5"];
         put?: never;
-        post: operations["upsert_3"];
-        delete: operations["remove_3"];
+        post: operations["upsert_5"];
+        delete: operations["remove_6"];
         options?: never;
         head?: never;
         patch?: never;
@@ -75,10 +139,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_4"];
+        get: operations["list_6"];
         put?: never;
-        post: operations["upsert_4"];
-        delete: operations["remove_4"];
+        post: operations["upsert_6"];
+        delete: operations["remove_7"];
         options?: never;
         head?: never;
         patch?: never;
@@ -91,10 +155,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_5"];
+        get: operations["list_7"];
         put?: never;
-        post: operations["upsert_5"];
-        delete: operations["remove_5"];
+        post: operations["upsert_7"];
+        delete: operations["remove_8"];
         options?: never;
         head?: never;
         patch?: never;
@@ -107,10 +171,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_6"];
+        get: operations["list_8"];
         put?: never;
-        post: operations["upsert_6"];
-        delete: operations["remove_6"];
+        post: operations["upsert_8"];
+        delete: operations["remove_9"];
         options?: never;
         head?: never;
         patch?: never;
@@ -123,10 +187,42 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_7"];
+        get: operations["list_9"];
         put?: never;
-        post: operations["upsert_7"];
-        delete: operations["remove_7"];
+        post: operations["upsert_9"];
+        delete: operations["remove_10"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/internal/ig-messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_10"];
+        put?: never;
+        post: operations["upsert_10"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/internal/cron-runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["record"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -180,6 +276,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/internal/ig-messages/conversation-id": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["conversationId"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/internal/cron-runs/last-success": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["lastSuccess"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/me/meta-connection": {
         parameters: {
             query?: never;
@@ -210,6 +338,35 @@ export interface components {
             sections: Record<string, never>;
             createdAt: string;
             updatedAt: string;
+        };
+        ItemRequestReferenceMaterial: {
+            item?: components["schemas"]["ReferenceMaterial"];
+        };
+        ReferenceMaterial: {
+            id: string;
+            brandProfileId: string;
+            name: string;
+            type: string;
+            mimeType: string;
+            /** Format: int64 */
+            sizeBytes: number;
+            storageUrl: string;
+            /** Format: int64 */
+            uploadedAt: number;
+        };
+        ItemRequestProduct: {
+            item?: components["schemas"]["Product"];
+        };
+        Product: {
+            id: string;
+            brandProfileId: string;
+            name: string;
+            description: string;
+            imageUrl?: string;
+            price?: string;
+            targetUrl?: string;
+            /** Format: int64 */
+            createdAt: number;
         };
         ItemRequestPersona: {
             item?: components["schemas"]["Persona"];
@@ -391,6 +548,35 @@ export interface components {
         ItemRequestAutoRelaunchState: {
             item?: components["schemas"]["AutoRelaunchState"];
         };
+        BulkRequest: {
+            items?: components["schemas"]["IgMessage"][];
+        };
+        IgMessage: {
+            id: string;
+            igUserId: string;
+            conversationId: string;
+            participantId: string;
+            participantHandle?: string;
+            fromMe: boolean;
+            text?: string;
+            attachmentUrl?: string;
+            createdAt: string;
+        };
+        CronRun: {
+            job?: string;
+            ok?: boolean;
+            /** Format: int32 */
+            scanned?: number;
+            /** Format: int32 */
+            settled?: number;
+            /** Format: int32 */
+            advanced?: number;
+            errors?: string[];
+            started_at?: string;
+            finished_at?: string;
+            /** Format: int32 */
+            error_count?: number;
+        };
         RefreshRequest: {
             refreshToken?: string;
         };
@@ -423,6 +609,12 @@ export interface components {
         ItemsResponseSop: {
             items?: components["schemas"]["Sop"][];
         };
+        ItemsResponseReferenceMaterial: {
+            items?: components["schemas"]["ReferenceMaterial"][];
+        };
+        ItemsResponseProduct: {
+            items?: components["schemas"]["Product"][];
+        };
         ItemsResponsePersona: {
             items?: components["schemas"]["Persona"][];
         };
@@ -444,6 +636,9 @@ export interface components {
         ItemsResponseAutoRelaunchState: {
             items?: components["schemas"]["AutoRelaunchState"][];
         };
+        ItemsResponseIgMessage: {
+            items?: components["schemas"]["IgMessage"][];
+        };
     };
     responses: never;
     parameters: never;
@@ -453,6 +648,86 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    read: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                bucket: string;
+                brandProfileId: string;
+                name: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": string;
+                };
+            };
+        };
+    };
+    write: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                bucket: string;
+                brandProfileId: string;
+                name: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": string;
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: string;
+                    };
+                };
+            };
+        };
+    };
+    remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                bucket: string;
+                brandProfileId: string;
+                name: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: boolean;
+                    };
+                };
+            };
+        };
+    };
     list: {
         parameters: {
             query?: never;
@@ -499,7 +774,7 @@ export interface operations {
             };
         };
     };
-    remove: {
+    remove_1: {
         parameters: {
             query: {
                 id: string;
@@ -525,7 +800,9 @@ export interface operations {
     };
     list_1: {
         parameters: {
-            query?: never;
+            query: {
+                brandProfileId: string;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -538,7 +815,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ItemsResponsePersona"];
+                    "*/*": components["schemas"]["ItemsResponseReferenceMaterial"];
                 };
             };
         };
@@ -552,77 +829,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ItemRequestPersona"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": {
-                        [key: string]: boolean;
-                    };
-                };
-            };
-        };
-    };
-    remove_1: {
-        parameters: {
-            query: {
-                id: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": {
-                        [key: string]: boolean;
-                    };
-                };
-            };
-        };
-    };
-    list_2: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ItemsResponseLibraryItem"];
-                };
-            };
-        };
-    };
-    upsert_2: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ItemRequestLibraryItem"];
+                "application/json": components["schemas"]["ItemRequestReferenceMaterial"];
             };
         };
         responses: {
@@ -663,9 +870,11 @@ export interface operations {
             };
         };
     };
-    list_3: {
+    list_2: {
         parameters: {
-            query?: never;
+            query: {
+                brandProfileId: string;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -678,12 +887,12 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ItemsResponseInfluencerCampaign"];
+                    "*/*": components["schemas"]["ItemsResponseProduct"];
                 };
             };
         };
     };
-    upsert_3: {
+    upsert_2: {
         parameters: {
             query?: never;
             header?: never;
@@ -692,7 +901,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ItemRequestInfluencerCampaign"];
+                "application/json": components["schemas"]["ItemRequestProduct"];
             };
         };
         responses: {
@@ -733,7 +942,7 @@ export interface operations {
             };
         };
     };
-    list_4: {
+    list_3: {
         parameters: {
             query?: never;
             header?: never;
@@ -748,12 +957,12 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ItemsResponseCreator"];
+                    "*/*": components["schemas"]["ItemsResponsePersona"];
                 };
             };
         };
     };
-    upsert_4: {
+    upsert_3: {
         parameters: {
             query?: never;
             header?: never;
@@ -762,7 +971,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ItemRequestCreator"];
+                "application/json": components["schemas"]["ItemRequestPersona"];
             };
         };
         responses: {
@@ -803,7 +1012,7 @@ export interface operations {
             };
         };
     };
-    list_5: {
+    status: {
         parameters: {
             query?: never;
             header?: never;
@@ -818,12 +1027,78 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ItemsResponseCampaignLaunch"];
+                    "*/*": {
+                        [key: string]: boolean;
+                    };
                 };
             };
         };
     };
-    upsert_5: {
+    complete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: boolean;
+                    };
+                };
+            };
+        };
+    };
+    reset: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: boolean;
+                    };
+                };
+            };
+        };
+    };
+    list_4: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ItemsResponseLibraryItem"];
+                };
+            };
+        };
+    };
+    upsert_4: {
         parameters: {
             query?: never;
             header?: never;
@@ -832,7 +1107,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ItemRequestCampaignLaunch"];
+                "application/json": components["schemas"]["ItemRequestLibraryItem"];
             };
         };
         responses: {
@@ -873,7 +1148,7 @@ export interface operations {
             };
         };
     };
-    list_6: {
+    list_5: {
         parameters: {
             query?: never;
             header?: never;
@@ -888,12 +1163,12 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ItemsResponseBrandProfile"];
+                    "*/*": components["schemas"]["ItemsResponseInfluencerCampaign"];
                 };
             };
         };
     };
-    upsert_6: {
+    upsert_5: {
         parameters: {
             query?: never;
             header?: never;
@@ -902,7 +1177,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ItemRequestBrandProfile"];
+                "application/json": components["schemas"]["ItemRequestInfluencerCampaign"];
             };
         };
         responses: {
@@ -943,7 +1218,7 @@ export interface operations {
             };
         };
     };
-    list_7: {
+    list_6: {
         parameters: {
             query?: never;
             header?: never;
@@ -958,12 +1233,12 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ItemsResponseAutoRelaunchState"];
+                    "*/*": components["schemas"]["ItemsResponseCreator"];
                 };
             };
         };
     };
-    upsert_7: {
+    upsert_6: {
         parameters: {
             query?: never;
             header?: never;
@@ -972,7 +1247,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ItemRequestAutoRelaunchState"];
+                "application/json": components["schemas"]["ItemRequestCreator"];
             };
         };
         responses: {
@@ -999,6 +1274,297 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: boolean;
+                    };
+                };
+            };
+        };
+    };
+    list_7: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ItemsResponseCampaignLaunch"];
+                };
+            };
+        };
+    };
+    upsert_7: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ItemRequestCampaignLaunch"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: boolean;
+                    };
+                };
+            };
+        };
+    };
+    remove_8: {
+        parameters: {
+            query: {
+                id: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: boolean;
+                    };
+                };
+            };
+        };
+    };
+    list_8: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ItemsResponseBrandProfile"];
+                };
+            };
+        };
+    };
+    upsert_8: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ItemRequestBrandProfile"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: boolean;
+                    };
+                };
+            };
+        };
+    };
+    remove_9: {
+        parameters: {
+            query: {
+                id: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: boolean;
+                    };
+                };
+            };
+        };
+    };
+    list_9: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ItemsResponseAutoRelaunchState"];
+                };
+            };
+        };
+    };
+    upsert_9: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ItemRequestAutoRelaunchState"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: boolean;
+                    };
+                };
+            };
+        };
+    };
+    remove_10: {
+        parameters: {
+            query: {
+                id: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: boolean;
+                    };
+                };
+            };
+        };
+    };
+    list_10: {
+        parameters: {
+            query: {
+                igUserId: string;
+                conversationId?: string;
+            };
+            header?: {
+                "X-Internal-Secret"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ItemsResponseIgMessage"];
+                };
+            };
+        };
+    };
+    upsert_10: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Internal-Secret"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: boolean;
+                    };
+                };
+            };
+        };
+    };
+    record: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Internal-Secret"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CronRun"];
+            };
+        };
         responses: {
             /** @description OK */
             200: {
@@ -1083,6 +1649,57 @@ export interface operations {
                     "*/*": {
                         [key: string]: string;
                     };
+                };
+            };
+        };
+    };
+    conversationId: {
+        parameters: {
+            query: {
+                igUserId: string;
+                participantId: string;
+            };
+            header?: {
+                "X-Internal-Secret"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: string;
+                    };
+                };
+            };
+        };
+    };
+    lastSuccess: {
+        parameters: {
+            query: {
+                job: string;
+            };
+            header?: {
+                "X-Internal-Secret"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CronRun"];
                 };
             };
         };

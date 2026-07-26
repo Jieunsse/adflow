@@ -14,6 +14,8 @@ import type { AutoRelaunchEntry } from "@shared/lib/autoRelaunch";
 import type { LaunchedCampaign } from "@entities/campaign/model";
 import type { PersonaEntry } from "@features/brand-profile/model/usePersonasStorage";
 import type { Sop } from "@features/sop/model/useSopStorage";
+import type { ProductEntry } from "@shared/lib/products";
+import type { ReferenceMaterial } from "@shared/lib/referenceMaterials";
 
 type Api<K extends keyof components["schemas"]> = components["schemas"][K];
 
@@ -57,4 +59,18 @@ export type SopIsCompatible = Assert<
 type LaunchOpaque = "adIds" | "abTestVariantB" | "goalId";
 export type CampaignLaunchIsCompatible = Assert<
   AssignableTo<Omit<Api<"CampaignLaunch">, LaunchOpaque>, Omit<LaunchedCampaign, LaunchOpaque>>
+>;
+
+// 단계 4 — 나머지 테이블.
+//
+// 주의: imageUrl·storageUrl 은 양쪽 다 string 이지만 의미가 다르다. 서버는 버킷 상대 경로를
+// 담고(product-images/{bp}/{id}.png) Next 라우트가 /api/files/… 로 조립해 내려보낸다.
+// 컴파일러가 이 차이를 못 보므로 files.test.ts 의 조립·역조립 왕복 테스트가 대신 지킨다.
+export type ProductIsCompatible = Assert<AssignableTo<Api<"Product">, ProductEntry>>;
+
+// type 만 예외다. TS 는 "image"|"pdf"|"txt" 유니온인데 서버는 String 으로 둔다 — Java enum 으로
+// 옮기면 목록이 두 곳에 살아 드리프트한다(단계 3 의 goalId 와 같은 판단). 값의 왕복은
+// ReferenceMaterialControllerTest.스칼라가_그대로_왕복한다 가 런타임으로 지킨다.
+export type ReferenceMaterialIsCompatible = Assert<
+  AssignableTo<Omit<Api<"ReferenceMaterial">, "type">, Omit<ReferenceMaterial, "type">>
 >;

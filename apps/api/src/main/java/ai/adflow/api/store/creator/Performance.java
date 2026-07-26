@@ -2,6 +2,7 @@ package ai.adflow.api.store.creator;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
  * TS: CreatorPerformance. Creator.performanceHistory 와 CampaignEntry.performance 가 공유한다.
@@ -13,6 +14,7 @@ import jakarta.persistence.Embeddable;
 public class Performance {
 
   @Column(name = "campaign_id")
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   private String campaignId;
 
   private Integer reach;
@@ -22,6 +24,7 @@ public class Performance {
   private Double cost;
 
   @Column(name = "recorded_at")
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   private String recordedAt;
 
   public String getCampaignId() { return campaignId; }

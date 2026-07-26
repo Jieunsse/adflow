@@ -5,6 +5,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
 import java.time.Instant;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
  * Synced Store 엔티티의 공통 바탕.
@@ -17,7 +18,9 @@ import java.time.Instant;
 @MappedSuperclass
 public abstract class OwnerScoped {
 
-  @Id private String id;
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
+  @Id
+  private String id;
 
   @JsonIgnore
   @Column(name = "owner_key", nullable = false)

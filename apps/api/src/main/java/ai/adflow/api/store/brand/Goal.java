@@ -15,6 +15,7 @@ import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Table;
 import java.util.ArrayList;
 import java.util.List;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
  * TS: Goal. leads 가 중첩 컬렉션이라 @Embeddable 로는 안 되고 엔티티여야 한다.
@@ -32,22 +33,27 @@ public class Goal {
   private Long pk;
 
   @Column(name = "goal_id")
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   private String id;
 
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   private String name;
 
   @Embedded
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   private LagTarget lag;
 
   @ElementCollection(fetch = FetchType.EAGER)
   @CollectionTable(name = "brand_profile_goal_leads", joinColumns = @JoinColumn(name = "goal_pk"))
   @OrderColumn(name = "position")
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   private List<LeadMetric> leads = new ArrayList<>();
 
   @Column(name = "period_days")
   private Integer periodDays;
 
   @Column(name = "created_at")
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   private String createdAt;
 
   public String getId() { return id; }

@@ -13,15 +13,18 @@ import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Table;
 import java.util.ArrayList;
 import java.util.List;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 /** TS: apps/web/src/entities/creator/model.ts 의 Creator 와 필드 1:1. */
 @Entity
 @Table(name = "creators")
 public class Creator extends OwnerScoped {
 
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   private String handle;
 
   @Enumerated(EnumType.STRING)
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   private CreatorPlatform platform;
 
   @Column(name = "display_name")
@@ -35,6 +38,7 @@ public class Creator extends OwnerScoped {
   @CollectionTable(name = "creator_categories", joinColumns = @JoinColumn(name = "creator_id"))
   @Column(name = "category")
   @OrderColumn(name = "position")
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   private List<String> category = new ArrayList<>();
 
   @Column(name = "follower_count")
@@ -48,9 +52,11 @@ public class Creator extends OwnerScoped {
       name = "creator_performances",
       joinColumns = @JoinColumn(name = "creator_id"))
   @OrderColumn(name = "position")
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   private List<Performance> performanceHistory = new ArrayList<>();
 
   @Column(name = "created_at")
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   private String createdAt;
 
   public String getHandle() { return handle; }

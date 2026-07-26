@@ -2,6 +2,8 @@ package ai.adflow.api.store.brand;
 
 import ai.adflow.api.store.JsonNodeConverter;
 import ai.adflow.api.store.OwnerScoped;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.CollectionTable;
@@ -18,12 +20,14 @@ import jakarta.persistence.Table;
 import java.util.ArrayList;
 import java.util.List;
 import tools.jackson.databind.JsonNode;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 /** TS: apps/web/src/features/brand-profile/model/useBrandProfileStorage.ts 의 BrandProfileEntry. */
 @Entity
 @Table(name = "brand_profiles")
 public class BrandProfile extends OwnerScoped {
 
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   private String name;
 
   @Column(name = "is_default")
@@ -75,7 +79,11 @@ public class BrandProfile extends OwnerScoped {
   /**
    * SopSection[] — type 마다 data 형태가 다른 판별 유니온이라 관계형으로 펼치지 않는다
    * (설계 §5 대비 의도된 편차). 조회 조건으로 쓰이지 않아 잃는 것이 없다.
+   *
+   * 스키마를 손으로 적어주지 않으면 springdoc 이 JsonNode 의 빈 프로퍼티(isArray·isNull…)를
+   * 그대로 노출해 계약이 거짓말을 한다. 서버가 해석하지 않는 값이므로 "객체 배열"까지만 말한다.
    */
+  @ArraySchema(schema = @Schema(implementation = Object.class))
   @Convert(converter = JsonNodeConverter.class)
   @Column(name = "policy", columnDefinition = "text")
   private JsonNode policy;

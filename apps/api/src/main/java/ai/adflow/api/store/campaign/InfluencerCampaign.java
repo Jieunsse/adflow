@@ -11,15 +11,18 @@ import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Table;
 import java.util.ArrayList;
 import java.util.List;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 /** TS: InfluencerCampaign. Meta Campaign 과 별개 엔티티다 (ADR-065 §1). */
 @Entity
 @Table(name = "influencer_campaigns")
 public class InfluencerCampaign extends OwnerScoped {
 
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   private String name;
 
   /** Meta objective 가 아니라 자유 텍스트/칩이다. enum 으로 좁히지 않는다. */
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   private String goal;
 
   @Column(name = "product_id")
@@ -34,14 +37,17 @@ public class InfluencerCampaign extends OwnerScoped {
   private String endDate;
 
   @Column(name = "brand_profile_id")
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   private String brandProfileId;
 
   @ElementCollection(fetch = FetchType.EAGER)
   @CollectionTable(name = "campaign_entries", joinColumns = @JoinColumn(name = "campaign_id"))
   @OrderColumn(name = "position")
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   private List<CampaignEntry> entries = new ArrayList<>();
 
   @Column(name = "created_at")
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   private String createdAt;
 
   public String getName() { return name; }

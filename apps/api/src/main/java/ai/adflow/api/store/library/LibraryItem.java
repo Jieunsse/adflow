@@ -4,6 +4,7 @@ import ai.adflow.api.store.OwnerScoped;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 /** TS: apps/web/src/shared/lib/library.ts 의 LibraryItem 과 필드 1:1. */
 @Entity
@@ -11,36 +12,48 @@ import jakarta.persistence.Table;
 public class LibraryItem extends OwnerScoped {
 
   @Column(name = "saved_at", nullable = false)
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   private Long savedAt;
 
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   private String brand;
 
   @Column(length = 1000)
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   private String headline;
 
   // TS 필드명은 primary 지만 PRIMARY 는 SQL 예약어라 컬럼만 바꾼다.
   // Jackson 은 자바 프로퍼티명을 쓰므로 와이어는 그대로 "primary" 다.
   @Column(name = "primary_text", length = 4000)
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   private String primary;
 
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   private String tone;
 
   @Column(name = "tone_label")
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   private String toneLabel;
 
   @Column(name = "cta_id")
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   private String ctaId;
 
   @Column(name = "cta_label")
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   private String ctaLabel;
 
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   private String goal;
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   private String target;
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   private String gradient;
 
   @Column(length = 2000)
   private String image;
 
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   private String tag;
 
   public Long getSavedAt() { return savedAt; }

@@ -1,0 +1,34 @@
+// 와이어 형태 동결의 강제 장치. 런타임 코드가 없고 타입 단언만 있다.
+//
+// Spring 이 내는 스키마(생성 타입)를 프론트 도메인 타입에 대입해본다. 백엔드가 필드를
+// 빠뜨리거나 타입을 바꾸면 tsc 가 여기서 깨진다 — 화면에서 undefined 를 만나기 전에.
+//
+// 방향에 주의: "생성 → 도메인" 이다. 응답을 도메인 타입 자리에 안전하게 쓸 수 있는가를 본다.
+
+import type { components } from "@adflow/contracts/types/api";
+import type { BrandProfileEntry } from "@features/brand-profile/model/useBrandProfileStorage";
+import type { Creator } from "@entities/creator/model";
+import type { InfluencerCampaign } from "@entities/influencer-campaign/model";
+import type { LibraryItem } from "@shared/lib/library";
+
+type Api<K extends keyof components["schemas"]> = components["schemas"][K];
+
+type Assert<T extends true> = T;
+type AssignableTo<From, To> = [From] extends [To] ? true : false;
+
+export type LibraryItemIsCompatible = Assert<AssignableTo<Api<"LibraryItem">, LibraryItem>>;
+export type CreatorIsCompatible = Assert<AssignableTo<Api<"Creator">, Creator>>;
+export type CampaignIsCompatible = Assert<
+  AssignableTo<Api<"InfluencerCampaign">, InfluencerCampaign>
+>;
+
+// policy 만 예외다. SopSection 은 type 마다 data 형태가 달라지는 판별 유니온이고, 서버는 그 값을
+// 해석하지 않고 JSON 텍스트로 왕복시키기만 한다(설계 문서 대비 의도된 편차 #1). OpenAPI 로 그
+// 유니온을 표현할 수 없으므로 계약이 지켜주지 못하는 유일한 필드다.
+//
+// 대신 policy 를 뺀 나머지 전 필드는 여기서 검증된다. policy 의 왕복 자체는
+// BrandProfileControllerTest.판별유니온_policy_가_배열로_왕복한다 와
+// BrandProfilePostgresIT.판별유니온_policy_가_텍스트로_왕복한다 가 런타임으로 지킨다.
+export type BrandProfileIsCompatible = Assert<
+  AssignableTo<Omit<Api<"BrandProfile">, "policy">, Omit<BrandProfileEntry, "policy">>
+>;

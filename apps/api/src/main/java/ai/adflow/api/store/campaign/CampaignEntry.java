@@ -7,15 +7,18 @@ import jakarta.persistence.Embeddable;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 /** TS: apps/web/src/entities/influencer-campaign/model.ts 의 CampaignEntry. */
 @Embeddable
 public class CampaignEntry {
 
   @Column(name = "creator_id")
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   private String creatorId;
 
   @Enumerated(EnumType.STRING)
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   private CampaignStage stage;
 
   @Column(name = "outreach_draft", length = 4000)
@@ -40,6 +43,7 @@ public class CampaignEntry {
   private String paidAt;
 
   @Column(name = "updated_at")
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   private String updatedAt;
 
   public String getCreatorId() { return creatorId; }

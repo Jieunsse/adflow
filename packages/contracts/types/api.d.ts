@@ -4,6 +4,86 @@
  */
 
 export interface paths {
+    "/stores/library": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list"];
+        put?: never;
+        post: operations["upsert"];
+        delete: operations["remove"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/stores/influencer-campaigns": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_1"];
+        put?: never;
+        post: operations["upsert_1"];
+        delete: operations["remove_1"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/stores/creators": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_2"];
+        put?: never;
+        post: operations["upsert_2"];
+        delete: operations["remove_2"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/stores/brand-profiles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_3"];
+        put?: never;
+        post: operations["upsert_3"];
+        delete: operations["remove_3"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["refresh"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/exchange": {
         parameters: {
             query?: never;
@@ -56,6 +136,146 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        ItemRequestLibraryItem: {
+            item?: components["schemas"]["LibraryItem"];
+        };
+        LibraryItem: {
+            id: string;
+            /** Format: int64 */
+            savedAt: number;
+            brand: string;
+            headline: string;
+            primary: string;
+            tone: string;
+            toneLabel: string;
+            ctaId: string;
+            ctaLabel: string;
+            goal: string;
+            target: string;
+            gradient: string;
+            image?: string;
+            tag: string;
+        };
+        CampaignEntry: {
+            creatorId: string;
+            /** @enum {string} */
+            stage: "candidate" | "proposed" | "negotiating" | "producing" | "published" | "settled";
+            outreachDraft?: string;
+            contentGuideline?: string;
+            contentUrl?: string;
+            performance?: components["schemas"]["Performance"];
+            paidAt?: string;
+            updatedAt: string;
+        };
+        InfluencerCampaign: {
+            id: string;
+            name: string;
+            goal: string;
+            productId?: string;
+            /** Format: double */
+            budget?: number;
+            startDate?: string;
+            endDate?: string;
+            brandProfileId: string;
+            entries: components["schemas"]["CampaignEntry"][];
+            createdAt: string;
+        };
+        ItemRequestInfluencerCampaign: {
+            item?: components["schemas"]["InfluencerCampaign"];
+        };
+        Performance: {
+            campaignId: string;
+            /** Format: int32 */
+            reach?: number;
+            /** Format: int32 */
+            clicks?: number;
+            /** Format: int32 */
+            conversions?: number;
+            /** Format: double */
+            revenue?: number;
+            /** Format: double */
+            cost?: number;
+            recordedAt: string;
+        };
+        Creator: {
+            id: string;
+            handle: string;
+            /** @enum {string} */
+            platform: "instagram" | "youtube" | "tiktok" | "other";
+            displayName?: string;
+            avatarUrl?: string;
+            category: string[];
+            /** Format: int32 */
+            followerCount?: number;
+            note?: string;
+            performanceHistory: components["schemas"]["Performance"][];
+            createdAt: string;
+        };
+        ItemRequestCreator: {
+            item?: components["schemas"]["Creator"];
+        };
+        BrandProfile: {
+            id: string;
+            name: string;
+            isDefault?: boolean;
+            brandDescription?: string;
+            tone?: string;
+            brandVoice?: string;
+            customerVoiceSummary?: string;
+            imageGuide?: string;
+            copyReferences?: components["schemas"]["CopyReference"][];
+            proofPoints?: string[];
+            /** Format: double */
+            marginRate?: number;
+            goal?: components["schemas"]["LagTarget"];
+            goals?: components["schemas"]["Goal"][];
+            policy?: Record<string, never>;
+        };
+        CopyReference: {
+            id: string;
+            text: string;
+            /** @enum {string} */
+            source: "ig" | "manual";
+            createdAt: string;
+        };
+        Goal: {
+            id: string;
+            name: string;
+            lag: components["schemas"]["LagTarget"];
+            leads: components["schemas"]["LeadMetric"][];
+            /** Format: int32 */
+            periodDays?: number;
+            createdAt: string;
+        };
+        ItemRequestBrandProfile: {
+            item?: components["schemas"]["BrandProfile"];
+        };
+        LagTarget: {
+            /** @enum {string} */
+            metric: "roas" | "contribution" | "cpa";
+            /** Format: double */
+            target: number;
+        };
+        LeadMetric: {
+            /** @enum {string} */
+            kind: "cpc-max" | "ctr-min";
+            /** Format: double */
+            value: number;
+            /** @enum {string} */
+            source: "derived" | "custom";
+            reason?: string;
+        };
+        RefreshRequest: {
+            refreshToken?: string;
+        };
+        ExchangeResponse: {
+            token?: string;
+            /** Format: date-time */
+            expiresAt?: string;
+            refreshToken?: string;
+            /** Format: date-time */
+            refreshExpiresAt?: string;
+        };
         ExchangeRequest: {
             ownerKey?: string;
             email?: string;
@@ -74,10 +294,17 @@ export interface components {
             igUserId?: string;
             igUsername?: string;
         };
-        ExchangeResponse: {
-            token?: string;
-            /** Format: date-time */
-            expiresAt?: string;
+        ItemsResponseLibraryItem: {
+            items?: components["schemas"]["LibraryItem"][];
+        };
+        ItemsResponseInfluencerCampaign: {
+            items?: components["schemas"]["InfluencerCampaign"][];
+        };
+        ItemsResponseCreator: {
+            items?: components["schemas"]["Creator"][];
+        };
+        ItemsResponseBrandProfile: {
+            items?: components["schemas"]["BrandProfile"][];
         };
     };
     responses: never;
@@ -88,6 +315,312 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ItemsResponseLibraryItem"];
+                };
+            };
+        };
+    };
+    upsert: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ItemRequestLibraryItem"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: boolean;
+                    };
+                };
+            };
+        };
+    };
+    remove: {
+        parameters: {
+            query: {
+                id: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: boolean;
+                    };
+                };
+            };
+        };
+    };
+    list_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ItemsResponseInfluencerCampaign"];
+                };
+            };
+        };
+    };
+    upsert_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ItemRequestInfluencerCampaign"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: boolean;
+                    };
+                };
+            };
+        };
+    };
+    remove_1: {
+        parameters: {
+            query: {
+                id: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: boolean;
+                    };
+                };
+            };
+        };
+    };
+    list_2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ItemsResponseCreator"];
+                };
+            };
+        };
+    };
+    upsert_2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ItemRequestCreator"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: boolean;
+                    };
+                };
+            };
+        };
+    };
+    remove_2: {
+        parameters: {
+            query: {
+                id: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: boolean;
+                    };
+                };
+            };
+        };
+    };
+    list_3: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ItemsResponseBrandProfile"];
+                };
+            };
+        };
+    };
+    upsert_3: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ItemRequestBrandProfile"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: boolean;
+                    };
+                };
+            };
+        };
+    };
+    remove_3: {
+        parameters: {
+            query: {
+                id: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: boolean;
+                    };
+                };
+            };
+        };
+    };
+    refresh: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Internal-Secret"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RefreshRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ExchangeResponse"];
+                };
+            };
+        };
+    };
     exchange: {
         parameters: {
             query?: never;

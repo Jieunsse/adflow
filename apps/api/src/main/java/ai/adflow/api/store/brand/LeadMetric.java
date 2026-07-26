@@ -13,7 +13,7 @@ public class LeadMetric {
    * "cpc-max"·"ctr-min" 은 하이픈이 있어 자바 enum 상수명이 될 수 없다. String 으로 두고
    * 허용값은 스키마에만 적는다 — 생성 TS 타입이 유니온이 되도록.
    */
-  @Schema(allowableValues = {"cpc-max", "ctr-min"})
+  @Schema(allowableValues = {"cpc-max", "ctr-min"}, requiredMode = Schema.RequiredMode.REQUIRED)
   private String kind;
 
   /**
@@ -24,9 +24,10 @@ public class LeadMetric {
   // Jackson 은 자바 프로퍼티명을 쓰므로 와이어는 그대로 "value" 다.
   @JsonInclude(JsonInclude.Include.ALWAYS)
   @Column(name = "lead_value")
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   private Double value;
 
-  @Schema(allowableValues = {"derived", "custom"})
+  @Schema(allowableValues = {"derived", "custom"}, requiredMode = Schema.RequiredMode.REQUIRED)
   private String source;
 
   @Column(length = 1000)

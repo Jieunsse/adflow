@@ -212,7 +212,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/internal/ig-messages": {
+    "/internal/tournaments": {
         parameters: {
             query?: never;
             header?: never;
@@ -222,6 +222,102 @@ export interface paths {
         get: operations["list_11"];
         put?: never;
         post: operations["upsert_11"];
+        delete: operations["remove_12"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/internal/tournaments/{id}/settle": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["settle"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/internal/tournaments/{id}/edit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["edit"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/internal/tournaments/{id}/advance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["advance"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/internal/poller/run": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["run"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/internal/notion-connections": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get"];
+        put?: never;
+        post: operations["save"];
+        delete: operations["remove_13"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/internal/ig-messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_12"];
+        put?: never;
+        post: operations["upsert_12"];
         delete?: never;
         options?: never;
         head?: never;
@@ -283,7 +379,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get"];
+        get: operations["get_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -300,6 +396,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["me"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/internal/tournaments/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get_2"];
         put?: never;
         post?: never;
         delete?: never;
@@ -712,6 +824,34 @@ export interface components {
         };
         ItemRequestAutoRelaunchState: {
             item?: components["schemas"]["AutoRelaunchState"];
+        };
+        Outcome: {
+            status?: string;
+            round?: components["schemas"]["TourRound"];
+            winnerIsB?: boolean;
+            badge?: string;
+            completed?: boolean;
+        };
+        EditRequest: {
+            variant?: components["schemas"]["Variant"];
+            /** Format: double */
+            addBudget?: number;
+        };
+        Cycle: {
+            /** Format: int32 */
+            scanned?: number;
+            /** Format: int32 */
+            settled?: number;
+            /** Format: int32 */
+            advanced?: number;
+            errors?: string[];
+        };
+        NotionConnection: {
+            accessToken: string;
+            botId?: string;
+            workspaceId?: string;
+            workspaceName?: string;
+            workspaceIcon?: string;
         };
         BulkRequest: {
             items?: components["schemas"]["IgMessage"][];
@@ -1740,6 +1880,270 @@ export interface operations {
     };
     list_11: {
         parameters: {
+            query?: {
+                status?: string;
+                ownerKey?: string;
+                brandProfileId?: string;
+            };
+            header?: {
+                "X-Internal-Secret"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ItemsResponseTournament"];
+                };
+            };
+        };
+    };
+    upsert_11: {
+        parameters: {
+            query: {
+                ownerKey: string;
+            };
+            header?: {
+                "X-Internal-Secret"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ItemRequestTournament"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: boolean;
+                    };
+                };
+            };
+        };
+    };
+    remove_12: {
+        parameters: {
+            query: {
+                id: string;
+            };
+            header?: {
+                "X-Internal-Secret"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: boolean;
+                    };
+                };
+            };
+        };
+    };
+    settle: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Internal-Secret"?: string;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Outcome"];
+                };
+            };
+        };
+    };
+    edit: {
+        parameters: {
+            query: {
+                action: string;
+            };
+            header?: {
+                "X-Internal-Secret"?: string;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["EditRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Tournament"];
+                };
+            };
+        };
+    };
+    advance: {
+        parameters: {
+            query: {
+                step: string;
+            };
+            header?: {
+                "X-Internal-Secret"?: string;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Tournament"];
+                };
+            };
+        };
+    };
+    run: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Internal-Secret"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Cycle"];
+                };
+            };
+        };
+    };
+    get: {
+        parameters: {
+            query: {
+                userKey: string;
+            };
+            header?: {
+                "X-Internal-Secret"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["NotionConnection"];
+                };
+            };
+        };
+    };
+    save: {
+        parameters: {
+            query: {
+                userKey: string;
+            };
+            header?: {
+                "X-Internal-Secret"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NotionConnection"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: boolean;
+                    };
+                };
+            };
+        };
+    };
+    remove_13: {
+        parameters: {
+            query: {
+                userKey: string;
+            };
+            header?: {
+                "X-Internal-Secret"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: boolean;
+                    };
+                };
+            };
+        };
+    };
+    list_12: {
+        parameters: {
             query: {
                 igUserId: string;
                 conversationId?: string;
@@ -1763,7 +2167,7 @@ export interface operations {
             };
         };
     };
-    upsert_11: {
+    upsert_12: {
         parameters: {
             query?: never;
             header?: {
@@ -1871,7 +2275,7 @@ export interface operations {
             };
         };
     };
-    get: {
+    get_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -1911,6 +2315,30 @@ export interface operations {
                     "*/*": {
                         [key: string]: string;
                     };
+                };
+            };
+        };
+    };
+    get_2: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Internal-Secret"?: string;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Tournament"];
                 };
             };
         };

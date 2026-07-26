@@ -141,7 +141,7 @@ function Step2({ onNext, onSkip }: { onNext: () => void; onSkip: () => void }) {
         brandDescription: desc.trim() || undefined,
         isDefault: isFirst,
       };
-      // Synced Store 경유 — 실유저면 Supabase 동기, 게스트면 로컬만.
+      // Synced Store 경유 — 실유저면 서버 동기, 게스트면 로컬만.
       upsertProfile(entry);
       if (isFirst) setActiveIdInStorage(id);
     } catch {

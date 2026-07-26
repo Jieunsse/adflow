@@ -3,7 +3,7 @@ import { getToken } from "next-auth/jwt"
 import { Client } from "@notionhq/client"
 import { saveNotionConnection } from "@shared/lib/notion-store"
 
-// ADR-043 — Notion OAuth callback. code → oauth.token() 교환 → Supabase 영속.
+// ADR-043 — Notion OAuth callback. code → oauth.token() 교환 → 서버 영속(단계 7 에서 Spring 으로 넘어갔다).
 export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl
   const code = searchParams.get("code")

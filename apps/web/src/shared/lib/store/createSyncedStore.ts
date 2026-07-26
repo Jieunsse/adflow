@@ -1,9 +1,9 @@
 "use client";
 
 // Synced Store (ADR-046 결정 1·3·4) — Tier 1 공유 팩토리.
-// zustand + persist(localStorage 오프라인 캐시) + 로그인 시 API 하이드레이션(Supabase=source-of-truth) +
+// zustand + persist(localStorage 오프라인 캐시) + 로그인 시 API 하이드레이션(서버=source-of-truth) +
 // API-backed mutation(POST/DELETE, Next 라우트 경유 service-role 스코핑). 게스트는 API 단락(persist 만 = Tier 3).
-// 토너먼트 supabaseTournamentStore(ADR-038)가 검증한 primary 모델의 일반 엔티티 일반화.
+// 토너먼트 스토어(ADR-038)가 검증한 primary 모델의 일반 엔티티 일반화.
 
 import { useEffect } from "react";
 import { useSession } from "next-auth/react";
@@ -63,7 +63,7 @@ export function createSyncedStore<T extends SyncedItem>(
   const useStore = create<SyncedState<T>>()(
     persist(
       (set, get) => {
-        // 서버 확정. 실패를 삼키지 않는다 — supabase-sync 의 .then(()=>{},()=>{}) 가
+        // 서버 확정. 실패를 삼키지 않는다 — 예전 동기화 코드의 .then(()=>{},()=>{}) 가
         // persona 미러 실패를 몇 달간 숨긴 전례가 있다(설계 §5).
         const settle = (res: Response | null, action: string) => {
           if (res && res.ok) {
@@ -129,7 +129,7 @@ export function createSyncedStore<T extends SyncedItem>(
 
         hydrate: async (owner) => {
           set({ owner });
-          // 게스트/미로그인 → Supabase 단락, persist(localStorage)만 = Tier 3 동작(ADR-033).
+          // 게스트/미로그인 → 서버 단락, persist(localStorage)만 = Tier 3 동작(ADR-033).
           if (!isRealOwner(owner)) {
             set({ status: "ready" });
             return;

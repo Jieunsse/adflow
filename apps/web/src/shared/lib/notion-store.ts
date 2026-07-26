@@ -1,8 +1,13 @@
-import { getSupabaseServer } from "./supabase-server";
-
 // ADR-043 — Notion Connection 영속. server-side only.
+//
+// 단계 7 에서 Supabase 에서 Spring 으로 넘어왔다. 액세스 토큰은 이제 암호화 컬럼에 앉는다.
 // user_key = NextAuth sub/email (라우트에서 getToken 으로 해석해 넘긴다).
-const TABLE = "notion_connections";
+//
+// Notion OAuth 콜백은 Spring JWT 를 들고 오지 않아서 내부 시크릿 경로를 쓴다.
+
+import { backendBaseUrl, internalSecret } from "@shared/lib/backend/client";
+
+const PATH = "/internal/notion-connections";
 
 export type NotionConnection = {
   accessToken: string;
@@ -12,42 +17,38 @@ export type NotionConnection = {
   workspaceIcon?: string;
 };
 
+function endpoint(userKey: string): { url: string; secret: string } | null {
+  const base = backendBaseUrl();
+  const secret = internalSecret();
+  if (!base || !secret) return null; // 백엔드 미설정이면 조용히 휴면 (둘러보기 배포와 같은 계약)
+  return { url: `${base}${PATH}?userKey=${encodeURIComponent(userKey)}`, secret };
+}
+
 export async function getNotionConnection(userKey: string): Promise<NotionConnection | null> {
-  const supabase = getSupabaseServer();
-  if (!supabase) return null;
-  const { data, error } = await supabase
-    .from(TABLE)
-    .select("access_token, bot_id, workspace_id, workspace_name, workspace_icon")
-    .eq("user_key", userKey)
-    .maybeSingle();
-  if (error || !data) return null;
-  return {
-    accessToken: data.access_token,
-    botId: data.bot_id ?? undefined,
-    workspaceId: data.workspace_id ?? undefined,
-    workspaceName: data.workspace_name ?? undefined,
-    workspaceIcon: data.workspace_icon ?? undefined,
-  };
+  const e = endpoint(userKey);
+  if (!e) return null;
+
+  const res = await fetch(e.url, { headers: { "X-Internal-Secret": e.secret } });
+  if (res.status === 204 || !res.ok) return null; // 204 = 연결 없음
+  return (await res.json()) as NotionConnection;
 }
 
 export async function saveNotionConnection(userKey: string, conn: NotionConnection): Promise<void> {
-  const supabase = getSupabaseServer();
-  if (!supabase) return;
-  const { error } = await supabase.from(TABLE).upsert({
-    user_key: userKey,
-    access_token: conn.accessToken,
-    bot_id: conn.botId ?? null,
-    workspace_id: conn.workspaceId ?? null,
-    workspace_name: conn.workspaceName ?? null,
-    workspace_icon: conn.workspaceIcon ?? null,
-    updated_at: new Date().toISOString(),
+  const e = endpoint(userKey);
+  if (!e) return;
+
+  const res = await fetch(e.url, {
+    method: "POST",
+    headers: { "X-Internal-Secret": e.secret, "Content-Type": "application/json" },
+    body: JSON.stringify(conn),
   });
-  if (error) console.error("[notion-store] saveNotionConnection 실패", error.message);
+  if (!res.ok) console.error("[notion-store] saveNotionConnection 실패", res.status, await res.text());
 }
 
 export async function deleteNotionConnection(userKey: string): Promise<void> {
-  const supabase = getSupabaseServer();
-  if (!supabase) return;
-  const { error } = await supabase.from(TABLE).delete().eq("user_key", userKey);
-  if (error) console.error("[notion-store] deleteNotionConnection 실패", error.message);
+  const e = endpoint(userKey);
+  if (!e) return;
+
+  const res = await fetch(e.url, { method: "DELETE", headers: { "X-Internal-Secret": e.secret } });
+  if (!res.ok) console.error("[notion-store] deleteNotionConnection 실패", res.status, await res.text());
 }

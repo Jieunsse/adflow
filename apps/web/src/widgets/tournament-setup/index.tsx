@@ -300,7 +300,7 @@ export default function TournamentSetup({ real = false }: { real?: boolean }) {
           : selected!.ctr
         : seedSpec.seedDefault;
 
-      // 실 유저 — POST /api/tournaments(Supabase + Meta delivery 봉투). 기존 광고 출발이면 라운드1 챌린저를 set-challenger 로 시드.
+      // 실 유저 — POST /api/tournaments(Spring + Meta delivery 봉투). 기존 광고 출발이면 라운드1 챌린저를 set-challenger 로 시드.
       if (real) {
         const res = await fetch("/api/tournaments", {
           method: "POST",

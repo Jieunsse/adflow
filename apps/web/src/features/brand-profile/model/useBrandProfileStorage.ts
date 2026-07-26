@@ -1,7 +1,7 @@
 "use client";
 
 // Brand Profile — 도메인 형태(타입)와 읽기/쓰기 표면. ADR-046: Synced Store(Tier 1)로 이관 —
-// Supabase=source-of-truth(로그인 시 하이드레이션), localStorage(persist)=오프라인 캐시, 게스트=로컬만.
+// 서버=source-of-truth(로그인 시 하이드레이션), localStorage(persist)=오프라인 캐시, 게스트=로컬만.
 // store·동기·영속은 brandProfileStore 가 담당(런타임 순환 회피). 동기 리더는 워밍된 getState 스냅샷을 읽는다.
 // (이전: useScopedStorage + 단방향 syncUpsert 미러 — 기기 바뀌면 소실)
 

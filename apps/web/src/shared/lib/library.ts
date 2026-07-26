@@ -1,7 +1,7 @@
 "use client";
 
 // Library Entry — STEP 01 Creative 저장. 도메인 어휘는 .document/CONTEXT.md §Library Entry.
-// ADR-046: Synced Store(Tier 1)로 이관 — Supabase=source-of-truth(로그인 시 하이드레이션),
+// ADR-046: Synced Store(Tier 1)로 이관 — 서버=source-of-truth(로그인 시 하이드레이션),
 // localStorage(persist)=오프라인 캐시, 게스트=로컬만. 동기화·영속은 createSyncedStore 가 담당,
 // 여기선 도메인 형태(id 생성·저장 시각)만. (이전: useScopedStorage + 단방향 syncUpsert 미러)
 

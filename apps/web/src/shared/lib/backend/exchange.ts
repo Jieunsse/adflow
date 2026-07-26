@@ -16,7 +16,7 @@ export type BackendToken = {
 };
 
 // 로그인 직후 1회. 실패해도 로그인을 깨지 않는다 — 단계 1 시점에 프론트 데이터는
-// 여전히 Supabase 라 백엔드 토큰이 없어도 앱은 정상 동작한다.
+// 백엔드 토큰이 없어도(백엔드 미설정 환경) 로그인 자체는 깨지지 않는다.
 export async function exchangeForBackendToken(
   input: ExchangeInput,
 ): Promise<BackendToken | null> {

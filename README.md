@@ -28,7 +28,9 @@ Meta 앱 자격증명은 `.env.local` 대신 `/install` 마법사로 넣는 게 
 
 `.env.example` 에 전부 주석과 함께 정리돼 있어요. `.env.local` 은 `.gitignore` 로 막혀 있어요 (커밋 금지).
 
-필수는 `NEXTAUTH_URL` · `NEXTAUTH_SECRET` 둘. 나머지(Meta·Gemini·Notion·Supabase)는 쓰는 기능만 채우면 돼요.
+필수는 `NEXTAUTH_URL` · `NEXTAUTH_SECRET` 둘. 나머지(Meta·Gemini·Notion)는 쓰는 기능만 채우면 돼요.
+
+영속은 Spring 백엔드(`apps/api`)가 맡아요. 저장 기능을 쓰려면 `ADFLOW_BACKEND_URL` 과 시크릿 3종이 필요해요.
 
 ## 문서
 
@@ -36,4 +38,4 @@ Meta 앱 자격증명은 `.env.local` 대신 `/install` 마법사로 넣는 게 
 - [.document/CONTEXT.md](./.document/CONTEXT.md) — 도메인 어휘 단일 소스
 - [.document/adr/](./.document/adr/) — 아키텍처 결정 기록
 - [.document/prd/](./.document/prd/) — 기능별 PRD
-- [supabase/schema.sql](./supabase/schema.sql) — 영속 레이어 스키마
+- [apps/api](./apps/api) — Spring 백엔드. 스키마는 JPA 엔티티가 단일 소스예요 (`ddl-auto`, 로컬 전용)

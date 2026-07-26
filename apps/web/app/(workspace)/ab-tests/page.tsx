@@ -32,7 +32,7 @@ export default function AbTestsPage() {
     return () => window.removeEventListener(TOURNAMENT_CHANGE_EVENT, reload);
   }, [browseMode]);
 
-  // ADR-038 섬2 — 실 유저: Supabase 토너먼트를 API 로 조회(소유분만). 데모 분기와 동일 대시보드.
+  // ADR-038 섬2 — 실 유저: 서버 토너먼트를 API 로 조회(소유분만). 데모 분기와 동일 대시보드.
   const realQ = useQuery({
     queryKey: ["tournaments", "real"],
     queryFn: () => tournamentClient(false).list(),

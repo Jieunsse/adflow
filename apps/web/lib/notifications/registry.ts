@@ -113,7 +113,7 @@ function hashToken(token: string): string {
 }
 
 // ADR-038 — cron 폴러가 토너먼트 owner 의 열린 SSE 스트림으로 결산 알림 push. 연결 없으면 no-op
-// (브라우저가 닫혀 있어도 토너먼트는 Supabase 상에서 진행되고, 재접속 시 상세 화면이 최신 상태를 읽는다).
+// (브라우저가 닫혀 있어도 Spring 폴러가 토너먼트를 진행하고, 재접속 시 상세 화면이 최신 상태를 읽는다).
 export function pushTournamentConcluded(
   ownerToken: string,
   payload: Omit<TournamentRoundConcludedPayload, "type">,

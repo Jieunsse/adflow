@@ -1,73 +1,43 @@
 import { GRAPH, getPageToken, getIgUserId } from "./instagram-graph"
-import { getSupabaseServer } from "@shared/lib/supabase-server"
+import { readIgMessages, saveIgMessages, type IgMessageRow } from "./ig-message-store"
 
-type DbRow = {
-  id: string
-  ig_user_id: string
-  conversation_id: string
-  participant_id: string
-  participant_handle?: string
-  from_me: boolean
-  text?: string
-  attachment_url?: string
-  created_at: string
-}
+async function getInboxFromStore(igUserId: string): Promise<IgInbox | null> {
+  const rows = await readIgMessages(igUserId)
+  if (rows.length === 0) return null
 
-async function upsertMessages(rows: DbRow[]): Promise<void> {
-  if (rows.length === 0) return
-  const sb = getSupabaseServer()
-  if (!sb) return
-  await sb.from('ig_messages').upsert(rows, { onConflict: 'id' })
-}
-
-async function getInboxFromSupabase(igUserId: string): Promise<IgInbox | null> {
-  const sb = getSupabaseServer()
-  if (!sb) return null
-  const { data } = await sb
-    .from('ig_messages')
-    .select('conversation_id, participant_id, participant_handle, text, created_at')
-    .eq('ig_user_id', igUserId)
-    .order('created_at', { ascending: false })
-  if (!data || data.length === 0) return null
-
+  // 최신순으로 오므로 대화별 첫 줄이 곧 미리보기다.
   const seen = new Set<string>()
   const summaries: IgConversationSummary[] = []
-  for (const row of data as DbRow[]) {
-    if (!seen.has(row.conversation_id)) {
-      seen.add(row.conversation_id)
+  for (const row of rows) {
+    if (!seen.has(row.conversationId)) {
+      seen.add(row.conversationId)
       summaries.push({
-        id: row.conversation_id,
-        participantId: row.participant_id,
-        participantHandle: row.participant_handle ?? 'unknown',
+        id: row.conversationId,
+        participantId: row.participantId,
+        participantHandle: row.participantHandle ?? 'unknown',
         preview: truncate(row.text ?? '', 70),
-        updatedAt: row.created_at,
+        updatedAt: row.createdAt,
       })
     }
   }
   return { conversations: summaries, mock: false }
 }
 
-async function getThreadFromSupabase(conversationId: string): Promise<IgThread | null> {
-  const sb = getSupabaseServer()
-  if (!sb) return null
-  const { data } = await sb
-    .from('ig_messages')
-    .select('*')
-    .eq('conversation_id', conversationId)
-    .order('created_at', { ascending: true })
-  if (!data || data.length === 0) return null
+async function getThreadFromStore(igUserId: string, conversationId: string): Promise<IgThread | null> {
+  // igUserId 로 함께 걸러야 대화 id 만 아는 사람에게 남의 스레드가 나가지 않는다(단계 4).
+  const rows = await readIgMessages(igUserId, conversationId)
+  if (rows.length === 0) return null
 
-  const rows = data as DbRow[]
-  const handle = rows.find(r => r.participant_handle)?.participant_handle ?? 'unknown'
+  const handle = rows.find(r => r.participantHandle)?.participantHandle ?? 'unknown'
   return {
     conversationId,
     participantHandle: handle,
     messages: rows.map(r => ({
       id: r.id,
-      from: r.from_me ? ('me' as const) : ('them' as const),
+      from: r.fromMe ? ('me' as const) : ('them' as const),
       text: r.text ?? '',
-      attachmentImageUrl: r.attachment_url,
-      createdAt: r.created_at,
+      attachmentImageUrl: r.attachmentUrl,
+      createdAt: r.createdAt,
     })),
     mock: false,
   }
@@ -217,23 +187,23 @@ async function fetchInboxWithToken(igUserId: string, token: string): Promise<IgI
     } satisfies IgConversationSummary
   }))
 
-  // Supabase 씨앗 심기 — 각 대화의 최신 메시지 1건 upsert
-  const seedRows: DbRow[] = rows.flatMap(row => {
+  // 씨앗 심기 — 각 대화의 최신 메시지 1건 저장
+  const seedRows: IgMessageRow[] = rows.flatMap(row => {
     const other = row.participants?.data?.find(p => p.id !== igUserId)
     const lastMsg = row.messages?.data?.[0]
     if (!lastMsg?.id) return []
     return [{
       id: lastMsg.id,
-      ig_user_id: igUserId,
-      conversation_id: row.id,
-      participant_id: other?.id ?? '',
-      participant_handle: other?.username,
-      from_me: lastMsg.from?.id === igUserId,
+      igUserId,
+      conversationId: row.id,
+      participantId: other?.id ?? '',
+      participantHandle: other?.username,
+      fromMe: lastMsg.from?.id === igUserId,
       text: lastMsg.message ?? '',
-      created_at: lastMsg.created_time ?? row.updated_time ?? '',
+      createdAt: lastMsg.created_time ?? row.updated_time ?? '',
     }]
   })
-  await upsertMessages(seedRows)
+  await saveIgMessages(seedRows)
 
   return { conversations: summaries, mock: false }
 }
@@ -276,17 +246,17 @@ async function fetchThreadWithToken(
     createdAt: m.created_time ?? '',
   }))
 
-  // Supabase 전체 스레드 upsert (첫 스레드 열람 시 씨앗 완성)
-  await upsertMessages(messages.map(m => ({
+  // 전체 스레드 저장 (첫 스레드 열람 시 씨앗 완성)
+  await saveIgMessages(messages.map(m => ({
     id: m.id,
-    ig_user_id: igUserId,
-    conversation_id: conversationId,
-    participant_id: other?.id ?? '',
-    participant_handle: handle,
-    from_me: m.from === 'me',
+    igUserId,
+    conversationId,
+    participantId: other?.id ?? '',
+    participantHandle: handle,
+    fromMe: m.from === 'me',
     text: m.text,
-    attachment_url: m.attachmentImageUrl,
-    created_at: m.createdAt,
+    attachmentUrl: m.attachmentImageUrl,
+    createdAt: m.createdAt,
   })))
 
   return { conversationId, participantHandle: handle, messages, mock: false }
@@ -304,11 +274,11 @@ export async function getInstagramInbox(
     const igUserId = igUserIdHint || (await getIgUserId(pageId, pageToken))
     if (!igUserId) return IG_INBOX_MOCK
 
-    // 재연결 경로: Supabase에 씨앗이 있으면 DB 반환
-    const cached = await getInboxFromSupabase(igUserId)
+    // 재연결 경로: 씨앗이 있으면 캐시 반환
+    const cached = await getInboxFromStore(igUserId)
     if (cached) return cached
 
-    // 첫 진입 경로: Meta API fetch + Supabase 씨앗 심기
+    // 첫 진입 경로: Meta API fetch + 씨앗 심기
     return await fetchInboxWithToken(igUserId, pageToken)
   } catch {
     return IG_INBOX_MOCK
@@ -323,16 +293,18 @@ export async function getInstagramThread(
 ): Promise<IgThread> {
   if (!pageId || !userToken) return getMockThread(conversationId)
   try {
-    // 재연결 경로: Supabase에 스레드가 있으면 DB 반환
-    const cached = await getThreadFromSupabase(conversationId)
-    if (cached) return cached
-
+    // igUserId 를 캐시 조회보다 먼저 확정한다 — 스레드 필터에 필요하다(단계 4).
+    // 예전엔 conversationId 만으로 조회해서 남의 스레드가 나올 수 있었다.
     const pageToken = await getPageToken(pageId, userToken)
     if (!pageToken) return getMockThread(conversationId)
     const igUserId = igUserIdHint || (await getIgUserId(pageId, pageToken))
     if (!igUserId) return getMockThread(conversationId)
 
-    // 첫 진입 경로: Meta API fetch + Supabase upsert
+    // 재연결 경로: 스레드가 있으면 캐시 반환
+    const cached = await getThreadFromStore(igUserId, conversationId)
+    if (cached) return cached
+
+    // 첫 진입 경로: Meta API fetch + 저장
     return await fetchThreadWithToken(conversationId, igUserId, pageToken)
   } catch {
     return getMockThread(conversationId)

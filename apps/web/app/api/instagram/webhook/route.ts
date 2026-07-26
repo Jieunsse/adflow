@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createHmac, timingSafeEqual } from "node:crypto"
-import { getSupabaseServer } from "@shared/lib/supabase-server"
+import { findConversationId, saveIgMessages } from "@/lib/ig-message-store"
 import { pushDmEvent } from "@/lib/notifications/dm-registry"
 
 // Meta webhook payload types
@@ -69,8 +69,6 @@ export async function POST(req: NextRequest) {
 }
 
 async function processEntries(entries: WebhookEntry[]): Promise<void> {
-  const sb = getSupabaseServer()
-
   for (const entry of entries) {
     const igUserId = entry.id
     for (const event of entry.messaging ?? []) {
@@ -83,31 +81,28 @@ async function processEntries(entries: WebhookEntry[]): Promise<void> {
       const conversationId = await deriveConversationId(igUserId, participantId)
       const row = {
         id: event.message.mid,
-        ig_user_id: igUserId,
-        conversation_id: conversationId,
-        participant_id: participantId,
-        from_me: fromMe,
+        igUserId,
+        conversationId,
+        participantId,
+        fromMe,
         text: event.message.text ?? "",
-        attachment_url: attachmentUrl,
-        created_at: new Date(event.timestamp).toISOString(),
+        attachmentUrl,
+        createdAt: new Date(event.timestamp).toISOString(),
       }
 
-      // Supabase INSERT (영속 저장)
-      if (sb) {
-        await sb.from("ig_messages").upsert(row, { onConflict: "id" })
-      }
+      await saveIgMessages([row])
 
       // SSE push (마케터 브라우저에 실시간 반영)
       pushDmEvent(igUserId, {
         type: "dm_new_message",
-        conversationId: row.conversation_id,
+        conversationId: row.conversationId,
         message: {
           id: row.id,
-          from_me: row.from_me,
+          from_me: row.fromMe,
           text: row.text,
-          attachment_url: row.attachment_url,
-          created_at: row.created_at,
-          participant_id: row.participant_id,
+          attachment_url: row.attachmentUrl,
+          created_at: row.createdAt,
+          participant_id: row.participantId,
         },
       })
     }
@@ -115,21 +110,8 @@ async function processEntries(entries: WebhookEntry[]): Promise<void> {
 }
 
 // Meta webhook은 conversation_id를 직접 주지 않아서
-// ig_messages 테이블에서 기존 conversation_id를 역조회하거나,
-// 없으면 ig_user_id:participant_id 조합으로 임시 키를 만든다.
-// 실제 Graph API conversation_id로 교체는 첫 스레드 열람 시 자동 upsert.
+// 기존 conversation_id를 역조회하거나, 없으면 ig_user_id:participant_id 조합으로 임시 키를 만든다.
+// 실제 Graph API conversation_id로 교체는 첫 스레드 열람 시 자동 저장.
 async function deriveConversationId(igUserId: string, participantId: string): Promise<string> {
-  const sb = getSupabaseServer()
-  if (sb) {
-    const { data } = await sb
-      .from("ig_messages")
-      .select("conversation_id")
-      .eq("ig_user_id", igUserId)
-      .eq("participant_id", participantId)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .single()
-    if (data?.conversation_id) return data.conversation_id as string
-  }
-  return `${igUserId}:${participantId}`
+  return (await findConversationId(igUserId, participantId)) ?? `${igUserId}:${participantId}`
 }

@@ -1,6 +1,5 @@
 package ai.adflow.api.internal.tournament;
 
-import ai.adflow.api.internal.InternalSecret;
 import ai.adflow.api.store.ItemRequest;
 import ai.adflow.api.store.ItemsResponse;
 import ai.adflow.api.tournament.Tournament;
@@ -19,7 +18,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -40,19 +38,16 @@ public class InternalTournamentController {
   private final TournamentSettleService settleService;
   private final TournamentAdvanceService advanceService;
   private final TournamentEditService editService;
-  private final InternalSecret internalSecret;
 
   public InternalTournamentController(
       TournamentRepository repository,
       TournamentSettleService settleService,
       TournamentAdvanceService advanceService,
-      TournamentEditService editService,
-      InternalSecret internalSecret) {
+      TournamentEditService editService) {
     this.repository = repository;
     this.settleService = settleService;
     this.advanceService = advanceService;
     this.editService = editService;
-    this.internalSecret = internalSecret;
   }
 
   /**
@@ -61,12 +56,9 @@ public class InternalTournamentController {
    */
   @GetMapping
   public ItemsResponse<Tournament> list(
-      @RequestHeader(value = "X-Internal-Secret", required = false) String presented,
       @RequestParam(value = "status", required = false) String status,
       @RequestParam(value = "ownerKey", required = false) String ownerKey,
       @RequestParam(value = "brandProfileId", required = false) String brandProfileId) {
-
-    internalSecret.require(presented);
 
     List<Tournament> items;
     if (ownerKey != null && brandProfileId != null) {
@@ -82,11 +74,7 @@ public class InternalTournamentController {
   }
 
   @GetMapping("/{id}")
-  public ResponseEntity<Tournament> get(
-      @RequestHeader(value = "X-Internal-Secret", required = false) String presented,
-      @PathVariable String id) {
-
-    internalSecret.require(presented);
+  public ResponseEntity<Tournament> get(@PathVariable String id) {
     return repository.findById(id).map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
   }
 
@@ -97,11 +85,8 @@ public class InternalTournamentController {
   @PostMapping
   @Transactional
   public Map<String, Boolean> upsert(
-      @RequestHeader(value = "X-Internal-Secret", required = false) String presented,
       @RequestParam("ownerKey") String ownerKey,
       @RequestBody ItemRequest<Tournament> body) {
-
-    internalSecret.require(presented);
 
     Tournament item = body.item();
     if (item == null || item.getId() == null || item.getId().isBlank()) {
@@ -124,22 +109,14 @@ public class InternalTournamentController {
 
   @DeleteMapping
   @Transactional
-  public Map<String, Boolean> remove(
-      @RequestHeader(value = "X-Internal-Secret", required = false) String presented,
-      @RequestParam("id") String id) {
-
-    internalSecret.require(presented);
+  public Map<String, Boolean> remove(@RequestParam("id") String id) {
     repository.deleteById(id);
     return Map.of("ok", true);
   }
 
   /** Java 엔진이 라운드를 결산한다. 단계 6 부터는 Spring 폴러가 스스로 부르고, 화면은 결과만 읽는다. */
   @PostMapping("/{id}/settle")
-  public TournamentSettleService.Outcome settle(
-      @RequestHeader(value = "X-Internal-Secret", required = false) String presented,
-      @PathVariable String id) {
-
-    internalSecret.require(presented);
+  public TournamentSettleService.Outcome settle(@PathVariable String id) {
     return settleService.settle(id);
   }
 
@@ -151,12 +128,7 @@ public class InternalTournamentController {
    */
   @PostMapping("/{id}/advance")
   @Transactional
-  public Tournament advance(
-      @RequestHeader(value = "X-Internal-Secret", required = false) String presented,
-      @PathVariable String id,
-      @RequestParam("step") String step) {
-
-    internalSecret.require(presented);
+  public Tournament advance(@PathVariable String id, @RequestParam("step") String step) {
     Tournament t =
         repository
             .findById(id)
@@ -181,12 +153,10 @@ public class InternalTournamentController {
    */
   @PostMapping("/{id}/edit")
   public Tournament edit(
-      @RequestHeader(value = "X-Internal-Secret", required = false) String presented,
       @PathVariable String id,
       @RequestParam("action") String action,
       @RequestBody(required = false) EditRequest body) {
 
-    internalSecret.require(presented);
     EditRequest b = body == null ? new EditRequest(null, null) : body;
 
     return switch (action) {

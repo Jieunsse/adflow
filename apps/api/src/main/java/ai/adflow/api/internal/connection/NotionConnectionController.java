@@ -2,7 +2,6 @@ package ai.adflow.api.internal.connection;
 
 import ai.adflow.api.connection.NotionConnection;
 import ai.adflow.api.connection.NotionConnectionRepository;
-import ai.adflow.api.internal.InternalSecret;
 import jakarta.transaction.Transactional;
 import java.time.Instant;
 import java.util.Map;
@@ -12,7 +11,6 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -29,21 +27,14 @@ import org.springframework.web.server.ResponseStatusException;
 public class NotionConnectionController {
 
   private final NotionConnectionRepository repository;
-  private final InternalSecret internalSecret;
 
-  public NotionConnectionController(
-      NotionConnectionRepository repository, InternalSecret internalSecret) {
+  public NotionConnectionController(NotionConnectionRepository repository) {
     this.repository = repository;
-    this.internalSecret = internalSecret;
   }
 
   /** 연결이 없으면 204 다 — 404 로 두면 호출자가 "고장"과 구분하지 못한다. */
   @GetMapping
-  public ResponseEntity<NotionConnection> get(
-      @RequestHeader(value = "X-Internal-Secret", required = false) String presented,
-      @RequestParam("userKey") String userKey) {
-
-    internalSecret.require(presented);
+  public ResponseEntity<NotionConnection> get(@RequestParam("userKey") String userKey) {
     return repository
         .findById(userKey)
         .map(ResponseEntity::ok)
@@ -53,11 +44,8 @@ public class NotionConnectionController {
   @PostMapping
   @Transactional
   public Map<String, Boolean> save(
-      @RequestHeader(value = "X-Internal-Secret", required = false) String presented,
-      @RequestParam("userKey") String userKey,
-      @RequestBody NotionConnection body) {
+      @RequestParam("userKey") String userKey, @RequestBody NotionConnection body) {
 
-    internalSecret.require(presented);
     if (body.getAccessToken() == null || body.getAccessToken().isBlank()) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Notion 액세스 토큰이 없어요.");
     }
@@ -70,11 +58,7 @@ public class NotionConnectionController {
 
   @DeleteMapping
   @Transactional
-  public Map<String, Boolean> remove(
-      @RequestHeader(value = "X-Internal-Secret", required = false) String presented,
-      @RequestParam("userKey") String userKey) {
-
-    internalSecret.require(presented);
+  public Map<String, Boolean> remove(@RequestParam("userKey") String userKey) {
     repository.deleteById(userKey);
     return Map.of("ok", true);
   }

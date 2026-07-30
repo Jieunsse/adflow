@@ -1885,9 +1885,7 @@ export interface operations {
                 ownerKey?: string;
                 brandProfileId?: string;
             };
-            header?: {
-                "X-Internal-Secret"?: string;
-            };
+            header?: never;
             path?: never;
             cookie?: never;
         };
@@ -1909,9 +1907,7 @@ export interface operations {
             query: {
                 ownerKey: string;
             };
-            header?: {
-                "X-Internal-Secret"?: string;
-            };
+            header?: never;
             path?: never;
             cookie?: never;
         };
@@ -1939,9 +1935,7 @@ export interface operations {
             query: {
                 id: string;
             };
-            header?: {
-                "X-Internal-Secret"?: string;
-            };
+            header?: never;
             path?: never;
             cookie?: never;
         };
@@ -1963,9 +1957,7 @@ export interface operations {
     settle: {
         parameters: {
             query?: never;
-            header?: {
-                "X-Internal-Secret"?: string;
-            };
+            header?: never;
             path: {
                 id: string;
             };
@@ -1989,9 +1981,7 @@ export interface operations {
             query: {
                 action: string;
             };
-            header?: {
-                "X-Internal-Secret"?: string;
-            };
+            header?: never;
             path: {
                 id: string;
             };
@@ -2019,9 +2009,7 @@ export interface operations {
             query: {
                 step: string;
             };
-            header?: {
-                "X-Internal-Secret"?: string;
-            };
+            header?: never;
             path: {
                 id: string;
             };
@@ -2043,9 +2031,7 @@ export interface operations {
     run: {
         parameters: {
             query?: never;
-            header?: {
-                "X-Internal-Secret"?: string;
-            };
+            header?: never;
             path?: never;
             cookie?: never;
         };
@@ -2067,9 +2053,7 @@ export interface operations {
             query: {
                 userKey: string;
             };
-            header?: {
-                "X-Internal-Secret"?: string;
-            };
+            header?: never;
             path?: never;
             cookie?: never;
         };
@@ -2091,9 +2075,7 @@ export interface operations {
             query: {
                 userKey: string;
             };
-            header?: {
-                "X-Internal-Secret"?: string;
-            };
+            header?: never;
             path?: never;
             cookie?: never;
         };
@@ -2121,9 +2103,7 @@ export interface operations {
             query: {
                 userKey: string;
             };
-            header?: {
-                "X-Internal-Secret"?: string;
-            };
+            header?: never;
             path?: never;
             cookie?: never;
         };
@@ -2148,9 +2128,7 @@ export interface operations {
                 igUserId: string;
                 conversationId?: string;
             };
-            header?: {
-                "X-Internal-Secret"?: string;
-            };
+            header?: never;
             path?: never;
             cookie?: never;
         };
@@ -2170,9 +2148,7 @@ export interface operations {
     upsert_12: {
         parameters: {
             query?: never;
-            header?: {
-                "X-Internal-Secret"?: string;
-            };
+            header?: never;
             path?: never;
             cookie?: never;
         };
@@ -2198,9 +2174,7 @@ export interface operations {
     record: {
         parameters: {
             query?: never;
-            header?: {
-                "X-Internal-Secret"?: string;
-            };
+            header?: never;
             path?: never;
             cookie?: never;
         };
@@ -2226,9 +2200,7 @@ export interface operations {
     refresh: {
         parameters: {
             query?: never;
-            header?: {
-                "X-Internal-Secret"?: string;
-            };
+            header?: never;
             path?: never;
             cookie?: never;
         };
@@ -2252,9 +2224,7 @@ export interface operations {
     exchange: {
         parameters: {
             query?: never;
-            header?: {
-                "X-Internal-Secret"?: string;
-            };
+            header?: never;
             path?: never;
             cookie?: never;
         };
@@ -2322,9 +2292,7 @@ export interface operations {
     get_2: {
         parameters: {
             query?: never;
-            header?: {
-                "X-Internal-Secret"?: string;
-            };
+            header?: never;
             path: {
                 id: string;
             };
@@ -2349,9 +2317,7 @@ export interface operations {
                 igUserId: string;
                 participantId: string;
             };
-            header?: {
-                "X-Internal-Secret"?: string;
-            };
+            header?: never;
             path?: never;
             cookie?: never;
         };
@@ -2375,9 +2341,7 @@ export interface operations {
             query: {
                 job: string;
             };
-            header?: {
-                "X-Internal-Secret"?: string;
-            };
+            header?: never;
             path?: never;
             cookie?: never;
         };

@@ -2,7 +2,6 @@ package ai.adflow.api.auth;
 
 import ai.adflow.api.connection.MetaConnection;
 import ai.adflow.api.connection.MetaConnectionRepository;
-import ai.adflow.api.internal.InternalSecret;
 import ai.adflow.api.security.Role;
 import ai.adflow.api.security.TokenIssuer;
 import jakarta.validation.Valid;
@@ -12,7 +11,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
@@ -32,23 +30,17 @@ public class AuthExchangeController {
 
   private final MetaConnectionRepository repository;
   private final TokenIssuer tokenIssuer;
-  private final InternalSecret internalSecret;
 
   public AuthExchangeController(
       MetaConnectionRepository repository,
-      TokenIssuer tokenIssuer,
-      InternalSecret internalSecret) {
+      TokenIssuer tokenIssuer) {
     this.repository = repository;
     this.tokenIssuer = tokenIssuer;
-    this.internalSecret = internalSecret;
   }
 
   @PostMapping("/exchange")
   public ResponseEntity<ExchangeResponse> exchange(
-      @RequestHeader(value = "X-Internal-Secret", required = false) String presented,
       @Valid @RequestBody ExchangeRequest request) {
-
-    internalSecret.require(presented);
 
     if (GUEST_OWNER.equals(request.ownerKey()) || GUEST_OWNER.equals(request.email())) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "둘러보기 게스트는 토큰을 발급받지 않아요.");

@@ -1,6 +1,5 @@
 package ai.adflow.api.internal.ig;
 
-import ai.adflow.api.internal.InternalSecret;
 import ai.adflow.api.store.ItemsResponse;
 import jakarta.transaction.Transactional;
 import java.util.List;
@@ -9,7 +8,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -29,21 +27,14 @@ public class IgMessageController {
   public record BulkRequest(List<IgMessage> items) {}
 
   private final IgMessageRepository repository;
-  private final InternalSecret internalSecret;
 
-  public IgMessageController(IgMessageRepository repository, InternalSecret internalSecret) {
+  public IgMessageController(IgMessageRepository repository) {
     this.repository = repository;
-    this.internalSecret = internalSecret;
   }
 
   @PostMapping
   @Transactional
-  public Map<String, Boolean> upsert(
-      @RequestHeader(value = "X-Internal-Secret", required = false) String presented,
-      @RequestBody BulkRequest body) {
-
-    internalSecret.require(presented);
-
+  public Map<String, Boolean> upsert(@RequestBody BulkRequest body) {
     // id 가 Meta 의 mid 라 save 가 곧 중복 제거다.
     if (body.items() != null && !body.items().isEmpty()) repository.saveAll(body.items());
     return Map.of("ok", true);
@@ -51,11 +42,8 @@ public class IgMessageController {
 
   @GetMapping
   public ItemsResponse<IgMessage> list(
-      @RequestHeader(value = "X-Internal-Secret", required = false) String presented,
       @RequestParam("igUserId") String igUserId,
       @RequestParam(value = "conversationId", required = false) String conversationId) {
-
-    internalSecret.require(presented);
 
     // 인박스는 최신순(대화별 첫 줄이 미리보기), 스레드는 오래된 순(읽는 순서).
     return new ItemsResponse<>(
@@ -67,11 +55,7 @@ public class IgMessageController {
 
   @GetMapping("/conversation-id")
   public ResponseEntity<Map<String, String>> conversationId(
-      @RequestHeader(value = "X-Internal-Secret", required = false) String presented,
-      @RequestParam("igUserId") String igUserId,
-      @RequestParam("participantId") String participantId) {
-
-    internalSecret.require(presented);
+      @RequestParam("igUserId") String igUserId, @RequestParam("participantId") String participantId) {
 
     return repository
         .findFirstByIgUserIdAndParticipantIdOrderByCreatedAtDesc(igUserId, participantId)

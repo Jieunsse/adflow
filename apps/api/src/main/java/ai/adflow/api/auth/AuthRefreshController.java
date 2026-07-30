@@ -1,6 +1,5 @@
 package ai.adflow.api.auth;
 
-import ai.adflow.api.internal.InternalSecret;
 import ai.adflow.api.security.JwtConfig;
 import ai.adflow.api.security.Role;
 import ai.adflow.api.security.TokenIssuer;
@@ -15,7 +14,6 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
@@ -32,23 +30,17 @@ public class AuthRefreshController {
 
   private final JwtDecoder refreshJwtDecoder;
   private final TokenIssuer tokenIssuer;
-  private final InternalSecret internalSecret;
 
   public AuthRefreshController(
       @Qualifier("refreshJwtDecoder") JwtDecoder refreshJwtDecoder,
-      TokenIssuer tokenIssuer,
-      InternalSecret internalSecret) {
+      TokenIssuer tokenIssuer) {
     this.refreshJwtDecoder = refreshJwtDecoder;
     this.tokenIssuer = tokenIssuer;
-    this.internalSecret = internalSecret;
   }
 
   @PostMapping("/refresh")
   public ResponseEntity<ExchangeResponse> refresh(
-      @RequestHeader(value = "X-Internal-Secret", required = false) String presented,
       @Valid @RequestBody RefreshRequest request) {
-
-    internalSecret.require(presented);
 
     Jwt jwt;
     try {

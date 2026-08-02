@@ -7,7 +7,7 @@ import Icon from "@shared/ui/Icon";
 import { Card } from "@shared/ui/Card";
 import { Button } from "@shared/ui/Button";
 import { cn } from "@shared/lib/cn";
-import { type Suggestion } from "@entities/insights/optimization";
+import { type Suggestion } from "@entities/insights/suggestion";
 import AiDraftModal from "@features/channel-suggestion-action/AiDraftModal";
 import { IgPostPreview } from "@shared/ui/IgPostPreview";
 import {

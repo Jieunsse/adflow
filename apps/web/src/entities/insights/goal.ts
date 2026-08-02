@@ -1,5 +1,4 @@
-// 목표 설정 — 계정 목표(ROAS/공헌이익/CPA)로부터 입찰 가드레일(CPC 상한·CTR 하한)을
-// 역산하고, 현재 성과가 목표 대비 어디에 있는지 판정하는 순수함수.
+// 목표 설정 — 현재 성과가 목표 대비 어디에 있는지 판정하는 순수함수.
 
 import { bepRoas } from "./profit";
 import { GOAL_AT_RISK_LOWER_RATIO, GOAL_AT_RISK_UPPER_RATIO } from "./thresholds";
@@ -10,100 +9,20 @@ export type AccountGoal = { metric: GoalMetric; target: number };
 
 export type LagTarget = { metric: GoalMetric; target: number };
 
-export type LeadMetricKind = "cpc-max" | "ctr-min";
-export type LeadMetric = {
-  kind: LeadMetricKind;
-  value: number | null;
-  source: "derived" | "custom";
-  reason?: string;
-};
-
 export type Goal = {
   id: string;
   name: string;
   lag: LagTarget;
-  leads: LeadMetric[];
   periodDays?: number;
+  /** 목표를 세운 시점의 후행 목표 실측. 추적 화면이 "시작 2.1x → 목표 3.0x" 를 그리는 기준선. */
+  baseline?: number;
+  /**
+   * 목표를 세운 시점의 선행지표 실측 스냅샷. 선행지표 목표치는 이 값에서 역산해 고정한다 —
+   * 오늘 실측으로 매번 다시 역산하면 목표선이 실측을 따라다녀서 진척이 영원히 0 이 된다.
+   */
+  baselineInputs?: { ctr?: number; cvr?: number; aov?: number; cpc?: number; cpm?: number };
   createdAt: string;
 };
-
-export type GuardrailInputs = {
-  aov?: number;
-  cvr?: number;
-  cpm?: number;
-  marginRate?: number | null;
-};
-
-export type Guardrail =
-  | { kind: "cpc-max"; value: number }
-  | { kind: "ctr-min"; value: number }
-  | { kind: "unavailable"; metric: "cpc-max" | "ctr-min"; reason: string };
-
-function ctrMinFrom(cpm: number | undefined, cpcMax: number): Guardrail {
-  if (cpm == null || cpm <= 0) {
-    return { kind: "unavailable", metric: "ctr-min", reason: "CPM 실측이 아직 없어요" };
-  }
-  return { kind: "ctr-min", value: cpm / (10 * cpcMax) };
-}
-
-function guardrailsFromRoasTarget(target: number, inputs: GuardrailInputs): Guardrail[] {
-  const { aov, cvr, cpm } = inputs;
-  if (target <= 0) {
-    return [
-      { kind: "unavailable", metric: "cpc-max", reason: "목표 ROAS가 올바르지 않아요" },
-      { kind: "unavailable", metric: "ctr-min", reason: "목표 ROAS가 올바르지 않아요" },
-    ];
-  }
-  if (aov == null || aov <= 0) {
-    return [
-      { kind: "unavailable", metric: "cpc-max", reason: "객단가 실측이 아직 없어요" },
-      { kind: "unavailable", metric: "ctr-min", reason: "객단가 실측이 아직 없어요" },
-    ];
-  }
-  if (cvr == null || cvr <= 0) {
-    return [
-      { kind: "unavailable", metric: "cpc-max", reason: "전환율 실측이 아직 없어요" },
-      { kind: "unavailable", metric: "ctr-min", reason: "전환율 실측이 아직 없어요" },
-    ];
-  }
-  const cpcMax = (aov * cvr) / target;
-  return [{ kind: "cpc-max", value: cpcMax }, ctrMinFrom(cpm, cpcMax)];
-}
-
-function guardrailsFromCpaTarget(target: number, inputs: GuardrailInputs): Guardrail[] {
-  const { cvr, cpm } = inputs;
-  if (target <= 0) {
-    return [
-      { kind: "unavailable", metric: "cpc-max", reason: "목표 CPA가 올바르지 않아요" },
-      { kind: "unavailable", metric: "ctr-min", reason: "목표 CPA가 올바르지 않아요" },
-    ];
-  }
-  if (cvr == null || cvr <= 0) {
-    return [
-      { kind: "unavailable", metric: "cpc-max", reason: "전환율 실측이 아직 없어요" },
-      { kind: "unavailable", metric: "ctr-min", reason: "전환율 실측이 아직 없어요" },
-    ];
-  }
-  const cpcMax = target * cvr;
-  return [{ kind: "cpc-max", value: cpcMax }, ctrMinFrom(cpm, cpcMax)];
-}
-
-export function deriveGuardrails(goal: LagTarget, inputs: GuardrailInputs): Guardrail[] {
-  if (goal.metric === "cpa") {
-    return guardrailsFromCpaTarget(goal.target, inputs);
-  }
-  if (goal.metric === "contribution") {
-    const r = bepRoas(inputs.marginRate ?? null);
-    if (r == null) {
-      return [
-        { kind: "unavailable", metric: "cpc-max", reason: "마진율이 아직 설정되지 않았어요" },
-        { kind: "unavailable", metric: "ctr-min", reason: "마진율이 아직 설정되지 않았어요" },
-      ];
-    }
-    return guardrailsFromRoasTarget(r, inputs);
-  }
-  return guardrailsFromRoasTarget(goal.target, inputs);
-}
 
 export type GoalProgressStatus = "on-track" | "at-risk" | "off-track" | "no-data";
 export type GoalProgress = {
@@ -142,15 +61,6 @@ export function deriveGoalProgress(
   }
 
   return progressHigherIsBetter(current.roas ?? null, goal.target, "roas");
-}
-
-export function deriveLeadChain(lag: LagTarget, inputs: GuardrailInputs): LeadMetric[] {
-  return deriveGuardrails(lag, inputs).map((rail) => {
-    if (rail.kind === "unavailable") {
-      return { kind: rail.metric, value: null, source: "derived", reason: rail.reason };
-    }
-    return { kind: rail.kind, value: rail.value, source: "derived" };
-  });
 }
 
 const RISK_SEVERITY: Record<GoalProgressStatus, number> = {

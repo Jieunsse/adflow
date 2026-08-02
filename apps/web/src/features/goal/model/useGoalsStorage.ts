@@ -12,10 +12,16 @@ import {
 } from "@features/brand-profile/model/useBrandProfileStorage";
 import { upsertProfile } from "@features/brand-profile/model/brandProfileStore";
 
-export function deriveGoals(profile: { goals?: Goal[]; goal?: Goal["lag"] }): Goal[] {
-  if (profile.goals) return profile.goals;
+type StoredGoal = Goal & { leads?: unknown };
+
+function normalizeGoal({ leads: _legacyLeads, ...goal }: StoredGoal): Goal {
+  return goal;
+}
+
+export function deriveGoals(profile: { goals?: StoredGoal[]; goal?: Goal["lag"] }): Goal[] {
+  if (profile.goals) return profile.goals.map(normalizeGoal);
   if (profile.goal) {
-    return [{ id: "legacy", name: "기존 목표", lag: profile.goal, leads: [], createdAt: "" }];
+    return [{ id: "legacy", name: "기존 목표", lag: profile.goal, createdAt: "" }];
   }
   return [];
 }

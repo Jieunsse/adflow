@@ -53,8 +53,7 @@ describe("deriveGoals — 읽기 파생 뷰", () => {
     expect(goals[0]).toEqual({
       id: "legacy",
       name: "기존 목표",
-      lag: { metric: "roas", target: 4 },
-      leads: [],
+      lag: { metric: "roas" as const, target: 4 },
       createdAt: "",
     });
   });
@@ -64,10 +63,28 @@ describe("deriveGoals — 읽기 파생 뷰", () => {
       id: "g1",
       name: "커스텀 목표",
       lag: { metric: "cpa", target: 15_000 },
-      leads: [],
       createdAt: "2026-01-01",
     };
     expect(deriveGoals({ ...baseEntry, goals: [g] })).toEqual([g]);
+  });
+
+  it("저장된 구 선행지표는 읽을 때 제외한다", () => {
+    const stored = {
+      id: "g1",
+      name: "커스텀 목표",
+      lag: { metric: "roas" as const, target: 4 },
+      leads: [{ kind: "cpc-max", value: 500, source: "custom" }],
+      createdAt: "2026-01-01",
+    };
+
+    expect(deriveGoals({ ...baseEntry, goals: [stored] })).toEqual([
+      {
+        id: "g1",
+        name: "커스텀 목표",
+        lag: { metric: "roas", target: 4 },
+        createdAt: "2026-01-01",
+      },
+    ]);
   });
 });
 
@@ -82,7 +99,6 @@ describe("useGoalsStorage 쓰기 경로 — upsertProfile 위임", () => {
       id: "g2",
       name: "신규 목표",
       lag: { metric: "cpa", target: 10_000 },
-      leads: [],
       createdAt: "2026-07-05",
     };
     upsertProfile({ ...entry!, goals: [...current, newGoal] });
@@ -95,8 +111,8 @@ describe("useGoalsStorage 쓰기 경로 — upsertProfile 위임", () => {
   });
 
   it("updateGoal: id 매칭 교체", () => {
-    const g1: Goal = { id: "g1", name: "A", lag: { metric: "roas", target: 4 }, leads: [], createdAt: "2026-01-01" };
-    const g2: Goal = { id: "g2", name: "B", lag: { metric: "cpa", target: 10_000 }, leads: [], createdAt: "2026-01-02" };
+    const g1: Goal = { id: "g1", name: "A", lag: { metric: "roas", target: 4 }, createdAt: "2026-01-01" };
+    const g2: Goal = { id: "g2", name: "B", lag: { metric: "cpa", target: 10_000 }, createdAt: "2026-01-02" };
     setActiveProfile({ ...baseEntry, goals: [g1, g2] });
 
     const entry = readActiveBrandProfileEntry()!;
@@ -109,8 +125,8 @@ describe("useGoalsStorage 쓰기 경로 — upsertProfile 위임", () => {
   });
 
   it("removeGoal: id 로 제거", () => {
-    const g1: Goal = { id: "g1", name: "A", lag: { metric: "roas", target: 4 }, leads: [], createdAt: "2026-01-01" };
-    const g2: Goal = { id: "g2", name: "B", lag: { metric: "cpa", target: 10_000 }, leads: [], createdAt: "2026-01-02" };
+    const g1: Goal = { id: "g1", name: "A", lag: { metric: "roas", target: 4 }, createdAt: "2026-01-01" };
+    const g2: Goal = { id: "g2", name: "B", lag: { metric: "cpa", target: 10_000 }, createdAt: "2026-01-02" };
     setActiveProfile({ ...baseEntry, goals: [g1, g2] });
 
     const entry = readActiveBrandProfileEntry()!;

@@ -17,12 +17,11 @@ import { Card } from "@shared/ui/Card";
 import { cn } from "@shared/lib/cn";
 import { useLaunchDraft } from "@entities/campaign/model";
 import { useCreativeDraft } from "@entities/creative/model";
+import { adIdentityPagesQueryKey, fetchAdIdentityPages } from "@entities/page/api";
 import { CTAS, type CtaId } from "@entities/creative/options";
 import { goalDefOf } from "@entities/creative/outcome-routing";
 import { profileOf } from "@entities/launch-objective/profile";
 import SubHead from "./SubHead";
-
-type Page = { id: string; name: string; phone: string | null };
 
 const USER_CHOICE_CTAS: CtaId[] = ["buy", "learn", "sample"];
 
@@ -45,16 +44,12 @@ export default function DestinationField({ urlAttempted = false }: Props) {
   const urlMode = profile?.url.mode ?? "user_input";
   const ctaMode = profile?.cta.mode ?? "locked";
 
-  const { data: pagesData } = useQuery({
-    queryKey: ["setup-pages"],
-    queryFn: async (): Promise<{ pages: Page[] }> => {
-      const res = await fetch("/api/setup/pages");
-      if (!res.ok) throw new Error("페이지 조회 실패");
-      return res.json();
-    },
+  const { data: pages } = useQuery({
+    queryKey: adIdentityPagesQueryKey,
+    queryFn: fetchAdIdentityPages,
     enabled: !!session?.pageId && urlMode === "prefilled_locked",
   });
-  const activePage = pagesData?.pages.find((p) => p.id === session?.pageId);
+  const activePage = pages?.find((p) => p.id === session?.pageId);
 
   const urlValue = state.landingUrl.trim();
   const httpsOk = urlValue.startsWith("https://");

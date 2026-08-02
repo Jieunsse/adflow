@@ -12,7 +12,7 @@ import { Button } from "@shared/ui/Button";
 import { Skeleton } from "@shared/ui/Skeleton";
 import { cn } from "@shared/lib/cn";
 import { useApiMutation } from "@shared/lib/api/useApiMutation";
-import { fetchImageStream } from "@features/generate-image/stream";
+import { fetchImageStream } from "@features/generate-image/image-stream";
 import { readFileAsDataUrl, splitDataUrl, urlToRef } from "@features/generate-image/refs";
 import type { ReferenceImage } from "@/lib/gemini-image";
 import type {

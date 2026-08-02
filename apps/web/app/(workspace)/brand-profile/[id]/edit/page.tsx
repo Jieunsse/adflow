@@ -18,10 +18,10 @@ import {
   type PersonaEntry,
 } from "@features/brand-profile/model/usePersonasStorage";
 import {
-  isSectionFilled,
+  replacePolicySection,
   type SopItemType,
   type SopSection,
-} from "@features/sop/model/useSopStorage";
+} from "@features/brand-profile/model/policy";
 import { SOP_SECTION_ORDER } from "@features/sop/model/section-labels";
 import SopCard from "@features/sop/ui/SopCard";
 import SopEditModal from "@features/sop/ui/SopEditModal";
@@ -187,8 +187,7 @@ export default function BrandProfileEditPage() {
 
   const handleSectionSave = (section: SopSection) => {
     if (!entry) return;
-    const others = (entry.policy ?? []).filter((s) => s.type !== section.type);
-    const next = isSectionFilled(section) ? [...others, section] : others;
+    const next = replacePolicySection(entry.policy ?? [], section);
     const updated = { ...entry, policy: next };
     saveProfile(updated);
     setEntry(updated);

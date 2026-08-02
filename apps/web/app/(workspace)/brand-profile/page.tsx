@@ -17,7 +17,7 @@ import {
 } from "@features/brand-profile/model/useBrandProfileStorage";
 import { seedDemoIfEmpty } from "@features/brand-profile/model/seed-demo";
 import { readPersonas, type PersonaEntry } from "@features/brand-profile/model/usePersonasStorage";
-import { isSectionFilled } from "@features/sop/model/useSopStorage";
+import { isSectionFilled } from "@features/brand-profile/model/policy";
 import { SOP_SECTION_LABEL } from "@features/sop/model/section-labels";
 import { SECTION_ACCENT } from "@features/sop/ui/section-style";
 

@@ -10,7 +10,11 @@ export const DRAFT_STORAGE_KEY = "adflow_create_draft_v1";
 
 // page.tsx 로컬 useState 로만 존재하는 생성 결과 — reducer 밖이라 별도 스냅샷 필요.
 // 이게 없으면 복원해도 generated=false 로 스튜디오 게이트가 다시 막힌다.
+// STEP 02 안의 세 화면(3안 비교 → 이미지 3컷 → 다듬기). 새로고침해도 보던 화면으로 돌아오게 같이 저장한다.
+export type StudioPhase = "compare" | "image" | "refine";
+
 export type StudioSnapshot = {
+  phase: StudioPhase;
   displayedHeadlines: string[] | null;
   displayedSubtitles: string[] | null;
   headlineIdx: number;

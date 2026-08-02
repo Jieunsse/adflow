@@ -6,16 +6,8 @@ import { Button } from "@shared/ui/Button";
 import Icon from "@shared/ui/Icon";
 import { IgPostPreview } from "@shared/ui/IgPostPreview";
 import { cn } from "@shared/lib/cn";
+import { fetchIgMedia, type IgMediaItem } from "@shared/lib/instagram-media";
 import { Dialog, DialogContent, DialogTitle } from "@shared/ui/Dialog";
-
-interface MediaItem {
-  id: string;
-  caption: string;
-  mediaUrl: string;
-  permalink?: string;
-  timestamp: string;
-  likeCount: number;
-}
 
 interface Props {
   onImport: (texts: string[]) => void;
@@ -26,17 +18,16 @@ export default function IgImportModal({ onImport, onClose }: Props) {
   const { data: session } = useSession();
   const handle = session?.igUsername ?? "instagram";
 
-  const [items, setItems] = useState<MediaItem[]>([]);
+  const [items, setItems] = useState<IgMediaItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [previewId, setPreviewId] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("/api/instagram/recent-media?limit=20")
-      .then((r) => r.json())
+    fetchIgMedia(20)
       .then((data) => {
-        const list = (data.items ?? []) as MediaItem[];
+        const list = data.items;
         const filtered = list.filter((m) => m.caption?.trim());
         setItems(filtered);
         if (filtered.length > 0) setPreviewId(filtered[0].id);

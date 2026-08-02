@@ -78,18 +78,21 @@ export function MiniBars({
   color = "var(--w-primary-normal)",
   mutedColor = "rgba(0,102,255,0.3)",
   height = 34,
+  highlight = "peak",
 }: {
   data: number[] | null | undefined;
   color?: string;
   mutedColor?: string;
   height?: number;
+  /** 어느 막대를 진하게 볼지. 비용처럼 "높을수록 나쁜" 지표는 peak 를 강조하면 신호가 뒤집힌다 — last(오늘) 를 쓴다. */
+  highlight?: "peak" | "last";
 }) {
   if (!data || data.length < 2) return null;
   const w = 120;
   const gap = 5;
   const barW = (w - gap * (data.length - 1)) / data.length;
   const max = Math.max(...data) || 1;
-  const peak = data.indexOf(max);
+  const peak = highlight === "last" ? data.length - 1 : data.indexOf(max);
   return (
     <svg viewBox={`0 0 ${w} ${height}`} style={{ width: w, height }} aria-hidden>
       {data.map((v, i) => {

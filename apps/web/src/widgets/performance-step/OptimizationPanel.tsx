@@ -7,7 +7,8 @@ import { Card } from "@shared/ui/Card";
 import { Button } from "@shared/ui/Button";
 import { Chip } from "@shared/ui/Chip";
 import { fmtKRW } from "@shared/lib/format";
-import { type Suggestion, type AutomationReadiness } from "@entities/insights/optimization";
+import { type AutomationReadiness } from "@entities/insights/optimization";
+import { type Suggestion } from "@entities/insights/suggestion";
 
 interface Props {
   isPaused: boolean;

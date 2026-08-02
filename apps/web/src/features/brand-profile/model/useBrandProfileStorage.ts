@@ -8,7 +8,7 @@
 import { useCallback, useEffect, useState } from "react";
 import type { AccountGoal, Goal } from "@entities/insights/goal";
 import { seedDemoIfEmpty } from "@features/brand-profile/model/seed-demo";
-import type { SopSection } from "@features/sop/model/useSopStorage";
+import type { SopSection } from "./policy";
 import {
   brandProfiles,
   useSyncBrandProfiles,
@@ -40,7 +40,7 @@ export interface BrandProfile {
   marginRate?: number;
   /** @deprecated goals 로 흡수 — 읽기 파생 뷰로만 소비 */
   goal?: AccountGoal;
-  /** 계정 다중 목표 — 선행 가드레일 역산의 입력. marginRate 와 동일한 영속 패턴. */
+  /** 계정 다중 목표 — 선행지표 역산의 입력. marginRate 와 동일한 영속 패턴. */
   goals?: Goal[];
 }
 

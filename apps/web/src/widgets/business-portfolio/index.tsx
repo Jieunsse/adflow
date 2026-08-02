@@ -11,7 +11,7 @@ import {
   FB_MOCK_POOR,
   type FbPageInsights,
 } from "@/lib/facebook-insights";
-import { suggestChannelOptimizations } from "@entities/insights/optimization";
+import { suggestChannelOptimizations } from "@entities/insights/channel-optimization";
 import { cn } from "@shared/lib/cn";
 import ChannelInsights, {
   type ChannelKpi,

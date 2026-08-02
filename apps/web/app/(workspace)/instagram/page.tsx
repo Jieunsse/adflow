@@ -7,7 +7,7 @@ import { useSession } from "next-auth/react";
 import { Button, buttonVariants } from "@shared/ui/Button";
 import { Card } from "@shared/ui/Card";
 import ChannelInsights, { type ChannelKpi, type ChannelPostRow } from "@widgets/business-portfolio/ChannelInsights";
-import { suggestChannelOptimizations } from "@entities/insights/optimization";
+import { suggestChannelOptimizations } from "@entities/insights/channel-optimization";
 import { IG_MOCK_GOOD, IG_MOCK_POOR, type IgAccountInsights } from "@/lib/instagram-insights";
 
 function fmtK(n: number): string {

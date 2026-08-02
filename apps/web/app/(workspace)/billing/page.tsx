@@ -14,7 +14,7 @@ import { Chip } from "@shared/ui/Chip";
 import { Skeleton } from "@shared/ui/Skeleton";
 import { fmt } from "@shared/lib/format";
 import BillingAlertWidget from "@widgets/billing-alert";
-import type { Billing } from "@entities/billing/types";
+import { billingQueryKey, fetchBilling } from "@entities/billing/api";
 import { accountStatusLabel, fundingSourceTypeLabel } from "@entities/billing/labels";
 import { BILLING_HELP_LINKS } from "@entities/billing/help-links";
 
@@ -29,16 +29,6 @@ function deeplink(path: "payment_settings" | "payment_methods" | "accounts/detai
   return `${META_BILLING_HUB}/${path}?asset_id=${toAssetId(accountId)}`;
 }
 
-async function fetchBilling(): Promise<Billing> {
-  const res = await fetch("/api/billing");
-  const data = await res.json();
-  if (res.status === 401) {
-    throw Object.assign(new Error(data?.error ?? "광고 계정을 먼저 연결해주세요."), { code: 401 });
-  }
-  if (!res.ok) throw new Error(data?.error ?? "결제 정보를 불러오지 못했어요");
-  return data as Billing;
-}
-
 function formatMoney(amount: number | null, currency: string): string {
   if (amount == null) return "—";
   // 본 PRD 는 KRW(minor=0) 만 가정 — 다른 통화는 정수 그대로 + 코드 라벨 (§2.2 비목표).
@@ -51,7 +41,7 @@ export default function BillingPage() {
   // 둘러보기 모드는 mock billing 으로 카드 5장 UI 구조만 보여줌 (api/billing 라우트가 분기 처리).
   const connected = !!session?.adAccountId || !!session?.browseMode;
   const q = useQuery({
-    queryKey: ["billing"],
+    queryKey: billingQueryKey,
     queryFn: fetchBilling,
     enabled: connected,
     staleTime: 60_000, // PRD §12 미정 #4 — 결제 정보 변화 빈도 낮음

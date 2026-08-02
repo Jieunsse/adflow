@@ -9,7 +9,7 @@ import { Button } from "@shared/ui/Button";
 import { useBrandProfilesStorage } from "@features/brand-profile/model/useBrandProfileStorage";
 import { seedDemoIfEmpty } from "@features/brand-profile/model/seed-demo";
 import { usePersonasForProfile } from "@features/brand-profile/model/usePersonasStorage";
-import { isSectionFilled } from "@features/sop/model/useSopStorage";
+import { isSectionFilled } from "@features/brand-profile/model/policy";
 import { SOP_SECTION_ORDER } from "@features/sop/model/section-labels";
 import SopCard from "@features/sop/ui/SopCard";
 import PersonaCard from "@features/brand-profile/ui/PersonaCard";

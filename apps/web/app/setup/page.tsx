@@ -5,19 +5,13 @@ import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Icon from "@shared/ui/Icon";
 import { Button } from "@shared/ui/Button";
+import { fetchAdIdentityPages, type AdIdentityPage } from "@entities/page/api";
 
 interface AdAccount {
   id: string;
   name: string;
   currency: string;
   account_status: number;
-}
-
-interface FbPage {
-  id: string;
-  name: string;
-  igUserId: string | null;
-  igUsername: string | null;
 }
 
 type Phase = "account" | "page";
@@ -108,7 +102,7 @@ function SetupFlow() {
   const nextUrl = searchParams.get("next") ?? "/dashboard";
   const [phase, setPhase] = useState<Phase>("account");
   const [accounts, setAccounts] = useState<AdAccount[]>([]);
-  const [pages, setPages] = useState<FbPage[]>([]);
+  const [pages, setPages] = useState<AdIdentityPage[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selecting, setSelecting] = useState<string | null>(null);
@@ -133,10 +127,7 @@ function SetupFlow() {
     await update({ adAccountId: account.id, adAccountName: account.name });
     setLoading(true);
     try {
-      const res = await fetch("/api/setup/pages");
-      const data = await res.json();
-      if (data.error) setError(data.error);
-      else setPages(data.pages);
+      setPages(await fetchAdIdentityPages());
     } catch {
       setError("페이스북 페이지 목록을 불러오지 못했어요.");
     }
@@ -145,7 +136,7 @@ function SetupFlow() {
     setPhase("page");
   }
 
-  async function selectPage(page: FbPage) {
+  async function selectPage(page: AdIdentityPage) {
     setSelecting(page.id);
     await update({
       pageId: page.id,

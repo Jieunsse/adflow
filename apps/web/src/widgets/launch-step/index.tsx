@@ -1,14 +1,16 @@
 "use client";
 
-// STEP 03 게재 계획서 widget — PRD-create-flow-redesign §3.3.
-// 카드 스택(도착지·예산·타겟·A/B·고급 설정) 상시 노출 + 우측 sticky(프리뷰·요약·게재).
-// 게재 성공(state.launchedCampaign) 시 같은 화면이 완료 상태로 전환.
+// STEP 03 게재 — 시안 1e. 좌: 확정한 소재, 우: 채널·예산·기간·예상 성과 + 검수 요청.
+// 시안에 없지만 게재에 반드시 필요한 것(도착 링크·타겟·A/B·고급)은 "세부 설정"으로 접어 둔다 —
+// 평소 화면은 시안 그대로, 필요할 때만 펼친다.
+// 게재 성공(state.launchedCampaign) 시 같은 자리가 시안 2c(검수 요청됨) 로 전환.
 
 import { useEffect, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useQuery } from "@tanstack/react-query";
 import { useCreativeDraft } from "@entities/creative/model";
 import { useLaunchDraft, type LaunchParams, type LaunchResponse } from "@entities/campaign/model";
+import { adIdentityPagesQueryKey, fetchAdIdentityPages } from "@entities/page/api";
 import { saveLaunchedCampaign } from "@entities/campaign/launched-storage";
 import { createBrowseCampaign } from "@entities/campaign/browse/seed";
 import { shrinkImageDataUrl } from "@shared/lib/shrink-image";
@@ -21,26 +23,40 @@ import { useAutoRelaunch } from "@shared/lib/autoRelaunch";
 import { useToast } from "@shared/ui/Toast";
 import { validateAdImage, buildLaunchParams, buildLaunchedCampaign, launchSuccessMessage, planBrowseLaunch } from "@features/launch-campaign/build";
 import { launchBlockReason, firstInvalidCard, type PlanCardId } from "@features/launch-campaign/plan-status";
-import { Card } from "@shared/ui/Card";
 import { Button } from "@shared/ui/Button";
+import { Chip } from "@shared/ui/Chip";
+import DatePicker from "@shared/ui/DatePicker";
 import Icon from "@shared/ui/Icon";
+import { fmt } from "@shared/lib/format";
+import { fmtBudget } from "@shared/lib/launch-utils";
+import { calcDaysBetween, estimateImpressionRange } from "@entities/insights/budget-estimates";
+import { CTA_LABEL } from "@entities/creative/options";
+import { AdMockFull } from "@widgets/create-flow/AdMockup";
+import { PanelCard, SelectChip } from "@widgets/create-flow/parts";
+import { useBrandHandle } from "@widgets/create-flow/useBrandHandle";
 
-import ObjectivePicker from "./ObjectivePicker";
 import DetailKnobs from "./DetailKnobs";
 import ABCreativeKnob from "./ABCreativeKnob";
 import DestinationField from "./DestinationField";
-import CreativePreview from "./CreativePreview";
-import SummaryCard from "./SummaryCard";
 import CallScheduleSection from "./CallScheduleSection";
 import MessagesAutoReplyCallout from "./MessagesAutoReplyCallout";
 import PageActivityCallout from "./PageActivityCallout";
 import PreLaunchSafetyModal from "./PreLaunchSafetyModal";
-import BudgetScheduleStep from "./BudgetScheduleStep";
 import TargetStep from "./TargetStep";
-import ConfirmStep from "./ConfirmStep";
 import BoostPostFlow from "./BoostPostFlow";
-import PostLaunchChecklist from "@widgets/post-launch-checklist";
+import ReviewRequestedCard from "./ReviewRequestedCard";
 import { validateLaunch, type ValidationIssue } from "@features/launch-validation";
+
+const BUDGET_MIN = 10_000;
+const BUDGET_MAX = 100_000;
+const BUDGET_STEP = 5_000;
+
+// 시안 1e 의 게재 채널 칩 3개 ↔ Meta placement position.
+const CHANNELS = [
+  { id: "instagram_feed", label: "인스타그램 피드", platform: "instagram" as const },
+  { id: "instagram_stories", label: "스토리", platform: "instagram" as const },
+  { id: "facebook_feed", label: "페이스북", platform: "facebook" as const },
+] as const;
 
 interface Props {
   onNext: () => void;
@@ -62,6 +78,7 @@ export default function LaunchStep({ onNext, goSettings, goCreative, brandName, 
   const state = launch.state;
   const dispatch = launch.dispatch;
   const { setEnabled: setAutoRelaunch } = useAutoRelaunch();
+  const handle = useBrandHandle();
 
   // STEP 03 진입 시 — 소재 스튜디오 AI가 채운 타겟팅으로 연령·성별 prefill.
   const targeting = creative.state.targeting;
@@ -95,16 +112,12 @@ export default function LaunchStep({ onNext, goSettings, goCreative, brandName, 
   }, [outcomeChip, dispatch, showToast]);
 
   // 페이지 목록 — leads_call goal 사전 차단용 phone 확인.
-  const { data: pagesData } = useQuery({
-    queryKey: ["setup-pages"],
-    queryFn: async (): Promise<{ pages: { id: string; name: string; phone: string | null }[] }> => {
-      const res = await fetch("/api/setup/pages");
-      if (!res.ok) throw new Error("페이지 조회 실패");
-      return res.json();
-    },
+  const { data: pages } = useQuery({
+    queryKey: adIdentityPagesQueryKey,
+    queryFn: fetchAdIdentityPages,
     enabled: !!session?.pageId,
   });
-  const activePage = pagesData?.pages.find((p) => p.id === session?.pageId);
+  const activePage = pages?.find((p) => p.id === session?.pageId);
 
   // PRD-objective-aware-launch §3 — profile.url.mode === 'prefilled_locked' 면 자동 채움.
   useEffect(() => {
@@ -170,7 +183,11 @@ export default function LaunchStep({ onNext, goSettings, goCreative, brandName, 
       countriesCount: state.countries.length,
     });
     if (invalidCard) {
-      document.getElementById(CARD_DOM_ID[invalidCard])?.scrollIntoView({ behavior: "smooth", block: "center" });
+      // 도착 링크·타겟은 "세부 설정" 안에 접혀 있다 — 펼쳐야 스크롤할 자리가 생긴다.
+      setAdvancedOpen(true);
+      requestAnimationFrame(() => {
+        document.getElementById(CARD_DOM_ID[invalidCard])?.scrollIntoView({ behavior: "smooth", block: "center" });
+      });
       return;
     }
     const phaseObjective = outcomeChip && profile ? (outcomeChip as ObjectivePhase1Id) : null;
@@ -202,84 +219,235 @@ export default function LaunchStep({ onNext, goSettings, goCreative, brandName, 
   const canLaunch = !blockReason;
   const canSkipLaunch = (accountConnected || browseMode) && hasCreative && state.countries.length > 0 && !launchMutation.isPending && !state.launchedCampaign;
 
-  if (state.launchedCampaign) {
-    return <PostLaunchChecklist onRestart={onRestart} />;
-  }
+  if (state.launchedCampaign) return <ReviewRequestedCard onRestart={onRestart} />;
 
   if (isBoostPost) return <BoostPostFlow onNext={onNext} />;
 
+  const budgetNum = parseInt(state.budget.replace(/[^\d]/g, ""), 10) || 0;
+  const days = calcDaysBetween(state.dateStart, state.dateEnd);
+  const { min: impMin, max: impMax } = estimateImpressionRange(budgetNum, days);
+  const sliderValue = Math.min(BUDGET_MAX, Math.max(BUDGET_MIN, budgetNum || BUDGET_MIN));
+  const budgetPct = ((sliderValue - BUDGET_MIN) / (BUDGET_MAX - BUDGET_MIN)) * 100;
+
+  const positions = state.placements.mode === "manual" ? state.placements.positions : [];
+  const channelOn = (id: string) => state.placements.mode === "auto" || positions.includes(id);
+
+  // 칩 하나를 끄고 켤 때마다 placements(수동 위치) 와 platforms 를 함께 맞춘다.
+  // 전부 끄면 자동 게재 위치로 돌아간다 — Meta 에 빈 목록을 보내지 않으려고.
+  const toggleChannel = (id: string) => {
+    const base = state.placements.mode === "auto" ? CHANNELS.map((c) => c.id as string) : positions;
+    const next = base.includes(id) ? base.filter((x) => x !== id) : [...base, id];
+    if (next.length === 0) {
+      dispatch({ type: "SET_PLACEMENTS", placements: { mode: "auto" } });
+      dispatch({ type: "SET_PLATFORMS", platforms: "both" });
+      return;
+    }
+    dispatch({ type: "SET_PLACEMENTS", placements: { mode: "manual", positions: next } });
+    const platforms = CHANNELS.filter((c) => next.includes(c.id));
+    const hasFb = platforms.some((c) => c.platform === "facebook");
+    const hasIg = platforms.some((c) => c.platform === "instagram");
+    dispatch({ type: "SET_PLATFORMS", platforms: hasFb && hasIg ? "both" : hasFb ? "facebook" : "instagram" });
+  };
+
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "1.25fr 1fr", gap: 20, alignItems: "flex-start" }}>
-      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-        <ObjectivePicker goCreative={goCreative} />
-
-        <Card variant="lg" id={CARD_DOM_ID.destination}>
-          <DestinationField urlAttempted={urlAttempted} />
-          {profile?.uniqueSections.includes("call_schedule") && (
-            <><hr className="h-px bg-[var(--w-line-neutral)] my-[18px] border-0" /><CallScheduleSection /></>
-          )}
-          {profile?.uniqueSections.includes("messages_auto_reply") && (
-            <><hr className="h-px bg-[var(--w-line-neutral)] my-[18px] border-0" /><MessagesAutoReplyCallout /></>
-          )}
-          {profile?.uniqueSections.includes("page_activity") && (
-            <><hr className="h-px bg-[var(--w-line-neutral)] my-[18px] border-0" /><PageActivityCallout /></>
-          )}
-        </Card>
-
-        <Card variant="lg">
-          <BudgetScheduleStep />
-        </Card>
-
-        <Card variant="lg" id={CARD_DOM_ID.target}>
-          <TargetStep />
-        </Card>
-
-        <Card variant="lg">
-          <ABCreativeKnob />
-        </Card>
-
-        <Card variant="lg">
-          <button
-            type="button"
-            onClick={() => setAdvancedOpen((v) => !v)}
-            aria-expanded={advancedOpen}
-            className="w-full flex items-center justify-between gap-2 cursor-pointer bg-transparent border-none p-0"
-          >
-            <span className="font-semibold text-[15px] leading-[1.3] tracking-[-0.008em] text-[var(--w-fg-strong)]">
-              고급 설정
-            </span>
-            <Icon
-              name="chev-down"
-              size={16}
-              className={advancedOpen ? "rotate-180" : ""}
-              style={{ color: "var(--w-fg-alternative)", transition: "transform 160ms" }}
-            />
-          </button>
-          {advancedOpen && (
-            <>
-              <hr className="h-px bg-[var(--w-line-neutral)] my-[18px] border-0" />
-              <DetailKnobs />
-            </>
-          )}
-        </Card>
+    <div className="bg-[var(--w-bg-alternative)] rounded-[var(--w-radius-16)] overflow-hidden">
+      <div className="px-7 pt-6 pb-3">
+        <div className="font-medium text-[12px] leading-[1.4] text-[var(--w-fg-neutral)] mb-1">
+          광고 만들기 · STEP 03
+        </div>
+        <h1 className="m-0 font-bold text-[26px] leading-[1.35] tracking-[-0.02em] text-[var(--w-fg-strong)]">
+          언제, 얼마나 보여줄까요
+        </h1>
       </div>
 
-      <div style={{ position: "sticky", top: 20, display: "flex", flexDirection: "column", gap: 16 }}>
-        <Card variant="lg">
-          <CreativePreview />
-        </Card>
-        <ConfirmStep
-          canLaunch={canLaunch}
-          canSkipLaunch={canSkipLaunch}
-          onLaunch={handleLaunch}
-          onSkipLaunch={handleSkipAdLaunch}
-          mutation={launchMutation}
-          goSettings={goSettings}
-          devModeOn={devModeOn}
-          testAccountActive={testAccountActive}
-          blockReason={blockReason}
-        />
-        <SummaryCard />
+      <div className="flex gap-5 items-start px-7 pt-2 pb-6">
+        <PanelCard className="w-[392px] shrink-0 overflow-hidden">
+          <div className="flex items-center justify-between px-3.5 py-3 border-b border-[var(--w-line-alternative)]">
+            <span className="font-semibold text-[13px] leading-[1.4] text-[var(--w-fg-strong)]">확정한 소재</span>
+            <button
+              type="button"
+              onClick={goCreative}
+              className="font-medium text-[12px] leading-[1.4] text-[var(--w-primary-normal)] cursor-pointer"
+            >
+              소재 수정
+            </button>
+          </div>
+          <AdMockFull
+            handle={handle}
+            imageUrl={state.finalImageDataUrl ?? state.imageDataUrl}
+            imageHeight={300}
+            headline={creative.state.headline}
+            body={creative.state.primaryText}
+            ctaLabel={CTA_LABEL[creative.state.cta]}
+          />
+        </PanelCard>
+
+        <div className="flex-1 min-w-0 flex flex-col gap-3">
+          <PanelCard className="p-[18px]">
+            <div className="font-bold text-[15px] leading-[1.4] text-[var(--w-fg-strong)] mb-2.5">게재 채널</div>
+            <div className="flex gap-2 flex-wrap">
+              {CHANNELS.map((c) => (
+                <SelectChip key={c.id} active={channelOn(c.id)} onClick={() => toggleChannel(c.id)}>
+                  {c.label}
+                </SelectChip>
+              ))}
+            </div>
+            {state.placements.mode === "auto" && (
+              <p className="m-0 mt-2.5 font-normal text-[12px] leading-[1.5] text-[var(--w-fg-neutral)]">
+                지금은 자동 게재 위치예요 — Meta 가 성과가 좋은 곳에 알아서 배분해요.
+              </p>
+            )}
+          </PanelCard>
+
+          <PanelCard className="p-[18px]">
+            <div className="flex items-baseline justify-between mb-3">
+              <span className="font-bold text-[15px] leading-[1.4] text-[var(--w-fg-strong)]">하루 예산</span>
+              <span className="font-bold text-[20px] leading-[1.3] text-[var(--w-primary-normal)]">
+                {fmt(budgetNum)}원
+              </span>
+            </div>
+            <input
+              type="range"
+              className="w-range block"
+              min={BUDGET_MIN}
+              max={BUDGET_MAX}
+              step={BUDGET_STEP}
+              value={sliderValue}
+              aria-label="하루 예산"
+              onChange={(e) => dispatch({ type: "SET_BUDGET", value: fmtBudget(e.target.value) })}
+              style={{
+                background: `linear-gradient(to right, var(--w-primary-normal) 0 ${budgetPct}%, var(--w-fill-normal) ${budgetPct}% 100%)`,
+              }}
+            />
+            <div className="flex justify-between mt-2 font-normal text-[12px] leading-[1.4] text-[var(--w-fg-neutral)]">
+              <span>1만원</span>
+              <span>10만원</span>
+            </div>
+          </PanelCard>
+
+          <PanelCard className="p-[18px]">
+            <div className="font-bold text-[15px] leading-[1.4] text-[var(--w-fg-strong)] mb-2.5">게재 기간</div>
+            <div className="flex gap-2 items-center">
+              <div className="flex-1 min-w-0">
+                <DatePicker
+                  value={state.dateStart}
+                  onChange={(v) => dispatch({ type: "SET_DATE_START", value: v })}
+                  placeholder="시작일"
+                  aria-label="시작일"
+                />
+              </div>
+              <span className="text-[var(--w-fg-alternative)]">–</span>
+              <div className="flex-1 min-w-0">
+                <DatePicker
+                  value={state.dateEnd}
+                  onChange={(v) => dispatch({ type: "SET_DATE_END", value: v })}
+                  placeholder="종료일"
+                  aria-label="종료일"
+                />
+              </div>
+              <Chip variant="neutral">{days}일</Chip>
+            </div>
+          </PanelCard>
+
+          <div className="bg-[var(--w-primary-soft)] rounded-[var(--w-radius-12)] p-[18px]">
+            <div className="font-semibold text-[13px] leading-[1.4] text-[var(--w-primary-normal)] mb-2.5">예상 성과</div>
+            <div className="flex gap-7 flex-wrap">
+              <div>
+                <div className="font-bold text-[24px] leading-[1.3] text-[var(--w-fg-strong)]">
+                  {fmt(impMin)}–{fmt(impMax)}
+                </div>
+                <div className="font-normal text-[12px] leading-[1.4] text-[var(--w-fg-neutral)]">예상 노출</div>
+              </div>
+              <div>
+                <div className="font-bold text-[24px] leading-[1.3] text-[var(--w-fg-strong)]">{days}일</div>
+                <div className="font-normal text-[12px] leading-[1.4] text-[var(--w-fg-neutral)]">게재 기간</div>
+              </div>
+              <div>
+                <div className="font-bold text-[24px] leading-[1.3] text-[var(--w-fg-strong)]">
+                  {fmt(budgetNum * days)}원
+                </div>
+                <div className="font-normal text-[12px] leading-[1.4] text-[var(--w-fg-neutral)]">총 집행액</div>
+              </div>
+            </div>
+            <p className="m-0 mt-2.5 font-normal text-[12px] leading-[1.5] text-[var(--w-fg-neutral)]">
+              업계 평균 CPM 을 가정해 대략 추정한 값이에요. 실제 노출은 경쟁·소재 성과에 따라 달라져요.
+            </p>
+          </div>
+
+          <PanelCard className="p-[18px]">
+            <button
+              type="button"
+              onClick={() => setAdvancedOpen((v) => !v)}
+              aria-expanded={advancedOpen}
+              className="w-full flex items-center justify-between gap-2 cursor-pointer bg-transparent border-none p-0"
+            >
+              <span className="font-bold text-[15px] leading-[1.4] text-[var(--w-fg-strong)]">세부 설정</span>
+              <span className="flex items-center gap-2">
+                <span className="font-normal text-[12px] leading-[1.4] text-[var(--w-fg-neutral)]">
+                  도착 링크 · 타겟 · A/B · 고급
+                </span>
+                <Icon
+                  name="chev-down"
+                  size={16}
+                  className={advancedOpen ? "rotate-180" : ""}
+                  style={{ color: "var(--w-fg-alternative)", transition: "transform 160ms" }}
+                />
+              </span>
+            </button>
+            {advancedOpen && (
+              <div className="flex flex-col gap-[18px] mt-[18px]">
+                <div id={CARD_DOM_ID.destination}>
+                  <DestinationField urlAttempted={urlAttempted} />
+                  {profile?.uniqueSections.includes("call_schedule") && (
+                    <><hr className="h-px bg-[var(--w-line-neutral)] my-[18px] border-0" /><CallScheduleSection /></>
+                  )}
+                  {profile?.uniqueSections.includes("messages_auto_reply") && (
+                    <><hr className="h-px bg-[var(--w-line-neutral)] my-[18px] border-0" /><MessagesAutoReplyCallout /></>
+                  )}
+                  {profile?.uniqueSections.includes("page_activity") && (
+                    <><hr className="h-px bg-[var(--w-line-neutral)] my-[18px] border-0" /><PageActivityCallout /></>
+                  )}
+                </div>
+                <hr className="h-px bg-[var(--w-line-neutral)] border-0" />
+                <div id={CARD_DOM_ID.target}><TargetStep /></div>
+                <hr className="h-px bg-[var(--w-line-neutral)] border-0" />
+                <ABCreativeKnob />
+                <hr className="h-px bg-[var(--w-line-neutral)] border-0" />
+                <DetailKnobs />
+              </div>
+            )}
+          </PanelCard>
+
+          {blockReason && (
+            <div className="flex items-start gap-2.5 px-3.5 py-3 rounded-[var(--w-radius-12)] bg-[var(--w-status-cautionary-soft)]">
+              <Icon name="warn" size={15} className="shrink-0 mt-0.5 text-[var(--w-status-cautionary)]" />
+              <p className="m-0 font-medium text-[13px] leading-[1.6] text-[var(--w-fg-normal)]">{blockReason}</p>
+            </div>
+          )}
+          {!accountConnected && !browseMode && (
+            <button
+              type="button"
+              onClick={goSettings}
+              className="self-start font-medium text-[13px] text-[var(--w-primary-normal)] cursor-pointer"
+            >
+              계정 연결하러 가기 ›
+            </button>
+          )}
+
+          <div className="flex justify-end gap-2.5">
+            {devModeOn && testAccountActive && (
+              <Button variant="ghost" size="lg" type="button" onClick={handleSkipAdLaunch} disabled={!canSkipLaunch}>
+                광고 없이 캠페인만 만들기
+              </Button>
+            )}
+            <Button variant="secondary" size="lg" type="button" onClick={goCreative}>
+              ← 소재로
+            </Button>
+            <Button variant="primary" size="lg" type="button" onClick={handleLaunch} disabled={!canLaunch}>
+              {launchMutation.isPending ? "요청하는 중…" : "검수 요청하기"}
+            </Button>
+          </div>
+        </div>
       </div>
 
       {modalOpen && (

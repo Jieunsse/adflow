@@ -9,7 +9,7 @@ import { Button, buttonVariants } from "@shared/ui/Button";
 import { Card } from "@shared/ui/Card";
 import Icon from "@shared/ui/Icon";
 import PageSwitcher from "@widgets/facebook/PageSwitcher";
-import type { FbManagedPagesResult } from "@/lib/facebook-pages";
+import { fetchManagedPages, managedPagesQueryKey } from "@entities/page/managed-pages";
 import type { FbPagePostsResult, FbPostCommentsResult } from "@/lib/facebook-posts";
 
 function fmtK(n: number): string {
@@ -143,12 +143,8 @@ function FacebookPostsFlow() {
   const pageParam = searchParams.get("page") ?? undefined;
 
   const { data: pagesData } = useQuery({
-    queryKey: ["fb-pages"],
-    queryFn: async (): Promise<FbManagedPagesResult> => {
-      const res = await fetch("/api/facebook/pages");
-      if (!res.ok) throw new Error("FB 페이지 목록을 불러오지 못했어요");
-      return res.json();
-    },
+    queryKey: managedPagesQueryKey,
+    queryFn: fetchManagedPages,
     staleTime: 10 * 60 * 1000,
   });
 

@@ -13,7 +13,6 @@ import type { LibraryItem } from "@shared/lib/library";
 import type { AutoRelaunchEntry } from "@shared/lib/autoRelaunch";
 import type { LaunchedCampaign } from "@entities/campaign/model";
 import type { PersonaEntry } from "@features/brand-profile/model/usePersonasStorage";
-import type { Sop } from "@features/sop/model/useSopStorage";
 import type { ProductEntry } from "@shared/lib/products";
 import type { ReferenceMaterial } from "@shared/lib/referenceMaterials";
 import type {
@@ -50,12 +49,6 @@ export type BrandProfileIsCompatible = Assert<
 export type PersonaIsCompatible = Assert<AssignableTo<Api<"Persona">, PersonaEntry>>;
 export type AutoRelaunchIsCompatible = Assert<
   AssignableTo<Api<"AutoRelaunchState">, AutoRelaunchEntry>
->;
-
-// sections 는 SopSection 판별 유니온이라 OpenAPI 로 표현할 수 없다(policy 와 같은 이유).
-// 왕복은 SopControllerTest.판별유니온_sections_가_그대로_왕복한다 가 지킨다.
-export type SopIsCompatible = Assert<
-  AssignableTo<Omit<Api<"Sop">, "sections">, Omit<Sop, "sections">>
 >;
 
 // 게재 영수증은 계약이 지켜주지 못하는 필드가 셋이다.

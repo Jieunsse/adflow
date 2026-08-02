@@ -16,6 +16,7 @@ import { Button } from "@shared/ui/Button";
 import { BROWSE_IG_ACCOUNT } from "@shared/lib/browse-connection";
 import { OBJECTIVES_PHASE1, OBJECTIVES_PHASE2 } from "@entities/creative/options";
 import { useCreativeDraft } from "@entities/creative/model";
+import { fetchProfilePictures, profilePicturesQueryKey } from "@entities/page/profile-pictures";
 
 interface Props {
   /** "변경" 버튼 클릭 시 동작. 라벨도 caller 가 정해서 의도 명확화. */
@@ -37,12 +38,8 @@ export default function SelectedGoalCard({ onChange, changeLabel = "광고 목�
   const igName = browseMode ? BROWSE_IG_ACCOUNT.name : null;
 
   const { data: pics } = useQuery({
-    queryKey: ["profile-pictures", session?.igUserId],
-    queryFn: async () => {
-      const res = await fetch("/api/connect/profile-pictures");
-      if (!res.ok) return { igPicture: null as string | null };
-      return res.json() as Promise<{ igPicture: string | null }>;
-    },
+    queryKey: profilePicturesQueryKey(session?.pageId, session?.igUserId),
+    queryFn: fetchProfilePictures,
     enabled: !browseMode && !!igUsername,
     staleTime: 60 * 60 * 1000,
   });

@@ -14,7 +14,8 @@ import { fmt, fmtKRW, shortDate, campaignDateInfo, campaignRunDays, campaignGrad
 import { useApiMutation } from "@shared/lib/api/useApiMutation";
 import { useToast } from "@shared/ui/Toast";
 import ConfirmModal from "@shared/ui/ConfirmModal";
-import { suggestOptimizations, assessAutomationReadiness, deriveVerdict, type Suggestion, type AutomationReadiness, type Verdict } from "@entities/insights/optimization";
+import { suggestOptimizations, assessAutomationReadiness, deriveVerdict, type AutomationReadiness, type Verdict } from "@entities/insights/optimization";
+import type { Suggestion } from "@entities/insights/suggestion";
 import { isFakePerformance, type FakePerformanceEvidence } from "@entities/insights/fake-performance";
 import { abVariantLabel, type AbTestAxis } from "@entities/campaign/model";
 import { campaignLaunches, loadLaunchedCampaign } from "@entities/campaign/launched-storage";

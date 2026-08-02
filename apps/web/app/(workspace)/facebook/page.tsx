@@ -9,9 +9,9 @@ import { Button, buttonVariants } from "@shared/ui/Button";
 import { Card } from "@shared/ui/Card";
 import ChannelInsights, { type ChannelKpi, type ChannelPostRow } from "@widgets/business-portfolio/ChannelInsights";
 import PageSwitcher from "@widgets/facebook/PageSwitcher";
-import { suggestChannelOptimizations } from "@entities/insights/optimization";
+import { suggestChannelOptimizations } from "@entities/insights/channel-optimization";
+import { fetchManagedPages, managedPagesQueryKey } from "@entities/page/managed-pages";
 import { FB_MOCK_GOOD, FB_MOCK_POOR, type FbPageInsights } from "@/lib/facebook-insights";
-import type { FbManagedPagesResult } from "@/lib/facebook-pages";
 
 function fmtK(n: number): string {
   if (n >= 10000) return `${(n / 10000).toFixed(1)}만`;
@@ -28,12 +28,8 @@ function FacebookInsightsFlow() {
   const [scenario, setScenario] = useState<"good" | "poor">("good");
 
   const { data: pagesData } = useQuery({
-    queryKey: ["fb-pages"],
-    queryFn: async (): Promise<FbManagedPagesResult> => {
-      const res = await fetch("/api/facebook/pages");
-      if (!res.ok) throw new Error("FB 페이지 목록을 불러오지 못했어요");
-      return res.json();
-    },
+    queryKey: managedPagesQueryKey,
+    queryFn: fetchManagedPages,
     staleTime: 10 * 60 * 1000,
   });
 

@@ -12,9 +12,9 @@ import type {
   IgInbox,
   IgThread,
   IgConversationSummary,
-  IgMessage,
 } from "@/lib/instagram-messages";
 import MessagesPermissionBanner from "./MessagesPermissionBanner";
+import { reconcileInboxEvent, sendInboxMessage, type InboxEvent } from "./inbox-state";
 
 function relativeTime(iso: string): string {
   if (!iso) return "";
@@ -221,48 +221,17 @@ function Composer({
     const value = text.trim();
     if (!value || sending) return;
 
-    const now = new Date().toISOString();
-    const tempId = `local-${Date.now()}`;
-    const newMsg: IgMessage = {
-      id: tempId,
-      from: "me",
-      text: value,
-      createdAt: now,
-    };
-    const preview = value.length > 70 ? `${value.slice(0, 69)}…` : value;
-
-    qc.setQueryData<IgThread>(["ig-thread", conversationId], (old) =>
-      old ? { ...old, messages: [...old.messages, newMsg] } : old,
-    );
-    qc.setQueryData<IgInbox>(["ig-conversations"], (old) => {
-      if (!old) return old;
-      return {
-        ...old,
-        conversations: old.conversations.map((c) =>
-          c.id === conversationId ? { ...c, preview, updatedAt: now } : c,
-        ),
-      };
-    });
     setText("");
     taRef.current?.focus();
-
-    if (isMock) return;
-
     setSending(true);
     try {
-      await fetch(`/api/instagram/conversations/${conversationId}/messages`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ recipientId: participantId, text: value }),
-      }).then((r) => {
-        if (!r.ok) throw new Error("send_failed");
+      await sendInboxMessage(qc, {
+        conversationId,
+        participantId,
+        text: value,
+        isMock,
       });
     } catch {
-      qc.setQueryData<IgThread>(["ig-thread", conversationId], (old) =>
-        old
-          ? { ...old, messages: old.messages.filter((m) => m.id !== tempId) }
-          : old,
-      );
     } finally {
       setSending(false);
     }
@@ -452,58 +421,20 @@ export default function Messages() {
     },
     staleTime: 60_000,
   });
+  const refetchInbox = inboxQ.refetch;
 
   const qc = useQueryClient();
   useEffect(() => {
     const es = new EventSource("/api/instagram/dm-stream");
     es.addEventListener("message", (e) => {
       try {
-        const event = JSON.parse(e.data) as {
-          type: string;
-          conversationId: string;
-          message: {
-            id: string;
-            from_me: boolean;
-            text: string;
-            attachment_url?: string;
-            created_at: string;
-            participant_id: string;
-          };
-        };
+        const event = JSON.parse(e.data) as InboxEvent;
         if (event.type !== "dm_new_message") return;
-
-        const newMsg: IgMessage = {
-          id: event.message.id,
-          from: event.message.from_me ? "me" : "them",
-          text: event.message.text,
-          attachmentImageUrl: event.message.attachment_url,
-          createdAt: event.message.created_at,
-        };
-        const preview =
-          event.message.text.length > 70
-            ? `${event.message.text.slice(0, 69)}…`
-            : event.message.text;
-
-        // 스레드 캐시에 메시지 append
-        qc.setQueryData<IgThread>(["ig-thread", event.conversationId], (old) =>
-          old ? { ...old, messages: [...old.messages, newMsg] } : old,
-        );
-        // 대화 목록 preview·updatedAt 갱신
-        qc.setQueryData<IgInbox>(["ig-conversations"], (old) => {
-          if (!old) return old;
-          return {
-            ...old,
-            conversations: old.conversations.map((c) =>
-              c.id === event.conversationId
-                ? { ...c, preview, updatedAt: event.message.created_at }
-                : c,
-            ),
-          };
-        });
+        reconcileInboxEvent(qc, () => void refetchInbox(), event);
       } catch {}
     });
     return () => es.close();
-  }, [qc]);
+  }, [qc, refetchInbox]);
 
   if (inboxQ.isLoading) {
     return (

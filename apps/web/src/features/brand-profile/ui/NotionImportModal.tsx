@@ -6,7 +6,7 @@ import { Button } from "@shared/ui/Button";
 import Icon from "@shared/ui/Icon";
 import { cn } from "@shared/lib/cn";
 import { Dialog, DialogContent, DialogTitle } from "@shared/ui/Dialog";
-import type { SopSection } from "@features/sop/model/useSopStorage";
+import type { SopSection } from "@features/brand-profile/model/policy";
 
 // ADR-043 — 노션 자원 선택 + AI 가져오기 모달. Brand Profile 신규·편집 화면에서 호출.
 export interface NotionResource {

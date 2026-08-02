@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { deriveVerdict, DATA_GATHERING_TITLES, type Suggestion } from "./optimization";
+import { deriveVerdict, DATA_GATHERING_TITLES } from "./optimization";
+import type { Suggestion } from "./suggestion";
 
 // ADR-048 — deriveVerdict 는 우선순위 정렬된 suggestions[] 의 1순위를 평결로 승격한다.
 // 새 계산 없음 — 1순위 kind/severity/title 만 읽어 상태를 분류. collecting(데이터부족)은 제목으로 선판정.

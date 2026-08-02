@@ -4,13 +4,9 @@ import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import Icon from "@shared/ui/Icon";
 import { cn } from "@shared/lib/cn";
+import { fetchIgMedia, igMediaQueryKey, type IgMediaItem } from "@shared/lib/instagram-media";
 
-export interface IgMediaItem {
-  id: string;
-  mediaUrl: string;
-  caption: string;
-  timestamp: string;
-}
+export type { IgMediaItem } from "@shared/lib/instagram-media";
 
 interface Props {
   selectedId: string | null;
@@ -20,12 +16,8 @@ interface Props {
 
 export default function BoostPostKnob({ selectedId, onSelect, preselectId }: Props) {
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["ig-recent-media"],
-    queryFn: async (): Promise<{ ok: boolean; items: IgMediaItem[]; mock?: boolean }> => {
-      const res = await fetch("/api/instagram/recent-media");
-      if (!res.ok) throw new Error("게시물을 불러오지 못했어요");
-      return res.json();
-    },
+    queryKey: igMediaQueryKey(5),
+    queryFn: () => fetchIgMedia(),
     staleTime: 5 * 60 * 1000,
   });
 

@@ -3,23 +3,16 @@
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { useQuery } from "@tanstack/react-query";
 import Image from "next/image";
 import Icon from "@shared/ui/Icon";
 import { IgPostPreview } from "@shared/ui/IgPostPreview";
 import { useToast } from "@shared/ui/Toast";
 import ConfirmModal from "@shared/ui/ConfirmModal";
+import { fetchIgMedia, type IgMediaItem } from "@shared/lib/instagram-media";
+import { fetchProfilePictures, profilePicturesQueryKey } from "@entities/page/profile-pictures";
 import type { IgComment } from "@/lib/instagram-comments";
 
-type MediaItem = {
-  id: string;
-  mediaUrl: string;
-  caption: string;
-  permalink?: string;
-  timestamp: string;
-  likeCount: number;
-};
-
-type MediaResp = { ok: true; items: MediaItem[] } | { ok: false; error: string };
 type CommentsResp = { ok: true; items: IgComment[]; mock?: boolean; devFallback?: boolean } | { ok: false; error: string };
 type RepliesResp = { ok: true; items: IgComment[]; mock?: boolean } | { ok: false; error: string };
 type MutateResp = { ok: true; mock?: boolean } | { ok: false; error: string };
@@ -46,7 +39,7 @@ function CommentsFlow() {
   const searchParams = useSearchParams();
   const mediaParam = searchParams.get("media");
 
-  const [media, setMedia] = useState<MediaItem[]>([]);
+  const [media, setMedia] = useState<IgMediaItem[]>([]);
   const [mediaLoading, setMediaLoading] = useState(true);
   const [mediaErr, setMediaErr] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -71,35 +64,27 @@ function CommentsFlow() {
   const [deleting, setDeleting] = useState(false);
   const [pendingDeleteReply, setPendingDeleteReply] = useState<{ reply: IgComment; parentId: string } | null>(null);
   const [deletingReply, setDeletingReply] = useState(false);
-  const [igPicture, setIgPicture] = useState<string | null>(null);
+  const picturesQ = useQuery({
+    queryKey: profilePicturesQueryKey(session?.pageId, session?.igUserId),
+    queryFn: fetchProfilePictures,
+    enabled: !!session && !session.browseMode,
+    staleTime: 60 * 60 * 1000,
+  });
+  const igPicture = picturesQ.data?.igPicture ?? null;
 
   const selectedMedia = media.find((m) => m.id === selectedId) ?? null;
   const commentsPanelRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    fetch("/api/connect/profile-pictures")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data: { igPicture?: string | null } | null) => {
-        if (data?.igPicture) setIgPicture(data.igPicture);
-      })
-      .catch(() => null);
-  }, []);
 
   useEffect(() => {
     async function load() {
       setMediaLoading(true);
       setMediaErr(null);
       try {
-        const res = await fetch("/api/instagram/recent-media?limit=20", { cache: "no-store" });
-        const data = (await res.json()) as MediaResp;
-        if (data.ok) {
-          setMedia(data.items);
-          const preset = mediaParam ? data.items.find((m) => m.id === mediaParam) : null;
-          if (preset) setSelectedId(preset.id);
-          else if (data.items.length > 0) setSelectedId(data.items[0].id);
-        } else {
-          setMediaErr(data.error);
-        }
+        const data = await fetchIgMedia(20);
+        setMedia(data.items);
+        const preset = mediaParam ? data.items.find((item) => item.id === mediaParam) : null;
+        if (preset) setSelectedId(preset.id);
+        else if (data.items.length > 0) setSelectedId(data.items[0].id);
       } catch (e) {
         setMediaErr(e instanceof Error ? e.message : "게시물 조회 실패");
       } finally {

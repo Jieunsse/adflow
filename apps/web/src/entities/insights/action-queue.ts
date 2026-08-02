@@ -5,6 +5,7 @@
 import { isFakePerformance } from "./fake-performance";
 import { deriveConversionSummary, type ConversionSummary } from "./period-kpis";
 import { contributionMargin, bepRoas } from "./profit";
+import { BUDGET_INCREASE_RATIO } from "./thresholds";
 import { campaignRunDays, fmt, fmtKRW } from "@shared/lib/format";
 import type { CampaignSummary } from "@/lib/meta-ads";
 
@@ -39,7 +40,6 @@ export type ActionQueueInput = {
 };
 
 const MAX_ITEMS = 3;
-const BUDGET_BUMP_RATIO = 1.3; // optimization.ts 의 +30% 증액과 같은 폭
 
 const quoted = (headline: string) => `'${headline}'`;
 const roasText = (n: number) => `${n.toFixed(2)}x`;
@@ -134,7 +134,7 @@ function conversionItem(
 
   // 손익분기 위 — 증액분만큼 공헌이익이 늘어난다(매출이 지출에 비례한다고 본 추정).
   if (bep != null && conversion.roas >= bep) {
-    const bumpSpend = conversion.conversionSpend * (BUDGET_BUMP_RATIO - 1);
+    const bumpSpend = conversion.conversionSpend * (BUDGET_INCREASE_RATIO - 1);
     const gain = Math.round(bumpSpend * (marginRate * conversion.roas - 1));
     return {
       id: `boost-${best.id}`,
@@ -149,7 +149,7 @@ function conversionItem(
   // 손익분기 아래 — 여기서 증액을 권하면 손해를 키운다. 넘겨야 할 선을 대신 알려준다.
   const bepCpa =
     conversion.conversionCount > 0 ? Math.round((conversion.conversionValue / conversion.conversionCount) * marginRate) : null;
-  const worse = contribution != null ? Math.round(contribution * BUDGET_BUMP_RATIO - contribution) : null;
+  const worse = contribution != null ? Math.round(contribution * BUDGET_INCREASE_RATIO - contribution) : null;
   return {
     id: `bep-${best.id}`,
     accent: "primary",

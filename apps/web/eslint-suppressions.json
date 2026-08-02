@@ -151,17 +151,7 @@
       "count": 2
     }
   },
-  "src/widgets/creative-step/AiImageBlock.tsx": {
-    "react-hooks/set-state-in-effect": {
-      "count": 1
-    }
-  },
-  "src/widgets/creative-step/InputForm.tsx": {
-    "react-hooks/set-state-in-effect": {
-      "count": 1
-    }
-  },
-  "src/widgets/creative-step/TextOverlayEditor.tsx": {
+  "src/widgets/create-flow/TextOverlayEditor.tsx": {
     "react-hooks/immutability": {
       "count": 1
     },

@@ -1,4 +1,4 @@
-import type { SopItemType } from "@features/sop/model/useSopStorage";
+import type { SopItemType } from "@features/brand-profile/model/policy";
 
 export const SECTION_ICON: Record<SopItemType, string> = {
   prohibited_words: "warn",

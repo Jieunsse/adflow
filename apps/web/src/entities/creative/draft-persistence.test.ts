@@ -28,6 +28,7 @@ import {
 } from "./draft-persistence";
 
 const STUDIO: StudioSnapshot = {
+  phase: "compare",
   displayedHeadlines: ["헤드라인 A", "헤드라인 B"],
   displayedSubtitles: null,
   headlineIdx: 1,

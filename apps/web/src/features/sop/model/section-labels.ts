@@ -3,7 +3,7 @@ import type {
   SopSection,
   LengthLimitsData,
   FreeTextSopType,
-} from "./useSopStorage";
+} from "@features/brand-profile/model/policy";
 
 export const SOP_SECTION_LABEL: Record<SopItemType, string> = {
   prohibited_words: "금지어 목록",

@@ -9,9 +9,8 @@ import { useQuery } from "@tanstack/react-query";
 import Icon from "@shared/ui/Icon";
 import { cn } from "@shared/lib/cn";
 import { useLaunchDraft, type CallScheduleSlot } from "@entities/campaign/model";
+import { adIdentityPagesQueryKey, fetchAdIdentityPages } from "@entities/page/api";
 import SubHead from "./SubHead";
-
-type Page = { id: string; name: string; phone: string | null };
 
 const DAYS = [
   { d: 1, label: "월" },
@@ -32,16 +31,12 @@ export default function CallScheduleSection() {
   const { state, dispatch } = useLaunchDraft();
   const { data: session } = useSession();
 
-  const { data: pagesData } = useQuery({
-    queryKey: ["setup-pages"],
-    queryFn: async (): Promise<{ pages: Page[] }> => {
-      const res = await fetch("/api/setup/pages");
-      if (!res.ok) throw new Error("페이지 조회 실패");
-      return res.json();
-    },
+  const { data: pages } = useQuery({
+    queryKey: adIdentityPagesQueryKey,
+    queryFn: fetchAdIdentityPages,
     enabled: !!session?.pageId,
   });
-  const activePage = pagesData?.pages.find((p) => p.id === session?.pageId);
+  const activePage = pages?.find((p) => p.id === session?.pageId);
   const phoneMissing = activePage !== undefined && !activePage.phone;
 
   const slots = state.callSchedule;

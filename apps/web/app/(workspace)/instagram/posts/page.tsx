@@ -4,6 +4,7 @@ import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { useQuery } from "@tanstack/react-query";
 import Image from "next/image";
 import Icon from "@shared/ui/Icon";
 
@@ -11,29 +12,20 @@ import { Button } from "@shared/ui/Button";
 import { Card } from "@shared/ui/Card";
 import { useToast } from "@shared/ui/Toast";
 import { IgPostPreview } from "@shared/ui/IgPostPreview";
+import { fetchIgMedia, type IgMediaItem } from "@shared/lib/instagram-media";
 import { readProfiles, readActiveBrandProfileEntry } from "@features/brand-profile/model/useBrandProfileStorage";
 import type { BrandProfileEntry } from "@features/brand-profile/model/useBrandProfileStorage";
 import { readPersonas } from "@features/brand-profile/model/usePersonasStorage";
 import type { PersonaEntry } from "@features/brand-profile/model/usePersonasStorage";
-import { sectionPreviewText, isSectionFilled } from "@features/sop/model/useSopStorage";
+import { sectionPreviewText, isSectionFilled } from "@features/brand-profile/model/policy";
 import { SOP_SECTION_LABEL } from "@features/sop/model/section-labels";
+import { fetchProfilePictures, profilePicturesQueryKey } from "@entities/page/profile-pictures";
 
-type RecentItem = {
-  id: string;
-  mediaUrl: string;
-  caption: string;
-  permalink?: string;
-  timestamp: string;
-  likeCount?: number;
-};
+type RecentItem = IgMediaItem;
 
 type PublishOk = { ok: true; postId: string; permalink?: string };
 type PublishFail = { ok: false; error: string; status?: number };
 type PublishResp = PublishOk | PublishFail;
-
-type RecentResp =
-  | { ok: true; items: RecentItem[] }
-  | { ok: false; error: string };
 
 type UploadResp = { ok: true; url: string } | { ok: false; error: string };
 
@@ -49,7 +41,13 @@ function PostsFlow() {
   const searchParams = useSearchParams();
   const captionPrefill = searchParams.get("caption") ?? "";
   const handle = session?.igUsername ?? "instagram";
-  const [igPicture, setIgPicture] = useState<string | null>(null);
+  const picturesQ = useQuery({
+    queryKey: profilePicturesQueryKey(session?.pageId, session?.igUserId),
+    queryFn: fetchProfilePictures,
+    enabled: !!session && !session.browseMode,
+    staleTime: 60 * 60 * 1000,
+  });
+  const igPicture = picturesQ.data?.igPicture ?? null;
   const [imageUrl, setImageUrl] = useState("");
   const [caption, setCaption] = useState(captionPrefill);
   const [submitting, setSubmitting] = useState(false);
@@ -79,16 +77,11 @@ function PostsFlow() {
   const loadRecent = useCallback(async () => {
     setRecentLoading(true);
     try {
-      const res = await fetch("/api/instagram/recent-media", { cache: "no-store" });
-      const data = (await res.json()) as RecentResp;
-      if (data.ok) {
-        setRecent(data.items);
-        setRecentErr(null);
-      } else {
-        setRecent([]);
-        setRecentErr(data.error);
-      }
+      const data = await fetchIgMedia();
+      setRecent(data.items);
+      setRecentErr(null);
     } catch (e) {
+      setRecent([]);
       setRecentErr(e instanceof Error ? e.message : "최근 게시 조회 실패");
     } finally {
       setRecentLoading(false);
@@ -98,13 +91,6 @@ function PostsFlow() {
   useEffect(() => {
     loadRecent();
   }, [loadRecent]);
-
-  useEffect(() => {
-    fetch("/api/connect/profile-pictures")
-      .then(r => r.ok ? r.json() : null)
-      .then((data: { igPicture?: string | null } | null) => { if (data?.igPicture) setIgPicture(data.igPicture); })
-      .catch(() => null);
-  }, []);
 
   useEffect(() => {
     const profiles = readProfiles();

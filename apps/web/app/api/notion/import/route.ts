@@ -4,7 +4,7 @@ import { getNotionConnection } from "@shared/lib/notion-store"
 import { fetchResourceText, type NotionResource } from "@/lib/notion"
 import { geminiNotion } from "@/lib/gemini-notion"
 import { geminiSop } from "@/lib/gemini-sop"
-import type { SopSection } from "@features/sop/model/useSopStorage"
+import type { SopSection } from "@features/brand-profile/model/policy"
 
 // ADR-043 — 선택 자원 합쳐 1회 Gemini. 스타일5필드+proofPoints(gemini-notion) + 정책(deriveFromMarketing).
 export async function POST(req: NextRequest) {

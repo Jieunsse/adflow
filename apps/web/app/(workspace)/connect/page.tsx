@@ -13,6 +13,8 @@ import { Button, buttonVariants } from "@shared/ui/Button";
 import { Card } from "@shared/ui/Card";
 import { Skeleton } from "@shared/ui/Skeleton";
 import { cn } from "@shared/lib/cn";
+import { fetchAdIdentityPages } from "@entities/page/api";
+import { fetchProfilePictures, profilePicturesQueryKey } from "@entities/page/profile-pictures";
 
 type AccountInfo = { connected: boolean; accountId: string; accountName: string; currency: string };
 
@@ -63,14 +65,6 @@ async function fetchAccount(): Promise<AccountInfo> {
   return data as AccountInfo;
 }
 
-type ProfilePictures = { pagePicture: string | null; igPicture: string | null };
-
-async function fetchProfilePictures(): Promise<ProfilePictures> {
-  const res = await fetch("/api/connect/profile-pictures");
-  if (!res.ok) return { pagePicture: null, igPicture: null };
-  return res.json();
-}
-
 type PickerKind = "account" | "page" | "pixel";
 type PickerItem = {
   id: string;
@@ -82,7 +76,13 @@ type PickerItem = {
 };
 
 async function fetchPickerList(kind: PickerKind): Promise<PickerItem[]> {
-  const url = kind === "account" ? "/api/setup/ad-accounts" : kind === "page" ? "/api/setup/pages" : "/api/setup/pixels";
+  if (kind === "page") {
+    return (await fetchAdIdentityPages()).map((page) => ({
+      id: page.id, name: page.name, igUserId: page.igUserId, igUsername: page.igUsername,
+    }));
+  }
+
+  const url = kind === "account" ? "/api/setup/ad-accounts" : "/api/setup/pixels";
   const res = await fetch(url);
   const data = await res.json();
   if (!res.ok || data?.error) throw new Error(data?.error ?? "목록을 불러오지 못했어요");
@@ -91,12 +91,7 @@ async function fetchPickerList(kind: PickerKind): Promise<PickerItem[]> {
       id: a.id, name: a.name, currency: a.currency, status: a.account_status === 1 ? "active" : "disabled",
     }));
   }
-  if (kind === "pixel") {
-    return ((data.pixels ?? []) as { id: string; name: string }[]).map((p) => ({ id: p.id, name: p.name }));
-  }
-  return ((data.pages ?? []) as { id: string; name: string; igUserId: string | null; igUsername: string | null }[]).map((p) => ({
-    id: p.id, name: p.name, igUserId: p.igUserId, igUsername: p.igUsername,
-  }));
+  return ((data.pixels ?? []) as { id: string; name: string }[]).map((p) => ({ id: p.id, name: p.name }));
 }
 
 function connCardClass(tone: "neutral" | "warn" | "danger" | "muted") {
@@ -146,7 +141,7 @@ export default function ConnectPage() {
 
   const accountQ = useQuery({ queryKey: ["account"], queryFn: fetchAccount, enabled: connected });
   const picturesQ = useQuery({
-    queryKey: ["profile-pictures", session?.pageId, session?.igUserId],
+    queryKey: profilePicturesQueryKey(session?.pageId, session?.igUserId),
     queryFn: fetchProfilePictures,
     enabled: connected,
     staleTime: 5 * 60 * 1000,

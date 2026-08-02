@@ -1,0 +1,10 @@
+import type { Viewport } from "next";
+import GoalTrackerClient from "./GoalTrackerClient";
+
+// 목표 화면은 모바일까지 대응한다 — 워크스페이스 레이아웃의 1440 고정을 여기서만 푼다.
+export const viewport: Viewport = { width: "device-width", initialScale: 1 };
+
+export default async function GoalTrackerPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  return <GoalTrackerClient goalId={id} />;
+}

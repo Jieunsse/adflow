@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { createSyncedStore } from "@shared/lib/store";
 
 export interface PersonaEntry {
@@ -71,7 +71,13 @@ export function usePersonasForProfile(brandProfileId: string) {
   personas.useSync();
   // 전체 목록에서 걸러 낸다 — 이전 구현이 "필터된 뷰"와 "전체"를 각각 들고 있어
   // 두 상태가 어긋나던 문제를 store 하나로 없앤다.
-  const list = useStore((s) => s.items.filter((p) => p.brandProfileId === brandProfileId));
+  // 필터는 selector 밖에서 — selector 가 매번 새 배열을 돌려주면 useSyncExternalStore 가
+  // 스냅샷이 바뀐 걸로 보고 무한 렌더에 빠진다.
+  const all = useStore((s) => s.items);
+  const list = useMemo(
+    () => all.filter((p) => p.brandProfileId === brandProfileId),
+    [all, brandProfileId],
+  );
   const upsert = useStore((s) => s.upsert);
   const removeById = useStore((s) => s.removeById);
 

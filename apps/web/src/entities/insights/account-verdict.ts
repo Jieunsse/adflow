@@ -2,7 +2,8 @@
 // 저자 = 룰(결정적·무료·즉시), Flo 아님. 새 숫자 0 — 캠페인별 suggestOptimizations + fake-perf 를
 // 재사용해 verdict 를 구한 뒤, 가장 무서운 신호(trap > poor > cruising > stable)를 끌어올린다.
 
-import { suggestOptimizations, deriveVerdict, type Suggestion, type VerdictStatus, type OptimizationObjective } from "./optimization";
+import { suggestOptimizations, deriveVerdict, type VerdictStatus, type OptimizationObjective } from "./optimization";
+import type { Suggestion } from "./suggestion";
 import { isFakePerformance, type FakePerformanceEvidence } from "./fake-performance";
 import { LOW_LANDING_RATE_PCT } from "./thresholds";
 

@@ -24,7 +24,7 @@ import { listBrowse, BROWSE_CHANGE_EVENT } from "@entities/campaign/browse/store
 import { browseCampaignToSummary } from "@entities/campaign/browse/summary";
 import type { CampaignSummary } from "@/lib/meta-ads";
 import { useBrandProfileStorage } from "@features/brand-profile/model/useBrandProfileStorage";
-import type { SopSection } from "@features/sop/model/useSopStorage";
+import type { SopSection } from "@features/brand-profile/model/policy";
 import { useProducts } from "@shared/lib/products";
 import { shrinkImageDataUrl } from "@shared/lib/shrink-image";
 import ChallengerImageGen from "./ChallengerImageGen";

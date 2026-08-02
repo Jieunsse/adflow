@@ -13,10 +13,17 @@ import { useCreators } from "@entities/creator/store";
 import { useInfluencerCampaigns } from "@entities/influencer-campaign/store";
 import { seedInfluencerDemo } from "@entities/creator/browse/seed";
 import { rankCreators } from "@entities/creator/ranking";
-import { aggregateCampaignPerformance, applyPerformanceToHistory } from "@entities/creator/aggregate";
+import { aggregateCampaignPerformance } from "@entities/creator/aggregate";
 import { buildPerCreatorRows, serializeInfluencerReportText, toInfluencerCampaignCsv } from "@entities/influencer-campaign/report";
 import type { InfluencerReportInsight } from "@entities/influencer-campaign/report";
 import type { CampaignEntry, CampaignStage } from "@entities/influencer-campaign/model";
+import {
+  addCampaignEntry,
+  saveCampaignEntryPerformance,
+  settleCampaignEntry,
+  transitionCampaignEntry,
+  updateCampaignEntry,
+} from "@entities/influencer-campaign/pipeline-transition";
 import type { CreatorPerformance } from "@entities/creator/model";
 import { useBrandProfileStorage } from "@features/brand-profile/model/useBrandProfileStorage";
 import {
@@ -109,28 +116,23 @@ export default function InfluencerCampaignDetailPage() {
   }
 
   const updateEntry = (creatorId: string, patch: Partial<CampaignEntry>) => {
-    const nextEntries = campaign.entries.map((e) =>
-      e.creatorId === creatorId ? { ...e, ...patch, updatedAt: new Date().toISOString() } : e,
-    );
-    upsertCampaign({ ...campaign, entries: nextEntries });
+    upsertCampaign(updateCampaignEntry(campaign, creatorId, patch, new Date().toISOString()));
   };
 
   const addToPipeline = (creatorId: string) => {
-    if (pipelineCreatorIds.has(creatorId)) return;
-    const entry: CampaignEntry = {
-      creatorId,
-      stage: "candidate",
-      updatedAt: new Date().toISOString(),
-    };
-    upsertCampaign({ ...campaign, entries: [...campaign.entries, entry] });
+    upsertCampaign(addCampaignEntry(campaign, creatorId, new Date().toISOString()));
   };
 
   const settleWithPerformance = (creatorId: string, perf?: CreatorPerformance) => {
-    updateEntry(creatorId, { stage: "settled", paidAt: new Date().toISOString(), performance: perf });
-    if (perf) {
-      const creator = creators.find((c) => c.id === creatorId);
-      if (creator) upsertCreator(applyPerformanceToHistory(creator, campaign.id, perf));
-    }
+    const result = settleCampaignEntry({
+      campaign,
+      creator: creators.find((creator) => creator.id === creatorId),
+      creatorId,
+      performance: perf,
+      now: new Date().toISOString(),
+    });
+    upsertCampaign(result.campaign);
+    if (result.creator) upsertCreator(result.creator);
   };
 
   const handleStageChange = (creatorId: string, stage: CampaignStage) => {
@@ -144,7 +146,15 @@ export default function InfluencerCampaignDetailPage() {
       showToast("정산 완료로 표시했어요.");
       return;
     }
-    updateEntry(creatorId, { stage });
+    const result = transitionCampaignEntry({
+      campaign,
+      creator: creators.find((creator) => creator.id === creatorId),
+      creatorId,
+      stage,
+      now: new Date().toISOString(),
+    });
+    upsertCampaign(result.campaign);
+    if (result.creator) upsertCreator(result.creator);
   };
 
   const runOutreach = async (creatorId: string) => {
@@ -450,11 +460,15 @@ export default function InfluencerCampaignDetailPage() {
               settleWithPerformance(modal.creatorId, performance);
               showToast("정산 완료로 표시했어요.");
             } else {
-              updateEntry(modal.creatorId, { performance });
-              if (modalEntry?.stage === "settled") {
-                const creator = creators.find((c) => c.id === modal.creatorId);
-                if (creator) upsertCreator(applyPerformanceToHistory(creator, campaign.id, performance));
-              }
+              const result = saveCampaignEntryPerformance({
+                campaign,
+                creator: creators.find((creator) => creator.id === modal.creatorId),
+                creatorId: modal.creatorId,
+                performance,
+                now: new Date().toISOString(),
+              });
+              upsertCampaign(result.campaign);
+              if (result.creator) upsertCreator(result.creator);
               showToast("성과를 저장했어요.");
             }
             setModal(null);

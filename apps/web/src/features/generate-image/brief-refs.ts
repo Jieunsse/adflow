@@ -3,12 +3,9 @@
 
 import type { ReferenceImage } from "@/lib/gemini-image";
 import type { ReferenceMaterial } from "@shared/lib/referenceMaterials";
+import { splitDataUrl } from "./refs";
 
-// data:<mime>;base64,<data> → ReferenceImage. 형식이 안 맞으면 null.
-export function splitDataUrl(dataUrl: string): ReferenceImage | null {
-  const m = /^data:([^;]+);base64,(.+)$/.exec(dataUrl);
-  return m ? { mimeType: m[1], dataBase64: m[2] } : null;
-}
+export { splitDataUrl } from "./refs";
 
 // 빈(미생성) 슬롯 인덱스. null = 한 번도 생성 안 함 → 전부 대상.
 export function computeBriefTargets(generated: [string, string, string] | null): number[] {

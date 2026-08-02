@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { listBrowse, BROWSE_CHANGE_EVENT } from "@entities/campaign/browse/store";
 import { seedAutoPilotDemo } from "@entities/campaign/browse/seed";
 import { browseCampaignToSummary } from "@entities/campaign/browse/summary";
+import { fetchCampaigns } from "@entities/campaign/api";
 import { CAMPAIGN_STATUS_MAP } from "@entities/campaign/status";
 import Icon, { type IconName } from "@shared/ui/Icon";
 import { EmptyState } from "@shared/ui/primitives";
@@ -63,14 +64,6 @@ const OBJECTIVE_VARIANT: Record<string, ChipVariant> = {
 
 function CampaignObjectiveChip({ goal, objective }: { goal: string; objective: string }) {
   return <Chip variant={OBJECTIVE_VARIANT[objective] ?? "neutral"}>{goal}</Chip>;
-}
-
-async function fetchCampaigns(period: Period): Promise<CampaignSummary[]> {
-  const res = await fetch(`/api/campaigns?period=${period}`);
-  const data = await res.json();
-  if (res.status === 401) throw Object.assign(new Error(data?.error ?? "광고 계정을 먼저 연결해주세요."), { code: 401 });
-  if (!res.ok) throw new Error(data?.error ?? "캠페인을 불러오지 못했어요");
-  return (data.campaigns ?? []) as CampaignSummary[];
 }
 
 export default function CampaignsPage() {

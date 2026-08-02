@@ -5,7 +5,7 @@ import {
   isSectionFilled,
   type SopItemType,
   type SopSection,
-} from "@features/sop/model/useSopStorage";
+} from "@features/brand-profile/model/policy";
 import { SOP_SECTION_LABEL, SOP_SECTION_DESCRIPTION } from "@features/sop/model/section-labels";
 import { SECTION_ACCENT, SECTION_ICON } from "./section-style";
 

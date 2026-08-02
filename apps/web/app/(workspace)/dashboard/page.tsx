@@ -30,11 +30,12 @@ import { buildRecent7Report, serializeReportText, toCampaignsCsv, type Recent7Re
 import { listBrowse, BROWSE_CHANGE_EVENT } from "@entities/campaign/browse/store";
 import { seedAutoPilotDemo } from "@entities/campaign/browse/seed";
 import { browseCampaignToSummary } from "@entities/campaign/browse/summary";
+import { fetchCampaigns } from "@entities/campaign/api";
+import { billingQueryKey, fetchBilling } from "@entities/billing/api";
 import BillingAlertWidget from "@widgets/billing-alert";
 import { DashboardHero, DashboardHeroNoConversion, heroRangeLabel } from "@widgets/dashboard-hero";
 import { ActionQueue } from "@widgets/action-queue";
 import { EvidenceRail, buildEvidenceMetrics, funnelLeakNote } from "@widgets/evidence-rail";
-import type { Billing } from "@entities/billing/types";
 import type { CampaignSummary } from "@/lib/meta-ads";
 import { Dialog, DialogContent, DialogTitle } from "@shared/ui/Dialog";
 import { useToast } from "@shared/ui/Toast";
@@ -51,18 +52,13 @@ const FUNNEL_SORT_PRESET: Partial<Record<FunnelStage["key"], string>> = {
   purchase: "roas",
 };
 
-async function fetchBilling(): Promise<Billing> {
-  const res = await fetch("/api/billing");
-  if (!res.ok) throw new Error("결제 정보를 불러오지 못했어요");
-  return res.json();
-}
-
-async function fetchCampaigns(period: Period): Promise<CampaignSummary[]> {
-  const res = await fetch(`/api/campaigns?period=${period}`);
-  if (res.status === 401) return [];
-  const data = await res.json();
-  if (!res.ok) throw new Error(data?.error ?? "캠페인을 불러오지 못했어요");
-  return (data.campaigns ?? []) as CampaignSummary[];
+async function fetchDashboardCampaigns(period: Period): Promise<CampaignSummary[]> {
+  try {
+    return await fetchCampaigns(period);
+  } catch (error) {
+    if ((error as { code?: number }).code === 401) return [];
+    throw error;
+  }
 }
 
 // ADR-059 — 계정 횡단 일별 합산 추세. days = 델타 비교용 직전 기간 포함 창.
@@ -113,7 +109,7 @@ export default function DashboardPage() {
   const goConnect = () => router.push("/setup");
 
   const billingQ = useQuery({
-    queryKey: ["billing"],
+    queryKey: billingQueryKey,
     queryFn: fetchBilling,
     enabled: !!session?.adAccountId,
     staleTime: 60_000,
@@ -121,7 +117,7 @@ export default function DashboardPage() {
 
   const campaignsQ = useQuery({
     queryKey: ["campaigns", period],
-    queryFn: () => fetchCampaigns(period),
+    queryFn: () => fetchDashboardCampaigns(period),
     enabled: !!session?.adAccountId || !!session?.browseMode,
     staleTime: 60_000,
   });
@@ -129,7 +125,7 @@ export default function DashboardPage() {
   // ADR-064 — 최근 7일 리포트는 대시보드 기간 토글(30일)과 무관하게 항상 7일 창. period="7d" 쿼리 고정 재사용(캐시 공유).
   const report7dCampaignsQ = useQuery({
     queryKey: ["campaigns", "7d"],
-    queryFn: () => fetchCampaigns("7d"),
+    queryFn: () => fetchDashboardCampaigns("7d"),
     enabled: !!session?.adAccountId || !!session?.browseMode,
     staleTime: 60_000,
   });

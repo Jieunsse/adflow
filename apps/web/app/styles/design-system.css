@@ -236,6 +236,19 @@
   --w-status-cautionary-line:rgba(245,158,11,0.25);
   --w-status-negative-line:  rgba(229,72,77,0.25);
 
+  /* 내러티브 서피스 — 대시보드 히어로처럼 "항상 어두운 판". --w-bg-inverse 는 테마가 뒤집으므로
+     본문 대비가 무너진다. 이 토큰군은 라이트·다크 양쪽에서 어둡게 유지되고, 위에 얹는 전경색도 함께 고정. */
+  --w-surface-narrative:        #171719;
+  --w-surface-narrative-raised: rgba(255,255,255,0.06);
+  --w-surface-narrative-fill:   rgba(255,255,255,0.14);
+  --w-surface-narrative-line:   rgba(255,255,255,0.12);
+  --w-on-narrative:             #f7f7f8;
+  --w-on-narrative-neutral:     rgba(247,247,248,0.70);
+  --w-on-narrative-alternative: rgba(247,247,248,0.55);
+  --w-on-narrative-assistive:   rgba(247,247,248,0.45);
+  --w-on-narrative-negative:    #ff7a7a;   /* red-300 — 어두운 판 위에서 읽히는 손해색 */
+  --w-on-narrative-positive:    #7df5a5;   /* green-300 */
+
   --w-focus-ring:       rgba(0,102,255,0.14);
   --w-brand-facebook:   #1877f2;
   --w-brand-facebook-hover:#1465d6;
@@ -325,6 +338,8 @@
   --w-status-cautionary-line:rgba(245,158,11,0.34);
   --w-status-negative-line:  rgba(229,72,77,0.34);
   --w-shadow-card:      0 1px 2px rgba(0,0,0,0.4), 0 4px 12px rgba(0,0,0,0.45);
+  /* 페이지 배경(#171719)보다 한 단 더 깊게 — 다크에서도 히어로가 판으로 떠 보이게. */
+  --w-surface-narrative: #0f0f10;
 }
 
 .adflow .w-display-1 {

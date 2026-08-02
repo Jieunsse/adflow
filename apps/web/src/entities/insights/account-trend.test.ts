@@ -36,8 +36,8 @@ describe("mergeAccountDaily", () => {
 
 describe("pickPerfAxis", () => {
   const daily = [
-    { date: "d1", spend: 10, impressions: 100, clicks: 5, landingPageView: 3, purchaseValue: 0 },
-    { date: "d2", spend: 20, impressions: 200, clicks: 8, landingPageView: 4, purchaseValue: 500 },
+    { date: "d1", spend: 10, impressions: 100, clicks: 5, landingPageView: 3, purchaseValue: 0, purchaseCount: 0 },
+    { date: "d2", spend: 20, impressions: 200, clicks: 8, landingPageView: 4, purchaseValue: 500, purchaseCount: 2 },
   ];
 
   it("전환 캠페인 ≥1 이면 매출축", () => {
@@ -112,7 +112,7 @@ describe("synthAccountDaily", () => {
 });
 
 const axis = (values: number[]): PerfAxis => ({ metric: "landing", label: "도착", values, hasData: values.some((v) => v > 0) });
-const pt = (date: string, spend: number, landing: number): AccountDailyPoint => ({ date, spend, impressions: 0, clicks: 0, landingPageView: landing, purchaseValue: 0 });
+const pt = (date: string, spend: number, landing: number): AccountDailyPoint => ({ date, spend, impressions: 0, clicks: 0, landingPageView: landing, purchaseValue: 0, purchaseCount: 0 });
 
 describe("deriveEfficiency", () => {
   it("효율 = 성과/지출, spend=0 인 날은 null", () => {

@@ -518,6 +518,7 @@ export const metaAdsInsights = {
       clicks: Math.round(Number(d.clicks ?? 0)),
       landingPageView: Math.round(extract(d.actions, 'landing_page_view')),
       purchaseValue: Math.round(extract(d.action_values, 'purchase') + extract(d.action_values, 'omni_purchase')),
+      purchaseCount: Math.round(extract(d.actions, 'purchase') + extract(d.actions, 'omni_purchase')),
     }))
   },
 

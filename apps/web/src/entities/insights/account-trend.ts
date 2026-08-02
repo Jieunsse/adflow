@@ -13,6 +13,7 @@ export type AccountDailyPoint = {
   clicks: number;
   landingPageView: number; // 미측정 캠페인은 0 기여
   purchaseValue: number; // 비전환 캠페인은 0 기여
+  purchaseCount: number; // 비전환 캠페인은 0 기여
 };
 
 export function mergeAccountDaily(series: InsightsDailyRow[][]): AccountDailyPoint[] {
@@ -21,12 +22,13 @@ export function mergeAccountDaily(series: InsightsDailyRow[][]): AccountDailyPoi
     for (const r of rows) {
       const p =
         byDate.get(r.date) ??
-        { date: r.date, spend: 0, impressions: 0, clicks: 0, landingPageView: 0, purchaseValue: 0 };
+        { date: r.date, spend: 0, impressions: 0, clicks: 0, landingPageView: 0, purchaseValue: 0, purchaseCount: 0 };
       p.spend += r.spend ?? 0;
       p.impressions += r.impressions ?? 0;
       p.clicks += r.clicks ?? 0;
       p.landingPageView += r.landingPageView ?? 0;
       p.purchaseValue += r.purchaseValue ?? 0;
+      p.purchaseCount += r.purchaseCount ?? 0;
       byDate.set(r.date, p);
     }
   }
@@ -42,6 +44,7 @@ export type SummaryLike = {
   spend: number;
   landingPageView?: number;
   purchaseValue?: number;
+  purchaseCount?: number;
 };
 
 function seededVariance(seed: string, index: number): number {
@@ -72,6 +75,7 @@ export function synthAccountDaily(campaigns: SummaryLike[], today: string, windo
     clicks: 0,
     landingPageView: 0,
     purchaseValue: 0,
+    purchaseCount: 0,
   }));
   // 호조: 막대(지출)·라인(도착/매출) 둘 다 증가 램프(성과가 지출보다 더 가파르게) → 효율 개선 서사.
   const n = dates.length;
@@ -90,6 +94,7 @@ export function synthAccountDaily(campaigns: SummaryLike[], today: string, windo
       points[i].clicks += c.clicks * pShare;
       points[i].landingPageView += (c.landingPageView ?? 0) * pShare;
       points[i].purchaseValue += (c.purchaseValue ?? 0) * pShare;
+      points[i].purchaseCount += (c.purchaseCount ?? 0) * pShare;
     });
   }
   return points.map((p) => ({
@@ -99,6 +104,7 @@ export function synthAccountDaily(campaigns: SummaryLike[], today: string, windo
     clicks: Math.round(p.clicks),
     landingPageView: Math.round(p.landingPageView),
     purchaseValue: Math.round(p.purchaseValue),
+    purchaseCount: Math.round(p.purchaseCount),
   }));
 }
 
@@ -236,6 +242,21 @@ export type FunnelStage = {
 };
 
 const BIG_DROP_THRESHOLD = 0.5;
+
+/**
+ * "돈이 새는 지점" = 클릭 이후 단계 중 직전 단 대비 전환율이 가장 낮은 곳.
+ * 노출→클릭은 광고에서 늘 1% 안팎이라 항상 bigDrop 이 되고, 그걸 누수라 부르면
+ * 진짜 새는 단계를 가린다 — 후보에서 뺀다.
+ */
+export function pickWorstDrop(stages: FunnelStage[]): { from: FunnelStage; to: FunnelStage } | null {
+  let worst: { from: FunnelStage; to: FunnelStage; rate: number } | null = null;
+  for (let i = 2; i < stages.length; i++) {
+    const s = stages[i];
+    if (!s.measured || s.stepRate == null) continue;
+    if (!worst || s.stepRate < worst.rate) worst = { from: stages[i - 1], to: s, rate: s.stepRate };
+  }
+  return worst ? { from: worst.from, to: worst.to } : null;
+}
 
 export function deriveFunnel(campaigns: FunnelCampaign[]): { stages: FunnelStage[]; hasData: boolean } {
   const impressions = campaigns.reduce((s, c) => s + c.impressions, 0);

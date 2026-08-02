@@ -3,6 +3,19 @@ export const fmt = (n: number | null | undefined): string =>
 
 export const fmtKRW = (n: number | null | undefined): string => "₩" + fmt(n);
 
+// 큰 금액을 읽어주는 말투로 — 대시보드 히어로 내러티브 전용("광고비 61만 2천원을 써서").
+// 천 단위 아래는 버린다(반올림하면 없는 돈이 생겨 보인다). 부호는 붙이지 않고 호출부가 문장으로 표현.
+export function fmtManwon(n: number | null | undefined): string {
+  if (n == null) return "—";
+  const abs = Math.abs(Math.round(n));
+  if (abs < 10_000) return `${fmt(abs)}원`;
+  const eok = Math.floor(abs / 100_000_000);
+  const man = Math.floor((abs % 100_000_000) / 10_000);
+  const chun = Math.floor((abs % 10_000) / 1_000);
+  const parts = [eok && `${fmt(eok)}억`, man && `${man}만`, !eok && chun ? `${chun}천` : ""];
+  return parts.filter(Boolean).join(" ") + "원";
+}
+
 export function shortDate(iso: string): string {
   const d = new Date(iso);
   if (isNaN(d.getTime())) return iso;

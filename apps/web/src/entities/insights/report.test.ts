@@ -4,7 +4,7 @@ import type { AccountDailyPoint } from "./account-trend";
 import type { PeriodKpis, CampaignTableRow } from "./period-kpis";
 import type { AccountVerdict } from "./account-verdict";
 
-const pt = (date: string): AccountDailyPoint => ({ date, spend: 0, impressions: 0, clicks: 0, landingPageView: 0, purchaseValue: 0 });
+const pt = (date: string): AccountDailyPoint => ({ date, spend: 0, impressions: 0, clicks: 0, landingPageView: 0, purchaseValue: 0, purchaseCount: 0 });
 
 const kpis: PeriodKpis = {
   spend: { value: 100000, deltaPct: 10 },

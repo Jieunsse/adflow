@@ -19,6 +19,7 @@ const pt = (date: string, p: Partial<AccountDailyPoint> = {}): AccountDailyPoint
   clicks: 0,
   landingPageView: 0,
   purchaseValue: 0,
+  purchaseCount: 0,
   ...p,
 });
 

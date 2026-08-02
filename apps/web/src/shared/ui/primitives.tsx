@@ -10,17 +10,23 @@ export function Sparkline({
   color = "var(--w-primary-normal)",
   fill = false,
   height = 28,
+  threshold,
+  thresholdColor = "var(--w-status-negative)",
 }: {
   data: number[] | null | undefined;
   color?: string;
   fill?: boolean;
   height?: number;
+  /** 기준선(손익분기 등). 값 범위에 포함시켜 그리므로 선 밖에 있어도 잘리지 않는다. */
+  threshold?: number;
+  thresholdColor?: string;
 }) {
   if (!data || data.length < 2) return null;
   const w = 100;
   const h = height;
-  const min = Math.min(...data);
-  const max = Math.max(...data);
+  const domain = threshold != null ? [...data, threshold] : data;
+  const min = Math.min(...domain);
+  const max = Math.max(...domain);
   const range = max - min || 1;
   const pts = data.map((v, i) => {
     const x = (i / (data.length - 1)) * w;
@@ -40,6 +46,18 @@ export function Sparkline({
       style={{ height }}
     >
       {fill && <path d={area} fill={color} opacity="0.12" />}
+      {threshold != null && (
+        <line
+          x1="0"
+          x2={w}
+          y1={h - ((threshold - min) / range) * (h - 4) - 2}
+          y2={h - ((threshold - min) / range) * (h - 4) - 2}
+          stroke={thresholdColor}
+          strokeWidth="1.5"
+          strokeDasharray="4 3"
+          vectorEffect="non-scaling-stroke"
+        />
+      )}
       <path
         d={d}
         fill="none"
@@ -47,7 +65,47 @@ export function Sparkline({
         strokeWidth="1.6"
         strokeLinecap="round"
         strokeLinejoin="round"
+        vectorEffect="non-scaling-stroke"
       />
+    </svg>
+  );
+}
+
+/* ── MiniBars — 근거 지표 레일의 막대 스파크라인. 최대값 막대만 진하게. ── */
+
+export function MiniBars({
+  data,
+  color = "var(--w-primary-normal)",
+  mutedColor = "rgba(0,102,255,0.3)",
+  height = 34,
+}: {
+  data: number[] | null | undefined;
+  color?: string;
+  mutedColor?: string;
+  height?: number;
+}) {
+  if (!data || data.length < 2) return null;
+  const w = 120;
+  const gap = 5;
+  const barW = (w - gap * (data.length - 1)) / data.length;
+  const max = Math.max(...data) || 1;
+  const peak = data.indexOf(max);
+  return (
+    <svg viewBox={`0 0 ${w} ${height}`} style={{ width: w, height }} aria-hidden>
+      {data.map((v, i) => {
+        const barH = Math.max(2, (v / max) * height);
+        return (
+          <rect
+            key={i}
+            x={i * (barW + gap)}
+            y={height - barH}
+            width={barW}
+            height={barH}
+            rx="2"
+            fill={i === peak ? color : mutedColor}
+          />
+        );
+      })}
     </svg>
   );
 }

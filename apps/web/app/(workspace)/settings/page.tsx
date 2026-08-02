@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import Icon from "@shared/ui/Icon";
 import IdField from "@shared/ui/IdField";
@@ -11,21 +11,34 @@ import { Card } from "@shared/ui/Card";
 import { cn } from "@shared/lib/cn";
 import { useToast } from "@shared/ui/Toast";
 import { useNotifSettings } from "@shared/lib/notifications";
-import { notifyScopedStorageChange } from "@shared/lib/storage/useScopedStorage";
+import { notifyScopedStorageChange, useScopedStorage } from "@shared/lib/storage/useScopedStorage";
 import { onboardedKey } from "@widgets/onboarding-guard";
 
-type Tab = "account" | "notif" | "danger";
-const TABS: [Tab, string][] = [["account", "계정 연결"], ["notif", "알림"], ["danger", "계정 관리"]];
+type Tab = "account" | "measure" | "notif" | "danger";
+const TABS: [Tab, string][] = [["account", "계정 연결"], ["measure", "전환 측정"], ["notif", "알림"], ["danger", "계정 관리"]];
+const isTab = (v: string | null): v is Tab => TABS.some(([k]) => k === v);
 
 export default function SettingsPage() {
-  const [tab, setTab] = useState<Tab>("account");
+  // useSearchParams 는 Suspense 경계를 요구한다(정적 렌더 중 CSR bailout).
+  return (
+    <Suspense fallback={null}>
+      <SettingsBody />
+    </Suspense>
+  );
+}
+
+function SettingsBody() {
+  // 대시보드 "측정 스크립트 받기" 등 딥링크(?tab=measure). 이후 탭 전환은 로컬 상태.
+  const initialTab = useSearchParams().get("tab");
+  const [tab, setTab] = useState<Tab>(isTab(initialTab) ? initialTab : "account");
+
   return (
     <div className="px-12 py-9 pb-16 max-w-[1280px] w-full mx-auto flex flex-col gap-7" data-screen-label="설정">
       <div className="flex justify-between items-end gap-6">
         <div>
           <span className="font-semibold text-[11px] leading-[1.45] tracking-[0.04em] uppercase text-[var(--w-fg-neutral)]">설정</span>
           <h1 className="m-0 font-bold text-[28px] leading-[1.25] tracking-[-0.024em] text-[var(--w-fg-strong)]" style={{ marginTop: 4 }}>설정</h1>
-          <p className="font-medium text-[14px] leading-[1.5] tracking-[0.004em] text-[var(--w-fg-neutral)] mt-1.5 mb-0">계정 연결, 알림을 관리해요.</p>
+          <p className="font-medium text-[14px] leading-[1.5] tracking-[0.004em] text-[var(--w-fg-neutral)] mt-1.5 mb-0">계정 연결, 전환 측정, 알림을 관리해요.</p>
         </div>
       </div>
 
@@ -48,9 +61,170 @@ export default function SettingsPage() {
       </div>
 
       {tab === "account" && <AccountTab />}
+      {tab === "measure" && <MeasureTab />}
       {tab === "notif" && <NotifTab />}
       {tab === "danger" && <DangerTab />}
     </div>
+  );
+}
+
+// ── 전환 측정 ────────────────────────────────────────────────────────────────
+// 대시보드가 "손익을 계산할 수 없는 광고비"를 지적할 때 보내는 곳. 픽셀 ID 를 받아 붙여넣을
+// 스크립트를 만들어 준다. ID 는 이 브라우저에만 저장 — 서버 설치·검증까지는 아직 안 한다.
+const PIXEL_ID_KEY = "adflow_pixel_id";
+
+function pixelBaseSnippet(id: string) {
+  return `<!-- Meta Pixel Code -->
+<script>
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window,document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '${id}');
+fbq('track', 'PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none"
+src="https://www.facebook.com/tr?id=${id}&ev=PageView&noscript=1"/></noscript>
+<!-- End Meta Pixel Code -->`;
+}
+
+const PURCHASE_SNIPPET = `<script>
+  fbq('track', 'Purchase', {
+    value: 39000,        // 주문 금액 — 실제 결제 금액으로 바꿔주세요
+    currency: 'KRW',
+  });
+</script>`;
+
+const MEASURE_STEPS: [string, string][] = [
+  ["Meta 이벤트 관리자에서 픽셀을 만들어요", "business.facebook.com/events_manager 에서 데이터 소스 → 웹 → 픽셀을 만들고 ID를 복사해요."],
+  ["기본 코드를 모든 페이지에 붙여요", "쇼핑몰 관리자의 '헤더 스크립트' 또는 </head> 바로 위에 넣으면 돼요."],
+  ["구매 이벤트를 주문 완료 페이지에 붙여요", "결제가 끝난 뒤 뜨는 페이지에만 넣어요. 금액을 실제 결제 금액으로 바꿔야 ROAS가 맞아요."],
+];
+
+function MeasureTab() {
+  const showToast = useToast();
+  const [pixelId, setPixelId] = useScopedStorage<string>("local", PIXEL_ID_KEY, "");
+  const activeId = pixelId || "<픽셀 ID>";
+
+  const copy = (text: string, label: string) => {
+    navigator.clipboard.writeText(text);
+    showToast(`${label}를 복사했어요.`);
+  };
+
+  return (
+    <div className="flex flex-col gap-5 max-w-[820px]">
+      <Card variant="lg" className="flex flex-col gap-0">
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          <div style={{ width: 48, height: 48, borderRadius: 12, background: "var(--w-primary-soft)", color: "var(--w-primary-press)", display: "grid", placeItems: "center", flex: "0 0 auto" }}>
+            <Icon name="target" size={22} />
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+              <h2 className="m-0 font-bold text-[17px] leading-[1.3] tracking-[-0.012em] text-[var(--w-fg-strong)]">전환 측정</h2>
+              {pixelId ? <Chip variant="success" size="sm" dot>ID 저장됨</Chip> : <Chip variant="warn" size="sm">미설정</Chip>}
+            </div>
+            <p className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)] mt-1 mb-0">
+              구매가 어디서 일어났는지 알아야 ROAS와 손익을 계산할 수 있어요. 픽셀 ID를 넣으면 붙여넣을 스크립트를 만들어 드려요.
+            </p>
+          </div>
+        </div>
+        <hr className="h-px bg-[var(--w-line-neutral)] my-[18px] border-0" />
+        {/* key=pixelId — storage hydrate(마운트 뒤 비동기) 가 끝나면 입력값을 저장된 ID 로 다시 세운다. */}
+        <PixelIdForm
+          key={pixelId}
+          saved={pixelId}
+          onSave={(id) => { setPixelId(id); showToast("픽셀 ID를 저장했어요."); }}
+          onClear={() => setPixelId("")}
+        />
+      </Card>
+
+      <Card variant="lg" className="flex flex-col gap-0">
+        <h2 className="m-0 font-bold text-[17px] leading-[1.3] tracking-[-0.012em] text-[var(--w-fg-strong)]">붙이는 순서</h2>
+        <hr className="h-px bg-[var(--w-line-neutral)] my-[18px] border-0" />
+        <ol className="m-0 p-0 list-none flex flex-col gap-3.5">
+          {MEASURE_STEPS.map(([title, desc], i) => (
+            <li key={title} className="flex gap-3.5">
+              <span className="shrink-0 grid place-items-center w-7 h-7 rounded-full bg-[var(--w-bg-alternative)] font-bold text-[13px] text-[var(--w-fg-normal)]">{i + 1}</span>
+              <div>
+                <div className="font-semibold text-[14px] leading-[1.4] text-[var(--w-fg-strong)]">{title}</div>
+                <div className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)] mt-0.5">{desc}</div>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </Card>
+
+      <SnippetCard
+        title="기본 코드 — 모든 페이지"
+        desc="방문·조회를 잡아요. 이게 없으면 구매 이벤트도 안 잡혀요."
+        code={pixelBaseSnippet(activeId)}
+        onCopy={() => copy(pixelBaseSnippet(activeId), "기본 코드")}
+        warn={!pixelId ? "픽셀 ID를 먼저 저장하면 코드에 자동으로 채워져요." : undefined}
+      />
+      <SnippetCard
+        title="구매 이벤트 — 주문 완료 페이지"
+        desc="금액과 통화를 같이 보내야 전환매출·ROAS가 계산돼요."
+        code={PURCHASE_SNIPPET}
+        onCopy={() => copy(PURCHASE_SNIPPET, "구매 이벤트 코드")}
+      />
+
+      <div className="flex items-start gap-2.5 p-3 px-[14px] rounded-[10px] border bg-[rgba(0,102,255,0.06)] border-[rgba(0,102,255,0.18)] text-[var(--w-primary-press)] font-medium text-[13px] leading-[1.5]">
+        <Icon name="info" size={14} style={{ flex: "0 0 auto", marginTop: 2 }} />
+        <span>붙인 뒤 Meta 이벤트 관리자에서 &apos;테스트 이벤트&apos;로 실제로 들어오는지 확인해 주세요. 데이터는 보통 20분 안에 대시보드에 반영돼요.</span>
+      </div>
+    </div>
+  );
+}
+
+function PixelIdForm({ saved, onSave, onClear }: { saved: string; onSave: (id: string) => void; onClear: () => void }) {
+  const [draft, setDraft] = useState(saved);
+  const valid = /^\d{10,20}$/.test(draft.trim());
+
+  return (
+    <>
+      <label className="font-semibold text-[13px] text-[var(--w-fg-strong)]" htmlFor="pixel-id">Meta 픽셀 ID</label>
+      <div className="flex items-center gap-2 mt-2 flex-wrap">
+        <input
+          id="pixel-id"
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          placeholder="1234567890123456"
+          inputMode="numeric"
+          className="w-[260px] px-3 py-2 rounded-lg border border-[var(--w-line-normal)] bg-[var(--w-bg-elevated)] font-medium text-[14px] [font-family:var(--w-font-mono)] text-[var(--w-fg-strong)] focus:outline-none focus:border-[var(--w-primary-normal)]"
+        />
+        <Button variant="primary" size="md" type="button" disabled={!valid} onClick={() => onSave(draft.trim())}>저장</Button>
+        {saved && <Button variant="ghost" size="md" type="button" onClick={onClear}>지우기</Button>}
+      </div>
+      <p className="font-medium text-[12px] leading-[1.5] text-[var(--w-fg-neutral)] mt-2 mb-0">
+        {draft.trim() && !valid
+          ? "픽셀 ID는 숫자 10~20자리예요. 다시 확인해 주세요."
+          : "이 브라우저에만 저장돼요. 아래 스크립트에 자동으로 채워 넣는 용도예요."}
+      </p>
+    </>
+  );
+}
+
+function SnippetCard({ title, desc, code, onCopy, warn }:{ title: string; desc: string; code: string; onCopy: () => void; warn?: string }) {
+  return (
+    <Card variant="lg" className="flex flex-col gap-0">
+      <div className="flex items-start justify-between gap-3 flex-wrap">
+        <div>
+          <h2 className="m-0 font-bold text-[17px] leading-[1.3] tracking-[-0.012em] text-[var(--w-fg-strong)]">{title}</h2>
+          <p className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)] mt-1 mb-0">{desc}</p>
+        </div>
+        <Button variant="secondary" size="sm" type="button" onClick={onCopy}><Icon name="copy" size={14} /> 복사</Button>
+      </div>
+      {warn && (
+        <div className="font-medium text-[12px] leading-[1.5] text-[var(--w-status-cautionary)] mt-2.5">{warn}</div>
+      )}
+      <pre className="mt-3.5 mb-0 p-4 rounded-xl bg-[var(--w-bg-alternative)] overflow-x-auto font-normal text-[12px] leading-[1.7] [font-family:var(--w-font-mono)] text-[var(--w-fg-normal)]">
+        <code>{code}</code>
+      </pre>
+    </Card>
   );
 }
 

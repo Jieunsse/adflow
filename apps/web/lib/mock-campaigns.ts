@@ -19,9 +19,9 @@ export const MOCK_CAMPAIGN_SUMMARIES: CampaignSummary[] = [
     clicks: 1191,
     ctr: 2.10,
     spend: 482000,
-    // ADR-030 데모 — CTR 2.10%(Vanity ✓)인데 도착률 33%(Substance ✗) = 가짜 성과 의심.
+    // 둘러보기 대시보드 — CTR과 도착률이 함께 좋은 정상 유입 예시.
     linkClick: 1072,
-    landingPageView: 354,
+    landingPageView: 858,
     issueReason: null,
     // PRD-ab-testing.md §4.4 — 시연 A/B 캠페인. startDate 가 과거(>7일) 라 winner case 즉시 노출.
     abTestEnabled: true,
@@ -353,7 +353,7 @@ export const MOCK_CAMPAIGN_SUMMARIES: CampaignSummary[] = [
     placementPositions: ['facebook_feed'],
   },
   {
-    // ADR-057 데모 — 전환(sales) 캠페인. ROAS 카드를 그럴듯하게 시연(데모≠실값). purchaseValue/roas 합성.
+    // 둘러보기 대시보드 — 마진 30% 기준 손익분기를 넘긴 전환 예시(데모≠실값).
     id: 'cmp_demo_120207643012',
     name: '그린루틴 — 가을 세일 — 비건 세트 구매 전환',
     headline: '가을 세일 — 비건 세트 구매 전환',
@@ -371,9 +371,9 @@ export const MOCK_CAMPAIGN_SUMMARIES: CampaignSummary[] = [
     spend: 612000,
     linkClick: 876,
     landingPageView: 613,
-    purchaseCount: 46,
-    purchaseValue: 1_518_000,
-    roas: 2.48,
+    purchaseCount: 92,
+    purchaseValue: 3_036_000,
+    roas: 4.96,
     issueReason: null,
     primaryText: '가을 세일 한정 구성. 비건 토너·크림 세트를 합리적인 가격에 만나보세요.',
     cta: 'SHOP_NOW',

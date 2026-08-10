@@ -20,7 +20,6 @@ import {
   derivePeriodKpis,
   deriveConversionSummary,
   deriveRevenueRoasDelta,
-  deriveRoasSeries,
   toCampaignTableRow,
   type CampaignTableRow,
 } from "@entities/insights/period-kpis";
@@ -43,7 +42,7 @@ import { useToast } from "@shared/ui/Toast";
 type Period = "7d" | "30d";
 const PERIOD_DAYS: Record<Period, number> = { "7d": 7, "30d": 30 };
 const TREND_DAYS: Record<Period, number> = { "7d": 14, "30d": 60 };
-const PERIOD_STORY: Record<Period, string> = { "7d": "이번 주 이야기", "30d": "이번 달 이야기" };
+const PERIOD_STORY: Record<Period, string> = { "7d": "최근 7일 성과", "30d": "최근 30일 성과" };
 
 // ADR-063 — 퍼널 단 클릭 = 캠페인 목록으로 이동해 해당 기준으로 정렬. 대시보드에 표를 다시 만들지 않는다.
 const FUNNEL_SORT_PRESET: Partial<Record<FunnelStage["key"], string>> = {
@@ -211,13 +210,10 @@ export default function DashboardPage() {
       buildEvidenceMetrics({
         roas: conversion?.roas ?? null,
         roasDeltaPct: revenueRoas.roasApprox,
-        roasSeries: conversion ? deriveRoasSeries(dailyCurrent, conversion.conversionSpend) : undefined,
         bep,
         conversionCount: conversion?.conversionCount ?? null,
-        conversionSeries: dailyCurrent.length >= 2 ? dailyCurrent.map((d) => d.purchaseCount) : undefined,
         revenue: revenueRoas.revenue.value,
         revenueDeltaPct: revenueRoas.revenue.deltaPct,
-        revenueSeries: dailyCurrent.length >= 2 ? dailyCurrent.map((d) => d.purchaseValue) : undefined,
         cpa: conversion?.cpa ?? null,
         targetCpa:
           conversion && marginRate != null && conversion.conversionCount > 0
@@ -279,8 +275,8 @@ export default function DashboardPage() {
     <div className="px-12 py-9 pb-16 max-w-[1280px] w-full mx-auto flex flex-col gap-5" data-screen-label="대시보드">
       <div className="flex justify-between items-center gap-4 h-11">
         <div className="flex items-center gap-2.5 min-w-0">
-          <h1 className="m-0 font-bold text-[17px] leading-none tracking-[-0.01em] text-[var(--w-fg-strong)]">광고 대시보드</h1>
-          {browseMode && <Chip variant="neutral" size="sm">예시</Chip>}
+          <h1 className="w-h4 m-0">광고 현황</h1>
+          {browseMode && <Chip variant="neutral" size="sm">둘러보기 예시</Chip>}
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <SegControl
@@ -318,8 +314,8 @@ export default function DashboardPage() {
         <Card className="flex items-center gap-4 border-[var(--w-status-cautionary-line)] bg-[var(--w-status-cautionary-soft)]">
           <Icon name="warn" size={20} className="shrink-0 text-[var(--w-status-cautionary)]" />
           <div className="flex-1">
-            <div className="font-semibold text-[15px] leading-[1.3] text-[var(--w-fg-strong)]">광고 계정이 아직 연결되지 않았어요</div>
-            <div className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)] mt-[3px]">Meta 광고 계정과 페이지를 연결하면 광고를 만들고 집행할 수 있어요.</div>
+            <div className="w-h4">광고 계정이 아직 연결되지 않았어요</div>
+            <div className="w-caption mt-1">Meta 광고 계정과 페이지를 연결하면 광고를 만들고 집행할 수 있어요.</div>
           </div>
           <Button variant="primary" size="sm" type="button" onClick={goConnect}>연결하러 가기 <Icon name="arrow-right" size={14} /></Button>
         </Card>

@@ -45,8 +45,8 @@ export function ActionQueue({ loading, items, onAction }: ActionQueueProps) {
   return (
     <div className="flex flex-col gap-3.5">
       <div className="flex items-baseline gap-2.5">
-        <h2 className="m-0 font-bold text-[20px] leading-[1.3] tracking-[-0.012em] text-[var(--w-fg-strong)]">오늘의 진단</h2>
-        <span className="font-medium text-[13px] text-[var(--w-fg-neutral)]">효과가 큰 순서로 정리했어요</span>
+        <h2 className="w-h2 m-0">지금 할 일</h2>
+        <span className="w-caption">우선순위대로 정리했어요</span>
       </div>
 
       {loading ? (
@@ -60,8 +60,8 @@ export function ActionQueue({ loading, items, onAction }: ActionQueueProps) {
             <Icon name="check" size={17} />
           </span>
           <div>
-            <div className="font-bold text-[17px] leading-[1.4] text-[var(--w-fg-strong)]">지금 손볼 게 없어요</div>
-            <div className="font-medium text-[14px] leading-[1.5] text-[var(--w-fg-neutral)] mt-0.5">
+            <div className="w-h4">지금 손볼 게 없어요</div>
+            <div className="w-caption mt-1">
               새는 곳도, 급하게 올릴 곳도 안 보여요. 이대로 지켜봐도 괜찮아요.
             </div>
           </div>
@@ -85,19 +85,19 @@ function ActionCard({ item, rank, onAction }: { item: ActionItem; rank: number; 
 
       <div className="flex-1 min-w-0 flex flex-col gap-2.5">
         <h3
-          className="m-0 font-bold text-[19px] leading-7 tracking-[-0.01em] text-[var(--w-fg-strong)]"
+          className="w-h4 m-0 max-w-[52ch]"
           style={{ textWrap: "pretty" }}
         >
           {item.title}
         </h3>
-        <p className="m-0 font-medium text-[15px] leading-6 text-[var(--w-fg-normal)]" style={{ textWrap: "pretty" }}>
+        <p className="w-body m-0 max-w-[72ch]" style={{ textWrap: "balance" }}>
           {item.body}
         </p>
 
         {item.stats.length > 0 && (
           <div
             className={cn(
-              "rounded-xl py-3.5 px-4 flex gap-5",
+              "w-fit max-w-full rounded-xl py-3.5 px-4 flex gap-5",
               item.stats.length === 1 ? "items-center gap-3.5 flex-wrap" : "items-stretch",
             )}
             style={{ background: STAT_BG[item.accent] }}

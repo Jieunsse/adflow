@@ -139,16 +139,6 @@ export function deriveRevenueRoasDelta(
   return { revenue, roasApprox: pRoas != null ? pctDelta(cRoas, pRoas) : undefined };
 }
 
-// 근거 지표 ROAS 스파크라인용 일별 시리즈. daily 는 계정 전체 지출만 가지고 있어(전환 캠페인 전용
-// 지출의 일별 시계열이 없다) 기간 평균 지출 비중이 매일 같다고 보고 전환 스코프로 환산한다 —
-// deriveRevenueRoasDelta 와 같은 종류의 근사이며, 절대값이 아니라 손익분기선 대비 위치·흐름을 읽는 용도.
-export function deriveRoasSeries(current: AccountDailyPoint[], conversionSpend: number): number[] | undefined {
-  const total = sum(current, "spend");
-  if (current.length < 2 || total <= 0 || conversionSpend <= 0) return undefined;
-  const scale = total / conversionSpend;
-  return current.map((d) => (d.spend > 0 ? (d.purchaseValue / d.spend) * scale : 0));
-}
-
 // ── 캠페인 성과 테이블 파생값 ───────────────────────────────────────────────────
 export type CampaignTableRow = {
   id: string;

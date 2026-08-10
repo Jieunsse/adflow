@@ -34,16 +34,16 @@ export function DashboardHero({ loading, narrative, rangeLabel, periodLabel, onS
     >
       <div className="flex flex-col gap-4">
         <span
-          className="font-bold text-[12px] leading-none"
-          style={{ letterSpacing: "0.06em", color: "var(--w-on-narrative-alternative)" }}
+          className="w-overline"
+          style={{ color: "var(--w-on-narrative-alternative)" }}
         >
           {rangeLabel ? `${rangeLabel} · ` : ""}
           {periodLabel}
         </span>
 
         <h1
-          className="m-0 font-bold text-[32px] leading-[44px] xl:text-[40px] xl:leading-[54px]"
-          style={{ letterSpacing: "-0.028em", textWrap: "pretty" }}
+          className="w-display-2 m-0"
+          style={{ color: "inherit", textWrap: "balance" }}
         >
           광고비 <span className="[font-variant-numeric:tabular-nums]">{fmtManwon(spend)}</span>을 써서
           <br />
@@ -66,7 +66,7 @@ export function DashboardHero({ loading, narrative, rangeLabel, periodLabel, onS
 
         {supportLine && (
           <p
-            className="m-0 font-medium text-[15px] leading-6 max-w-[520px]"
+            className="w-body m-0 max-w-[520px]"
             style={{ color: "var(--w-on-narrative-neutral)" }}
           >
             {supportLine}
@@ -170,19 +170,19 @@ export function DashboardHeroNoConversion({
       style={{ background: "var(--w-surface-narrative)", color: "var(--w-on-narrative)" }}
     >
       <div className="flex flex-col gap-4">
-        <span className="font-bold text-[12px] leading-none" style={{ letterSpacing: "0.06em", color: "var(--w-on-narrative-alternative)" }}>
+        <span className="w-overline" style={{ color: "var(--w-on-narrative-alternative)" }}>
           {rangeLabel ? `${rangeLabel} · ` : ""}
           {periodLabel}
         </span>
-        <h1 className="m-0 font-bold text-[32px] leading-[44px] xl:text-[40px] xl:leading-[54px]" style={{ letterSpacing: "-0.028em", textWrap: "pretty" }}>
+        <h1 className="w-display-2 m-0" style={{ color: "inherit", textWrap: "balance" }}>
           광고비 <span className="[font-variant-numeric:tabular-nums]">{fmtManwon(spend)}</span>을 써서
           <br />
           클릭 <span className="[font-variant-numeric:tabular-nums]">{fmt(clicks)}</span>번을 만들었어요.
           <br />
-          <span style={{ color: "var(--w-on-narrative-alternative)" }}>번 돈은 아직 알 수 없어요.</span>
+          <span style={{ color: "var(--w-on-narrative-alternative)" }}>매출은 아직 알 수 없어요.</span>
         </h1>
-        <p className="m-0 font-medium text-[15px] leading-6 max-w-[520px]" style={{ color: "var(--w-on-narrative-neutral)" }}>
-          전환을 측정하는 캠페인이 없어서 손익을 계산하지 못했어요. 측정을 붙이면 이 자리에 얼마를 남겼는지 바로 보여드려요.
+        <p className="w-body m-0 max-w-[520px]" style={{ color: "var(--w-on-narrative-neutral)" }}>
+          전환을 측정하는 캠페인이 없어서 손익을 계산하지 못했어요. 전환 측정을 설정하면 이 자리에 남긴 금액을 보여드려요.
         </p>
       </div>
 

@@ -7,7 +7,6 @@ import { Card } from "@shared/ui/Card";
 import { Button } from "@shared/ui/Button";
 import { Skeleton } from "@shared/ui/Skeleton";
 import Icon from "@shared/ui/Icon";
-import { MiniBars, Sparkline } from "@shared/ui/primitives";
 import { fmt, fmtKRW } from "@shared/lib/format";
 import { pickWorstDrop, type FunnelStage } from "@entities/insights/account-trend";
 
@@ -21,7 +20,6 @@ export type EvidenceMetric = {
   noteTone?: "positive" | "negative" | "neutral";
   valueTone?: "normal" | "cautionary" | "negative";
   caption?: string;
-  chart?: React.ReactNode;
 };
 
 export type EvidenceRailProps = {
@@ -59,7 +57,7 @@ export function EvidenceRail({
   return (
     <div className="flex flex-col gap-3.5">
       <div className="flex items-baseline gap-2.5">
-        <h2 className="m-0 font-bold text-[20px] leading-[1.3] tracking-[-0.012em] text-[var(--w-fg-strong)]">근거 지표</h2>
+        <h2 className="w-h2 m-0">근거 지표</h2>
       </div>
 
       {loading ? (
@@ -67,36 +65,23 @@ export function EvidenceRail({
       ) : (
         <Card className={`${CARD} flex flex-col gap-[18px]`}>
           {metrics.map((m, i) => (
-            <div key={m.label} className="flex flex-col gap-2">
+            <div key={m.label} className="flex flex-col gap-1.5">
               {i > 0 && <div className="h-px -mt-[18px] mb-2 bg-[var(--w-line-alternative)]" />}
               <div className="flex items-baseline justify-between gap-2">
-                <span className="font-semibold text-[13px] text-[var(--w-fg-neutral)]">{m.label}</span>
+                <span className="w-caption">{m.label}</span>
                 {m.note && (
                   <span className="font-semibold text-[12px]" style={{ color: NOTE_COLOR[m.noteTone ?? "neutral"] }}>
                     {m.note}
                   </span>
                 )}
               </div>
-              <div className="flex items-end justify-between gap-3">
-                <span
-                  className="font-bold text-[30px] leading-none tracking-[-0.025em] [font-variant-numeric:tabular-nums]"
-                  style={{ color: VALUE_COLOR[m.valueTone ?? "normal"] }}
-                >
-                  {m.value}
-                </span>
-                {m.chart ? (
-                  <div className="w-[120px] shrink-0">{m.chart}</div>
-                ) : (
-                  m.caption && (
-                    <span className="font-medium text-[12px] leading-[1.4] text-[var(--w-fg-neutral)] text-right max-w-[120px]">
-                      {m.caption}
-                    </span>
-                  )
-                )}
-              </div>
-              {m.chart && m.caption && (
-                <span className="font-medium text-[12px] text-[var(--w-fg-neutral)]">{m.caption}</span>
-              )}
+              <span
+                className="w-display-2 [font-variant-numeric:tabular-nums]"
+                style={{ color: VALUE_COLOR[m.valueTone ?? "normal"] }}
+              >
+                {m.value}
+              </span>
+              {m.caption && <span className="w-caption">{m.caption}</span>}
             </div>
           ))}
         </Card>
@@ -107,8 +92,8 @@ export function EvidenceRail({
           <span className="grid place-items-center w-9 h-9 rounded-full bg-[var(--w-primary-soft)] text-[var(--w-primary-normal)]">
             <Icon name="target" size={20} />
           </span>
-          <span className="font-bold text-[15px] text-[var(--w-fg-strong)]">목표를 세우면 더 정확해져요</span>
-          <span className="font-medium text-[13px] leading-5 text-[var(--w-fg-normal)]">
+          <span className="w-h4">목표를 세우면 더 정확해져요</span>
+          <span className="w-caption">
             월 목표 매출과 마진율만 알려주시면, 매일 얼마를 써도 되는지 상한선을 계산해 드려요.
           </span>
           <Button variant="primary" size="md" type="button" block onClick={onSetGoal}>
@@ -119,7 +104,7 @@ export function EvidenceRail({
 
       {!loading && funnel.hasData && (
         <Card className={`${CARD} flex flex-col gap-3.5`}>
-          <span className="font-bold text-[15px] text-[var(--w-fg-strong)]">돈이 새는 단계</span>
+          <span className="w-h4">돈이 새는 단계</span>
           <div className="flex flex-col gap-2.5">
             {funnel.stages.map((s) => (
               <LeakBar
@@ -131,7 +116,7 @@ export function EvidenceRail({
             ))}
           </div>
           {funnelNote && (
-            <span className="font-medium text-[12px] leading-[18px] text-[var(--w-fg-neutral)]">{funnelNote}</span>
+            <span className="w-caption">{funnelNote}</span>
           )}
         </Card>
       )}
@@ -191,13 +176,10 @@ export function funnelLeakNote(stages: FunnelStage[], loss: boolean): string | u
 export function buildEvidenceMetrics(input: {
   roas: number | null;
   roasDeltaPct?: number;
-  roasSeries?: number[];
   bep: number | null;
   conversionCount: number | null;
-  conversionSeries?: number[];
   revenue: number;
   revenueDeltaPct?: number;
-  revenueSeries?: number[];
   cpa: number | null;
   targetCpa: number | null;
 }): EvidenceMetric[] {
@@ -209,11 +191,7 @@ export function buildEvidenceMetrics(input: {
       value: `${input.roas.toFixed(2)}x`,
       note: input.roasDeltaPct != null ? `${input.roasDeltaPct >= 0 ? "↗" : "↘"} ${Math.abs(input.roasDeltaPct).toFixed(1)}%` : undefined,
       noteTone: input.roasDeltaPct != null ? (input.roasDeltaPct >= 0 ? "positive" : "negative") : undefined,
-      // 손익분기 미달은 점선·캡션이 이미 말한다 — 값까지 물들이면 경고가 두 번이라 위계가 죽는다.
-      caption: input.bep != null ? `점선이 손익분기 ${input.bep.toFixed(2)}x예요` : undefined,
-      chart: input.roasSeries ? (
-        <Sparkline data={input.roasSeries} height={34} color="var(--w-primary-normal)" threshold={input.bep ?? undefined} />
-      ) : undefined,
+      caption: input.bep != null ? `손익분기 ROAS는 ${input.bep.toFixed(2)}x예요` : undefined,
     });
   }
 
@@ -222,7 +200,6 @@ export function buildEvidenceMetrics(input: {
       label: "전환수",
       value: fmt(input.conversionCount),
       note: "기간 누적",
-      chart: input.conversionSeries ? <MiniBars data={input.conversionSeries} /> : undefined,
     });
   }
 
@@ -231,9 +208,6 @@ export function buildEvidenceMetrics(input: {
     value: fmtKRW(input.revenue),
     note: input.revenueDeltaPct != null ? `${input.revenueDeltaPct >= 0 ? "↗" : "↘"} ${Math.abs(input.revenueDeltaPct).toFixed(1)}%` : undefined,
     noteTone: input.revenueDeltaPct != null ? (input.revenueDeltaPct >= 0 ? "positive" : "negative") : undefined,
-    chart: input.revenueSeries ? (
-      <Sparkline data={input.revenueSeries} height={34} color="var(--w-status-positive)" />
-    ) : undefined,
   });
 
   if (input.cpa != null) {

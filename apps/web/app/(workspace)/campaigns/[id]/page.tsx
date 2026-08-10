@@ -1,19 +1,17 @@
 "use client";
 
 import { Suspense, useEffect, useMemo, useState } from "react";
+import dynamic from "next/dynamic";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import Icon, { type IconName } from "@shared/ui/Icon";
-import DatePicker from "@shared/ui/DatePicker";
-import AgeRange from "@shared/ui/AgeRange";
 import { COUNTRIES } from "@shared/lib/geo-options";
 import { KpiCard } from "@shared/ui/primitives";
 import DualChart, { ChartLegend } from "@shared/ui/DualChart";
 import { fmt, fmtKRW, shortDate, campaignDateInfo, campaignRunDays, campaignGradient } from "@shared/lib/format";
 import { useApiMutation } from "@shared/lib/api/useApiMutation";
 import { useToast } from "@shared/ui/Toast";
-import ConfirmModal from "@shared/ui/ConfirmModal";
 import { suggestOptimizations, assessAutomationReadiness, deriveVerdict, type AutomationReadiness, type Verdict } from "@entities/insights/optimization";
 import type { Suggestion } from "@entities/insights/suggestion";
 import { isFakePerformance, type FakePerformanceEvidence } from "@entities/insights/fake-performance";
@@ -30,7 +28,6 @@ import { judgeAbTest, rowToKpi } from "@entities/insights/ab-verdict";
 import { getMockCampaignAdIds, seedMockAdRows } from "@/lib/mock-campaigns";
 import { CTAS } from "@entities/creative/options";
 import { DEMO_AD_IMAGES } from "@/lib/demo/mock-images";
-import AbTestResultCard from "@widgets/performance-step/AbTestResultCard";
 import type { CampaignSummary, InsightsPeriod } from "@/lib/meta-ads";
 import type { AdInsightsRow } from "@entities/insights/types";
 import { Button, buttonVariants } from "@shared/ui/Button";
@@ -42,6 +39,11 @@ import { SegControl } from "@shared/ui/SegControl";
 import { cn } from "@shared/lib/cn";
 import { useAutoRelaunch } from "@shared/lib/autoRelaunch";
 import { useNotifications, type WinnerEvidence } from "@shared/lib/notifications";
+
+const DatePicker = dynamic(() => import("@shared/ui/DatePicker"));
+const AgeRange = dynamic(() => import("@shared/ui/AgeRange"));
+const ConfirmModal = dynamic(() => import("@shared/ui/ConfirmModal"));
+const AbTestResultCard = dynamic(() => import("@widgets/performance-step/AbTestResultCard"));
 
 
 type Period = "all" | InsightsPeriod;

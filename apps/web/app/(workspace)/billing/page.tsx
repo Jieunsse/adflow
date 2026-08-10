@@ -15,6 +15,7 @@ import { Skeleton } from "@shared/ui/Skeleton";
 import { fmt } from "@shared/lib/format";
 import BillingAlertWidget from "@widgets/billing-alert";
 import { billingQueryKey, fetchBilling } from "@entities/billing/api";
+import type { Billing } from "@entities/billing/types";
 import { accountStatusLabel, fundingSourceTypeLabel } from "@entities/billing/labels";
 import { BILLING_HELP_LINKS } from "@entities/billing/help-links";
 

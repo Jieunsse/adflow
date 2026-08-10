@@ -60,7 +60,7 @@ const MOCK: BrandedContentItem[] = [
     id: "bc5",
     creatorUsername: "running.hyo",
     creatorAvatarUrl: "https://i.pravatar.cc/64?img=12",
-    mediaUrl: "/demo/library/suncream.png",
+    mediaUrl: "/demo/library/suncream.webp",
     caption: "야외 러닝 전엔 비건 선크림 필수예요 🏃‍♀️ 가볍게 발려요 @greenroutine_official",
     timestamp: "2026-05-08T07:30:00Z",
     isEligibleForBrandedContent: false,

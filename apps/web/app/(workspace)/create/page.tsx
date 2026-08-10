@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useEffect, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Button } from "@shared/ui/Button";
@@ -17,7 +18,6 @@ import { getMockCampaign, getMockCampaignAdIds, seedMockAdRows } from "@/lib/moc
 import Icon from "@shared/ui/Icon";
 import { useToast } from "@shared/ui/Toast";
 import { useLibrary } from "@shared/lib/library";
-import ConfirmModal from "@shared/ui/ConfirmModal";
 import { TONES, CTAS, OBJECTIVES_ALL, COPY_HOOKS, type CtaId, type CopyHook, type OutcomeChip } from "@entities/creative/options";
 import { isBoost } from "@entities/creative/outcome-routing";
 import { nextStepAfterBrief, shouldTriggerGenerate } from "@entities/creative/brief-flow";
@@ -32,21 +32,23 @@ import {
   type CreateDraftSnapshot,
 } from "@entities/creative/draft-persistence";
 import { shrinkImageDataUrl } from "@shared/lib/shrink-image";
-import LaunchStep from "@widgets/launch-step";
 import BriefStep from "@widgets/create-flow/BriefStep";
-import GeneratingPanel from "@widgets/create-flow/GeneratingPanel";
-import CompareStep from "@widgets/create-flow/CompareStep";
-import ImageConceptStep from "@widgets/create-flow/ImageConceptStep";
-import RefineStep from "@widgets/create-flow/RefineStep";
 import { savedAgoLabel } from "@widgets/create-flow/copy-diff";
 import { useStudioSession } from "@widgets/create-flow/useStudioSession";
 import { readBrandProfile, readActiveBrandProfileEntry, useBrandProfileStorage } from "@features/brand-profile/model/useBrandProfileStorage";
 import { readPersonas, usePersonasStorage } from "@features/brand-profile/model/usePersonasStorage";
 import { mergePersonaTargeting } from "@features/brand-profile/model/mergePersonaTargeting";
 import { useProducts } from "@shared/lib/products";
-import PersonaQuickCreateModal from "@features/brand-profile/ui/PersonaQuickCreateModal";
-import ProductEditModal from "@features/brand-profile/ui/ProductEditModal";
 import { selectProfileNudge, NUDGE_LABEL, type ProfileNudge, type ProfileNudgeTarget } from "@entities/creative/profile-nudge";
+
+const LaunchStep = dynamic(() => import("@widgets/launch-step"));
+const GeneratingPanel = dynamic(() => import("@widgets/create-flow/GeneratingPanel"));
+const CompareStep = dynamic(() => import("@widgets/create-flow/CompareStep"));
+const ImageConceptStep = dynamic(() => import("@widgets/create-flow/ImageConceptStep"));
+const RefineStep = dynamic(() => import("@widgets/create-flow/RefineStep"));
+const ConfirmModal = dynamic(() => import("@shared/ui/ConfirmModal"));
+const PersonaQuickCreateModal = dynamic(() => import("@features/brand-profile/ui/PersonaQuickCreateModal"));
+const ProductEditModal = dynamic(() => import("@features/brand-profile/ui/ProductEditModal"));
 
 const GRADIENTS = [
   "linear-gradient(135deg, #0066ff 0%, #6541f2 60%, #00bdde 100%)",

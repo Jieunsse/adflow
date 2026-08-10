@@ -124,7 +124,7 @@ export function getMockLibraryItems(now: number = Date.now()): LibraryItem[] {
       goal: "트래픽",
       target: "20–38세 · 데일리 자외선 차단 관심",
       gradient: "linear-gradient(135deg, #7ba56b 0%, #b7d6a0 60%, #eef4e2 100%)",
-      image: "/demo/library/suncream.png",
+      image: "/demo/library/suncream.webp",
       tag: "AI 생성",
     },
     {
@@ -141,7 +141,7 @@ export function getMockLibraryItems(now: number = Date.now()): LibraryItem[] {
       goal: "참여",
       target: "20–34세 · 데일리 입술 케어",
       gradient: "linear-gradient(135deg, #9bc89b 0%, #cce6b8 55%, #f3f1e3 100%)",
-      image: "/demo/library/lipbalm.png",
+      image: "/demo/library/lipbalm.webp",
       tag: "AI 생성",
     },
   ];

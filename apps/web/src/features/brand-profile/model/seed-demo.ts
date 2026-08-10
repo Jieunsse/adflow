@@ -253,7 +253,7 @@ const DEMO_PRODUCTS: ProductEntry[] = [
     name: "식물성 선크림",
     description:
       "백탁 없이 산뜻하게 발리는 비건 선크림. 끈적임 없이 가볍게, 무향·무색소로 자극은 줄였어요. 데일리 자외선 차단.",
-    imageUrl: "/demo/library/suncream.png",
+    imageUrl: "/demo/library/suncream.webp",
     price: "26,000원",
     createdAt: Date.now() - 1000 * 60 * 60 * 24 * 8,
   },
@@ -263,7 +263,7 @@ const DEMO_PRODUCTS: ProductEntry[] = [
     name: "비건 립밤",
     description:
       "식물성 보습 성분을 담은 비건 립밤. 무향으로 자극 없이, 하루 종일 촉촉하게 발려요. 비건 인증·무색소.",
-    imageUrl: "/demo/library/lipbalm.png",
+    imageUrl: "/demo/library/lipbalm.webp",
     price: "12,000원",
     createdAt: Date.now() - 1000 * 60 * 60 * 24 * 6,
   },

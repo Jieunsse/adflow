@@ -301,7 +301,7 @@
   --w-space-13:  128px;
 
   
-  --w-font-sans: "Pretendard", "Pretendard JP Variable", "Pretendard JP",
+  --w-font-sans: "Pretendard JP Variable", "Pretendard JP",
                  -apple-system, "system-ui", "Apple SD Gothic Neo", "Noto Sans KR",
                  "Hiragino Kaku Gothic ProN", sans-serif;
   --w-font-display: "Wanted Sans Variable", "Wanted Sans", var(--w-font-sans);

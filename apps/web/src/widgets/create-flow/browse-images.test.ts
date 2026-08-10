@@ -14,7 +14,7 @@ describe("pickBrowseShots", () => {
   });
 
   it("3컷이 서로 겹치지 않는다", () => {
-    for (const product of [null, "/demo/library/cream.jpg", "/demo/library/lipbalm.png"]) {
+    for (const product of [null, "/demo/library/cream.jpg", "/demo/library/lipbalm.webp"]) {
       for (let rotate = 0; rotate < 8; rotate++) {
         expect(new Set(urls(rotate, product)).size).toBe(3);
       }

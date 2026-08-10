@@ -15,7 +15,7 @@ function toneText(tone: string): string {
   return TONE_PROMPT_DESC[tone as ToneId] ?? tone;
 }
 import { AD_COPYWRITER_SYSTEM_PROMPT } from "@/lib/prompts/ad-copywriter";
-import type { SopSection } from "@features/sop/model/useSopStorage";
+import type { SopSection } from "@features/brand-profile/model/policy";
 
 export interface BrandProfileContext {
   brandDescription?: string;

@@ -254,7 +254,7 @@ export const SPECS: SeedSpec[] = [
     startChampion: {
       headline: "매일 바르는 순한 식물성 자외선 차단",
       primaryText: "백탁 없이 산뜻하게 발리는 비건 선크림. 민감한 피부도 부담 없이 데일리로 쓸 수 있어요.",
-      imageUrl: "/demo/library/suncream.png",
+      imageUrl: "/demo/library/suncream.webp",
     },
     mutations: [
       { field: "primaryText", value: "백탁 없이 산뜻하게 흡수되는 비건 선크림. 민감 피부도 매일 부담 없이 발라요.", outcome: "win" },
@@ -276,7 +276,7 @@ export const SPECS: SeedSpec[] = [
     startChampion: {
       headline: "건조한 입술에 촉촉 한 겹",
       primaryText: "식물성 보습 성분을 담은 비건 립밤. 무향으로 자극 없이, 하루 종일 촉촉하게.",
-      imageUrl: "/demo/library/lipbalm.png",
+      imageUrl: "/demo/library/lipbalm.webp",
     },
     mutations: [
       { field: "headline", value: "갈라지는 입술, 촉촉하게 채워요", outcome: "win" },

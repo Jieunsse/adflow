@@ -39,12 +39,12 @@ const DEMO_SHOTS: BrowseShot[] = [
     note: "그림자가 살아 있어 사진처럼 자연스러워요.",
   },
   {
-    url: "/demo/library/suncream.png",
+    url: "/demo/library/suncream.webp",
     label: "제품컷 · 밝은 톤 · 데일리",
     note: "밝고 가벼운 인상 — 여름 캠페인에 어울려요.",
   },
   {
-    url: "/demo/library/lipbalm.png",
+    url: "/demo/library/lipbalm.webp",
     label: "제품컷 · 소형 · 포인트 컷",
     note: "작은 제품을 크게 잡아 눈에 띄게 했어요.",
   },

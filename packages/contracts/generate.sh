@@ -11,5 +11,5 @@ if ! curl -sSf "$API_URL/v3/api-docs" -o "$HERE/openapi.json"; then
 fi
 
 mkdir -p "$HERE/types"
-npx openapi-typescript "$HERE/openapi.json" -o "$HERE/types/api.d.ts"
+pnpm --dir "$HERE" exec openapi-typescript "$HERE/openapi.json" -o "$HERE/types/api.d.ts"
 echo "생성 완료 — $HERE/types/api.d.ts"

@@ -2,17 +2,15 @@
   "name": "adflow-monorepo",
   "version": "0.1.0",
   "private": true,
-  "workspaces": [
-    "apps/web",
-    "packages/*"
-  ],
+  "packageManager": "pnpm@10.23.0",
   "scripts": {
-    "dev": "npm run dev --workspace apps/web",
-    "https-dev": "npm run https-dev --workspace apps/web",
-    "build": "npm run build --workspace apps/web",
-    "start": "npm run start --workspace apps/web",
-    "lint": "npm run lint --workspace apps/web",
-    "test": "npm run test --workspace apps/web",
-    "contracts:generate": "npm run generate --workspace packages/contracts"
+    "dev": "pnpm --filter adflow dev",
+    "https-dev": "pnpm --filter adflow https-dev",
+    "build": "pnpm --filter adflow build",
+    "start": "pnpm --filter adflow start",
+    "lint": "pnpm --filter adflow lint",
+    "test": "pnpm --filter adflow test",
+    "test:e2e": "pnpm --filter adflow test:e2e",
+    "contracts:generate": "pnpm --filter @adflow/contracts generate"
   }
 }

@@ -12,6 +12,8 @@ node_modules
 
 # testing
 coverage
+playwright-report/
+test-results/
 
 # next.js
 .next/
@@ -41,11 +43,8 @@ yarn-error.log*
 next-env.d.ts
 
 # etc
-.agents/*
 .document/*
 .jayden/*
-.claude/*
-.codex/*
 
 # adflow local secrets (Meta 자격증명 암호화 저장)
 .adflow/
@@ -54,9 +53,6 @@ next-env.d.ts
 **/public/uploads/
 # local scratch / agent issue tracker
 .scratch/
-# agent auto-memory (personal — do not commit)
-/memory/
-
 certificates
 .gstack/
 

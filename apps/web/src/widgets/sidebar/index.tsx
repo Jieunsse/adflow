@@ -17,6 +17,7 @@ interface NavItem {
   href: string;
   label: string;
   icon: IconName;
+  matchPaths?: string[];
   chip?: string;
   count?: number;
   countVariant?: "warn" | "primary";
@@ -28,25 +29,40 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
     label: "메인",
     items: [
       { href: "/dashboard", label: "대시보드", icon: "grid" },
+      { href: "/analysis", label: "상세 분석", icon: "chart" },
       { href: "/goals", label: "목표", icon: "target" },
       { href: "/create", label: "광고 만들기", icon: "sparkles", chip: "AI" },
     ],
   },
   {
-    label: "캠페인 관리",
+    label: "운영",
     items: [
-      { href: "/campaigns", label: "캠페인", icon: "message", count: 12, countVariant: "primary" },
-      { href: "/ab-tests", label: "A/B 테스트", icon: "chart" },
-      { href: "/approvals", label: "승인 대기", icon: "clock", countVariant: "warn" },
-      { href: "/library", label: "소재 라이브러리", icon: "folder" },
+      {
+        href: "/campaigns",
+        label: "캠페인 관리",
+        icon: "message",
+        children: [
+          { href: "/campaigns", label: "캠페인", icon: "message", count: 12, countVariant: "primary" },
+          { href: "/ab-tests", label: "A/B 테스트", icon: "chart" },
+          { href: "/approvals", label: "승인 대기", icon: "clock", countVariant: "warn" },
+          { href: "/library", label: "소재 라이브러리", icon: "folder" },
+        ],
+      },
     ],
   },
   {
     label: "인플루언서",
     items: [
-      { href: "/creators", label: "크리에이터", icon: "user" },
-      { href: "/creators/campaigns", label: "협업 캠페인", icon: "megaphone" },
-      { href: "/instagram/partnerships", label: "파트너십 콘텐츠", icon: "hash" },
+      {
+        href: "/creators",
+        label: "크리에이터",
+        icon: "user",
+        children: [
+          { href: "/creators", label: "크리에이터", icon: "user" },
+          { href: "/creators/campaigns", label: "협업 캠페인", icon: "megaphone" },
+          { href: "/instagram/partnerships", label: "파트너십 콘텐츠", icon: "hash" },
+        ],
+      },
     ],
   },
   {
@@ -58,11 +74,8 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
         icon: "instagram",
         children: [
           { href: "/instagram", label: "인사이트", icon: "chart" },
-          { href: "/instagram/posts", label: "게시", icon: "image" },
-          { href: "/instagram/comments", label: "댓글 관리", icon: "comment" },
-          { href: "/instagram/stories", label: "스토리", icon: "play" },
-          { href: "/instagram/reels", label: "릴스", icon: "play" },
-          { href: "/instagram/messages", label: "메시지", icon: "message" },
+          { href: "/instagram/posts", label: "콘텐츠", icon: "image", matchPaths: ["/instagram/stories", "/instagram/reels"] },
+          { href: "/instagram/messages", label: "DM", icon: "send" },
         ],
       },
       {
@@ -85,10 +98,16 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
   {
     label: "워크스페이스",
     items: [
-      { href: "/members", label: "구성원 · 권한", icon: "users" },
-      { href: "/connect", label: "계정 연결", icon: "asterisk" },
-      { href: "/billing", label: "청구 및 결제", icon: "wallet" },
-      { href: "/settings", label: "설정", icon: "settings" },
+      {
+        href: "/settings",
+        label: "워크스페이스",
+        icon: "settings",
+        children: [
+          { href: "/members", label: "구성원 · 권한", icon: "users" },
+          { href: "/billing", label: "청구 및 결제", icon: "wallet" },
+          { href: "/settings", label: "설정", icon: "settings" },
+        ],
+      },
     ],
   },
 ];
@@ -101,6 +120,10 @@ const THEME_BUTTONS: { id: ThemeChoice; icon: IconName; label: string }[] = [
 
 const COUNT_BASE =
   "ml-auto font-semibold text-[11px] leading-none [font-family:var(--w-font-mono)] px-[7px] py-[3px] rounded-full";
+
+function matchesPath(item: NavItem, pathname: string) {
+  return [item.href, ...(item.matchPaths ?? [])].some((href) => pathname === href || pathname.startsWith(href + "/"));
+}
 
 function countClass(variant: "warn" | "primary" | undefined, active: boolean) {
   return cn(COUNT_BASE, {
@@ -150,7 +173,7 @@ export default function Sidebar() {
     const open = new Set<string>();
     for (const group of NAV_GROUPS) {
       for (const item of group.items) {
-        if (item.children?.some((c) => pathname === c.href || pathname.startsWith(c.href + "/"))) {
+        if (item.children?.some((c) => matchesPath(c, pathname))) {
           open.add(item.href);
         }
       }
@@ -161,7 +184,7 @@ export default function Sidebar() {
   useEffect(() => {
     for (const group of NAV_GROUPS) {
       for (const item of group.items) {
-        if (item.children?.some((c) => pathname === c.href || pathname.startsWith(c.href + "/"))) {
+        if (item.children?.some((c) => matchesPath(c, pathname))) {
           setOpenItems((prev) => {
             if (prev.has(item.href)) return prev;
             return new Set([...prev, item.href]);
@@ -224,7 +247,7 @@ export default function Sidebar() {
             </div>
             {(() => {
               const bestGroupMatch = group.items.reduce<NavItem | null>((best, it) => {
-                const matches = pathname === it.href || pathname.startsWith(it.href + "/");
+                const matches = matchesPath(it, pathname);
                 if (!matches) return best;
                 return !best || it.href.length > best.href.length ? it : best;
               }, null);
@@ -280,18 +303,22 @@ export default function Sidebar() {
                   )}
                   {hasChildren && isOpen && (() => {
                     const bestMatch = it.children!.reduce<NavItem | null>((best, c) => {
-                      const matches = pathname === c.href || pathname.startsWith(c.href + "/");
+                      const matches = matchesPath(c, pathname);
                       if (!matches) return best;
                       return !best || c.href.length > best.href.length ? c : best;
                     }, null);
                     return it.children!.map((child) => {
                       const childActive = child.href === bestMatch?.href;
+                      const childLiveCount = child.href === "/approvals" ? approvalsCount : child.count;
                       return (
                         <Link key={child.href} href={child.href} className={linkClass(childActive, true)}>
                           <span className="w-4 h-4 grid place-items-center">
                             <Icon name={child.icon} size={16} />
                           </span>
                           <span>{child.label}</span>
+                          {childLiveCount != null && childLiveCount > 0 && (
+                            <span className={countClass(child.countVariant, childActive)}>{childLiveCount}</span>
+                          )}
                         </Link>
                       );
                     });
@@ -309,7 +336,12 @@ export default function Sidebar() {
           <div className="font-semibold text-[10.5px] leading-none uppercase tracking-[0.08em] text-[var(--w-fg-alternative)] mb-2">
             연결 상태
           </div>
-          {connected ? (
+          {browseMode ? (
+            <div className="flex items-center gap-1.5">
+              <span className="w-[7px] h-[7px] rounded-full bg-[var(--w-status-cautionary)]" />
+              <span className="font-semibold text-[12px] leading-[1.3] text-[var(--w-fg-normal)]">둘러보기 모드</span>
+            </div>
+          ) : connected ? (
             <>
               <div className="flex items-center gap-1.5 mb-1.5">
                 <span className="w-[7px] h-[7px] rounded-full shrink-0 bg-[var(--w-status-positive)]" />

@@ -24,7 +24,10 @@ function resolve(t: ThemeChoice): "light" | "dark" {
 }
 
 function applyToHtml(t: ThemeChoice) {
-  if (typeof document !== "undefined") document.documentElement.setAttribute("data-theme", resolve(t));
+  if (typeof document === "undefined") return;
+  const pathname = window.location.pathname;
+  const forceLight = ["/login", "/onboarding", "/setup"].some((route) => pathname === route || pathname.startsWith(`${route}/`));
+  document.documentElement.setAttribute("data-theme", forceLight ? "light" : resolve(t));
 }
 
 export function useTheme() {

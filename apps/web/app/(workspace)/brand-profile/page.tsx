@@ -233,7 +233,7 @@ export default function BrandProfilePage() {
   };
 
   return (
-    <div className="px-12 py-9 pb-16 max-w-[900px] w-full mx-auto flex flex-col gap-7">
+    <div className="px-12 py-9 pb-16 max-w-[900px] w-full mx-auto flex flex-col gap-7" data-screen-label="브랜드 프로필">
       <div className="flex justify-between items-end gap-6">
         <div>
           <span className="font-semibold text-[11px] leading-[1.45] uppercase tracking-[0.04em] text-[var(--w-fg-neutral)]">

@@ -7,10 +7,11 @@ import { Card } from "@shared/ui/Card";
 import { Button } from "@shared/ui/Button";
 import { Skeleton } from "@shared/ui/Skeleton";
 import Icon from "@shared/ui/Icon";
+import { cn } from "@shared/lib/cn";
 import { fmt, fmtKRW } from "@shared/lib/format";
 import { pickWorstDrop, type FunnelStage } from "@entities/insights/account-trend";
 
-const CARD = "rounded-2xl py-[22px] px-6 shadow-[var(--w-shadow-card)]";
+const CARD = "rounded-[var(--w-radius-12)] p-6";
 
 export type EvidenceMetric = {
   label: string;
@@ -55,22 +56,28 @@ export function EvidenceRail({
   onSetGoal,
 }: EvidenceRailProps) {
   return (
-    <div className="flex flex-col gap-3.5">
-      <div className="flex items-baseline gap-2.5">
+    <div className="flex flex-col gap-5">
+      <div className="flex items-baseline gap-3">
         <h2 className="w-h2 m-0">근거 지표</h2>
       </div>
 
       {loading ? (
         <Skeleton className="h-[420px] rounded-2xl" />
       ) : (
-        <Card className={`${CARD} flex flex-col gap-[18px]`}>
+        <Card className={`${CARD} grid grid-cols-2 gap-0 overflow-hidden p-0`}>
           {metrics.map((m, i) => (
-            <div key={m.label} className="flex flex-col gap-1.5">
-              {i > 0 && <div className="h-px -mt-[18px] mb-2 bg-[var(--w-line-alternative)]" />}
+            <div
+              key={m.label}
+              className={cn(
+                "flex min-h-32 flex-col gap-2 p-6",
+                i % 2 === 1 && "border-l border-[var(--w-line-alternative)]",
+                i >= 2 && "border-t border-[var(--w-line-alternative)]",
+              )}
+            >
               <div className="flex items-baseline justify-between gap-2">
                 <span className="w-caption">{m.label}</span>
                 {m.note && (
-                  <span className="font-semibold text-[12px]" style={{ color: NOTE_COLOR[m.noteTone ?? "neutral"] }}>
+                  <span className="w-caption font-semibold" style={{ color: NOTE_COLOR[m.noteTone ?? "neutral"] }}>
                     {m.note}
                   </span>
                 )}
@@ -138,7 +145,7 @@ function LeakBar({ stage, leak, onClick }: { stage: FunnelStage; leak: boolean; 
       className="flex items-center gap-2.5 w-full bg-transparent border-0 p-0 text-left enabled:cursor-pointer enabled:hover:opacity-80"
     >
       <span
-        className="w-16 shrink-0 text-[12px]"
+        className="w-16 shrink-0 w-caption"
         style={{ color: leak ? "var(--w-status-negative)" : "var(--w-fg-neutral)", fontWeight: leak ? 700 : 500 }}
       >
         {stage.label}
@@ -151,7 +158,7 @@ function LeakBar({ stage, leak, onClick }: { stage: FunnelStage; leak: boolean; 
         <span className="flex-1 h-2 rounded-full border border-dashed border-[var(--w-line-normal)]" />
       )}
       <span
-        className="w-16 shrink-0 text-right text-[13px] [font-variant-numeric:tabular-nums]"
+        className="w-16 shrink-0 text-right w-label [font-variant-numeric:tabular-nums]"
         style={{ color: leak ? "var(--w-status-negative)" : "var(--w-fg-strong)", fontWeight: leak ? 700 : 600 }}
       >
         {stage.measured ? fmt(stage.value) : "—"}

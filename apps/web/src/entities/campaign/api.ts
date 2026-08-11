@@ -4,8 +4,10 @@ export type CampaignsQueryError = Error & { code?: number };
 
 // /campaigns, /approvals, 사이드바 배지가 같은 queryKey 로 캐시 공유.
 // react-query key 컨벤션: ["campaigns", period].
-export async function fetchCampaigns(period: "all" | InsightsPeriod = "all"): Promise<CampaignSummary[]> {
-  const res = await fetch(`/api/campaigns?period=${period}`);
+export async function fetchCampaigns(period: "all" | InsightsPeriod = "all", example?: "good" | "poor"): Promise<CampaignSummary[]> {
+  const params = new URLSearchParams({ period });
+  if (example) params.set("example", example);
+  const res = await fetch(`/api/campaigns?${params}`);
   const data = await res.json();
   if (res.status === 401) {
     const err: CampaignsQueryError = Object.assign(

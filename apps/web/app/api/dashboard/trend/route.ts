@@ -1,12 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { metaAds } from '@/lib/meta-ads'
 import { withMetaSession } from '@/lib/meta-session'
-import { MOCK_CAMPAIGN_SUMMARIES } from '@/lib/mock-campaigns'
+import { getBrowseDashboardCampaigns, MOCK_CAMPAIGN_SUMMARIES, type BrowseDashboardExample } from '@/lib/mock-campaigns'
 import { synthAccountDaily } from '@entities/insights/account-trend'
 
 function parseDays(v: string | null): number {
   const n = Number(v)
   return n === 14 || n === 60 ? n : 14
+}
+
+function parseBrowseExample(v: string | null): BrowseDashboardExample | null {
+  return v === 'good' || v === 'poor' ? v : null
 }
 
 // ADR-059 — 계정 횡단 일별 합산 추세(듀얼추세 입력). 실유저는 계정 레벨 단일 콜(N+1 회피).
@@ -21,8 +25,10 @@ export const GET = withMetaSession(
   {
     onBrowse: (_session, req) => {
       const days = parseDays(req.nextUrl.searchParams.get('days'))
+      const example = parseBrowseExample(req.nextUrl.searchParams.get('example'))
       const today = new Date().toISOString().slice(0, 10)
-      return NextResponse.json({ daily: synthAccountDaily(MOCK_CAMPAIGN_SUMMARIES, today, days, true) })
+      const campaigns = example ? getBrowseDashboardCampaigns(example) : MOCK_CAMPAIGN_SUMMARIES
+      return NextResponse.json({ daily: synthAccountDaily(campaigns, today, days, example !== 'poor') })
     },
   },
 )

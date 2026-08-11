@@ -243,6 +243,16 @@ function PostsFlow() {
   const selectedProfile = brandProfiles.find((p) => p.id === selectedProfileId) ?? null;
   const profilePersonas = allPersonas.filter((p) => p.brandProfileId === selectedProfileId);
   const selectedPersona = profilePersonas.find((p) => p.id === selectedPersonaId) ?? null;
+  const contextItems = [
+    selectedProfile?.tone ? { label: "톤", content: selectedProfile.tone } : null,
+    selectedProfile?.brandVoice ? { label: "보이스", content: selectedProfile.brandVoice } : null,
+    selectedPersona?.customerDescription ? { label: "타겟", content: selectedPersona.customerDescription } : null,
+    selectedProfile?.imageGuide ? { label: "이미지", content: selectedProfile.imageGuide } : null,
+    ...(selectedProfile?.policy?.filter(isSectionFilled).map((section) => ({
+      label: SOP_SECTION_LABEL[section.type],
+      content: sectionPreviewText(section),
+    })) ?? []),
+  ].filter((item): item is { label: string; content: string } => item !== null);
 
   const suggestCaption = useCallback(async () => {
     setCaptionSuggesting(true);
@@ -294,118 +304,127 @@ function PostsFlow() {
 
       {/* AI 컨텍스트 — 별도 섹션 */}
       {brandProfiles.length > 0 && (
-        <div className="mb-4 rounded-xl border border-[var(--w-line-normal)] bg-[var(--w-bg-elevated)] p-3 flex flex-col gap-3">
-          <div className="flex items-center gap-1.5">
-            <Icon name="sparkles" size={12} />
-            <span className="text-[11px] font-semibold text-[var(--w-fg-neutral)] uppercase tracking-wide">AI 컨텍스트</span>
-          </div>
-
-          {/* 브랜드 프로필 선택 */}
-          <div className="flex flex-col gap-1.5">
-            <div className="text-[11px] font-semibold text-[var(--w-fg-alternative)] uppercase tracking-wide">브랜드 프로필</div>
-            <div className="flex gap-1.5 flex-wrap">
-              {brandProfiles.map((p) => (
-                <button
-                  key={p.id}
-                  type="button"
-                  onClick={() => {
-                    setSelectedProfileId(p.id);
-                    const first = allPersonas.find((pe) => pe.brandProfileId === p.id);
-                    setSelectedPersonaId(first?.id ?? null);
-                  }}
-                  className={`px-2.5 py-1 rounded-full text-[12px] font-semibold border transition-colors ${
-                    selectedProfileId === p.id
-                      ? "bg-[var(--w-fg-strong)] text-[var(--w-bg-elevated)] border-[var(--w-fg-strong)]"
-                      : "border-[var(--w-line-normal)] text-[var(--w-fg-strong)] hover:bg-[var(--w-bg-neutral)]"
-                  }`}
-                >
-                  {p.name}
-                </button>
-              ))}
-              <button
-                type="button"
-                onClick={() => { setSelectedProfileId(null); setSelectedPersonaId(null); }}
-                className={`px-2.5 py-1 rounded-full text-[12px] font-semibold border transition-colors ${
-                  selectedProfileId === null
-                    ? "bg-[var(--w-fg-strong)] text-[var(--w-bg-elevated)] border-[var(--w-fg-strong)]"
-                    : "border-[var(--w-line-normal)] text-[var(--w-fg-neutral)] hover:bg-[var(--w-bg-neutral)]"
-                }`}
-              >
-                미적용
-              </button>
+        <section className="mb-8 overflow-hidden rounded-[var(--w-radius-16)] border border-[var(--w-line-normal)] bg-[var(--w-bg-elevated)]" aria-labelledby="ai-context-title">
+          <div className="flex items-center gap-3 border-b border-[var(--w-line-alternative)] px-5 py-4">
+            <span className="flex size-8 items-center justify-center rounded-[var(--w-radius-8)] bg-[var(--w-primary-soft)] text-[var(--w-primary-normal)]">
+              <Icon name="sparkles" size={16} />
+            </span>
+            <div>
+              <h2 id="ai-context-title" className="w-h4">AI 컨텍스트</h2>
+              <p className="w-caption mt-0.5">캡션 제안에 쓸 브랜드와 고객 기준을 골라요.</p>
             </div>
           </div>
 
-          {/* 페르소나 선택 */}
-          {selectedProfileId && profilePersonas.length > 0 && (
-            <div className="flex flex-col gap-1.5">
-              <div className="text-[11px] font-semibold text-[var(--w-fg-alternative)] uppercase tracking-wide">페르소나</div>
-              <div className="flex gap-1.5 flex-wrap">
-                {profilePersonas.map((pe) => (
+          <div className="grid lg:grid-cols-[280px_minmax(0,1fr)]">
+            <div className="flex flex-col gap-5 p-5 lg:border-r lg:border-[var(--w-line-alternative)]">
+              {/* 브랜드 프로필 선택 */}
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center justify-between">
+                  <div className="w-overline">브랜드 프로필</div>
+                  {selectedProfile && <span className="w-overline !text-[var(--w-primary-normal)]">사용 중</span>}
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {brandProfiles.map((p) => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      aria-pressed={selectedProfileId === p.id}
+                      onClick={() => {
+                        setSelectedProfileId(p.id);
+                        const first = allPersonas.find((pe) => pe.brandProfileId === p.id);
+                        setSelectedPersonaId(first?.id ?? null);
+                      }}
+                      className={`rounded-[var(--w-radius-8)] border px-3 py-2 text-left transition-colors ${
+                        selectedProfileId === p.id
+                          ? "border-[var(--w-primary-normal)] bg-[var(--w-primary-soft)] text-[var(--w-primary-heavy)]"
+                          : "border-[var(--w-line-normal)] text-[var(--w-fg-normal)] hover:bg-[var(--w-bg-neutral)]"
+                      }`}
+                    >
+                      <span className="text-[13px] font-semibold leading-[1.4] tracking-[-0.006em]">{p.name}</span>
+                    </button>
+                  ))}
                   <button
-                    key={pe.id}
                     type="button"
-                    onClick={() => setSelectedPersonaId(pe.id)}
-                    className={`px-2.5 py-1 rounded-full text-[12px] font-semibold border transition-colors ${
-                      selectedPersonaId === pe.id
-                        ? "bg-[var(--w-fg-strong)] text-[var(--w-bg-elevated)] border-[var(--w-fg-strong)]"
-                        : "border-[var(--w-line-normal)] text-[var(--w-fg-strong)] hover:bg-[var(--w-bg-neutral)]"
+                    aria-pressed={selectedProfileId === null}
+                    onClick={() => { setSelectedProfileId(null); setSelectedPersonaId(null); }}
+                    className={`rounded-[var(--w-radius-8)] border px-3 py-2 text-left transition-colors ${
+                      selectedProfileId === null
+                        ? "border-[var(--w-primary-normal)] bg-[var(--w-primary-soft)] text-[var(--w-primary-heavy)]"
+                        : "border-[var(--w-line-normal)] text-[var(--w-fg-neutral)] hover:bg-[var(--w-bg-neutral)]"
                     }`}
                   >
-                    {pe.name}
+                    <span className="text-[13px] font-semibold leading-[1.4] tracking-[-0.006em]">미적용</span>
                   </button>
-                ))}
-                <button
-                  type="button"
-                  onClick={() => setSelectedPersonaId(null)}
-                  className={`px-2.5 py-1 rounded-full text-[12px] font-semibold border transition-colors ${
-                    selectedPersonaId === null
-                      ? "bg-[var(--w-fg-strong)] text-[var(--w-bg-elevated)] border-[var(--w-fg-strong)]"
-                      : "border-[var(--w-line-normal)] text-[var(--w-fg-neutral)] hover:bg-[var(--w-bg-neutral)]"
-                  }`}
-                >
-                  없음
-                </button>
+                </div>
               </div>
-            </div>
-          )}
 
-          {/* 스타일 + 정책 미리보기 */}
-          {selectedProfile && (
-            <div className="border-t border-[var(--w-line-alternative)] pt-2.5 grid grid-cols-2 gap-x-4 gap-y-1">
-              {selectedProfile.tone && (
-                <div className="flex gap-1.5 text-[11px]">
-                  <span className="text-[var(--w-fg-alternative)] flex-shrink-0">톤</span>
-                  <span className="text-[#121212] line-clamp-1">{selectedProfile.tone}</span>
+              {/* 페르소나 선택 */}
+              {selectedProfileId && profilePersonas.length > 0 && (
+                <div className="flex flex-col gap-2 border-t border-[var(--w-line-alternative)] pt-5">
+                  <div className="w-overline">페르소나</div>
+                  <div className="flex flex-wrap gap-2">
+                    {profilePersonas.map((pe) => (
+                      <button
+                        key={pe.id}
+                        type="button"
+                        aria-pressed={selectedPersonaId === pe.id}
+                        onClick={() => setSelectedPersonaId(pe.id)}
+                        className={`rounded-[var(--w-radius-8)] border px-3 py-2 text-left transition-colors ${
+                          selectedPersonaId === pe.id
+                            ? "border-[var(--w-primary-normal)] bg-[var(--w-primary-soft)] text-[var(--w-primary-heavy)]"
+                            : "border-[var(--w-line-normal)] text-[var(--w-fg-normal)] hover:bg-[var(--w-bg-neutral)]"
+                        }`}
+                      >
+                        <span className="text-[13px] font-semibold leading-[1.4] tracking-[-0.006em]">{pe.name}</span>
+                      </button>
+                    ))}
+                    <button
+                      type="button"
+                      aria-pressed={selectedPersonaId === null}
+                      onClick={() => setSelectedPersonaId(null)}
+                      className={`rounded-[var(--w-radius-8)] border px-3 py-2 text-left transition-colors ${
+                        selectedPersonaId === null
+                          ? "border-[var(--w-primary-normal)] bg-[var(--w-primary-soft)] text-[var(--w-primary-heavy)]"
+                          : "border-[var(--w-line-normal)] text-[var(--w-fg-neutral)] hover:bg-[var(--w-bg-neutral)]"
+                      }`}
+                    >
+                      <span className="text-[13px] font-semibold leading-[1.4] tracking-[-0.006em]">없음</span>
+                    </button>
+                  </div>
                 </div>
               )}
-              {selectedProfile.brandVoice && (
-                <div className="flex gap-1.5 text-[11px]">
-                  <span className="text-[var(--w-fg-alternative)] flex-shrink-0">보이스</span>
-                  <span className="text-[#121212] line-clamp-1">{selectedProfile.brandVoice}</span>
-                </div>
-              )}
-              {selectedPersona?.customerDescription && (
-                <div className="flex gap-1.5 text-[11px]">
-                  <span className="text-[var(--w-fg-alternative)] flex-shrink-0">타겟</span>
-                  <span className="text-[#121212] line-clamp-1">{selectedPersona.customerDescription}</span>
-                </div>
-              )}
-              {selectedProfile.imageGuide && (
-                <div className="flex gap-1.5 text-[11px]">
-                  <span className="text-[var(--w-fg-alternative)] flex-shrink-0">이미지</span>
-                  <span className="text-[#121212] line-clamp-1">{selectedProfile.imageGuide}</span>
-                </div>
-              )}
-              {selectedProfile.policy?.filter(isSectionFilled).map((sec) => (
-                <div key={sec.type} className="flex gap-1.5 text-[11px]">
-                  <span className="text-[var(--w-fg-alternative)] flex-shrink-0">{SOP_SECTION_LABEL[sec.type]}</span>
-                  <span className="text-[#121212] line-clamp-1">{sectionPreviewText(sec)}</span>
-                </div>
-              ))}
             </div>
-          )}
-        </div>
+
+            <div className="p-5">
+              {selectedProfile ? (
+                <div>
+                  <div className="mb-4 flex items-start gap-2.5">
+                    <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-[var(--w-primary-soft)] text-[var(--w-primary-normal)]">
+                      <Icon name="check-circle" size={14} />
+                    </span>
+                    <div>
+                      <h3 className="w-label">AI가 적용할 기준</h3>
+                      <p className="w-caption mt-0.5">선택한 정보는 캡션 제안에 함께 반영돼요.</p>
+                    </div>
+                  </div>
+                  <dl className="grid gap-2.5 sm:grid-cols-2">
+                    {contextItems.map((item) => (
+                      <div key={item.label} className="min-w-0 rounded-[var(--w-radius-8)] border border-[var(--w-line-alternative)] bg-[var(--w-bg-alternative)] px-3.5 py-3">
+                        <dt className="w-overline">{item.label}</dt>
+                        <dd className="w-caption mt-1.5 line-clamp-2 !text-[var(--w-fg-normal)]">{item.content}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                </div>
+              ) : (
+                <div className="flex items-center gap-3 rounded-[var(--w-radius-12)] border border-dashed border-[var(--w-line-normal)] bg-[var(--w-bg-alternative)] px-4 py-5">
+                  <Icon name="sparkles" size={16} className="shrink-0 text-[var(--w-fg-alternative)]" />
+                  <p className="w-caption">브랜드 프로필을 고르면 AI가 적용할 기준을 확인할 수 있어요.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
       )}
 
       <Card variant="lg">

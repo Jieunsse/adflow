@@ -9,7 +9,7 @@ import type { PersonaEntry } from "../model/usePersonasStorage";
 import type { BrandProfileEntry } from "../model/useBrandProfileStorage";
 
 const INPUT_CLS =
-  "w-full px-[14px] py-3 border border-[var(--w-line-normal)] rounded-xl bg-[var(--w-bg-elevated)] font-medium text-[14px] leading-[1.5] tracking-[0.004em] text-[var(--w-fg-strong)] outline-none transition-[border-color,box-shadow] duration-[120ms] placeholder:text-[var(--w-fg-alternative)] focus:border-[var(--w-primary-normal)] focus:shadow-[0_0_0_4px_rgba(0,102,255,0.14)]";
+  "w-full px-[14px] py-3 border border-[var(--w-line-normal)] rounded-[var(--w-radius-12)] bg-[var(--w-bg-elevated)] font-medium text-[14px] leading-[1.5] tracking-[0.004em] text-[var(--w-fg-strong)] outline-none transition-[border-color,box-shadow] duration-[120ms] placeholder:text-[var(--w-fg-alternative)] focus:border-[var(--w-primary-normal)] focus:shadow-[0_0_0_4px_var(--w-focus-ring)]";
 
 interface Props {
   activeBrandProfileId: string | null;
@@ -40,20 +40,23 @@ export default function PersonaQuickCreateModal({ activeBrandProfileId, profiles
 
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
-      <DialogContent style={{ width: 420 }}>
-        <div className="flex flex-col gap-5">
-          <div className="flex items-center justify-between">
-            <DialogTitle className="m-0 font-bold text-[17px] leading-[1.3] tracking-[-0.014em] text-[var(--w-fg-strong)]">
+      <DialogContent style={{ width: 440 }}>
+        <div className="flex flex-col gap-5 p-6">
+          <div className="flex items-start justify-between">
+            <DialogTitle className="m-0 font-bold text-[18px] leading-[1.3] tracking-[-0.016em] text-[var(--w-fg-strong)]">
               새 페르소나
             </DialogTitle>
-            <DialogClose className="p-1 text-[var(--w-fg-neutral)] hover:text-[var(--w-fg-strong)]">
+            <DialogClose
+              aria-label="닫기"
+              className="-mr-1 -mt-1 flex size-8 items-center justify-center rounded-[var(--w-radius-8)] text-[var(--w-fg-neutral)] transition-colors duration-[120ms] hover:bg-[var(--w-bg-neutral)] hover:text-[var(--w-fg-strong)]"
+            >
               <Icon name="x" size={18} />
             </DialogClose>
           </div>
 
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-5">
             {needsProfileSelect && (
-              <div className="flex flex-col gap-1.5">
+              <div className="flex flex-col gap-2">
                 <label className="font-semibold text-[14px] text-[var(--w-fg-strong)]">
                   브랜드 프로필 <span className="text-red-500">*</span>
                 </label>
@@ -73,7 +76,7 @@ export default function PersonaQuickCreateModal({ activeBrandProfileId, profiles
               </div>
             )}
 
-            <div className="flex flex-col gap-1.5">
+            <div className="flex flex-col gap-2">
               <label className="font-semibold text-[14px] text-[var(--w-fg-strong)]">
                 이름 <span className="text-red-500">*</span>
               </label>
@@ -87,23 +90,23 @@ export default function PersonaQuickCreateModal({ activeBrandProfileId, profiles
               />
             </div>
 
-            <div className="flex flex-col gap-1.5">
+            <div className="flex flex-col gap-2">
               <label className="font-semibold text-[14px] text-[var(--w-fg-strong)]">
                 고객 설명 <span className="font-normal text-[var(--w-fg-neutral)]">(선택)</span>
               </label>
               <textarea
-                className="w-full px-[14px] py-3 border border-[var(--w-line-normal)] rounded-xl bg-[var(--w-bg-elevated)] font-medium text-[14px] leading-[1.6] text-[var(--w-fg-strong)] outline-none transition-[border-color,box-shadow] duration-[120ms] placeholder:text-[var(--w-fg-alternative)] focus:border-[var(--w-primary-normal)] focus:shadow-[0_0_0_4px_rgba(0,102,255,0.14)] resize-none min-h-[72px]"
+                className="min-h-[88px] w-full resize-none rounded-[var(--w-radius-12)] border border-[var(--w-line-normal)] bg-[var(--w-bg-elevated)] px-[14px] py-3 font-medium text-[14px] leading-[1.6] text-[var(--w-fg-strong)] outline-none transition-[border-color,box-shadow] duration-[120ms] placeholder:text-[var(--w-fg-alternative)] focus:border-[var(--w-primary-normal)] focus:shadow-[0_0_0_4px_var(--w-focus-ring)]"
                 value={customerDescription}
                 onChange={(e) => setCustomerDescription(e.target.value)}
                 placeholder="예) 피부 트러블에 민감한 20대 초반 여성. 성분 중심으로 구매 결정."
               />
-              <p className="m-0 font-medium text-[12px] text-[var(--w-fg-neutral)]">
+              <p className="m-0 pt-0.5 font-medium text-[12px] leading-[1.5] text-[var(--w-fg-neutral)]">
                 연령·성별·관심사 등 세부 설정은 브랜드 프로필에서 편집할 수 있어요.
               </p>
             </div>
           </div>
 
-          <div className="flex justify-end gap-2">
+          <div className="flex justify-end gap-2 pt-1">
             <Button variant="secondary" type="button" onClick={onClose}>취소</Button>
             <Button
               variant="primary"

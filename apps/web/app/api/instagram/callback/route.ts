@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
 
   const fail = (reason?: string) => {
     console.error("[IG callback] fail:", reason)
-    return NextResponse.redirect(new URL(`/connect?igError=${encodeURIComponent(reason ?? "1")}`, req.url))
+    return NextResponse.redirect(new URL(`/settings?tab=account&igError=${encodeURIComponent(reason ?? "1")}`, req.url))
   }
 
   console.log("[IG callback] called. error:", error, "hasCode:", !!code, "hasState:", !!state)
@@ -72,7 +72,7 @@ export async function GET(req: NextRequest) {
       igUsername: me.username ?? "",
     })
 
-    const res = NextResponse.redirect(new URL("/connect?igLinked=1", req.url))
+    const res = NextResponse.redirect(new URL("/settings?tab=account&igLinked=1", req.url))
     res.cookies.delete("adflow_ig_state")
     return res
   } catch (e) {

@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
 
   const fail = (reason?: string) => {
     console.error("[Notion callback] fail:", reason)
-    return NextResponse.redirect(new URL(`/connect?notionError=${encodeURIComponent(reason ?? "1")}`, req.url))
+    return NextResponse.redirect(new URL(`/settings?tab=account&notionError=${encodeURIComponent(reason ?? "1")}`, req.url))
   }
 
   if (error) return fail("cancelled")
@@ -50,7 +50,7 @@ export async function GET(req: NextRequest) {
       workspaceIcon: token.workspace_icon ?? undefined,
     })
 
-    const res = NextResponse.redirect(new URL("/connect?notionLinked=1", req.url))
+    const res = NextResponse.redirect(new URL("/settings?tab=account&notionLinked=1", req.url))
     res.cookies.delete("adflow_notion_state")
     return res
   } catch (e) {

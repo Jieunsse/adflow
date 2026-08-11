@@ -674,7 +674,7 @@ function CreateFlow() {
 
 
   return (
-    <div className={`px-12 py-9 pb-16 max-w-[1280px] w-full mx-auto flex flex-col gap-7 min-h-[calc(100vh-64px)]${browseMode ? " justify-center" : ""}`} data-screen-label="광고 만들기">
+    <div className={`px-12 py-9 pb-16 max-w-[1280px] w-full mx-auto flex flex-col gap-7 min-h-[calc(100vh-64px)]${browseMode && step !== 0 ? " justify-center" : ""}`} data-screen-label="광고 만들기">
       {prefillBanner && (
         <div className="flex items-center gap-3 p-[14px] bg-[var(--w-primary-soft)] rounded-xl">
           <Icon name="sparkles" size={16} />
@@ -740,6 +740,7 @@ function CreateFlow() {
           selectedIdx={studio.headlineIdx}
           onSelect={handleSelectVersion}
           imageUrl={launch.state.finalImageDataUrl ?? launch.state.imageDataUrl}
+          browseMode={browseMode}
           personaId={personaId}
           regenerating={generating}
           onRegenerate={() => handleGenerate()}

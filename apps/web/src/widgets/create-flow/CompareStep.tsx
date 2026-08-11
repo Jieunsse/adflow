@@ -12,6 +12,7 @@ import { AdMockCompact } from "./AdMockup";
 import ConditionRail from "./ConditionRail";
 import { StepHeaderBar, VerLabel, selectionRing } from "./parts";
 import { evidenceNote, lengthNote, openingStyle } from "./copy-diff";
+import { pickBrowseShots } from "./browse-images";
 import { useBrandHandle } from "./useBrandHandle";
 
 interface Props {
@@ -23,6 +24,7 @@ interface Props {
   selectedIdx: number;
   onSelect: (i: number) => void;
   imageUrl: string | null;
+  browseMode: boolean;
   personaId: string | null;
   regenerating: boolean;
   onRegenerate: () => void;
@@ -67,6 +69,7 @@ function DiffRow({ label, cells }: { label: string; cells: string[] }) {
 export default function CompareStep(p: Props) {
   const handle = useBrandHandle();
   const idxs = [0, 1, 2];
+  const browseImages = p.browseMode && !p.imageUrl ? pickBrowseShots(null) : null;
 
   return (
     <div className="bg-[var(--w-bg-alternative)] rounded-[var(--w-radius-16)] overflow-hidden">
@@ -112,7 +115,7 @@ export default function CompareStep(p: Props) {
                 </div>
                 <AdMockCompact
                   handle={handle}
-                  imageUrl={p.imageUrl}
+                  imageUrl={p.imageUrl ?? browseImages?.[i].url ?? null}
                   headline={p.headlines[i] ?? ""}
                   body={p.primaryTexts[i] ?? ""}
                 />

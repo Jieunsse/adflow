@@ -5,7 +5,7 @@ import { withRouteHandler, ValidationError } from '@/lib/route-handler'
 export async function POST(req: NextRequest) {
   return withRouteHandler(
     creatorContentGuideline.isConfigured,
-    'GOOGLE_AI_API_KEY 가 .env.local 에 설정되지 않았어요.',
+    'Gemini API 키가 설정되지 않았어요.',
     async () => {
       const body = (await req.json()) as Partial<GenerateContentGuidelineParams>
       const { brand, campaign, platform } = body

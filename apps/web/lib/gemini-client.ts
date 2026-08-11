@@ -1,18 +1,18 @@
-// Server-side only — do not import from 'use client' components; GOOGLE_AI_API_KEY would be exposed.
-// gemini 텍스트 모듈 공용 클라이언트 — env 검증·503 폴백을 단일 출처로.
+// Server-side only — do not import from 'use client' components; Gemini API 키가 노출된다.
+// gemini 텍스트 모듈 공용 클라이언트 — 키 검증·503 폴백을 단일 출처로.
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { getGeminiApiKey } from "./gemini-credentials";
 
-const API_KEY_ENV = "GOOGLE_AI_API_KEY";
 const TEXT_MODELS = ["gemini-2.5-flash-lite", "gemini-2.5-flash"];
 
-export function isGeminiConfigured(): boolean {
-  return !!process.env[API_KEY_ENV];
+export async function isGeminiConfigured(): Promise<boolean> {
+  return !!(await getGeminiApiKey());
 }
 
-export function requireGeminiKey(): string {
-  const v = process.env[API_KEY_ENV];
-  if (!v) throw new Error(`${API_KEY_ENV} 가 .env.local 에 설정되지 않았어요.`);
+export async function requireGeminiKey(): Promise<string> {
+  const v = await getGeminiApiKey();
+  if (!v) throw new Error("Gemini API 키가 설정되지 않았어요.");
   return v;
 }
 
@@ -30,7 +30,7 @@ export async function generateGeminiText(
   prompt: string,
   options: GenerateTextOptions = {},
 ): Promise<string> {
-  const apiKey = requireGeminiKey();
+  const apiKey = await requireGeminiKey();
   for (const modelName of TEXT_MODELS) {
     try {
       const model = new GoogleGenerativeAI(apiKey).getGenerativeModel({

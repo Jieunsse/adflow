@@ -37,7 +37,7 @@ function getMasterKey(): Buffer {
   return createHash("sha256").update(secret).digest()
 }
 
-function encrypt(plaintext: string): string {
+export function encrypt(plaintext: string): string {
   const iv = randomBytes(12)
   const cipher = createCipheriv("aes-256-gcm", getMasterKey(), iv)
   const enc = Buffer.concat([cipher.update(plaintext, "utf8"), cipher.final()])
@@ -45,7 +45,7 @@ function encrypt(plaintext: string): string {
   return Buffer.concat([iv, tag, enc]).toString("base64")
 }
 
-function decrypt(encoded: string): string {
+export function decrypt(encoded: string): string {
   const buf = Buffer.from(encoded, "base64")
   const iv = buf.subarray(0, 12)
   const tag = buf.subarray(12, 28)
@@ -57,7 +57,7 @@ function decrypt(encoded: string): string {
 
 // ── 로컬 파일 어댑터 ───────────────────────────────────────────────────────
 
-function getDataDir(): string {
+export function getDataDir(): string {
   return process.env.ADFLOW_DATA_DIR ?? path.join(process.cwd(), ".adflow")
 }
 function credFile(): string {

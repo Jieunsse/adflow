@@ -15,8 +15,8 @@ export async function POST(req: NextRequest) {
   const conn = await getNotionConnection(userKey)
   if (!conn) return NextResponse.json({ error: "not_connected" }, { status: 403 })
 
-  if (!geminiNotion.isConfigured) {
-    return NextResponse.json({ error: "GOOGLE_AI_API_KEY 가 설정되지 않았어요." }, { status: 503 })
+  if (!(await geminiNotion.isConfigured)) {
+    return NextResponse.json({ error: "Gemini API 키가 설정되지 않았어요." }, { status: 503 })
   }
 
   const body = (await req.json()) as { resources?: NotionResource[] }

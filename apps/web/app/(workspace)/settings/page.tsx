@@ -13,9 +13,10 @@ import { useToast } from "@shared/ui/Toast";
 import { useNotifSettings } from "@shared/lib/notifications";
 import { notifyScopedStorageChange, useScopedStorage } from "@shared/lib/storage/useScopedStorage";
 import { onboardedKey } from "@widgets/onboarding-guard";
+import { ConnectionManager } from "../connect/ConnectionManager";
 
 type Tab = "account" | "measure" | "notif" | "danger";
-const TABS: [Tab, string][] = [["account", "계정 연결"], ["measure", "전환 측정"], ["notif", "알림"], ["danger", "계정 관리"]];
+const TABS: [Tab, string][] = [["account", "연결 관리"], ["measure", "전환 측정"], ["notif", "알림"], ["danger", "계정 관리"]];
 const isTab = (v: string | null): v is Tab => TABS.some(([k]) => k === v);
 
 export default function SettingsPage() {
@@ -38,7 +39,7 @@ function SettingsBody() {
         <div>
           <span className="font-semibold text-[11px] leading-[1.45] tracking-[0.04em] uppercase text-[var(--w-fg-neutral)]">설정</span>
           <h1 className="m-0 font-bold text-[28px] leading-[1.25] tracking-[-0.024em] text-[var(--w-fg-strong)]" style={{ marginTop: 4 }}>설정</h1>
-          <p className="font-medium text-[14px] leading-[1.5] tracking-[0.004em] text-[var(--w-fg-neutral)] mt-1.5 mb-0">계정 연결, 전환 측정, 알림을 관리해요.</p>
+          <p className="font-medium text-[14px] leading-[1.5] tracking-[0.004em] text-[var(--w-fg-neutral)] mt-1.5 mb-0">서비스 연결, 전환 측정, 알림을 관리해요.</p>
         </div>
       </div>
 
@@ -229,136 +230,14 @@ function SnippetCard({ title, desc, code, onCopy, warn }:{ title: string; desc: 
 }
 
 function AccountTab() {
-  const router = useRouter();
   const { data: session } = useSession();
-  const connected = !!(session?.adAccountId && session?.pageId);
   const browseMode = !!session?.browseMode;
 
-  const statusIconBg = connected
-    ? "var(--w-primary-soft)"
-    : browseMode
-      ? "rgba(255,146,0,0.14)"
-      : "rgba(255,66,66,0.10)";
-  const statusIconFg = connected
-    ? "var(--w-primary-press)"
-    : browseMode
-      ? "var(--w-status-cautionary)"
-      : "var(--w-status-negative)";
-
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      <Card variant="lg" className="flex flex-col gap-0">
-        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-          <div style={{ width: 48, height: 48, borderRadius: 12, background: statusIconBg, color: statusIconFg, display: "grid", placeItems: "center", flex: "0 0 auto" }}>
-            <Icon name={connected ? "check" : "link"} size={22} />
-          </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-              <h2 className="m-0 font-bold text-[17px] leading-[1.3] tracking-[-0.012em] text-[var(--w-fg-strong)]">연결 상태</h2>
-              {connected ? (
-                <Chip variant="success" size="sm" dot live>연결됨</Chip>
-              ) : browseMode ? (
-                <Chip variant="warn" size="sm">둘러보기</Chip>
-              ) : (
-                <Chip variant="neg" size="sm">미연결</Chip>
-              )}
-            </div>
-            <p className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)] mt-1 mb-0">
-              {connected
-                ? "Meta 광고 계정과 페이스북 페이지가 연결되어 있어요."
-                : browseMode
-                  ? "예시 데이터로 화면과 흐름을 살펴보는 중이에요. 광고 집행은 연결 후에 가능해요."
-                  : "아직 광고 계정·페이지가 연결되지 않았어요."}
-            </p>
-          </div>
-        </div>
-        <hr className="h-px bg-[var(--w-line-neutral)] my-[18px] border-0" />
-        {connected ? (
-          <>
-            <div className="flex items-center justify-between gap-3 py-4 px-[18px] rounded-xl border border-[var(--w-line-alternative)] bg-[var(--w-bg-elevated)]">
-              <div style={{ display: "flex", alignItems: "center", gap: 14, minWidth: 0 }}>
-                <div style={{ width: 40, height: 40, borderRadius: 10, background: "var(--w-primary-soft)", color: "var(--w-primary-press)", display: "grid", placeItems: "center", flex: "0 0 auto" }}><Icon name="wallet" size={18} /></div>
-                <div style={{ minWidth: 0 }}>
-                  <div className="font-semibold text-[14px] leading-[1.3] text-[var(--w-fg-strong)]">{session?.adAccountName ?? "광고 계정"}</div>
-                  <div className="font-medium text-[13px] leading-[1.4] text-[var(--w-fg-neutral)] mt-0.5">{session?.adAccountId}</div>
-                </div>
-              </div>
-              <Chip variant="success" size="sm" dot>활성</Chip>
-            </div>
-            <div className="flex items-center justify-between gap-3 py-4 px-[18px] rounded-xl border border-[var(--w-line-alternative)] bg-[var(--w-bg-elevated)] mt-2">
-              <div style={{ display: "flex", alignItems: "center", gap: 14, minWidth: 0 }}>
-                <div style={{ width: 40, height: 40, borderRadius: 10, background: "var(--w-accent-violet-soft)", color: "var(--w-accent-violet)", display: "grid", placeItems: "center", flex: "0 0 auto" }}><Icon name="doc" size={18} /></div>
-                <div style={{ minWidth: 0 }}>
-                  <div className="font-semibold text-[14px] leading-[1.3] text-[var(--w-fg-strong)]">{session?.pageName ?? "페이스북 페이지"}</div>
-                  <div className="font-medium text-[13px] leading-[1.4] text-[var(--w-fg-neutral)] mt-0.5">{session?.pageId}</div>
-                </div>
-              </div>
-              <Chip variant="success" size="sm" dot>활성</Chip>
-            </div>
-            <hr className="h-px bg-[var(--w-line-neutral)] my-[18px] border-0" />
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10 }}>
-              <div className="font-medium text-[12px] leading-[1.5] tracking-[0.008em] text-[var(--w-fg-neutral)]">광고 계정·페이지 변경이나 연결 해제는 계정 연결 탭에서 할 수 있어요.</div>
-              <Button variant="secondary" size="sm" type="button" onClick={() => router.push("/connect")}>연결 관리 <Icon name="arrow-right" size={13} /></Button>
-            </div>
-          </>
-        ) : (
-          <div className="flex items-center justify-between gap-3 py-4 px-[18px] rounded-xl border border-[var(--w-line-alternative)] bg-[var(--w-bg-elevated)]" style={{ borderStyle: "dashed" }}>
-            <div>
-              <div className="font-semibold text-[14px] leading-[1.3] text-[var(--w-fg-strong)]">광고 계정이 연결되지 않았어요</div>
-              <div className="font-medium text-[13px] leading-[1.4] text-[var(--w-fg-neutral)] mt-0.5">{browseMode ? "광고를 집행하려면 Meta 광고 계정·페이지를 연결해주세요." : "Meta 광고 계정·페이지를 연결하면 광고를 만들고 집행할 수 있어요."}</div>
-            </div>
-            <Button variant="primary" size="sm" type="button" onClick={() => router.push("/connect")}><Icon name="link" size={14} /> 계정 연결하기</Button>
-          </div>
-        )}
-      </Card>
-
-      {connected && (
-        <Card className="flex items-center gap-[18px] flex-wrap" style={{ background: "linear-gradient(135deg, rgba(0,102,255,0.04), rgba(101,65,242,0.05))", borderColor: "transparent" }}>
-          <div style={{ width: 52, height: 52, borderRadius: 14, background: "var(--w-primary-soft)", color: "var(--w-primary-press)", display: "grid", placeItems: "center", flex: "0 0 auto" }}>
-            <Icon name="sparkles" size={22} />
-          </div>
-          <div style={{ flex: 1, minWidth: 220 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-              <div className="font-bold text-[17px] leading-[1.3] tracking-[-0.012em] text-[var(--w-fg-strong)]">광고를 만들 수 있어요</div>
-              <Chip variant="success" size="sm" dot live>준비됨</Chip>
-            </div>
-            <p style={{ font: "500 13px/1.55 var(--w-font-sans)", color: "var(--w-fg-neutral)", margin: "6px 0 0" }}>바로 광고 만들기 화면으로 이동해 첫 캠페인을 시작해보세요.</p>
-          </div>
-          <Button variant="primary" size="sm" type="button" onClick={() => router.push("/create")}>광고 만들기로 이동 <Icon name="arrow-right" size={13} /></Button>
-        </Card>
-      )}
-
+    <div className="flex flex-col gap-5">
       {(session?.role === "팀장" || browseMode) && <MetaAppCard previewMode={browseMode} />}
-
-      <Card variant="lg" className="flex flex-col gap-0">
-        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-          <div style={{ width: 48, height: 48, borderRadius: 12, background: "linear-gradient(135deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888)", display: "grid", placeItems: "center", flex: "0 0 auto" }}>
-            <Icon name="image" size={22} style={{ color: "#fff" }} />
-          </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <h2 className="m-0 font-bold text-[17px] leading-[1.3] tracking-[-0.012em] text-[var(--w-fg-strong)]">Instagram 오가닉 인사이트</h2>
-            <p className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)] mt-1 mb-0">연결된 Facebook 페이지에 Instagram 비즈니스 계정이 링크되면 성과 탭에서 오가닉 인사이트를 자동으로 확인할 수 있어요.</p>
-          </div>
-        </div>
-        <hr className="h-px bg-[var(--w-line-neutral)] my-[18px] border-0" />
-        <div className="flex items-center justify-between gap-3 py-4 px-[18px] rounded-xl border border-[var(--w-line-alternative)] bg-[var(--w-bg-elevated)]">
-          <div style={{ minWidth: 0 }}>
-            <div className="font-semibold text-[14px] leading-[1.3] text-[var(--w-fg-strong)]">Instagram 비즈니스 계정</div>
-            <div className="font-medium text-[13px] leading-[1.4] text-[var(--w-fg-neutral)] mt-0.5">
-              {connected
-                ? "Facebook 페이지에 Instagram 비즈니스 계정이 연결되면 자동으로 인사이트를 불러와요."
-                : "먼저 Meta 광고 계정과 Facebook 페이지를 연결해주세요."}
-            </div>
-          </div>
-          <Button variant="secondary" size="sm" type="button" onClick={() => router.push("/create")}>
-            성과 탭에서 확인 <Icon name="arrow-right" size={13} />
-          </Button>
-        </div>
-        <div className="flex items-start gap-2.5 p-3 px-[14px] rounded-[10px] border bg-[rgba(0,102,255,0.06)] border-[rgba(0,102,255,0.18)] text-[var(--w-primary-press)] mt-[14px] font-medium text-[13px] leading-[1.5]">
-          <Icon name="info" size={14} style={{ flex: "0 0 auto", marginTop: 2 }} />
-          <span>Instagram 비즈니스 계정 연결은 Facebook 페이지 설정에서 할 수 있어요. 연결 후 다시 로그인하면 인사이트가 활성화돼요.</span>
-        </div>
-      </Card>
+      {(session?.role === "팀장" || browseMode) && <GeminiApiKeyCard previewMode={browseMode} />}
+      <ConnectionManager embedded />
     </div>
   );
 }
@@ -434,6 +313,109 @@ function MetaAppCard({ previewMode = false }: { previewMode?: boolean }) {
           </div>
           <Button variant="primary" size="sm" type="button" onClick={() => router.push("/install")}>
             <Icon name="link" size={14} /> 셋업 시작
+          </Button>
+        </div>
+      )}
+    </Card>
+  );
+}
+
+interface GeminiKeyState {
+  configured: boolean;
+  source: "saved" | "env" | null;
+}
+
+function GeminiApiKeyCard({ previewMode = false }: { previewMode?: boolean }) {
+  const showToast = useToast();
+  const [state, setState] = useState<GeminiKeyState | null>(previewMode ? { configured: true, source: "saved" } : null);
+  const [apiKey, setApiKey] = useState("");
+  const [editing, setEditing] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (previewMode) return;
+    fetch("/api/settings/gemini-key")
+      .then((r) => r.json())
+      .then((data) => setState(data))
+      .catch(() => setState({ configured: false, source: null }));
+  }, [previewMode]);
+
+  const save = async () => {
+    if (previewMode) {
+      showToast("둘러보기 모드에서는 API 키를 저장할 수 없어요.");
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/settings/gemini-key", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ apiKey }),
+      });
+      const data = await res.json() as { error?: string };
+      if (!res.ok || data.error) {
+        setError(data.error ?? "Gemini API 키를 저장하지 못했어요.");
+        return;
+      }
+      setState({ configured: true, source: "saved" });
+      setApiKey("");
+      setEditing(false);
+      showToast("Gemini API 키를 저장했어요.");
+    } catch {
+      setError("네트워크를 확인한 뒤 다시 저장해주세요.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const sourceDescription = state?.source === "saved"
+    ? "AdFlow에 암호화해 저장돼 있어요."
+    : state?.source === "env"
+      ? "서버 환경변수로 설정돼 있어요. 여기서 저장하면 해당 키를 우선 사용해요."
+      : "AI 카피와 이미지 생성 기능을 사용하려면 API 키를 설정해주세요.";
+
+  return (
+    <Card variant="lg" className="flex flex-col gap-0">
+      <div className="flex items-center gap-[14px]">
+        <div className="w-12 h-12 rounded-xl bg-[var(--w-primary-soft)] text-[var(--w-primary-press)] grid place-items-center flex-none">
+          <Icon name="sparkles" size={22} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h2 className="m-0 font-bold text-[17px] leading-[1.3] tracking-[-0.012em] text-[var(--w-fg-strong)]">Gemini API 키</h2>
+            <Chip variant={state?.configured ? "success" : "warn"} size="sm" dot={!!state?.configured}>
+              {state?.configured ? "설정됨" : "미설정"}
+            </Chip>
+          </div>
+          <p className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)] mt-1 mb-0">{sourceDescription}</p>
+        </div>
+      </div>
+      <hr className="h-px bg-[var(--w-line-neutral)] my-[18px] border-0" />
+      {editing ? (
+        <div className="flex flex-col gap-3">
+          <label className="font-semibold text-[13px] text-[var(--w-fg-strong)]" htmlFor="gemini-api-key">Gemini API 키</label>
+          <input
+            id="gemini-api-key"
+            type="password"
+            autoComplete="off"
+            value={apiKey}
+            onChange={(e) => setApiKey(e.target.value)}
+            placeholder="AIza…"
+            className="w-full box-border px-3 py-2.5 rounded-lg border border-[var(--w-line-normal)] bg-[var(--w-bg-elevated)] text-[var(--w-fg-strong)] font-medium text-[14px] outline-none focus:border-[var(--w-primary-normal)]"
+          />
+          {error && <div className="font-medium text-[13px] leading-[1.5] text-[var(--w-status-negative)]">{error}</div>}
+          <div className="flex justify-end gap-2">
+            <Button variant="ghost" size="sm" type="button" onClick={() => { setEditing(false); setError(null); }} disabled={busy}>취소</Button>
+            <Button variant="primary" size="sm" type="button" onClick={save} disabled={!apiKey.trim() || busy}>{busy ? "저장 중…" : "저장하기"}</Button>
+          </div>
+        </div>
+      ) : (
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div className="font-medium text-[12px] leading-[1.5] tracking-[0.008em] text-[var(--w-fg-neutral)]">API 키는 다시 표시되지 않아요.</div>
+          <Button variant={state?.configured ? "secondary" : "primary"} size="sm" type="button" onClick={() => setEditing(true)}>
+            {state?.configured ? "API 키 교체" : "API 키 설정"} <Icon name="arrow-right" size={13} />
           </Button>
         </div>
       )}

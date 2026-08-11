@@ -24,6 +24,24 @@ export default function GoalTrackerClient({ goalId }: { goalId: string }) {
     setEditing(false);
   };
 
+  if (editing && goal) {
+    return (
+      <GoalWizard
+        goal={goal}
+        inputs={m.inputs}
+        current={m.current}
+        marginRate={m.marginRate}
+        campaignNames={m.campaigns.filter((c) => c.status === "live").map((c) => c.name)}
+        onSave={save}
+        onClose={() => setEditing(false)}
+        onOpenTracker={(id) => {
+          setEditing(false);
+          router.push(`/goals/${id}`);
+        }}
+      />
+    );
+  }
+
   return (
     <div className="px-5 sm:px-8 lg:px-12 py-7 lg:py-9 pb-16 max-w-[1280px] w-full mx-auto" data-screen-label="목표 추적">
       {m.loading ? (
@@ -43,22 +61,6 @@ export default function GoalTrackerClient({ goalId }: { goalId: string }) {
         />
       ) : (
         <GoalTracker goal={goal} m={m} onEdit={() => setEditing(true)} />
-      )}
-
-      {editing && goal && (
-        <GoalWizard
-          goal={goal}
-          inputs={m.inputs}
-          current={m.current}
-          marginRate={m.marginRate}
-          campaignNames={m.campaigns.filter((c) => c.status === "live").map((c) => c.name)}
-          onSave={save}
-          onClose={() => setEditing(false)}
-          onOpenTracker={(id) => {
-            setEditing(false);
-            router.push(`/goals/${id}`);
-          }}
-        />
       )}
     </div>
   );

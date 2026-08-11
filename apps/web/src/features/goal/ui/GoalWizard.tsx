@@ -163,7 +163,7 @@ export function GoalWizard({
 
   if (savedGoal) {
     return (
-      <Shell onClose={onClose}>
+      <Shell>
         <SavedScreen
           goal={savedGoal}
           outlook={outlook}
@@ -176,10 +176,10 @@ export function GoalWizard({
   }
 
   return (
-    <Shell onClose={onClose}>
-      <WizardHeader step={step} onClose={onClose} onBack={goPrev} />
-      {/* 마지막 확인은 아래 큰 문장이 같은 말을 해서 스트립을 내리지 않는다. */}
-      {step < CONFIRM_STEP && (
+    <Shell>
+      <WizardHeader step={step} />
+      {/* 이름은 질문과 다음 순서를 한 화면에 보여준다. 이후 단계만 문장을 채운다. */}
+      {step > 0 && step < CONFIRM_STEP && (
         <SentenceStrip
           step={step}
           name={name}
@@ -202,54 +202,80 @@ export function GoalWizard({
           onSave={save}
         />
       ) : (
-        <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-2 border-t border-[var(--w-line-alternative)] overflow-y-auto lg:overflow-hidden">
-          <div className="flex flex-col gap-6 p-7 sm:p-9 lg:border-r border-[var(--w-line-alternative)] lg:overflow-y-auto">
-            {step === 0 && <NameStep name={name} onChange={setName} campaignNames={campaignNames} />}
-            {step === 1 && (
-              <MetricStep
-                metric={metric}
-                onChange={setMetric}
-                current={current}
-                marginRate={marginRate}
-                bep={bep}
-                leadCount={map.rows.filter((r) => r.current != null).length}
-              />
+        <div
+          className={cn(
+            "grid grid-cols-1",
+            step === 0
+              ? "mx-auto min-h-[520px] w-full max-w-[1320px] gap-10 py-14 lg:flex-1 lg:content-center lg:grid-cols-[minmax(0,1.35fr)_minmax(400px,0.85fr)] lg:gap-14 lg:py-16"
+              : "mt-12 min-h-[560px] border-t border-[var(--w-line-alternative)] lg:mt-16 lg:h-[min(720px,calc(100vh-220px))] lg:grid-cols-[minmax(0,0.92fr)_minmax(440px,1.08fr)] lg:overflow-hidden",
+          )}
+        >
+          <div
+            className={cn(
+              "flex min-h-[440px] flex-col",
+              step === 0 ? "" : "p-7 sm:p-9 lg:border-r lg:border-[var(--w-line-alternative)] lg:overflow-y-auto",
             )}
-            {step === 2 && (
-              <TargetStep
-                metric={metric}
-                draft={targetDraft}
-                onChange={setTargetDraft}
-                lagCurrent={lagCurrent}
-                suggestions={suggestions}
-                bep={bep}
-                marginRate={marginRate}
-              />
-            )}
-            {step === 3 && <PeriodStep periodDays={periodDays} onChange={setPeriodDays} />}
-
-            <div className="mt-auto pt-2 flex items-center gap-3 flex-wrap">
-              {step > 0 && (
-                <Button variant="ghost" size="lg" type="button" onClick={goPrev}>
-                  이전
-                </Button>
+          >
+            <div
+              className={cn(
+                "mx-auto flex w-full flex-col gap-6",
+                step === 0 ? "max-w-[720px]" : "relative h-full max-w-[560px]",
               )}
-              <Button variant="primary" size="lg" type="button" disabled={!canAdvance} onClick={goNext}>
-                {NEXT_LABELS[step]}
-              </Button>
-              <span className="font-medium text-[12px] text-[var(--w-fg-alternative)]">Enter로도 넘어가요</span>
+            >
+              <div className={cn("flex flex-1 flex-col", step === 0 ? "" : "justify-center lg:-translate-y-6")}>
+                {step === 0 && <NameStep name={name} onChange={setName} campaignNames={campaignNames} />}
+                {step === 1 && (
+                  <MetricStep
+                    metric={metric}
+                    onChange={setMetric}
+                    current={current}
+                    marginRate={marginRate}
+                    bep={bep}
+                    leadCount={map.rows.filter((r) => r.current != null).length}
+                  />
+                )}
+                {step === 2 && (
+                  <TargetStep
+                    metric={metric}
+                    draft={targetDraft}
+                    onChange={setTargetDraft}
+                    lagCurrent={lagCurrent}
+                    suggestions={suggestions}
+                    bep={bep}
+                    marginRate={marginRate}
+                  />
+                )}
+                {step === 3 && <PeriodStep periodDays={periodDays} onChange={setPeriodDays} />}
+              </div>
+
+              <div className={cn("flex flex-wrap items-center gap-3 pt-2", step === 0 ? "mt-3" : "mt-auto lg:absolute lg:bottom-0 lg:left-0")}>
+                {step > 0 && (
+                  <Button variant="ghost" size="lg" type="button" onClick={goPrev}>
+                    이전
+                  </Button>
+                )}
+                <Button variant="primary" size="lg" type="button" disabled={!canAdvance} onClick={goNext}>
+                  {step === 0 ? "후행 목표 고르기" : NEXT_LABELS[step]}
+                </Button>
+                <span className="font-medium text-[12px] text-[var(--w-fg-neutral)]">
+                  {step === 0 ? "이름을 입력하면 다음으로 갈 수 있어요" : "Enter로도 넘어가요"}
+                </span>
+              </div>
             </div>
           </div>
 
-          <div className="min-h-[420px] lg:min-h-0 lg:overflow-y-auto">
-            <BackcastPanel
-              map={map}
-              statusLabel={backcastStatus(step, map.rows.filter((r) => r.current != null).length)}
-              statusTone={step === 3 && map.liftPct != null ? "accent" : "muted"}
-              empty={step === 0}
-              note={BACKCAST_NOTE[step]}
-              footer={step === 3 && map.liftPct != null ? <PathFooter periodDays={periodDays} metric={metric} lagCurrent={lagCurrent} target={target} outlookDate={outlook.etaDate} /> : undefined}
-            />
+          <div className={cn(step === 0 ? "self-start" : "min-h-[420px] lg:min-h-0 lg:overflow-y-auto")}>
+            {step === 0 ? (
+              <GoalSetupPath name={name} />
+            ) : (
+              <BackcastPanel
+                map={map}
+                statusLabel={backcastStatus(step, map.rows.filter((r) => r.current != null).length)}
+                statusTone={step === 3 && map.liftPct != null ? "accent" : "muted"}
+                note={BACKCAST_NOTE[step]}
+                footer={step === 3 && map.liftPct != null ? <PathFooter periodDays={periodDays} metric={metric} lagCurrent={lagCurrent} target={target} outlookDate={outlook.etaDate} /> : undefined}
+              />
+            )}
           </div>
         </div>
       )}
@@ -273,58 +299,35 @@ function backcastStatus(step: number, branchCount: number): string {
 
 // ── 셸 ──────────────────────────────────────────────────────────────────────
 
-function Shell({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", onKey);
-    document.body.style.overflow = "hidden";
-    return () => {
-      window.removeEventListener("keydown", onKey);
-      document.body.style.overflow = "";
-    };
-  }, [onClose]);
-
-  // 시안은 1160×700 카드 한 장 — 뷰포트로 늘리면 넓은 화면에서 컬럼이 벌어지고 여백이 죽는다.
-  // 캔버스 위에 카드를 띄우고, 좁은 화면에서만 전체를 채운다.
+function Shell({ children }: { children: React.ReactNode }) {
   return (
-    <div
-      className="fixed inset-0 z-50 bg-[var(--w-bg-alternative)] flex items-center justify-center lg:p-7"
-      role="dialog"
-      aria-modal="true"
-      aria-label="목표 세우기"
+    <section
+      className="flex min-h-[calc(100vh-48px)] w-full flex-col px-5 py-5 sm:px-8 sm:py-7 lg:px-10 lg:py-8"
+      data-screen-label="목표 세우기"
     >
-      <div className="w-full max-w-[1160px] h-full lg:h-[min(760px,100%)] flex flex-col overflow-hidden bg-[var(--w-bg-elevated)] lg:rounded-2xl lg:shadow-[var(--w-shadow-strong)]">
-        {children}
-      </div>
-    </div>
+      {children}
+    </section>
   );
 }
 
-function WizardHeader({ step, onClose, onBack }: { step: number; onClose: () => void; onBack: () => void }) {
+function WizardHeader({ step }: { step: number }) {
   const isConfirm = step === CONFIRM_STEP;
   const pct = isConfirm ? 100 : ((step + 1) / STEP_TITLES.length) * 100;
   return (
-    <div className="h-14 shrink-0 px-5 sm:px-6 flex items-center gap-4 border-b border-[var(--w-line-alternative)]">
-      <button
-        type="button"
-        onClick={isConfirm ? onBack : onClose}
-        className="inline-flex items-center gap-1.5 font-semibold text-[13px] text-[var(--w-fg-neutral)] hover:text-[var(--w-fg-strong)]"
-      >
-        <Icon name={isConfirm ? "arrow-left" : "x"} size={18} />
-        {isConfirm ? "기간 다시 고르기" : "나가기"}
-      </button>
-      <span className="flex-1" />
+    <div className="flex shrink-0 items-center gap-4 border-b border-[var(--w-line-alternative)] px-1 pb-5 sm:px-2">
+      <div className="flex flex-1 flex-col gap-1">
+        <span className="w-overline">성과 목표</span>
+        <span className="w-h4">새 목표 세우기</span>
+      </div>
       {isConfirm ? (
-        <span className="font-bold text-[12px] tracking-[0.01em] text-[var(--w-primary-press)]">마지막 확인</span>
+        <span className="w-caption font-bold text-[var(--w-primary-press)]">마지막 확인</span>
       ) : (
-        <span className="font-bold text-[12px] tracking-[0.04em] text-[var(--w-fg-neutral)] [font-variant-numeric:tabular-nums]">
-          {String(step + 1).padStart(2, "0")}
-          <span className="text-[var(--w-fg-alternative)]"> / {String(STEP_TITLES.length).padStart(2, "0")}</span>
+        <span className="w-caption font-bold tracking-[0.04em] text-[var(--w-fg-neutral)] [font-variant-numeric:tabular-nums]">
+          {step + 1}
+          <span className="text-[var(--w-fg-alternative)]"> / {STEP_TITLES.length}</span>
         </span>
       )}
-      <div className="w-24 sm:w-[180px] h-1 rounded-full bg-[var(--w-bg-neutral)] overflow-hidden">
+      <div className="h-1 w-20 overflow-hidden rounded-full bg-[var(--w-bg-neutral)] sm:w-32">
         <div className="h-full rounded-full bg-[var(--w-primary-normal)] transition-[width] duration-200" style={{ width: `${pct}%` }} />
       </div>
     </div>
@@ -353,30 +356,30 @@ function SentenceStrip({
   ];
 
   return (
-    <div className="shrink-0 py-6 px-5 flex justify-center">
-      {/* 행간 1.35 — 칸(px+py)이 line-box 를 이미 키운다. 1.65 면 두 줄로 넘어갈 때 문장이 흩어진다.
-          조사는 gap-1.5 로 자기 칸에 붙이고, 칸끼리는 gap-x-3 으로 띄워 어디에 걸린 조사인지 보이게. */}
-      <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2 max-w-[820px] font-semibold text-[17px] sm:text-[26px] leading-[1.35] tracking-[-0.02em] text-[var(--w-fg-alternative)]">
+    <div className="flex shrink-0 justify-center border-b border-[var(--w-line-alternative)] px-1 py-5 sm:px-2">
+      <div
+        className="w-display-1 flex max-w-[1320px] flex-wrap items-center justify-center gap-x-4 gap-y-3 text-center"
+        style={{ color: "var(--w-fg-alternative)" }}
+      >
         {slots.map((slot, i) => (
-          // 칸과 조사는 한 덩어리 — 사이에서 줄이 갈리면 '동안' 만 다음 줄에 홀로 남는다.
-          <span key={slot.placeholder} className="inline-flex items-center gap-1.5 whitespace-nowrap max-w-full">
+          <span key={slot.placeholder} className="inline-flex max-w-full items-center gap-1.5 whitespace-nowrap">
             {slot.text == null ? (
-              <span className="px-3 py-1 rounded-lg border-[1.5px] border-dashed border-[var(--w-line-normal)] font-semibold text-[var(--w-fg-alternative)]">
+              <span className="rounded-lg border-[1.5px] border-dashed border-[var(--w-line-normal)] px-3 py-1 text-[48px] font-semibold text-[var(--w-fg-alternative)]">
                 {slot.placeholder}
               </span>
             ) : i === Math.min(step, 3) ? (
               <span
-                className="px-3 py-1 rounded-lg font-extrabold text-white bg-[var(--w-primary-normal)] truncate"
+                className="truncate rounded-lg bg-[var(--w-primary-normal)] px-3 py-1 text-[48px] font-extrabold text-white"
                 style={{ boxShadow: "0 0 0 4px var(--w-focus-ring)" }}
               >
                 {slot.text}
               </span>
             ) : (
-              <span className="px-3 py-1 rounded-lg font-bold bg-[var(--w-bg-neutral)] text-[var(--w-fg-strong)] truncate">
+              <span className="truncate rounded-lg bg-[var(--w-bg-neutral)] px-3 py-1 text-[48px] font-bold text-[var(--w-fg-strong)]">
                 {slot.text}
               </span>
             )}
-            <span className="shrink-0">{slot.suffix}</span>
+            <span className="w-display-2 shrink-0 text-[var(--w-fg-alternative)]">{slot.suffix}</span>
           </span>
         ))}
       </div>
@@ -411,38 +414,42 @@ function NameStep({
 
   return (
     <>
-      <QuestionHead
-        title={<>이번 목표,<br />뭐라고 부를까요?</>}
-        desc="나중에 리포트와 알림에 이 이름으로 표시돼요. 캠페인 이름 그대로 써도 좋아요."
-      />
+      <div className="flex flex-col gap-3">
+        <h2 className="w-display-editorial m-0 break-keep">이번 목표를<br />어떤 이름으로 남길까요?</h2>
+        <p className="w-body m-0 break-keep text-pretty">
+          리포트와 알림에서 이 이름으로 목표를 찾아요.<br />캠페인 이름을 그대로 가져와도 괜찮아요.
+        </p>
+      </div>
 
-      <div className="flex items-end gap-2.5 pb-3.5 border-b-2 border-[var(--w-primary-normal)]">
-        <input
-          ref={ref}
-          type="text"
-          value={name}
-          maxLength={30}
-          placeholder="7월 신제품 런칭"
-          onChange={(e) => onChange(e.target.value)}
-          className="flex-1 min-w-0 bg-transparent border-none outline-none font-bold text-[26px] sm:text-[34px] leading-[1.2] tracking-[-0.03em] text-[var(--w-fg-strong)] placeholder:text-[var(--w-fg-alternative)]"
-        />
-        <span className="shrink-0 pb-1.5 font-medium text-[13px] text-[var(--w-fg-alternative)] [font-variant-numeric:tabular-nums]">
-          {name.length} / 30
-        </span>
+      <div className="flex flex-col gap-3">
+        <div className="flex items-baseline justify-between gap-3">
+          <label htmlFor="goal-name" className="w-label">목표 이름</label>
+          <span className="w-caption shrink-0 [font-variant-numeric:tabular-nums]">{name.length} / 30</span>
+        </div>
+        <div className="flex h-[72px] items-center gap-4 rounded-xl border-2 border-[var(--w-primary-normal)] bg-[var(--w-bg-normal)] px-5 focus-within:border-[var(--w-primary-press)] focus-within:ring-4 focus-within:ring-[var(--w-focus-ring)]">
+          <input
+            ref={ref}
+            id="goal-name"
+            type="text"
+            value={name}
+            maxLength={30}
+            placeholder="예: 7월 신제품 런칭"
+            onChange={(e) => onChange(e.target.value)}
+            className="h-full min-w-0 flex-1 border-none bg-transparent text-[26px] font-bold leading-[1.2] tracking-[-0.03em] text-[var(--w-fg-strong)] outline-none focus-visible:!outline-none placeholder:text-[var(--w-fg-alternative)] sm:text-[34px]"
+          />
+        </div>
       </div>
 
       {campaignNames.length > 0 && (
         <div className="flex flex-col gap-2.5">
-          <span className="font-bold text-[12px] tracking-[0.01em] text-[var(--w-fg-neutral)]">
-            진행 중인 캠페인에서 가져오기
-          </span>
+          <span className="w-caption">진행 중인 캠페인 이름을 가져올 수 있어요</span>
           <div className="flex flex-wrap gap-2">
             {campaignNames.slice(0, 4).map((cn) => (
               <button
                 key={cn}
                 type="button"
                 onClick={() => onChange(cn.slice(0, 30))}
-                className="h-8 px-3 rounded-full border border-[var(--w-line-normal)] font-semibold text-[13px] text-[var(--w-fg-normal)] hover:bg-[var(--w-bg-neutral)] max-w-full truncate"
+                className="h-9 max-w-full truncate rounded-full border border-[var(--w-line-normal)] px-3 font-semibold text-[13px] text-[var(--w-fg-normal)] hover:border-[var(--w-primary-normal)] hover:text-[var(--w-primary-press)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--w-focus-ring)]"
               >
                 {cn}
               </button>
@@ -451,6 +458,70 @@ function NameStep({
         </div>
       )}
     </>
+  );
+}
+
+function GoalSetupPath({ name }: { name: string }) {
+  const steps = [
+    { label: "목표 이름", value: name.trim() || "아직 이름을 입력하지 않았어요" },
+    { label: "후행 목표", value: "ROAS, CPA, 공헌이익 중 하나를 골라요" },
+    { label: "목표값", value: "현재 실적을 보고 현실적인 값을 정해요" },
+    { label: "추적 기간", value: "언제까지 볼지 정하면 준비가 끝나요" },
+  ];
+
+  return (
+    <aside className="w-full rounded-2xl border border-[var(--w-line-normal)] bg-[var(--w-bg-elevated)] p-7">
+      <div className="flex items-start justify-between gap-4 border-b border-[var(--w-line-alternative)] pb-5">
+        <div>
+          <h3 className="w-h4 m-0">목표를 만드는 순서</h3>
+          <p className="w-caption m-0 mt-1">지금은 이름만 정하면 돼요.</p>
+        </div>
+        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[var(--w-primary-soft)] text-[13px] font-extrabold text-[var(--w-primary-press)]">
+          01
+        </span>
+      </div>
+
+      <ol className="m-0 mt-6 list-none p-0">
+        {steps.map((item, index) => {
+          const active = index === 0;
+          return (
+            <li key={item.label} className="relative grid min-h-[68px] grid-cols-[28px_minmax(0,1fr)] gap-4">
+              {index < steps.length - 1 && (
+                <span className="absolute left-[13px] top-7 h-[42px] w-px bg-[var(--w-line-normal)]" />
+              )}
+              <span
+                className={cn(
+                  "z-10 grid h-7 w-7 place-items-center rounded-full border text-[12px] font-bold",
+                  active
+                    ? "border-[var(--w-primary-normal)] bg-[var(--w-primary-normal)] text-white"
+                    : "border-[var(--w-line-normal)] bg-[var(--w-bg-elevated)] text-[var(--w-fg-neutral)]",
+                )}
+              >
+                {index + 1}
+              </span>
+              <span className="min-w-0">
+                <span className="block text-[15px] font-bold leading-[1.4] text-[var(--w-fg-strong)]">{item.label}</span>
+                <span
+                  className={cn(
+                    "mt-0.5 block break-keep text-[13px] font-medium leading-[1.5] text-pretty",
+                    active ? "text-[var(--w-primary-press)]" : "text-[var(--w-fg-neutral)]",
+                  )}
+                >
+                  {item.value}
+                </span>
+              </span>
+            </li>
+          );
+        })}
+      </ol>
+
+      <div className="mt-2 rounded-xl bg-[var(--w-primary-soft)] p-5">
+        <span className="block text-[14px] font-bold text-[var(--w-primary-press)]">마지막에 받는 것</span>
+        <span className="mt-2 block break-keep text-[13px] font-medium leading-[1.55] text-[var(--w-fg-normal)] text-pretty">
+          정한 후행 목표를 달성하는 데 필요한 선행지표와 추적 기준을 알려드려요.
+        </span>
+      </div>
+    </aside>
   );
 }
 
@@ -482,7 +553,7 @@ function MetricStep({
   return (
     <>
       <QuestionHead
-        title={<>무엇으로 성패를<br />판단할까요?</>}
+        title="무엇으로 성패를 판단할까요?"
         desc="결과를 말해주는 후행 목표 하나만 고르면 돼요."
       />
 
@@ -517,14 +588,12 @@ function MetricStep({
                   >
                     {selected && <Icon name="check" size={14} strokeWidth={2.5} />}
                   </span>
-                  <span className="flex-1 min-w-0 flex flex-col gap-1">
-                    <span className="font-bold text-[15px] leading-tight text-[var(--w-fg-strong)]">
-                      {opt.name}{" "}
-                      <span className="font-medium text-[12px] text-[var(--w-fg-neutral)]">{opt.hint}</span>
-                    </span>
+                  <span className="flex-1 min-w-0 flex flex-col gap-0.5">
+                    <span className="font-bold text-[16px] leading-tight text-[var(--w-fg-strong)]">{opt.name}</span>
+                    <span className="font-medium text-[12px] leading-[1.4] text-[var(--w-fg-neutral)]">{opt.hint}</span>
                     <span
                       className={cn(
-                        "font-medium text-[12px] leading-[1.4]",
+                        "mt-1 font-medium text-[12px] leading-[1.4]",
                         selected ? "text-[var(--w-primary-press)]" : "text-[var(--w-fg-neutral)]",
                       )}
                     >

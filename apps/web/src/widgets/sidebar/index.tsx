@@ -121,7 +121,7 @@ const THEME_BUTTONS: { id: ThemeChoice; icon: IconName; label: string }[] = [
 ];
 
 const COUNT_BASE =
-  "ml-auto font-semibold text-[11px] leading-none [font-family:var(--w-font-mono)] px-[7px] py-[3px] rounded-full";
+  "ml-auto font-semibold text-[11px] leading-none [font-family:var(--w-font-mono)] px-[7px] py-[3px] rounded-[var(--w-radius-pill)]";
 
 function matchesPath(item: NavItem, pathname: string) {
   return [item.href, ...(item.matchPaths ?? [])].some((href) => pathname === href || pathname.startsWith(href + "/"));
@@ -142,7 +142,7 @@ function countClass(variant: "warn" | "primary" | undefined, active: boolean) {
 
 function linkClass(active: boolean, isSub = false, isParent = false) {
   return cn(
-    "flex items-center gap-[11px] rounded-lg",
+    "flex items-center gap-[11px] rounded-[var(--w-radius-8)]",
     "font-semibold leading-none tracking-[-0.003em]",
     "cursor-pointer border-none text-left",
     "transition-[background,color] duration-[120ms]",
@@ -153,7 +153,7 @@ function linkClass(active: boolean, isSub = false, isParent = false) {
         : "bg-[var(--w-bg-neutral)] text-[var(--w-fg-strong)]"
       : isSub
         ? "bg-transparent text-[var(--w-fg-neutral)] hover:bg-[var(--w-bg-neutral)] hover:text-[var(--w-fg-strong)]"
-        : "bg-transparent text-[#121212] dark:text-[var(--w-fg-neutral)] hover:bg-[var(--w-bg-neutral)] hover:text-[var(--w-fg-strong)]"
+        : "bg-transparent text-[var(--w-fg-strong)] dark:text-[var(--w-fg-neutral)] hover:bg-[var(--w-bg-neutral)] hover:text-[var(--w-fg-strong)]"
   );
 }
 

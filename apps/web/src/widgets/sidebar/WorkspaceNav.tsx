@@ -34,7 +34,7 @@ export default function WorkspaceNav() {
           type="button"
           aria-label="메뉴 열기"
           onClick={() => setOpen(true)}
-          className="w-9 h-9 -ml-1.5 grid place-items-center rounded-lg text-[var(--w-fg-strong)] hover:bg-[var(--w-bg-neutral)]"
+          className="w-9 h-9 -ml-1.5 grid place-items-center rounded-[var(--w-radius-8)] text-[var(--w-fg-strong)] hover:bg-[var(--w-bg-neutral)]"
         >
           <Icon name="grid" size={20} />
         </button>

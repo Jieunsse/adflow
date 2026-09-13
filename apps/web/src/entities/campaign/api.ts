@@ -1,6 +1,14 @@
 import type { CampaignSummary, InsightsPeriod } from "@/lib/meta-ads";
 
 export type CampaignsQueryError = Error & { code?: number };
+export type CampaignControlParams = {
+  campaignId: string;
+  adSetId?: string;
+  adId?: string;
+  action: "pause" | "resume" | "set-daily-budget";
+  dailyBudget?: number;
+};
+export type CampaignControlResult = { ok: true; status?: "ACTIVE" | "PAUSED"; dailyBudget?: number };
 
 export const campaignKeys = {
   all: ["campaigns"] as const,
@@ -24,4 +32,38 @@ export async function fetchCampaigns(period: "all" | InsightsPeriod = "all", exa
   }
   if (!res.ok) throw new Error(data?.error ?? "캠페인을 불러오지 못했어요");
   return (data.campaigns ?? []) as CampaignSummary[];
+}
+
+export async function controlCampaign(params: CampaignControlParams): Promise<CampaignControlResult> {
+  const res = await fetch("/api/campaign/control", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(params),
+  });
+  const data = await res.json() as CampaignControlResult & { error?: string };
+  if (!res.ok) throw new Error(data.error ?? "캠페인을 변경하지 못했어요");
+  return data;
+}
+
+export async function updateCampaignAdSet(campaignId: string, adSet: Record<string, unknown>): Promise<void> {
+  const res = await fetch(`/api/campaign/${campaignId}/update`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ adSet }),
+  });
+  const data = await res.json() as { error?: string };
+  if (!res.ok) throw new Error(data.error ?? "캠페인을 수정하지 못했어요");
+}
+
+export async function replaceCampaignCreative(
+  campaignId: string,
+  body: { headline: string; primaryText: string; reuseExistingImage?: boolean; imageDataUrl?: string },
+): Promise<void> {
+  const res = await fetch(`/api/campaign/${campaignId}/replace-creative`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  const data = await res.json() as { error?: string };
+  if (!res.ok) throw new Error(data.error ?? "소재를 교체하지 못했어요");
 }

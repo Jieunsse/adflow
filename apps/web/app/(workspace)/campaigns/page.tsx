@@ -7,7 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { listBrowse, BROWSE_CHANGE_EVENT } from "@entities/campaign/browse/store";
 import { seedAutoPilotDemo } from "@entities/campaign/browse/seed";
 import { browseCampaignToSummary } from "@entities/campaign/browse/summary";
-import { campaignKeys, fetchCampaigns } from "@entities/campaign/api";
+import { campaignKeys, controlCampaign, fetchCampaigns, type CampaignControlParams, type CampaignControlResult } from "@entities/campaign/api";
 import { CAMPAIGN_STATUS_MAP } from "@entities/campaign/status";
 import Icon, { type IconName } from "@shared/ui/Icon";
 import { EmptyState } from "@shared/ui/primitives";
@@ -34,9 +34,6 @@ const STATUS_DEF: Record<StatusFilter, { label: string; chip: string }> = {
   all: { label: "전체", chip: "neutral" },
   ...CAMPAIGN_STATUS_MAP,
 };
-
-type ControlParams = { campaignId: string; adSetId?: string; adId?: string; action: "pause" | "resume" | "set-daily-budget"; dailyBudget?: number };
-type ControlResult = { ok: true };
 
 function CampaignStatusChip({ status }: { status: string }) {
   const def = STATUS_DEF[status as StatusFilter] ?? { label: status, chip: "neutral" };
@@ -82,7 +79,7 @@ export default function CampaignsPage() {
   const { data: session } = useSession();
   const browseMode = !!session?.browseMode;
   const q = useQuery({ queryKey: campaignKeys.list(period), queryFn: () => fetchCampaigns(period) });
-  const control = useApiMutation<ControlParams, ControlResult>("/api/campaign/control", {
+  const control = useApiMutation<CampaignControlParams, CampaignControlResult>("/api/campaign/control", {
     invalidateKeys: [campaignKeys.all],
   });
 
@@ -156,7 +153,7 @@ export default function CampaignsPage() {
 
   const goDetail = (id: string) => router.push(`/campaigns/${id}?tab=info&period=${period}`);
 
-  const runControl = (params: ControlParams, successMsg: string) => {
+  const runControl = (params: CampaignControlParams, successMsg: string) => {
     control.mutate(params, {
       onSuccess: () => { showToast(successMsg); setMenuOpen(null); q.refetch(); },
       onError: (e) => showToast(e instanceof Error ? e.message : "적용에 실패했어요"),
@@ -170,11 +167,7 @@ export default function CampaignsPage() {
     setBulkPending(true);
     const results = await Promise.allSettled(
       actionable.map((c) =>
-        fetch("/api/campaign/control", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ campaignId: c.id, adSetId: c.adSetId ?? undefined, adId: c.adId ?? undefined, action }),
-        }).then((r) => { if (!r.ok) return r.json().then((d) => Promise.reject(new Error(d?.error ?? "실패"))); }),
+        controlCampaign({ campaignId: c.id, adSetId: c.adSetId ?? undefined, adId: c.adId ?? undefined, action }),
       ),
     );
     setBulkPending(false);

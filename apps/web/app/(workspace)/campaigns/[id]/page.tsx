@@ -29,6 +29,7 @@ import { getMockCampaignAdIds, seedMockAdRows } from "@/lib/mock-campaigns";
 import { CTAS } from "@entities/creative/options";
 import { DEMO_AD_IMAGES } from "@/lib/demo/mock-images";
 import type { CampaignSummary, InsightsPeriod } from "@/lib/meta-ads";
+import { updateCampaignAdSet, replaceCampaignCreative } from "@entities/campaign/api";
 import { campaignDetailKeys, fetchCampaignDetail, fetchCampaignInsights, type CampaignDetailInsights } from "@entities/campaign/detail-api";
 import { Button, buttonVariants } from "@shared/ui/Button";
 import { Card } from "@shared/ui/Card";
@@ -733,13 +734,7 @@ function CampaignConfigurationTab({ c, isLoading, campaignId, onRefetch, isAbCam
 
     setSaving(true);
     try {
-      const res = await fetch(`/api/campaign/${campaignId}/update`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ adSet: payload }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error((data as { error?: string }).error ?? "수정에 실패했어요");
+      await updateCampaignAdSet(campaignId, payload);
       showToast("일정·예산을 수정했어요");
       setEditingSchedule(false);
       onRefetch();
@@ -776,13 +771,7 @@ function CampaignConfigurationTab({ c, isLoading, campaignId, onRefetch, isAbCam
     };
     setSavingTargeting(true);
     try {
-      const res = await fetch(`/api/campaign/${campaignId}/update`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ adSet: { targeting: payload } }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error((data as { error?: string }).error ?? "수정에 실패했어요");
+      await updateCampaignAdSet(campaignId, { targeting: payload });
       showToast("타겟팅을 수정했어요");
       setEditingTargeting(false);
       onRefetch();
@@ -823,13 +812,7 @@ function CampaignConfigurationTab({ c, isLoading, campaignId, onRefetch, isAbCam
     adSet.placements = placementMode === "auto" ? { mode: "auto" } : { mode: "manual", positions: placementPositions };
     setSavingBid(true);
     try {
-      const res = await fetch(`/api/campaign/${campaignId}/update`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ adSet }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error((data as { error?: string }).error ?? "수정에 실패했어요");
+      await updateCampaignAdSet(campaignId, adSet);
       showToast("입찰·배치를 수정했어요");
       setEditingBid(false);
       onRefetch();
@@ -882,13 +865,7 @@ function CampaignConfigurationTab({ c, isLoading, campaignId, onRefetch, isAbCam
       } else if (imageDataUrl) {
         body.imageDataUrl = imageDataUrl;
       }
-      const res = await fetch(`/api/campaign/${campaignId}/replace-creative`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error((data as { error?: string }).error ?? "소재 교체에 실패했어요");
+      await replaceCampaignCreative(campaignId, body as Parameters<typeof replaceCampaignCreative>[1]);
       showToast("소재를 교체했어요. Meta 검토 후 게재돼요.");
       setEditingCreative(false);
       setShowCreativeConfirm(false);

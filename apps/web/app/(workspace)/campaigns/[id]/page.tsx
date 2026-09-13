@@ -77,11 +77,18 @@ function CampaignDetailFlow() {
   const { data: session } = useSession();
   const showToast = useToast();
 
-  const initialPeriod = (searchParams.get("period") ?? "all") as Period;
-  const [period, setPeriod] = useState<Period>(initialPeriod === "7d" || initialPeriod === "30d" ? initialPeriod : "all");
+  const rawPeriod = searchParams.get("period");
+  const period: Period = rawPeriod === "7d" || rawPeriod === "30d" ? rawPeriod : "all";
   const rawTab = searchParams.get("tab");
-  const initialTab = rawTab === "performance" ? "performance" : "info";
-  const [activeTab, setActiveTab] = useState<"info" | "performance">(initialTab);
+  const activeTab = rawTab === "performance" ? "performance" : "info";
+
+  const updateViewParam = (key: "period" | "tab", value?: string) => {
+    const next = new URLSearchParams(searchParams.toString());
+    if (value) next.set(key, value);
+    else next.delete(key);
+    const query = next.toString();
+    router.replace(`/campaigns/${id}${query ? `?${query}` : ""}`, { scroll: false });
+  };
 
   // ADR-033 — Browse Mode 성과 탭: 기간 토글 대신 좋은/나쁜 성과 예시 토글.
   const [quality, setQuality] = useState<BrowseQuality>("good");
@@ -272,8 +279,8 @@ function CampaignDetailFlow() {
       </div>
 
       <div className="inline-flex gap-0.5 p-[3px] bg-[var(--w-bg-alternative)] rounded-[10px] mb-4">
-        <button type="button" className={cn("border-none px-3.5 py-2 rounded-lg font-semibold text-[13px] leading-none cursor-pointer transition-[background,color] duration-[120ms]", activeTab === "info" ? "bg-[var(--w-bg-elevated)] text-[var(--w-fg-strong)] shadow-[0_1px_2px_rgba(23,23,23,0.08)]" : "bg-transparent text-[var(--w-fg-neutral)]")} onClick={() => setActiveTab("info")}>캠페인 정보</button>
-        <button type="button" className={cn("border-none px-3.5 py-2 rounded-lg font-semibold text-[13px] leading-none cursor-pointer transition-[background,color] duration-[120ms]", activeTab === "performance" ? "bg-[var(--w-bg-elevated)] text-[var(--w-fg-strong)] shadow-[0_1px_2px_rgba(23,23,23,0.08)]" : "bg-transparent text-[var(--w-fg-neutral)]")} onClick={() => setActiveTab("performance")}>성과</button>
+        <button type="button" className={cn("border-none px-3.5 py-2 rounded-lg font-semibold text-[13px] leading-none cursor-pointer transition-[background,color] duration-[120ms]", activeTab === "info" ? "bg-[var(--w-bg-elevated)] text-[var(--w-fg-strong)] shadow-[0_1px_2px_rgba(23,23,23,0.08)]" : "bg-transparent text-[var(--w-fg-neutral)]")} onClick={() => updateViewParam("tab")}>캠페인 정보</button>
+        <button type="button" className={cn("border-none px-3.5 py-2 rounded-lg font-semibold text-[13px] leading-none cursor-pointer transition-[background,color] duration-[120ms]", activeTab === "performance" ? "bg-[var(--w-bg-elevated)] text-[var(--w-fg-strong)] shadow-[0_1px_2px_rgba(23,23,23,0.08)]" : "bg-transparent text-[var(--w-fg-neutral)]")} onClick={() => updateViewParam("tab", "performance")}>성과</button>
       </div>
 
       {metaUnauthorized ? (
@@ -314,7 +321,7 @@ function CampaignDetailFlow() {
               ) : (
                 <SegControl
                   value={period}
-                  onChange={setPeriod}
+                  onChange={(value) => updateViewParam("period", value === "all" ? undefined : value)}
                   options={[{ value: "all", label: "전체" }, { value: "7d", label: "최근 7일" }, { value: "30d", label: "최근 30일" }]}
                 />
               )}

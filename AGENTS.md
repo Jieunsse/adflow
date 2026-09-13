@@ -92,6 +92,10 @@
 
 ## Agent skills
 
+### Frontend
+
+`apps/web` 작업은 [apps/web/AGENTS.md](./apps/web/AGENTS.md)와 [프론트엔드 개발 가이드](./docs/engineering/frontend-guidelines.md)를 먼저 읽는다. Next.js App Router, 얇은 FSD 경계, Vercel React 성능 규칙의 적용 기준을 이 문서들이 정의한다.
+
 ### Issue tracker
 
 이슈는 `.scratch/<feature>/` 아래 로컬 마크다운 파일로 관리해요. `.document/agents/issue-tracker.md` 참고.

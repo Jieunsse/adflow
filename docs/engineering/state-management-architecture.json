@@ -1,0 +1,177 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "AdFlow 프론트엔드 상태관리 아키텍처",
+    "output": "state-management-architecture.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/Jieunsse/adflow.git",
+      "provider": "github",
+      "link_mode": "local-only",
+      "revision": "ec235e796ef27c71bdbcd71ad44b1028944ea4eb"
+    },
+    "views": [
+      {
+        "id": "query-flow",
+        "label": "TanStack Query 흐름",
+        "focus": ["screens", "providers", "query-hooks", "query-cache", "api-routes", "remote-api"],
+        "note": "화면의 서버 상태가 Query Cache를 거쳐 API와 동기화되는 경로입니다."
+      },
+      {
+        "id": "zustand-flow",
+        "label": "Zustand 흐름",
+        "focus": ["screens", "zustand-hooks", "synced-store", "local-storage", "store-routes", "server-store"],
+        "note": "공유·영속·서버 동기화가 필요한 클라이언트 도메인 상태의 경로입니다."
+      },
+      {
+        "id": "boundary",
+        "label": "사용 경계",
+        "focus": ["screens", "providers", "query-hooks", "synced-store", "local-storage", "query-cache"],
+        "note": "서버 상태와 클라이언트 공유 상태를 어디서 나누는지 확인합니다."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "screens",
+      "type": "frontend",
+      "label": "App Router 화면",
+      "sublabel": "pages · widgets · features",
+      "tag": "Consumer",
+      "pos": [40, 300],
+      "size": [170, 72],
+      "sources": [
+        { "path": "apps/web/app/(workspace)/dashboard/page.tsx", "label": "Query consumer" },
+        { "path": "apps/web/src/widgets/business-portfolio/Messages.tsx", "label": "Query + mutation" },
+        { "path": "apps/web/src/features/brand-profile/model/usePersonasStorage.ts", "label": "Zustand consumer" }
+      ]
+    },
+    {
+      "id": "providers",
+      "type": "frontend",
+      "label": "App Providers",
+      "sublabel": "Session + QueryClient",
+      "tag": "Runtime boundary",
+      "pos": [280, 300],
+      "size": [190, 72],
+      "sources": [{ "path": "apps/web/app/providers.tsx", "label": "Query provider" }]
+    },
+    {
+      "id": "query-hooks",
+      "type": "frontend",
+      "label": "TanStack Query",
+      "sublabel": "queries · mutations · invalidation",
+      "tag": "Server state",
+      "pos": [540, 140],
+      "size": [210, 78],
+      "sources": [
+        { "path": "apps/web/src/shared/lib/api/useApiMutation.ts", "label": "Mutation wrapper" },
+        { "path": "apps/web/src/entities/campaign/api.ts", "label": "Query fetcher" }
+      ]
+    },
+    {
+      "id": "query-cache",
+      "type": "database",
+      "label": "Query Cache",
+      "sublabel": "QueryClient in memory",
+      "tag": "Cache · dedupe · refetch",
+      "pos": [810, 140],
+      "size": [190, 78]
+    },
+    {
+      "id": "api-routes",
+      "type": "backend",
+      "label": "Next.js API Routes",
+      "sublabel": "campaigns · insights · Meta proxy",
+      "tag": "HTTP boundary",
+      "pos": [1060, 140],
+      "size": [200, 78],
+      "sources": [
+        { "path": "apps/web/app/api/campaigns/route.ts", "label": "Campaign API" },
+        { "path": "apps/web/app/api/insights/[id]/route.ts", "label": "Insights API" }
+      ]
+    },
+    {
+      "id": "remote-api",
+      "type": "external",
+      "label": "외부·서버 데이터",
+      "sublabel": "Meta API · Supabase · app DB",
+      "tag": "Source of truth",
+      "pos": [1060, 300],
+      "size": [200, 72]
+    },
+    {
+      "id": "zustand-hooks",
+      "type": "frontend",
+      "label": "도메인 Store 훅",
+      "sublabel": "profile · persona · library",
+      "tag": "Shared client state",
+      "pos": [540, 470],
+      "size": [210, 78],
+      "sources": [
+        { "path": "apps/web/src/features/brand-profile/model/useBrandProfileStorage.ts", "label": "Brand profile" },
+        { "path": "apps/web/src/shared/lib/library.ts", "label": "Library" }
+      ]
+    },
+    {
+      "id": "synced-store",
+      "type": "frontend",
+      "label": "createSyncedStore",
+      "sublabel": "Zustand + persist + hydration",
+      "tag": "Shared store factory",
+      "pos": [810, 470],
+      "size": [190, 78],
+      "sources": [{ "path": "apps/web/src/shared/lib/store/createSyncedStore.ts", "label": "Store factory" }]
+    },
+    {
+      "id": "local-storage",
+      "type": "database",
+      "label": "localStorage",
+      "sublabel": "persist cache · guest fallback",
+      "tag": "Offline-friendly",
+      "pos": [1060, 470],
+      "size": [200, 78]
+    },
+    {
+      "id": "store-routes",
+      "type": "backend",
+      "label": "Store API Routes",
+      "sublabel": "GET · POST · DELETE /api/stores/*",
+      "tag": "Hydration + mutation",
+      "pos": [810, 650],
+      "size": [190, 72],
+      "sources": [{ "path": "apps/web/app/api/stores/brand-profiles/route.ts", "label": "Store API" }]
+    },
+    {
+      "id": "server-store",
+      "type": "database",
+      "label": "서버 영속 데이터",
+      "sublabel": "로그인 사용자별 source of truth",
+      "tag": "Remote persistence",
+      "pos": [1060, 650],
+      "size": [200, 72]
+    }
+  ],
+  "boundaries": [
+    { "kind": "region", "label": "브라우저 / Next.js Client", "wraps": ["screens", "providers", "query-hooks", "query-cache", "zustand-hooks", "synced-store", "local-storage"], "pad": 26 },
+    { "kind": "region", "label": "Next.js Server / 외부 시스템", "wraps": ["api-routes", "remote-api", "store-routes", "server-store"], "pad": 26 }
+  ],
+  "connections": [
+    { "id": "screens-providers", "from": "screens", "to": "providers", "label": "render" },
+    { "id": "providers-query", "from": "providers", "to": "query-hooks", "label": "QueryClient context", "fromSide": "top", "toSide": "left", "variant": "emphasis" },
+    { "id": "query-hooks-cache", "from": "query-hooks", "to": "query-cache", "label": "read / write cache", "labelDy": 63 },
+    { "id": "query-cache-api", "from": "query-cache", "to": "api-routes", "label": "fetch / mutation", "variant": "emphasis", "labelDy": 63 },
+    { "id": "api-remote", "from": "api-routes", "to": "remote-api", "label": "proxy / persist", "fromSide": "bottom", "toSide": "top", "labelDy": 24 },
+    { "id": "screens-zustand", "from": "screens", "to": "zustand-hooks", "label": "select / action", "fromSide": "bottom", "toSide": "left" },
+    { "id": "hooks-store", "from": "zustand-hooks", "to": "synced-store", "label": "domain facade", "labelDy": 63 },
+    { "id": "store-local", "from": "synced-store", "to": "local-storage", "label": "persist / rehydrate", "variant": "dashed", "labelDy": 63 },
+    { "id": "store-routes", "from": "synced-store", "to": "store-routes", "label": "hydrate / optimistic write", "fromSide": "bottom", "toSide": "top", "variant": "emphasis", "labelDy": 24 },
+    { "id": "routes-server", "from": "store-routes", "to": "server-store", "label": "server source of truth", "labelDy": 60 }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "TanStack Query 역할", "items": ["서버 상태·캐시·중복 요청·refetch 담당", "화면은 Query 결과를 소비하고 mutation 뒤 invalidate"] },
+    { "dot": "violet", "title": "Zustand 역할", "items": ["공유 클라이언트 도메인 상태와 localStorage persist 담당", "createSyncedStore가 로그인 hydration·optimistic write를 공통 처리"] },
+    { "dot": "amber", "title": "경계 규칙", "items": ["API 조회 데이터는 Query", "여러 화면에서 공유·영속·동기화할 데이터는 Zustand"] }
+  ]
+}

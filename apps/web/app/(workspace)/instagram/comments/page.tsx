@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { createContext, Suspense, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useQuery } from "@tanstack/react-query";
@@ -17,6 +17,29 @@ type CommentsResp = { ok: true; items: IgComment[]; mock?: boolean; devFallback?
 type RepliesResp = { ok: true; items: IgComment[]; mock?: boolean } | { ok: false; error: string };
 type MutateResp = { ok: true; mock?: boolean } | { ok: false; error: string };
 type CreateResp = { ok: true; id: string; mock?: boolean } | { ok: false; error: string };
+
+type CommentRowContextValue = {
+  replies: Record<string, IgComment[]>;
+  repliesOpen: Record<string, boolean>;
+  repliesLoading: Record<string, boolean>;
+  replyDraft: Record<string, string>;
+  replySubmitting: Record<string, boolean>;
+  onToggleReplies: (commentId: string) => void;
+  onHide: (comment: IgComment) => void;
+  onDelete: (comment: IgComment) => void;
+  onReplyDraft: (commentId: string, value: string) => void;
+  onReplySubmit: (commentId: string) => void;
+  onHideReply: (parentId: string, reply: IgComment) => void;
+  onDeleteReply: (parentId: string, reply: IgComment) => void;
+};
+
+const CommentRowContext = createContext<CommentRowContextValue | null>(null);
+
+function useCommentRowContext() {
+  const context = useContext(CommentRowContext);
+  if (!context) throw new Error("CommentRow must be used inside CommentRowContext");
+  return context;
+}
 
 function formatDate(iso: string): string {
   if (!iso) return "";
@@ -42,7 +65,7 @@ function CommentsFlow() {
   const [media, setMedia] = useState<IgMediaItem[]>([]);
   const [mediaLoading, setMediaLoading] = useState(true);
   const [mediaErr, setMediaErr] = useState<string | null>(null);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(mediaParam);
 
   const [comments, setComments] = useState<IgComment[]>([]);
   const [commentsLoading, setCommentsLoading] = useState(false);
@@ -92,7 +115,7 @@ function CommentsFlow() {
       }
     }
     load();
-  }, []);
+  }, [mediaParam]);
 
   const loadComments = useCallback(async (mediaId: string) => {
     setCommentsLoading(true);
@@ -386,24 +409,24 @@ function CommentsFlow() {
                         연결된 IG 계정이 없어 샘플 데이터를 보여줘요.
                       </li>
                     )}
-                    {comments.map((c) => (
-                      <CommentRow
-                        key={c.id}
-                        comment={c}
-                        replies={replies[c.id]}
-                        repliesOpen={!!repliesOpen[c.id]}
-                        repliesLoading={!!repliesLoading[c.id]}
-                        replyDraft={replyDraft[c.id] ?? ""}
-                        replySubmitting={!!replySubmitting[c.id]}
-                        onToggleReplies={() => toggleReplies(c.id)}
-                        onHide={() => handleHide(c)}
-                        onDelete={() => setPendingDelete(c)}
-                        onReplyDraft={(v) => setReplyDraft((s) => ({ ...s, [c.id]: v }))}
-                        onReplySubmit={() => handleReply(c.id)}
-                        onHideReply={(r) => handleHideReply(c.id, r)}
-                        onDeleteReply={(r) => setPendingDeleteReply({ reply: r, parentId: c.id })}
-                      />
-                    ))}
+                    <CommentRowContext.Provider
+                      value={{
+                        replies,
+                        repliesOpen,
+                        repliesLoading,
+                        replyDraft,
+                        replySubmitting,
+                        onToggleReplies: toggleReplies,
+                        onHide: handleHide,
+                        onDelete: setPendingDelete,
+                        onReplyDraft: (commentId, value) => setReplyDraft((s) => ({ ...s, [commentId]: value })),
+                        onReplySubmit: handleReply,
+                        onHideReply: handleHideReply,
+                        onDeleteReply: (parentId, reply) => setPendingDeleteReply({ reply, parentId }),
+                      }}
+                    >
+                      {comments.map((comment) => <CommentRow key={comment.id} comment={comment} />)}
+                    </CommentRowContext.Provider>
                   </ul>
                 )}
               </div>
@@ -515,33 +538,28 @@ export default function CommentsPage() {
 
 function CommentRow({
   comment,
-  replies,
-  repliesOpen,
-  repliesLoading,
-  replyDraft,
-  replySubmitting,
-  onToggleReplies,
-  onHide,
-  onDelete,
-  onReplyDraft,
-  onReplySubmit,
-  onHideReply,
-  onDeleteReply,
 }: {
   comment: IgComment;
-  replies?: IgComment[];
-  repliesOpen: boolean;
-  repliesLoading: boolean;
-  replyDraft: string;
-  replySubmitting: boolean;
-  onToggleReplies: () => void;
-  onHide: () => void;
-  onDelete: () => void;
-  onReplyDraft: (v: string) => void;
-  onReplySubmit: () => void;
-  onHideReply: (r: IgComment) => void;
-  onDeleteReply: (r: IgComment) => void;
 }) {
+  const {
+    replies,
+    repliesOpen,
+    repliesLoading,
+    replyDraft,
+    replySubmitting,
+    onToggleReplies,
+    onHide,
+    onDelete,
+    onReplyDraft,
+    onReplySubmit,
+    onHideReply,
+    onDeleteReply,
+  } = useCommentRowContext();
+  const commentReplies = replies[comment.id];
+  const isRepliesOpen = !!repliesOpen[comment.id];
+  const isRepliesLoading = !!repliesLoading[comment.id];
+  const draft = replyDraft[comment.id] ?? "";
+  const isReplySubmitting = !!replySubmitting[comment.id];
   const [showReplyInput, setShowReplyInput] = useState(false);
 
   return (
@@ -576,12 +594,12 @@ function CommentRow({
             {comment.replyCount > 0 && (
               <button
                 type="button"
-                onClick={onToggleReplies}
+                onClick={() => onToggleReplies(comment.id)}
                 className="text-[12px] font-semibold text-[var(--w-fg-neutral)] hover:text-[var(--w-fg-strong)] flex items-center gap-1"
               >
-                {repliesLoading ? (
+                {isRepliesLoading ? (
                   <Icon name="spinner" size={11} spin />
-                ) : repliesOpen ? (
+                ) : isRepliesOpen ? (
                   `답글 ${comment.replyCount}개 접기`
                 ) : (
                   `답글 ${comment.replyCount}개 보기`
@@ -590,14 +608,14 @@ function CommentRow({
             )}
             <button
               type="button"
-              onClick={onHide}
+              onClick={() => onHide(comment)}
               className="text-[12px] font-semibold text-[var(--w-fg-neutral)] hover:text-[var(--w-fg-strong)]"
             >
               {comment.hidden ? "보이기" : "숨기기"}
             </button>
             <button
               type="button"
-              onClick={onDelete}
+              onClick={() => onDelete(comment)}
               className="text-[12px] font-semibold text-[var(--w-status-negative)]"
             >
               삭제
@@ -606,9 +624,9 @@ function CommentRow({
         </div>
       </div>
 
-      {repliesOpen && replies && replies.length > 0 && (
+      {isRepliesOpen && commentReplies && commentReplies.length > 0 && (
         <ul className="mt-2.5 ml-4 flex flex-col gap-3 border-l-2 border-[var(--w-line-alternative)] pl-3">
-          {replies.map((r) => (
+          {commentReplies.map((r) => (
             <li key={r.id} className={`flex flex-col gap-0.5 ${r.hidden ? "opacity-50" : ""}`}>
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="font-semibold text-[12px] text-[var(--w-fg-strong)]">@{r.username}</span>
@@ -630,14 +648,14 @@ function CommentRow({
               <div className="flex items-center gap-3 mt-1">
                 <button
                   type="button"
-                  onClick={() => onHideReply(r)}
+                  onClick={() => onHideReply(comment.id, r)}
                   className="text-[11px] font-semibold text-[var(--w-fg-neutral)] hover:text-[var(--w-fg-strong)]"
                 >
                   {r.hidden ? "보이기" : "숨기기"}
                 </button>
                 <button
                   type="button"
-                  onClick={() => onDeleteReply(r)}
+                  onClick={() => onDeleteReply(comment.id, r)}
                   className="text-[11px] font-semibold text-[var(--w-status-negative)]"
                 >
                   삭제
@@ -652,23 +670,23 @@ function CommentRow({
         <div className="mt-2.5 ml-4 flex gap-2 items-end">
           <input
             type="text"
-            value={replyDraft}
-            onChange={(e) => onReplyDraft(e.target.value)}
+            value={draft}
+            onChange={(e) => onReplyDraft(comment.id, e.target.value)}
             placeholder={`@${comment.username} 에게 답글…`}
             maxLength={2200}
             className="flex-1 px-3 py-2 rounded-[8px] border border-[var(--w-line-normal)] bg-[var(--w-bg-elevated)] text-[13px] text-[var(--w-fg-strong)] outline-none ring-0 focus:outline-none focus:ring-0 focus:border-[var(--w-primary-normal)]"
-            disabled={replySubmitting}
+            disabled={isReplySubmitting}
             onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); onReplySubmit(); }
+              if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); onReplySubmit(comment.id); }
             }}
           />
           <button
             type="button"
-            onClick={onReplySubmit}
-            disabled={!replyDraft.trim() || replySubmitting}
+            onClick={() => onReplySubmit(comment.id)}
+            disabled={!draft.trim() || isReplySubmitting}
             className="h-9 px-3.5 rounded-[8px] bg-[var(--w-primary-normal)] text-white font-semibold text-[12px] disabled:opacity-40 hover:bg-[var(--w-primary-press)] transition-colors shrink-0"
           >
-            {replySubmitting ? <Icon name="spinner" size={13} spin /> : <Icon name="send" size={13} />}
+            {isReplySubmitting ? <Icon name="spinner" size={13} spin /> : <Icon name="send" size={13} />}
           </button>
         </div>
       )}

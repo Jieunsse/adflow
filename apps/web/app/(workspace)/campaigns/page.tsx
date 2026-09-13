@@ -7,7 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { listBrowse, BROWSE_CHANGE_EVENT } from "@entities/campaign/browse/store";
 import { seedAutoPilotDemo } from "@entities/campaign/browse/seed";
 import { browseCampaignToSummary } from "@entities/campaign/browse/summary";
-import { fetchCampaigns } from "@entities/campaign/api";
+import { campaignKeys, fetchCampaigns } from "@entities/campaign/api";
 import { CAMPAIGN_STATUS_MAP } from "@entities/campaign/status";
 import Icon, { type IconName } from "@shared/ui/Icon";
 import { EmptyState } from "@shared/ui/primitives";
@@ -15,12 +15,14 @@ import { fmt, fmtKRW, campaignDateInfo, campaignRunDays } from "@shared/lib/form
 import { isFakePerformance } from "@entities/insights/fake-performance";
 import { useApiMutation } from "@shared/lib/api/useApiMutation";
 import { useToast } from "@shared/ui/Toast";
-import { Button, buttonVariants } from "@shared/ui/Button";
+import { Button } from "@shared/ui/Button";
 import { Card } from "@shared/ui/Card";
 import { Chip, type ChipVariant } from "@shared/ui/Chip";
 import { Skeleton } from "@shared/ui/Skeleton";
 import { SegControl } from "@shared/ui/SegControl";
 import { Select } from "@shared/ui/Select";
+import { Checkbox } from "@shared/ui/Checkbox";
+import { ErrorState } from "@shared/ui/ErrorState";
 import { cn } from "@shared/lib/cn";
 import type { CampaignSummary, CampaignStatusBucket, InsightsPeriod } from "@/lib/meta-ads";
 
@@ -75,14 +77,14 @@ export default function CampaignsPage() {
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
-  const [budgetEdit, setBudgetEdit] = useState<string | null>(null);
-  const [budgetValue, setBudgetValue] = useState("");
   const [bulkPending, setBulkPending] = useState(false);
 
   const { data: session } = useSession();
   const browseMode = !!session?.browseMode;
-  const q = useQuery({ queryKey: ["campaigns", period], queryFn: () => fetchCampaigns(period) });
-  const control = useApiMutation<ControlParams, ControlResult>("/api/campaign/control");
+  const q = useQuery({ queryKey: campaignKeys.list(period), queryFn: () => fetchCampaigns(period) });
+  const control = useApiMutation<ControlParams, ControlResult>("/api/campaign/control", {
+    invalidateKeys: [campaignKeys.all],
+  });
 
   // ADR-033 — Browse Mode: 발표자가 /create 로 만든 캠페인(localStorage)을 정적 mock 앞에 merge.
   const [browseRows, setBrowseRows] = useState<CampaignSummary[]>([]);
@@ -139,7 +141,6 @@ export default function CampaignsPage() {
     const close = (e: MouseEvent) => {
       if (!(e.target as HTMLElement)?.closest("[data-menu-root]")) {
         setMenuOpen(null);
-        setBudgetEdit(null);
       }
     };
     document.addEventListener("click", close);
@@ -157,7 +158,7 @@ export default function CampaignsPage() {
 
   const runControl = (params: ControlParams, successMsg: string) => {
     control.mutate(params, {
-      onSuccess: () => { showToast(successMsg); setMenuOpen(null); setBudgetEdit(null); q.refetch(); },
+      onSuccess: () => { showToast(successMsg); setMenuOpen(null); q.refetch(); },
       onError: (e) => showToast(e instanceof Error ? e.message : "적용에 실패했어요"),
     });
   };
@@ -200,7 +201,7 @@ export default function CampaignsPage() {
       </div>
 
       {!browseMode && isUnauthorized ? (
-        <ErrorCard
+        <ErrorState
           icon="link"
           title="광고 계정을 먼저 연결해주세요"
           reason="Meta 광고 계정과 페이지를 연결해야 캠페인을 불러올 수 있어요."
@@ -208,7 +209,7 @@ export default function CampaignsPage() {
           onAction={() => router.push("/setup")}
         />
       ) : !browseMode && q.isError ? (
-        <ErrorCard
+        <ErrorState
           title="캠페인을 불러오지 못했어요"
           reason={q.error instanceof Error ? q.error.message : "잠시 후 다시 시도해 주세요"}
           ctaLabel="다시 시도"
@@ -373,7 +374,7 @@ export default function CampaignsPage() {
                             className="w-8 h-8 rounded-lg border border-transparent bg-transparent text-[var(--w-fg-neutral)] cursor-pointer inline-grid place-items-center hover:bg-[var(--w-bg-neutral)] hover:text-[var(--w-fg-strong)]"
                             type="button"
                             title="더 보기"
-                            onClick={(e) => { e.stopPropagation(); setMenuOpen(isMenu ? null : c.id); setBudgetEdit(null); }}
+                            onClick={(e) => { e.stopPropagation(); setMenuOpen(isMenu ? null : c.id); }}
                           >
                             <Icon name="dots" size={16} />
                           </button>
@@ -389,13 +390,9 @@ export default function CampaignsPage() {
                                     : showToast("이 캠페인은 여기서 재개할 수 없어요")
                                   : runControl({ campaignId: c.id, action: "pause" }, "광고를 일시정지했어요")
                               }
-                              onBudgetOpen={() => { setBudgetEdit(c.id); setBudgetValue(c.dailyBudget != null ? String(c.dailyBudget) : ""); }}
                               onRemake={() => { setMenuOpen(null); router.push(`/create?prefill=campaign:${c.id}`); }}
-                              budgetOpen={budgetEdit === c.id}
-                              budgetValue={budgetValue}
-                              setBudgetValue={setBudgetValue}
-                              onBudgetApply={() => {
-                                const v = parseInt(budgetValue.replace(/[^\d]/g, ""), 10) || 0;
+                              onBudgetApply={(value) => {
+                                const v = parseInt(value.replace(/[^\d]/g, ""), 10) || 0;
                                 if (!c.adSetId) { showToast("이 캠페인은 여기서 예산을 바꿀 수 없어요"); return; }
                                 runControl({ campaignId: c.id, adSetId: c.adSetId, action: "set-daily-budget", dailyBudget: v }, `일일예산이 ${fmtKRW(v)}로 변경됐어요`);
                               }}
@@ -427,33 +424,21 @@ function SummaryItem({ label, value, mono, dot, last }: { label: string; value: 
   );
 }
 
-function Checkbox({ checked, onChange }: { checked: boolean; onChange: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={(e) => { e.stopPropagation(); onChange(); }}
-      aria-checked={checked}
-      role="checkbox"
-      style={{ width: 18, height: 18, borderRadius: 5, border: checked ? "1.5px solid var(--w-primary-normal)" : "1.5px solid var(--w-line-normal)", background: checked ? "var(--w-primary-normal)" : "var(--w-bg-elevated)", color: "#fff", display: "grid", placeItems: "center", cursor: "pointer", padding: 0 }}
-    >
-      {checked && <Icon name="check" size={11} strokeWidth={3} />}
-    </button>
-  );
-}
-
 function RowMenu({
-  campaign, busy, onDetail, onPauseResume, onBudgetOpen, onRemake, budgetOpen, budgetValue, setBudgetValue, onBudgetApply,
+  campaign, busy, onDetail, onPauseResume, onRemake, onBudgetApply,
 }: {
   campaign: CampaignSummary; busy: boolean;
-  onDetail: () => void; onPauseResume: () => void; onBudgetOpen: () => void; onRemake: () => void;
-  budgetOpen: boolean; budgetValue: string; setBudgetValue: (v: string) => void; onBudgetApply: () => void;
+  onDetail: () => void; onPauseResume: () => void; onRemake: () => void;
+  onBudgetApply: (value: string) => void;
 }) {
+  const [budgetOpen, setBudgetOpen] = useState(false);
+  const [budgetValue, setBudgetValue] = useState(() => campaign.dailyBudget != null ? String(campaign.dailyBudget) : "");
   const paused = campaign.status === "paused";
   return (
     <div className="absolute right-2 top-9 z-30 min-w-[220px] p-1.5 bg-[var(--w-bg-elevated)] border border-[var(--w-line-normal)] rounded-xl shadow-[0_12px_32px_rgba(0,0,0,0.12)]" onClick={(e) => e.stopPropagation()}>
       <MenuItem icon="arrow-right" onClick={onDetail}>상세 보기</MenuItem>
       <MenuItem icon={paused ? "play" : "pause"} onClick={onPauseResume} disabled={busy}>{busy ? "처리 중…" : paused ? "재개" : "일시정지"}</MenuItem>
-      <MenuItem icon="wallet" onClick={onBudgetOpen}>일일예산 조정</MenuItem>
+      <MenuItem icon="wallet" onClick={() => setBudgetOpen(true)}>일일예산 조정</MenuItem>
       <MenuItem icon="sparkles" onClick={onRemake}>새 소재로 다시 만들기</MenuItem>
       <div className="h-px bg-[var(--w-line-alternative)] mx-1 my-0.5" />
       <MenuItem icon="folder" disabled soon>보관</MenuItem>
@@ -475,7 +460,7 @@ function RowMenu({
           <div style={{ font: "500 11px/1.4 var(--w-font-sans)", color: "var(--w-fg-alternative)", marginBottom: 8 }}>최소 ₩10,000</div>
           <div style={{ display: "flex", gap: 6, justifyContent: "flex-end" }}>
             <Button variant="ghost" size="sm" type="button" onClick={() => setBudgetValue("")}>지우기</Button>
-            <Button variant="primary" size="sm" type="button" disabled={busy} onClick={onBudgetApply}>{busy ? "적용 중…" : "적용"}</Button>
+            <Button variant="primary" size="sm" type="button" disabled={busy} onClick={() => onBudgetApply(budgetValue)}>{busy ? "적용 중…" : "적용"}</Button>
           </div>
         </div>
       )}
@@ -535,17 +520,6 @@ function TableSkeleton() {
           ))}
         </tbody>
       </table>
-    </Card>
-  );
-}
-
-function ErrorCard({ icon = "warn", title, reason, ctaLabel = "다시 시도", onAction }: { icon?: IconName; title: string; reason: string; ctaLabel?: string; onAction: () => void }) {
-  return (
-    <Card className="py-10 px-8 flex flex-col items-center gap-3 text-center">
-      <div style={{ width: 56, height: 56, borderRadius: "50%", background: "var(--w-status-negative-soft)", color: "var(--w-status-negative)", display: "grid", placeItems: "center" }}><Icon name={icon} size={24} /></div>
-      <div style={{ font: "700 17px/1.3 var(--w-font-sans)", color: "var(--w-fg-strong)", letterSpacing: "-0.01em" }}>{title}</div>
-      <div style={{ font: "500 13px/1.5 var(--w-font-sans)", color: "var(--w-fg-neutral)", maxWidth: 380 }}>{reason}</div>
-      <Button variant="secondary" type="button" className="mt-2" onClick={onAction}>{ctaLabel}</Button>
     </Card>
   );
 }

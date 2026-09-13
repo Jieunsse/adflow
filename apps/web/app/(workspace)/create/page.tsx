@@ -2,7 +2,6 @@
 
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
-import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Button } from "@shared/ui/Button";
 import { useSessionStorage } from "@shared/lib/storage/useSessionStorage";
@@ -26,15 +25,12 @@ import { nextStepAfterBrief, shouldTriggerGenerate } from "@entities/creative/br
 import { browseCreative, browseRefinedBody } from "@entities/creative/browse/seed";
 import { refineInstruction, type RefineId } from "@entities/creative/refine-presets";
 import {
-  saveDraftToSession,
   loadDraftFromSession,
   clearDraftFromSession,
   hydrateCreativeDraft,
   hydrateLaunchDraft,
   type CreateDraftSnapshot,
 } from "@entities/creative/draft-persistence";
-import { createStageFor, routeFromCreateStage, type CreateFlowStep } from "@entities/creative/create-flow-route";
-import { shrinkImageDataUrl } from "@shared/lib/shrink-image";
 import BriefStep from "@widgets/create-flow/BriefStep";
 import CreateFlowProgress from "@widgets/create-flow/CreateFlowProgress";
 import { savedAgoLabel } from "@widgets/create-flow/copy-diff";
@@ -45,6 +41,8 @@ import { mergePersonaTargeting } from "@features/brand-profile/model/mergePerson
 import { useProducts } from "@shared/lib/products";
 import { selectProfileNudge, NUDGE_LABEL, type ProfileNudge, type ProfileNudgeTarget } from "@entities/creative/profile-nudge";
 import { CREATE_EVENTS, recordCreateEvent } from "@entities/creative/create-events";
+import { useCreateFlowRoute } from "@widgets/create-flow/useCreateFlowRoute";
+import { useCreateDraftPersistence } from "@widgets/create-flow/useCreateDraftPersistence";
 
 const LaunchStep = dynamic(() => import("@widgets/launch-step"));
 const GeneratingPanel = dynamic(() => import("@widgets/create-flow/GeneratingPanel"));
@@ -71,8 +69,7 @@ const BROWSE_GENERATE_MS = 1400;
 const BROWSE_REFINE_MS = 900;
 
 function CreateFlow() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
+  const { router, searchParams, step, reviewing, setStep, setReviewing, goToStep } = useCreateFlowRoute();
   const { data: session, status } = useSession();
   const creative = useCreativeDraft();
   const launch = useLaunchDraft();
@@ -83,39 +80,12 @@ function CreateFlow() {
   campaignLaunches.useSync();
   const launchedCampaigns = campaignLaunches.useStore((s) => s.items);
   // 확정 플로우 — 0 브리프(1d) · 1 소재(1f 생성 중 → 1c 3안 비교 → 2a 이미지 3컷 → 2b 다듬기) · 2 게재(1e → 2c).
-  const [step, setStep] = useState<CreateFlowStep>(0);
-  const [reviewing, setReviewing] = useState(false);
   const studio = useStudioSession();
   // 자동 저장 pill 은 실제로 저장이 끝난 시각만 보여준다. 문구는 30초마다만 다시 계산한다.
-  const [lastSavedAt, setLastSavedAt] = useState<number | null>(null);
+  const [savedLabel, setSavedLabel] = useState<string | null>(null);
   // 둘러보기는 API 대신 시드를 쓰지만, 생성 중 화면(시안 1f)은 똑같이 지나가야 한다.
   const [browseBusy, setBrowseBusy] = useState<null | "generate" | "refine">(null);
-  const [savedLabel, setSavedLabel] = useState<string | null>(null);
   const [draftResolved, setDraftResolved] = useState(false);
-
-  const goToStep = (nextStep: CreateFlowStep, nextReviewing = false) => {
-    setStep(nextStep);
-    setReviewing(nextReviewing);
-    const params = new URLSearchParams(searchParams.toString());
-    const stage = createStageFor(nextStep, nextReviewing);
-    if (stage) params.set("stage", stage);
-    else params.delete("stage");
-    const query = params.toString();
-    router.push(query ? `/create?${query}` : "/create");
-  };
-
-  useEffect(() => {
-    const route = routeFromCreateStage(searchParams.get("stage"));
-    setStep(route.step);
-    setReviewing(route.reviewing);
-  }, [searchParams]);
-  useEffect(() => {
-    if (!lastSavedAt) return;
-    const tick = () => setSavedLabel(savedAgoLabel(lastSavedAt, Date.now()));
-    tick();
-    const id = setInterval(tick, 30_000);
-    return () => clearInterval(id);
-  }, [lastSavedAt]);
 
   // PRD-ab-testing.md §3.3 / §8 — `?prefill=campaign:{id}` 진입 → 우세 안 자동 채움.
   const prefillRaw = searchParams.get("prefill");
@@ -433,6 +403,23 @@ function CreateFlow() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const { lastSavedAt } = useCreateDraftPersistence({
+    step,
+    creative: creative.state,
+    launch: launch.state,
+    studio: studio.snapshot,
+    resumeDraft,
+    draftResolved,
+  });
+
+  useEffect(() => {
+    if (!lastSavedAt) return;
+    const tick = () => setSavedLabel(savedAgoLabel(lastSavedAt, Date.now()));
+    tick();
+    const id = setInterval(tick, 30_000);
+    return () => clearInterval(id);
+  }, [lastSavedAt]);
+
   const handleResumeDraft = () => {
     if (!resumeDraft) return;
     hydrateCreativeDraft(creative.dispatch, resumeDraft.creative);
@@ -446,55 +433,6 @@ function CreateFlow() {
     clearDraftFromSession();
     setResumeDraft(null);
   };
-
-  // 초안 미러링 — debounce 800ms. 이어하기 배너 응답 전에는 저장하지 않아 기존 초안을 지키고,
-  // 게재 완료 시 초안 삭제. 빈 상태(목표·생성물 없음)는 저장하지 않는다.
-  useEffect(() => {
-    if (!draftResolved) return;
-    if (resumeDraft) return;
-    if (launch.state.launchedCampaign) {
-      clearDraftFromSession();
-      return;
-    }
-    const meaningful = step > 0 || creative.state.outcome !== null || studio.snapshot.displayedHeadlines !== null;
-    if (!meaningful) return;
-    const timer = setTimeout(() => {
-      void (async () => {
-        const img = launch.state.imageDataUrl ? await shrinkImageDataUrl(launch.state.imageDataUrl) : null;
-        const finalImg = launch.state.finalImageDataUrl ? await shrinkImageDataUrl(launch.state.finalImageDataUrl) : null;
-        saveDraftToSession(
-          step,
-          creative.state,
-          { ...launch.state, imageDataUrl: img, finalImageDataUrl: finalImg },
-          studio.snapshot,
-        );
-        setLastSavedAt(Date.now());
-      })();
-    }, 800);
-    return () => clearTimeout(timer);
-  }, [
-    step,
-    creative.state,
-    launch.state,
-    studio.snapshot,
-    resumeDraft,
-    draftResolved,
-  ]);
-
-  // debounce 전에 새로고침·다른 화면 이동이 일어나도 현재 초안을 남긴다.
-  useEffect(() => {
-    if (!draftResolved || resumeDraft) return;
-    const saveBeforeLeave = () => {
-      if (launch.state.launchedCampaign) {
-        clearDraftFromSession();
-        return;
-      }
-      const meaningful = step > 0 || creative.state.outcome !== null || studio.snapshot.displayedHeadlines !== null;
-      if (meaningful) saveDraftToSession(step, creative.state, launch.state, studio.snapshot);
-    };
-    window.addEventListener("pagehide", saveBeforeLeave);
-    return () => window.removeEventListener("pagehide", saveBeforeLeave);
-  }, [step, creative.state, launch.state, studio.snapshot, resumeDraft, draftResolved]);
 
   // productId 변경 시 제품의 targetUrl → landingUrl 자동 프리필 (비어있을 때만)
   useEffect(() => {

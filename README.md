@@ -16,9 +16,9 @@ pnpm dev
 
 1. Supabase 프로젝트를 만들어요.
 2. SQL Editor에서 [supabase/schema.sql](./supabase/schema.sql)을 실행해요.
-3. apps/web/.env.local에 SUPABASE_URL과 server-side 전용 SUPABASE_SERVICE_ROLE_KEY를 넣어요.
+3. apps/web/.env.local에 SUPABASE_URL과 server-side 전용 SUPABASE_SECRET_KEY를 넣어요.
 
-SUPABASE_SERVICE_ROLE_KEY는 브라우저 코드나 NEXT_PUBLIC_* 변수에 넣으면 안 돼요.
+SUPABASE_SECRET_KEY는 브라우저 코드나 NEXT_PUBLIC_* 변수에 넣으면 안 돼요.
 
 ## 명령
 

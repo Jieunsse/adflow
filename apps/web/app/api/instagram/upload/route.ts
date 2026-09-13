@@ -1,49 +1,23 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
-import { randomUUID } from "node:crypto"
-import { mkdir, writeFile } from "node:fs/promises"
-import path from "node:path"
-
-const MAX_BYTES = 8 * 1024 * 1024 // IG photo upload 한도와 동일
-const ALLOWED = new Set(["image/jpeg", "image/png", "image/webp"])
-const EXT_BY_MIME: Record<string, string> = {
-  "image/jpeg": "jpg",
-  "image/png": "png",
-  "image/webp": "webp",
-}
+import { prepareInstagramMedia } from "@/lib/instagram-upload"
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions)
-  if (!session) return NextResponse.json({ ok: false, error: "로그인이 필요합니다." }, { status: 401 })
+  if (!session) return NextResponse.json({ ok: false, error: "로그인이 필요해요." }, { status: 401 })
+  if (session.browseMode) {
+    return NextResponse.json({ ok: false, error: "둘러보기에서는 파일 업로드를 지원하지 않아요. 로그인하면 저장할 수 있어요." }, { status: 401 })
+  }
 
-  let form: FormData
+  let body: { mimeType?: unknown; size?: unknown }
   try {
-    form = await req.formData()
+    const parsed = await req.json()
+    body = parsed && typeof parsed === "object" ? (parsed as { mimeType?: unknown; size?: unknown }) : {}
   } catch {
-    return NextResponse.json({ ok: false, error: "multipart/form-data 가 아니에요." }, { status: 400 })
+    return NextResponse.json({ ok: false, error: "업로드 정보가 올바르지 않아요." }, { status: 400 })
   }
 
-  const file = form.get("file")
-  if (!(file instanceof File)) {
-    return NextResponse.json({ ok: false, error: "file 필드가 필요해요." }, { status: 400 })
-  }
-  if (!ALLOWED.has(file.type)) {
-    return NextResponse.json({ ok: false, error: "JPG/PNG/WebP 만 지원해요." }, { status: 400 })
-  }
-  if (file.size > MAX_BYTES) {
-    return NextResponse.json({ ok: false, error: "파일이 8MB 를 넘었어요." }, { status: 400 })
-  }
-
-  const origin = `${req.nextUrl.protocol}//${req.nextUrl.host}`
-
-  const ext = EXT_BY_MIME[file.type]
-  const filename = `${randomUUID()}.${ext}`
-  const dir = path.join(process.cwd(), "public", "uploads")
-  await mkdir(dir, { recursive: true })
-  const buf = Buffer.from(await file.arrayBuffer())
-  await writeFile(path.join(dir, filename), buf)
-
-  const url = `${origin}/uploads/${filename}`
-  return NextResponse.json({ ok: true, url })
+  const result = prepareInstagramMedia("image", body.mimeType, body.size)
+  return NextResponse.json(result.ok ? result : { ok: false, error: result.error }, { status: result.ok ? 200 : result.status })
 }

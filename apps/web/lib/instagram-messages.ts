@@ -1,47 +1,12 @@
-import { GRAPH, getPageToken, getIgUserId } from "./instagram-graph"
-import { readIgMessages, saveIgMessages, type IgMessageRow } from "./ig-message-store"
-
-async function getInboxFromStore(igUserId: string): Promise<IgInbox | null> {
-  const rows = await readIgMessages(igUserId)
-  if (rows.length === 0) return null
-
-  // 최신순으로 오므로 대화별 첫 줄이 곧 미리보기다.
-  const seen = new Set<string>()
-  const summaries: IgConversationSummary[] = []
-  for (const row of rows) {
-    if (!seen.has(row.conversationId)) {
-      seen.add(row.conversationId)
-      summaries.push({
-        id: row.conversationId,
-        participantId: row.participantId,
-        participantHandle: row.participantHandle ?? 'unknown',
-        preview: truncate(row.text ?? '', 70),
-        updatedAt: row.createdAt,
-      })
-    }
-  }
-  return { conversations: summaries, mock: false }
-}
-
-async function getThreadFromStore(igUserId: string, conversationId: string): Promise<IgThread | null> {
-  // igUserId 로 함께 걸러야 대화 id 만 아는 사람에게 남의 스레드가 나가지 않는다(단계 4).
-  const rows = await readIgMessages(igUserId, conversationId)
-  if (rows.length === 0) return null
-
-  const handle = rows.find(r => r.participantHandle)?.participantHandle ?? 'unknown'
-  return {
-    conversationId,
-    participantHandle: handle,
-    messages: rows.map(r => ({
-      id: r.id,
-      from: r.fromMe ? ('me' as const) : ('them' as const),
-      text: r.text ?? '',
-      attachmentImageUrl: r.attachmentUrl,
-      createdAt: r.createdAt,
-    })),
-    mock: false,
-  }
-}
+import {
+  MetaGraphError,
+  graphErrorMessage,
+  graphStatus,
+  hasGraphError,
+  readGraphBody,
+  resolveInstagramCredentials,
+} from "./instagram-graph"
+import { saveIgMessages, type IgMessageRow } from "./ig-message-store"
 
 export type IgConversationSummary = {
   id: string
@@ -138,9 +103,9 @@ export function getMockThread(conversationId: string): IgThread {
   return { ...t, mock: true }
 }
 
-async function fetchParticipantPicture(igsid: string, token: string): Promise<string | undefined> {
+async function fetchParticipantPicture(igsid: string, token: string, graphBase: string): Promise<string | undefined> {
   try {
-    const res = await fetch(`${GRAPH}/${igsid}?fields=profile_pic&access_token=${token}`)
+    const res = await fetch(`${graphBase}/${igsid}?fields=profile_pic&access_token=${token}`, { cache: "no-store" })
     if (!res.ok) return undefined
     const data = await res.json() as { profile_pic?: string }
     return data.profile_pic
@@ -153,30 +118,35 @@ function truncate(s: string, n: number): string {
   return s.length > n ? `${s.slice(0, n - 1)}…` : s
 }
 
-async function fetchInboxWithToken(igUserId: string, token: string): Promise<IgInbox> {
+async function fetchInboxWithToken(creds: { igUserId: string; token: string; graphBase: string }): Promise<IgInbox> {
+  const { igUserId, token } = creds
   const res = await fetch(
-    `${GRAPH}/${igUserId}/conversations?platform=instagram` +
+    `${creds.graphBase}/${igUserId}/conversations?platform=instagram` +
     `&fields=participants,updated_time,messages.limit(1){id,message,from,created_time}` +
-    `&limit=20&access_token=${token}`
+    `&limit=20&access_token=${token}`,
+    { cache: "no-store" },
   )
-  if (!res.ok) return IG_INBOX_MOCK
-
-  const data = await res.json() as {
+  const body = await readGraphBody(res) as {
     data?: Array<{
       id: string
       updated_time?: string
       participants?: { data?: Array<{ id: string; username?: string }> }
       messages?: { data?: Array<{ id?: string; message?: string; from?: { id: string }; created_time?: string }> }
     }>
+    error?: { message?: string }
   }
-  const rows = data.data ?? []
+  if (!res.ok || hasGraphError(body)) {
+    throw new MetaGraphError(graphErrorMessage(body, "Instagram 대화 조회 실패"), graphStatus(res.status, body), body)
+  }
+
+  const rows = body.data ?? []
   if (rows.length === 0) return { conversations: [], mock: false }
 
   const summaries = await Promise.all(rows.map(async (row) => {
     const other = row.participants?.data?.find(p => p.id !== igUserId)
     const handle = other?.username ?? 'unknown'
     const lastMsg = row.messages?.data?.[0]
-    const pictureUrl = other?.id ? await fetchParticipantPicture(other.id, token) : undefined
+    const pictureUrl = other?.id ? await fetchParticipantPicture(other.id, token, creds.graphBase) : undefined
     return {
       id: row.id,
       participantId: other?.id ?? '',
@@ -187,7 +157,6 @@ async function fetchInboxWithToken(igUserId: string, token: string): Promise<IgI
     } satisfies IgConversationSummary
   }))
 
-  // 씨앗 심기 — 각 대화의 최신 메시지 1건 저장
   const seedRows: IgMessageRow[] = rows.flatMap(row => {
     const other = row.participants?.data?.find(p => p.id !== igUserId)
     const lastMsg = row.messages?.data?.[0]
@@ -203,24 +172,27 @@ async function fetchInboxWithToken(igUserId: string, token: string): Promise<IgI
       createdAt: lastMsg.created_time ?? row.updated_time ?? '',
     }]
   })
-  await saveIgMessages(seedRows)
+  try {
+    await saveIgMessages(seedRows)
+  } catch (error) {
+    console.error("[Instagram DM] inbox fetched but cache save failed", error)
+  }
 
   return { conversations: summaries, mock: false }
 }
 
 async function fetchThreadWithToken(
   conversationId: string,
-  igUserId: string,
-  token: string,
+  creds: { igUserId: string; token: string; graphBase: string },
 ): Promise<IgThread> {
+  const { igUserId, token } = creds
   const res = await fetch(
-    `${GRAPH}/${conversationId}` +
+    `${creds.graphBase}/${conversationId}` +
     `?fields=messages.limit(50){message,from,attachments{image_data},created_time},participants` +
-    `&access_token=${token}`
+    `&access_token=${token}`,
+    { cache: "no-store" },
   )
-  if (!res.ok) return getMockThread(conversationId)
-
-  const data = await res.json() as {
+  const data = await readGraphBody(res) as {
     participants?: { data?: Array<{ id: string; username?: string }> }
     messages?: {
       data?: Array<{
@@ -231,6 +203,10 @@ async function fetchThreadWithToken(
         created_time?: string
       }>
     }
+    error?: { message?: string }
+  }
+  if (!res.ok || hasGraphError(data)) {
+    throw new MetaGraphError(graphErrorMessage(data, "Instagram 대화 조회 실패"), graphStatus(res.status, data), data)
   }
 
   const other = data.participants?.data?.find(p => p.id !== igUserId)
@@ -246,18 +222,21 @@ async function fetchThreadWithToken(
     createdAt: m.created_time ?? '',
   }))
 
-  // 전체 스레드 저장 (첫 스레드 열람 시 씨앗 완성)
-  await saveIgMessages(messages.map(m => ({
-    id: m.id,
-    igUserId,
-    conversationId,
-    participantId: other?.id ?? '',
-    participantHandle: handle,
-    fromMe: m.from === 'me',
-    text: m.text,
-    attachmentUrl: m.attachmentImageUrl,
-    createdAt: m.createdAt,
-  })))
+  try {
+    await saveIgMessages(messages.map(m => ({
+      id: m.id,
+      igUserId,
+      conversationId,
+      participantId: other?.id ?? '',
+      participantHandle: handle,
+      fromMe: m.from === 'me',
+      text: m.text,
+      attachmentUrl: m.attachmentImageUrl,
+      createdAt: m.createdAt,
+    })))
+  } catch (error) {
+    console.error("[Instagram DM] thread fetched but cache save failed", error)
+  }
 
   return { conversationId, participantHandle: handle, messages, mock: false }
 }
@@ -266,23 +245,16 @@ export async function getInstagramInbox(
   pageId: string | undefined,
   userToken: string | undefined,
   igUserIdHint?: string,
+  igAccessToken?: string,
 ): Promise<IgInbox> {
-  if (!pageId || !userToken) return IG_INBOX_MOCK
-  try {
-    const pageToken = await getPageToken(pageId, userToken)
-    if (!pageToken) return IG_INBOX_MOCK
-    const igUserId = igUserIdHint || (await getIgUserId(pageId, pageToken))
-    if (!igUserId) return IG_INBOX_MOCK
-
-    // 재연결 경로: 씨앗이 있으면 캐시 반환
-    const cached = await getInboxFromStore(igUserId)
-    if (cached) return cached
-
-    // 첫 진입 경로: Meta API fetch + 씨앗 심기
-    return await fetchInboxWithToken(igUserId, pageToken)
-  } catch {
-    return IG_INBOX_MOCK
-  }
+  const creds = await resolveInstagramCredentials({
+    igUserId: igUserIdHint,
+    igAccessToken,
+    pageId,
+    accessToken: userToken,
+  })
+  if (!creds) throw new MetaGraphError("Instagram 계정이 연결되지 않았어요.", 401, { code: "missing_credentials" })
+  return fetchInboxWithToken(creds)
 }
 
 export async function getInstagramThread(
@@ -290,25 +262,16 @@ export async function getInstagramThread(
   pageId: string | undefined,
   userToken: string | undefined,
   igUserIdHint?: string,
+  igAccessToken?: string,
 ): Promise<IgThread> {
-  if (!pageId || !userToken) return getMockThread(conversationId)
-  try {
-    // igUserId 를 캐시 조회보다 먼저 확정한다 — 스레드 필터에 필요하다(단계 4).
-    // 예전엔 conversationId 만으로 조회해서 남의 스레드가 나올 수 있었다.
-    const pageToken = await getPageToken(pageId, userToken)
-    if (!pageToken) return getMockThread(conversationId)
-    const igUserId = igUserIdHint || (await getIgUserId(pageId, pageToken))
-    if (!igUserId) return getMockThread(conversationId)
-
-    // 재연결 경로: 스레드가 있으면 캐시 반환
-    const cached = await getThreadFromStore(igUserId, conversationId)
-    if (cached) return cached
-
-    // 첫 진입 경로: Meta API fetch + 저장
-    return await fetchThreadWithToken(conversationId, igUserId, pageToken)
-  } catch {
-    return getMockThread(conversationId)
-  }
+  const creds = await resolveInstagramCredentials({
+    igUserId: igUserIdHint,
+    igAccessToken,
+    pageId,
+    accessToken: userToken,
+  })
+  if (!creds) throw new MetaGraphError("Instagram 계정이 연결되지 않았어요.", 401, { code: "missing_credentials" })
+  return fetchThreadWithToken(conversationId, creds)
 }
 
 export async function sendInstagramMessage(
@@ -316,25 +279,31 @@ export async function sendInstagramMessage(
   text: string,
   pageId: string | undefined,
   userToken: string | undefined,
+  igUserIdHint?: string,
+  igAccessToken?: string,
 ): Promise<{ messageId: string }> {
-  if (!pageId || !userToken) throw new Error('no_session')
-  const pageToken = await getPageToken(pageId, userToken)
-  if (!pageToken) throw new Error('no_page_token')
-  const igUserId = await getIgUserId(pageId, pageToken)
-  if (!igUserId) throw new Error('no_ig_user')
+  const creds = await resolveInstagramCredentials({
+    igUserId: igUserIdHint,
+    igAccessToken,
+    pageId,
+    accessToken: userToken,
+  })
+  if (!creds) throw new MetaGraphError("Instagram 계정이 연결되지 않았어요.", 401, { code: "missing_credentials" })
 
-  const res = await fetch(`${GRAPH}/${igUserId}/messages`, {
+  const res = await fetch(`${creds.graphBase}/${creds.igUserId}/messages`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Authorization': `Bearer ${creds.token}`,
+      'Content-Type': 'application/json',
+    },
     body: JSON.stringify({
       recipient: { id: recipientId },
       message: { text },
     }),
   })
+  const body = await readGraphBody(res) as { message_id?: string; error?: { message?: string } }
   if (!res.ok) {
-    const err = await res.json().catch(() => ({})) as { error?: { message?: string } }
-    throw new Error(err.error?.message ?? 'send_failed')
+    throw new MetaGraphError(graphErrorMessage(body, 'Instagram DM 발송 실패'), graphStatus(res.status, body), body)
   }
-  const data = await res.json() as { message_id?: string }
-  return { messageId: data.message_id ?? '' }
+  return { messageId: body.message_id ?? '' }
 }

@@ -1,4 +1,4 @@
-import { GRAPH, IG_GRAPH, getPageToken, getIgUserId } from "./instagram-graph"
+import { graphErrorMessage, graphStatus, hasGraphError, readGraphBody, resolveInstagramCredentials } from "./instagram-graph"
 
 export type IgComment = {
   id: string
@@ -12,11 +12,11 @@ export type IgComment = {
 
 export type IgCommentsResult =
   | { ok: true; items: IgComment[]; mock?: boolean }
-  | { ok: false; error: string; status?: number }
+  | { ok: false; error: string; status?: number; body?: unknown }
 
 export type IgDeleteResult =
   | { ok: true; mock?: boolean }
-  | { ok: false; error: string; status?: number }
+  | { ok: false; error: string; status?: number; body?: unknown }
 
 export const IG_COMMENTS_MOCK: Record<string, IgComment[]> = {
   default: [
@@ -48,26 +48,10 @@ export function getMockReplies(commentId: string): IgComment[] {
 
 type GraphErrorBody = { error?: { message?: string; type?: string } }
 
-// igAccessToken 이 세션에 있지만 만료/무효화된 경우 Graph API 가 OAuthException 을 반환.
-// "토큰 없음" 과 동일하게 목 폴백으로 처리.
-function isOAuthException(body: GraphErrorBody): boolean {
-  return body.error?.type === "OAuthException"
-}
-
-type ResolvedToken = { token: string; graphBase: string }
-
-async function resolveIgToken(opts: {
-  igAccessToken?: string
-  pageId?: string
-  accessToken?: string
-}): Promise<ResolvedToken | null> {
-  // IGAAX 토큰(Instagram Business Login)은 graph.instagram.com 전용
-  if (opts.igAccessToken) return { token: opts.igAccessToken, graphBase: IG_GRAPH }
-  if (!opts.pageId || !opts.accessToken) return null
-  const pageToken = await getPageToken(opts.pageId, opts.accessToken)
-  if (!pageToken) return null
-  await getIgUserId(opts.pageId, pageToken)
-  return { token: pageToken, graphBase: GRAPH }
+function isOAuthException(body: unknown): boolean {
+  if (typeof body !== "object" || body === null || !("error" in body)) return false
+  const error = body.error
+  return typeof error === "object" && error !== null && "type" in error && error.type === "OAuthException"
 }
 
 export async function listComments(opts: {
@@ -76,7 +60,7 @@ export async function listComments(opts: {
   pageId?: string
   accessToken?: string
 }): Promise<IgCommentsResult> {
-  const resolved = await resolveIgToken(opts)
+  const resolved = await resolveInstagramCredentials(opts)
   if (!resolved) return { ok: false, error: "IG 계정이 연결되지 않았어요." }
 
   const url =
@@ -84,8 +68,8 @@ export async function listComments(opts: {
     `?fields=id,username,text,timestamp,like_count,hidden,replies.summary(true)` +
     `&limit=100` +
     `&access_token=${resolved.token}`
-  const res = await fetch(url)
-  const body = await res.json().catch(() => ({})) as {
+  const res = await fetch(url, { cache: "no-store" })
+  const body = await readGraphBody(res) as {
     data?: Array<{
       id: string
       username?: string
@@ -97,9 +81,9 @@ export async function listComments(opts: {
     }>
     error?: { message?: string; type?: string }
   }
-  if (!res.ok || body.error) {
-    if (isOAuthException(body)) return { ok: false, error: "토큰이 만료되었어요. IG 계정을 다시 연결해 주세요." }
-    return { ok: false, status: res.status, error: body.error?.message ?? "댓글 조회 실패" }
+  if (!res.ok || hasGraphError(body)) {
+    if (isOAuthException(body)) return { ok: false, error: "토큰이 만료되었어요. IG 계정을 다시 연결해 주세요.", status: graphStatus(res.status, body), body }
+    return { ok: false, status: graphStatus(res.status, body), error: graphErrorMessage(body, "댓글 조회 실패"), body }
   }
   const items: IgComment[] = (body.data ?? []).map((c) => ({
     id: c.id,
@@ -115,11 +99,11 @@ export async function listComments(opts: {
 
 export type IgHideResult =
   | { ok: true; mock?: boolean }
-  | { ok: false; error: string; status?: number }
+  | { ok: false; error: string; status?: number; body?: unknown }
 
 export type IgCreateResult =
   | { ok: true; id: string; mock?: boolean }
-  | { ok: false; error: string; status?: number }
+  | { ok: false; error: string; status?: number; body?: unknown }
 
 export async function hideComment(opts: {
   commentId: string
@@ -128,7 +112,7 @@ export async function hideComment(opts: {
   pageId?: string
   accessToken?: string
 }): Promise<IgHideResult> {
-  const resolved = await resolveIgToken(opts)
+  const resolved = await resolveInstagramCredentials(opts)
   if (!resolved) return { ok: false, error: "IG 계정이 연결되지 않았어요." }
 
   const res = await fetch(
@@ -136,9 +120,9 @@ export async function hideComment(opts: {
     { method: "POST" }
   )
   if (!res.ok) {
-    const body = await res.json().catch(() => ({})) as GraphErrorBody
-    if (isOAuthException(body)) return { ok: false, error: "토큰이 만료되었어요. IG 계정을 다시 연결해 주세요." }
-    return { ok: false, status: res.status, error: body.error?.message ?? "댓글 숨김 실패" }
+    const body = await readGraphBody(res) as GraphErrorBody
+    if (isOAuthException(body)) return { ok: false, error: "토큰이 만료되었어요. IG 계정을 다시 연결해 주세요.", status: graphStatus(res.status, body), body }
+    return { ok: false, status: graphStatus(res.status, body), error: graphErrorMessage(body, "댓글 숨김 실패"), body }
   }
   return { ok: true }
 }
@@ -150,7 +134,7 @@ export async function createComment(opts: {
   pageId?: string
   accessToken?: string
 }): Promise<IgCreateResult> {
-  const resolved = await resolveIgToken(opts)
+  const resolved = await resolveInstagramCredentials(opts)
   if (!resolved) return { ok: false, error: "IG 계정이 연결되지 않았어요." }
 
   const res = await fetch(
@@ -158,11 +142,11 @@ export async function createComment(opts: {
     { method: "POST" }
   )
   if (!res.ok) {
-    const body = await res.json().catch(() => ({})) as GraphErrorBody
-    if (isOAuthException(body)) return { ok: false, error: "토큰이 만료되었어요. IG 계정을 다시 연결해 주세요." }
-    return { ok: false, status: res.status, error: body.error?.message ?? "댓글 작성 실패" }
+    const body = await readGraphBody(res) as GraphErrorBody
+    if (isOAuthException(body)) return { ok: false, error: "토큰이 만료되었어요. IG 계정을 다시 연결해 주세요.", status: graphStatus(res.status, body), body }
+    return { ok: false, status: graphStatus(res.status, body), error: graphErrorMessage(body, "댓글 작성 실패"), body }
   }
-  const body = await res.json() as { id?: string }
+  const body = await readGraphBody(res) as { id?: string }
   return { ok: true, id: body.id ?? `created-${Date.now()}` }
 }
 
@@ -172,20 +156,20 @@ export async function listReplies(opts: {
   pageId?: string
   accessToken?: string
 }): Promise<IgCommentsResult> {
-  const resolved = await resolveIgToken(opts)
+  const resolved = await resolveInstagramCredentials(opts)
   if (!resolved) return { ok: false, error: "IG 계정이 연결되지 않았어요." }
 
   const url =
     `${resolved.graphBase}/${opts.commentId}/replies` +
     `?fields=id,username,text,timestamp,like_count,hidden` +
     `&access_token=${resolved.token}`
-  const res = await fetch(url)
+  const res = await fetch(url, { cache: "no-store" })
   if (!res.ok) {
-    const body = await res.json().catch(() => ({})) as GraphErrorBody
-    if (isOAuthException(body)) return { ok: false, error: "토큰이 만료되었어요. IG 계정을 다시 연결해 주세요." }
-    return { ok: false, status: res.status, error: body.error?.message ?? "답글 조회 실패" }
+    const body = await readGraphBody(res) as GraphErrorBody
+    if (isOAuthException(body)) return { ok: false, error: "토큰이 만료되었어요. IG 계정을 다시 연결해 주세요.", status: graphStatus(res.status, body), body }
+    return { ok: false, status: graphStatus(res.status, body), error: graphErrorMessage(body, "답글 조회 실패"), body }
   }
-  const body = await res.json() as {
+  const body = await readGraphBody(res) as {
     data?: Array<{
       id: string
       username?: string
@@ -214,7 +198,7 @@ export async function replyToComment(opts: {
   pageId?: string
   accessToken?: string
 }): Promise<IgCreateResult> {
-  const resolved = await resolveIgToken(opts)
+  const resolved = await resolveInstagramCredentials(opts)
   if (!resolved) return { ok: false, error: "IG 계정이 연결되지 않았어요." }
 
   const res = await fetch(
@@ -222,11 +206,11 @@ export async function replyToComment(opts: {
     { method: "POST" }
   )
   if (!res.ok) {
-    const body = await res.json().catch(() => ({})) as GraphErrorBody
-    if (isOAuthException(body)) return { ok: false, error: "토큰이 만료되었어요. IG 계정을 다시 연결해 주세요." }
-    return { ok: false, status: res.status, error: body.error?.message ?? "답글 작성 실패" }
+    const body = await readGraphBody(res) as GraphErrorBody
+    if (isOAuthException(body)) return { ok: false, error: "토큰이 만료되었어요. IG 계정을 다시 연결해 주세요.", status: graphStatus(res.status, body), body }
+    return { ok: false, status: graphStatus(res.status, body), error: graphErrorMessage(body, "답글 작성 실패"), body }
   }
-  const body = await res.json() as { id?: string }
+  const body = await readGraphBody(res) as { id?: string }
   return { ok: true, id: body.id ?? `reply-${Date.now()}` }
 }
 
@@ -236,14 +220,14 @@ export async function deleteComment(opts: {
   pageId?: string
   accessToken?: string
 }): Promise<IgDeleteResult> {
-  const resolved = await resolveIgToken(opts)
+  const resolved = await resolveInstagramCredentials(opts)
   if (!resolved) return { ok: false, error: "IG 계정이 연결되지 않았어요." }
 
   const res = await fetch(`${resolved.graphBase}/${opts.commentId}?access_token=${resolved.token}`, { method: "DELETE" })
   if (!res.ok) {
-    const body = await res.json().catch(() => ({})) as GraphErrorBody
-    if (isOAuthException(body)) return { ok: false, error: "토큰이 만료되었어요. IG 계정을 다시 연결해 주세요." }
-    return { ok: false, status: res.status, error: body.error?.message ?? "댓글 삭제 실패" }
+    const body = await readGraphBody(res) as GraphErrorBody
+    if (isOAuthException(body)) return { ok: false, error: "토큰이 만료되었어요. IG 계정을 다시 연결해 주세요.", status: graphStatus(res.status, body), body }
+    return { ok: false, status: graphStatus(res.status, body), error: graphErrorMessage(body, "댓글 삭제 실패"), body }
   }
   return { ok: true }
 }

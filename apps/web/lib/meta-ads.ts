@@ -19,6 +19,7 @@ export type {
   InsightsPeriod,
   CampaignIssueReason,
   CampaignSummary,
+  AnalysisCampaignMetrics,
 } from './meta-ads-insights'
 
 export { VALID_OBJECTIVES, mapSplitTestError } from './meta-ads-campaign'

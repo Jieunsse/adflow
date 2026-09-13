@@ -51,6 +51,17 @@ class IgMessageControllerTest {
   }
 
   @Test
+  void 필수값이_없는_메시지는_400() throws Exception {
+    mockMvc
+        .perform(
+            post("/internal/ig-messages")
+                .header("X-Internal-Secret", SECRET)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"items\":[{\"id\":\"m1\"}]}"))
+        .andExpect(status().isBadRequest());
+  }
+
+  @Test
   void 인박스는_최신순_스레드는_오래된_순() throws Exception {
     upsert(
         """

@@ -1,10 +1,16 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
+import { getWorkspaceSession } from "@/lib/meta-session"
 import { getRecentMedia, RECENT_MEDIA_MOCK } from "@/lib/instagram-publish"
 
 export async function GET(req: NextRequest) {
-  const session = await getServerSession(authOptions)
+  let session
+  try {
+    session = await getWorkspaceSession(await getServerSession(authOptions))
+  } catch {
+    return NextResponse.json({ ok: false, error: "Instagram 세션을 확인하지 못했어요." }, { status: 502 })
+  }
   if (!session) return NextResponse.json({ ok: false, error: "로그인이 필요합니다." }, { status: 401 })
 
   const limitParam = req.nextUrl.searchParams.get("limit")
@@ -20,5 +26,6 @@ export async function GET(req: NextRequest) {
     limit,
   })
 
-  return NextResponse.json(result)
+  const status = result.ok ? 200 : result.status && result.status >= 400 ? result.status : 502
+  return NextResponse.json(result.ok ? result : { ok: false, error: result.error, status }, { status })
 }

@@ -5,12 +5,14 @@ import jakarta.transaction.Transactional;
 import java.util.List;
 import java.util.Map;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 /**
  * 인스타 DM 캐시.
@@ -35,9 +37,23 @@ public class IgMessageController {
   @PostMapping
   @Transactional
   public Map<String, Boolean> upsert(@RequestBody BulkRequest body) {
+    if (body == null || body.items() == null || body.items().size() > 1000) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "DM 메시지 목록이 올바르지 않아요.");
+    }
+    for (IgMessage item : body.items()) {
+      if (item == null || blank(item.getId()) || blank(item.getIgUserId())
+          || blank(item.getConversationId()) || blank(item.getParticipantId())
+          || item.getFromMe() == null || blank(item.getCreatedAt())) {
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "DM 메시지 필수값이 없어요.");
+      }
+    }
     // id 가 Meta 의 mid 라 save 가 곧 중복 제거다.
-    if (body.items() != null && !body.items().isEmpty()) repository.saveAll(body.items());
+    if (!body.items().isEmpty()) repository.saveAll(body.items());
     return Map.of("ok", true);
+  }
+
+  private static boolean blank(String value) {
+    return value == null || value.isBlank();
   }
 
   @GetMapping

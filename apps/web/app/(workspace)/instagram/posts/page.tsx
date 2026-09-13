@@ -20,6 +20,7 @@ import type { PersonaEntry } from "@features/brand-profile/model/usePersonasStor
 import { sectionPreviewText, isSectionFilled } from "@features/brand-profile/model/policy";
 import { SOP_SECTION_LABEL } from "@features/sop/model/section-labels";
 import { fetchProfilePictures, profilePicturesQueryKey } from "@entities/page/profile-pictures";
+import { uploadInstagramFile } from "@shared/lib/instagram-upload";
 
 type RecentItem = IgMediaItem;
 
@@ -27,7 +28,6 @@ type PublishOk = { ok: true; postId: string; permalink?: string };
 type PublishFail = { ok: false; error: string; status?: number };
 type PublishResp = PublishOk | PublishFail;
 
-type UploadResp = { ok: true; url: string } | { ok: false; error: string };
 
 function isHttpUrl(s: string): boolean {
   return /^https?:\/\/\S+$/i.test(s.trim());
@@ -143,21 +143,9 @@ function PostsFlow() {
   };
 
   const uploadFile = useCallback(async (file: File) => {
-    if (!file.type.startsWith("image/")) {
-      showToast("이미지 파일만 선택할 수 있어요");
-      return;
-    }
     setUploading(true);
     try {
-      const fd = new FormData();
-      fd.append("file", file);
-      const res = await fetch("/api/instagram/upload", { method: "POST", body: fd });
-      const data = (await res.json()) as UploadResp;
-      if (data.ok) {
-        setImageUrl(data.url);
-      } else {
-        showToast(`업로드 실패 — ${data.error}`);
-      }
+      setImageUrl(await uploadInstagramFile(file, "image", "/api/instagram/upload"));
     } catch (e) {
       showToast(`업로드 실패 — ${e instanceof Error ? e.message : "요청 실패"}`);
     } finally {
@@ -226,12 +214,7 @@ function PostsFlow() {
       const mime = blob.type || "image/png";
       const ext = mime.split("/")[1] ?? "png";
       const file = new File([blob], `ai-${Date.now()}.${ext}`, { type: mime });
-      const fd = new FormData();
-      fd.append("file", file);
-      const res = await fetch("/api/instagram/upload", { method: "POST", body: fd });
-      const data = (await res.json()) as UploadResp;
-      if (data.ok) setImageUrl(data.url);
-      else showToast(`업로드 실패 — ${data.error}`);
+      setImageUrl(await uploadInstagramFile(file, "image", "/api/instagram/upload"));
     } catch (e) {
       showToast(`업로드 실패 — ${e instanceof Error ? e.message : "요청 실패"}`);
     } finally {

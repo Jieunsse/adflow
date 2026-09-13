@@ -14,6 +14,7 @@ import { findObjective, OBJECTIVES_PHASE1, type ObjectiveId } from "@entities/cr
 import { useBrandProfileStorage } from "@features/brand-profile/model/useBrandProfileStorage";
 import { usePersonasForProfile } from "@features/brand-profile/model/usePersonasStorage";
 import PersonaQuickCreateModal from "@features/brand-profile/ui/PersonaQuickCreateModal";
+import type { QuickStartSettings } from "@entities/campaign/model";
 import { SelectChip } from "./parts";
 
 interface Props {
@@ -27,6 +28,9 @@ interface Props {
   setPersonaId: (id: string | null) => void;
   customBrand: boolean;
   setCustomBrand: (v: boolean) => void;
+  mode: "quick" | "detailed";
+  setMode: (mode: "quick" | "detailed") => void;
+  quickStart: QuickStartSettings | null;
   onGenerate: () => void;
 }
 
@@ -71,6 +75,9 @@ export default function BriefStep(p: Props) {
   const productSummary = selectedProduct?.name
     ?? (isProfileMode ? "브랜드 전체" : p.brand.trim() || "아직 입력하지 않았어요");
   const audienceSummary = selectedPersona?.name ?? (p.target.trim() || "선택하지 않았어요");
+  const briefStages = p.mode === "quick"
+    ? [["01", "목표"], ["02", "제품"]]
+    : [["01", "목표"], ["02", "제품 · 고객"], ["03", "메시지 · 근거"]];
 
   useEffect(() => {
     if (status !== "loading" && !browseMode && !hasBrandProfile) p.setCustomBrand(true);
@@ -80,6 +87,10 @@ export default function BriefStep(p: Props) {
   useEffect(() => {
     if (!outcome) setBriefStage(1);
   }, [outcome]);
+
+  useEffect(() => {
+    setBriefStage(1);
+  }, [p.mode]);
 
   const handleFiles = async (files: FileList | null) => {
     if (!files?.length) return;
@@ -106,12 +117,31 @@ export default function BriefStep(p: Props) {
           </div>
           <p className="w-caption m-0 max-w-[280px] lg:text-right">필요한 정보만 순서대로 고르면, 다음 단계에서 광고 문구와 소재를 만들어요.</p>
         </div>
-        <div className="mt-6 grid grid-cols-3 gap-2 rounded-[var(--w-radius-12)] bg-[var(--w-bg-alternative)] p-2" aria-label="광고 브리프 구성">
-          {[
-            ["01", "목표"],
-            ["02", "제품 · 고객"],
-            ["03", "메시지 · 근거"],
-          ].map(([number, label]) => (
+        <div className="mt-6 grid gap-2 rounded-[var(--w-radius-12)] bg-[var(--w-bg-alternative)] p-2 sm:grid-cols-2" aria-label="광고 만들기 방식">
+          <button
+            type="button"
+            aria-pressed={p.mode === "quick"}
+            onClick={() => p.setMode("quick")}
+            className={`rounded-[var(--w-radius-8)] px-3 py-3 text-left ${p.mode === "quick" ? "bg-[var(--w-primary-soft)]" : "hover:bg-[var(--w-bg-normal)]"}`}
+          >
+            <span className="w-label block text-[var(--w-fg-strong)]">빠르게 만들기</span>
+            <span className="w-caption mt-1 block">목표와 제품만 고르면 최근 설정을 적용해요.</span>
+          </button>
+          <button
+            type="button"
+            aria-pressed={p.mode === "detailed"}
+            onClick={() => p.setMode("detailed")}
+            className={`rounded-[var(--w-radius-8)] px-3 py-3 text-left ${p.mode === "detailed" ? "bg-[var(--w-primary-soft)]" : "hover:bg-[var(--w-bg-normal)]"}`}
+          >
+            <span className="w-label block text-[var(--w-fg-strong)]">상세 설정</span>
+            <span className="w-caption mt-1 block">고객·메시지·근거까지 직접 정해요.</span>
+          </button>
+        </div>
+        {p.mode === "quick" && p.quickStart && (
+          <p className="w-caption m-0 mt-3 rounded-[var(--w-radius-8)] bg-[var(--w-primary-soft)] px-3 py-2 text-[var(--w-primary-heavy)]">최근 광고 설정을 적용했어요. 게재 전에는 모두 바꿀 수 있어요.</p>
+        )}
+        <div className={`mt-3 grid gap-2 rounded-[var(--w-radius-12)] bg-[var(--w-bg-alternative)] p-2 ${p.mode === "quick" ? "grid-cols-2" : "grid-cols-3"}`} aria-label="광고 브리프 구성">
+          {briefStages.map(([number, label]) => (
             <button
               key={number}
               type="button"
@@ -174,8 +204,8 @@ export default function BriefStep(p: Props) {
           </section>}
 
           {briefStage === 2 && outcome && (
-            <div className="overflow-hidden rounded-[var(--w-radius-16)] border border-[var(--w-line-normal)] bg-[var(--w-bg-normal)] lg:grid lg:grid-cols-2">
-              <div className="border-b border-[var(--w-line-alternative)] lg:border-b-0 lg:border-r">
+            <div className={`overflow-hidden rounded-[var(--w-radius-16)] border border-[var(--w-line-normal)] bg-[var(--w-bg-normal)] ${p.mode === "detailed" ? "lg:grid lg:grid-cols-2" : ""}`}>
+              <div className={p.mode === "detailed" ? "border-b border-[var(--w-line-alternative)] lg:border-b-0 lg:border-r" : ""}>
                 <BriefSection number="02" title="어떤 제품을 보러 오게 할까요?" description="제품을 고르면 저장된 브랜드 정보가 자동으로 카피에 반영돼요." last>
             <label className="w-label mb-2 flex items-center justify-between gap-3">
               <span>{isProfileMode ? "홍보할 제품 · 서비스" : "홍보할 브랜드 · 제품"}</span>
@@ -210,7 +240,7 @@ export default function BriefStep(p: Props) {
                 </BriefSection>
               </div>
 
-              <BriefSection number="03" title="누구에게 이 말을 건넬까요?" description="가장 먼저 설득하고 싶은 고객을 고르면 메시지가 더 구체적으로 만들어져요." last>
+              {p.mode === "detailed" && <BriefSection number="03" title="누구에게 이 말을 건넬까요?" description="가장 먼저 설득하고 싶은 고객을 고르면 메시지가 더 구체적으로 만들어져요." last>
             {isProfileMode ? (
               <>
                 <p className="w-label mb-3 flex items-center justify-between gap-3"><span>고객</span><span className="text-[11px] font-semibold text-[var(--w-primary-normal)]">선택</span></p>
@@ -234,7 +264,7 @@ export default function BriefStep(p: Props) {
                 <textarea id="customer-description" className={`${inputBox} min-h-[96px] resize-y`} value={p.target} onChange={(event) => p.setTarget(event.target.value)} placeholder="예) 20대 여성 대학생 · 민감성 피부 관리에 관심이 많아요" />
               </>
             )}
-              </BriefSection>
+              </BriefSection>}
             </div>
           )}
 
@@ -287,7 +317,7 @@ export default function BriefStep(p: Props) {
             <SummaryField label="사용할 근거" last>{proofPoints.length ? proofPoints.slice(0, 3).join(" · ") : "저장된 근거 없음"}</SummaryField>
           </div>
           <div className="mt-auto border-t border-[var(--w-line-alternative)] bg-[var(--w-bg-alternative)] p-3.5">
-            {briefStage === 3 ? (
+            {(briefStage === 3 || (p.mode === "quick" && briefStage === 2)) ? (
               <>
                 <Button variant="primary" size="lg" type="button" className="w-full" onClick={p.onGenerate}>
                   <Icon name="sparkles" size={15} /> 소재 3안 만들기
@@ -304,7 +334,7 @@ export default function BriefStep(p: Props) {
                 disabled={!outcome}
                 title={!outcome ? "광고 목표를 선택해주세요" : undefined}
               >
-                다음: {briefStage === 1 ? "제품과 고객 정하기" : "메시지와 근거 정하기"}
+                다음: {briefStage === 1 ? (p.mode === "quick" ? "제품 고르기" : "제품과 고객 정하기") : "메시지와 근거 정하기"}
               </Button>
             )}
           </div>

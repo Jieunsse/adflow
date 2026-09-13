@@ -1,6 +1,6 @@
 "use client";
 
-// "오늘의 진단" — 효과가 큰 순서로 1·2·3. 카드 하나 = 문장 하나 + 근거 숫자 + 지금 누를 버튼.
+// 주간 리포트의 주목 항목 — 원인 확인은 상세 분석으로 넘긴다.
 
 import { Button } from "@shared/ui/Button";
 import { Skeleton } from "@shared/ui/Skeleton";
@@ -39,13 +39,14 @@ export type ActionQueueProps = {
   loading: boolean;
   items: ActionItem[];
   onAction: (button: ActionButton) => void;
+  onViewAll: () => void;
 };
 
-export function ActionQueue({ loading, items, onAction }: ActionQueueProps) {
+export function ActionQueue({ loading, items, onAction, onViewAll }: ActionQueueProps) {
   return (
     <div className="flex flex-col gap-5">
       <div className="flex items-baseline gap-3">
-        <h2 className="w-h2 m-0">지금 할 일</h2>
+        <h2 className="w-h2 m-0">주목할 항목</h2>
         <span className="w-caption">우선순위대로 정리했어요</span>
       </div>
 
@@ -60,10 +61,11 @@ export function ActionQueue({ loading, items, onAction }: ActionQueueProps) {
             <Icon name="check" size={17} />
           </span>
           <div>
-            <div className="w-h4">지금 손볼 게 없어요</div>
+            <div className="w-h4">현재 우선 확인할 이슈가 없어요</div>
             <div className="w-caption mt-1">
-              새는 곳도, 급하게 올릴 곳도 안 보여요. 이대로 지켜봐도 괜찮아요.
+              세부 성과가 궁금하면 상세 분석에서 기간과 캠페인을 비교해볼 수 있어요.
             </div>
+            <Button className="mt-3" variant="secondary" size="sm" type="button" onClick={onViewAll}>상세 분석 보기</Button>
           </div>
         </Card>
       ) : (

@@ -4,6 +4,7 @@ type Menu = { label: string; href: string };
 
 const mainMenus: Menu[] = [
   { label: "대시보드", href: "/dashboard" },
+  { label: "상세 분석", href: "/analysis" },
   { label: "목표", href: "/goals" },
   { label: "광고 만들기", href: "/create" },
   { label: "브랜드 프로필", href: "/brand-profile" },
@@ -46,7 +47,6 @@ const collapsibleMenus = [
     label: "워크스페이스",
     children: [
       { label: "구성원 · 권한", href: "/members" },
-      { label: "계정 연결", href: "/connect" },
       { label: "청구 및 결제", href: "/billing" },
       { label: "설정", href: "/settings" },
     ],

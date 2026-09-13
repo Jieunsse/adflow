@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Chip } from "@shared/ui/Chip";
 import { Button } from "@shared/ui/Button";
 import { Skeleton } from "@shared/ui/Skeleton";
@@ -9,13 +8,30 @@ import Icon from "@shared/ui/Icon";
 import { Card } from "@shared/ui/Card";
 import type { Goal } from "@entities/insights/goal";
 import { useGoalMeasurements } from "@features/goal/model/useGoalMeasurements";
+import { clearGoalDraft } from "@features/goal/model/goal-draft";
 import { GoalWizard } from "@features/goal/ui/GoalWizard";
 import { GoalListCard } from "@features/goal/ui/GoalListCard";
 
 export default function GoalsClient() {
   const m = useGoalMeasurements();
   const router = useRouter();
-  const [wizard, setWizard] = useState<{ goal: Goal | null } | null>(null);
+  const searchParams = useSearchParams();
+  const editingGoal = m.goals.find((goal) => goal.id === searchParams.get("edit")) ?? null;
+  const wizardOpen = searchParams.get("new") === "1" || editingGoal != null;
+  const requestedStep = Number(searchParams.get("step"));
+  const step = Number.isInteger(requestedStep) && requestedStep >= 0 && requestedStep <= 4 ? requestedStep : 0;
+
+  const openWizard = (goal: Goal | null) => {
+    clearGoalDraft();
+    router.push(goal ? `/goals?edit=${goal.id}` : "/goals?new=1");
+  };
+  const changeStep = (nextStep: number) => {
+    const params = new URLSearchParams();
+    if (editingGoal) params.set("edit", editingGoal.id);
+    else params.set("new", "1");
+    params.set("step", String(nextStep));
+    router.push(`/goals?${params}`);
+  };
 
   const save = (goal: Goal) => {
     if (m.goals.some((g) => g.id === goal.id)) m.updateGoal(goal);
@@ -24,16 +40,18 @@ export default function GoalsClient() {
 
   const campaignNames = m.campaigns.filter((c) => c.status === "live").map((c) => c.name);
 
-  if (wizard) {
+  if (wizardOpen) {
     return (
       <GoalWizard
-        goal={wizard.goal}
+        goal={editingGoal}
+        step={step}
         inputs={m.inputs}
         current={m.current}
         marginRate={m.marginRate}
         campaignNames={campaignNames}
         onSave={save}
-        onClose={() => setWizard(null)}
+        onStepChange={changeStep}
+        onClose={() => { clearGoalDraft(); router.replace("/goals"); }}
         onOpenTracker={(id) => router.push(`/goals/${id}`)}
       />
     );
@@ -64,7 +82,7 @@ export default function GoalsClient() {
           )}
         </div>
         {(m.loading || m.goals.length > 0) && (
-          <Button variant="primary" size="md" type="button" onClick={() => setWizard({ goal: null })}>
+          <Button variant="primary" size="md" type="button" onClick={() => openWizard(null)}>
             <Icon name="plus" size={14} /> 목표 세우기
           </Button>
         )}
@@ -81,7 +99,7 @@ export default function GoalsClient() {
           <p className="w-body max-w-[480px] mt-3 mb-0">
             후행 목표를 세우면 도달에 필요한 선행지표를 역산해서 추적해드려요. 노출수처럼 행동으로 이어지지 않는 지표는 목표 후보에 두지 않아요.
           </p>
-          <Button className="mt-7" variant="primary" size="md" type="button" onClick={() => setWizard({ goal: null })}>
+          <Button className="mt-7" variant="primary" size="md" type="button" onClick={() => openWizard(null)}>
             첫 목표 세우기
           </Button>
         </Card>
@@ -93,7 +111,7 @@ export default function GoalsClient() {
               goal={goal}
               current={m.current}
               marginRate={m.marginRate}
-              onEdit={() => setWizard({ goal })}
+              onEdit={() => openWizard(goal)}
               onDelete={() => m.removeGoal(goal.id)}
             />
           ))}

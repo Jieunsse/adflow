@@ -34,6 +34,7 @@ class CampaignLaunchControllerTest {
         "status": "ACTIVE",
         "objective": "OUTCOME_SALES",
         "goalId": "sales",
+        "quickStart": {"productId": "prd_1", "dailyBudget": "30,000", "durationDays": 31},
         "abTestAxis": "headline",
         "abTestVariantA": "아침을 바꾸는 한 잔",
         "abTestVariantB": {"axis": "headline", "headline": "하루를 여는 한 잔"}
@@ -80,6 +81,7 @@ class CampaignLaunchControllerTest {
         .andExpect(jsonPath("$.items[0].status").value("ACTIVE"))
         .andExpect(jsonPath("$.items[0].objective").value("OUTCOME_SALES"))
         .andExpect(jsonPath("$.items[0].goalId").value("sales"))
+        .andExpect(jsonPath("$.items[0].quickStart.productId").value("prd_1"))
         .andExpect(jsonPath("$.items[0].abTestAxis").value("headline"))
         .andExpect(jsonPath("$.items[0].abTestVariantB.axis").value("headline"))
         .andExpect(jsonPath("$.items[0].abTestVariantB.headline").value("하루를 여는 한 잔"))

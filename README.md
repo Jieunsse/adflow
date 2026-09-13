@@ -15,7 +15,7 @@ cp apps/web/.env.example apps/web/.env.local   # NEXTAUTH_SECRET 등 필수값 �
 pnpm dev                                       # http://localhost:3000
 ```
 
-**저장 기능(실 유저 경로)까지 쓰려면** 백엔드가 필요해요. 시크릿 3종을 먼저 만들어요.
+**저장 기능(실 유저 경로)까지 쓰려면** Spring 백엔드와 PostgreSQL을 별도 배포해야 해요. Vercel에는 Next.js만 배포할 수 있고, workspace target·DM 이력·업로드 파일의 영속 저장소가 아니에요. 시크릿 3종을 먼저 만들어요.
 
 ```bash
 python3 -c "import secrets;print('ADFLOW_JWT_SECRET=' + secrets.token_urlsafe(48))"
@@ -23,7 +23,7 @@ python3 -c "import secrets;print('ADFLOW_INTERNAL_SECRET=' + secrets.token_urlsa
 python3 -c "import secrets,base64;print('ADFLOW_ENCRYPTION_KEY=' + base64.urlsafe_b64encode(secrets.token_bytes(24)).decode()[:32])"
 ```
 
-출력 3줄을 `apps/web/.env.local` 에 붙이고 `ADFLOW_BACKEND_URL=http://localhost:8080` 도 더해요.
+출력 3줄은 `apps/api/.env`에만 넣어요. 프론트에는 `ADFLOW_BACKEND_URL`과 같은 `ADFLOW_INTERNAL_SECRET`만 추가해요. 예시는 [apps/web/.env.example](./apps/web/.env.example)와 [apps/api/.env.example](./apps/api/.env.example)에 있어요.
 `ADFLOW_ENCRYPTION_KEY` 는 **정확히 32자** 여야 해요 (`echo -n "<값>" | wc -c` 로 확인).
 **이 키를 잃으면 저장된 Meta·Notion 토큰을 복구할 수 없어요** — 재로그인으로 다시 받아야 해요.
 
@@ -72,13 +72,14 @@ lint 는 기존 위반 80건을 `apps/web/eslint-suppressions.json` 에 **기준
 그래서 깨지면 새로 생긴 위반이에요. 밀린 것을 갚으려면 그 파일에서 항목을 지우고 고치면 되고,
 `pnpm exec eslint . --prune-suppressions` 로 이미 사라진 항목을 정리할 수 있어요.
 
-## 환경변수
+## 환경변수와 외부 설정
 
 `.env.example` 에 전부 주석과 함께 정리돼 있어요. `.env.local` 은 `.gitignore` 로 막혀 있어요 (커밋 금지).
 
-필수는 `NEXTAUTH_URL` · `NEXTAUTH_SECRET` 둘. 나머지(Meta·Gemini·Notion)는 쓰는 기능만 채우면 돼요.
+프론트의 기본 필수값은 `NEXTAUTH_URL` · `NEXTAUTH_SECRET`이에요. 실사용 Meta·Instagram 기능에는 Meta 앱 자격증명, Instagram Business Login redirect URI·권한, Webhook verify token/app secret, 그리고 공개 HTTPS 백엔드·PostgreSQL이 추가로 필요해요. `ADFLOW_BACKEND_URL`은 브라우저의 직접 업로드와 Meta의 미디어 fetch 양쪽에서 접근 가능한 공개 HTTPS Spring origin이어야 해요.
 
-영속은 Spring 백엔드(`apps/api`)가 맡아요. 저장 기능을 쓰려면 `ADFLOW_BACKEND_URL` 과 시크릿 3종이 필요해요.
+`ADFLOW_BACKEND_URL`과 `ADFLOW_INTERNAL_SECRET`이 없으면 workspace target·DM 저장은 동작하지 않아요. `ADFLOW_JWT_SECRET`·`ADFLOW_ENCRYPTION_KEY`는 백엔드에만 두고, Vercel 환경변수만으로 백엔드 배포·PostgreSQL·Meta App Review 승인·Webhook 구독 승인을 대신할 수는 없어요.
+Instagram 이미지·릴스 파일은 Vercel을 거치지 않고 브라우저에서 Spring의 서명된 `PUT /files/published-media/**`로 직접 올라가요. 백엔드는 해당 경로의 CORS를 허용하고, `ADFLOW_STORAGE_ROOT`를 재시작·스케일아웃 뒤에도 유지되는 볼륨 또는 S3 호환 저장소로 설정해야 해요.
 
 ## 문서
 

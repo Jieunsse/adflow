@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { getToken } from "next-auth/jwt"
-import { getNotionConnection } from "@shared/lib/notion-store"
+import { getNotionConnection, getWorkspaceNotionOwner } from "@shared/lib/notion-store"
 import { fetchResourceText, type NotionResource } from "@/lib/notion"
 import { geminiNotion } from "@/lib/gemini-notion"
 import { geminiSop } from "@/lib/gemini-sop"
@@ -9,10 +9,10 @@ import type { SopSection } from "@features/brand-profile/model/policy"
 // ADR-043 — 선택 자원 합쳐 1회 Gemini. 스타일5필드+proofPoints(gemini-notion) + 정책(deriveFromMarketing).
 export async function POST(req: NextRequest) {
   const jwt = await getToken({ req })
-  const userKey = (jwt?.sub ?? jwt?.email ?? jwt?.jti) as string | undefined
-  if (!userKey) return NextResponse.json({ error: "no_session" }, { status: 401 })
+  if (!jwt) return NextResponse.json({ error: "no_session" }, { status: 401 })
 
-  const conn = await getNotionConnection(userKey)
+  const owner = await getWorkspaceNotionOwner()
+  const conn = owner ? await getNotionConnection(owner) : null
   if (!conn) return NextResponse.json({ error: "not_connected" }, { status: 403 })
 
   if (!(await geminiNotion.isConfigured)) {

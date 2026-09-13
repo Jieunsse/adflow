@@ -1,6 +1,6 @@
-import { describe, expect, it } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import type { Session } from "next-auth"
-import { requireMetaSession } from "./meta-session"
+import { getWorkspaceSession, requireMetaSession } from "./meta-session"
 import { AuthError } from "./route-handler"
 
 // resolveAccessToken/resolveAdAccountId 는 NEXT_PUBLIC_META_APP_MODE !== 'development' 일 때
@@ -61,5 +61,46 @@ describe("requireMetaSession", () => {
 
   it("browseMode 플래그 passthrough", () => {
     expect(requireMetaSession(session({ browseMode: true })).browseMode).toBe(true)
+  })
+
+})
+
+describe("getWorkspaceSession", () => {
+  beforeEach(() => {
+    process.env.ADFLOW_BACKEND_URL = "http://backend"
+    process.env.ADFLOW_INTERNAL_SECRET = "secret"
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    delete process.env.ADFLOW_BACKEND_URL
+    delete process.env.ADFLOW_INTERNAL_SECRET
+  })
+
+  it("null과 browse 세션은 backend 없이 그대로 통과해요", async () => {
+    const browse = session({ browseMode: true, igUserId: "ig_1", igAccessToken: "ig-token" })
+    expect(await getWorkspaceSession(null)).toBeNull()
+    expect(await getWorkspaceSession(browse)).toBe(browse)
+  })
+
+  it("전역 target을 적용하고 다른 IG 계정의 토큰은 버려요", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({
+      target: { adAccountId: "act_shared", pageId: "page_shared", igUserId: "ig_shared" },
+    }), { status: 200 })))
+
+    await expect(getWorkspaceSession(session({
+      adAccountId: "act_personal", pageId: "page_personal", igUserId: "ig_personal", igAccessToken: "ig-token",
+    }))).resolves.toMatchObject({
+      adAccountId: "act_shared", pageId: "page_shared", igUserId: "ig_shared", igAccessToken: undefined,
+    })
+  })
+
+  it("빈 IG target도 명시된 범위 변경으로 보고 토큰을 버려요", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({
+      target: { igUserId: "" },
+    }), { status: 200 })))
+
+    await expect(getWorkspaceSession(session({ igUserId: "ig_personal", igAccessToken: "ig-token" })))
+      .resolves.toMatchObject({ igUserId: "", igAccessToken: undefined })
   })
 })

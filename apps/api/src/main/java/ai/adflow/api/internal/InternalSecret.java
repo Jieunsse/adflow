@@ -1,7 +1,10 @@
 package ai.adflow.api.internal;
 
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.security.MessageDigest;
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -34,5 +37,28 @@ public class InternalSecret {
   public boolean matches(String presented) {
     byte[] given = presented == null ? new byte[0] : presented.getBytes(StandardCharsets.UTF_8);
     return expected.length > 0 && MessageDigest.isEqual(expected, given);
+  }
+
+  public boolean matchesSignedUpload(String method, String path, String expires, String signature) {
+    if (expected.length == 0 || method == null || path == null || expires == null || signature == null) {
+      return false;
+    }
+    try {
+      long expiresAt = Long.parseLong(expires);
+      if (expiresAt < Instant.now().getEpochSecond() || signature.length() != 64) return false;
+      byte[] given = new byte[32];
+      for (int i = 0; i < given.length; i++) {
+        int high = Character.digit(signature.charAt(i * 2), 16);
+        int low = Character.digit(signature.charAt(i * 2 + 1), 16);
+        if (high < 0 || low < 0) return false;
+        given[i] = (byte) ((high << 4) | low);
+      }
+      Mac mac = Mac.getInstance("HmacSHA256");
+      mac.init(new SecretKeySpec(expected, "HmacSHA256"));
+      byte[] expectedSignature = mac.doFinal((method + "\n" + path + "\n" + expires).getBytes(StandardCharsets.UTF_8));
+      return MessageDigest.isEqual(expectedSignature, given);
+    } catch (Exception e) {
+      return false;
+    }
   }
 }

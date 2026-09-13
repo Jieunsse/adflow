@@ -1,4 +1,4 @@
-const GRAPH = "https://graph.facebook.com/v20.0"
+import { GRAPH, MetaGraphError, getPageToken, graphErrorMessage, graphStatus, hasGraphError, readGraphBody } from "./instagram-graph"
 
 export type FbPagePost = {
   id: string
@@ -84,16 +84,6 @@ export const FB_COMMENTS_MOCK: FbComment[] = [
   { id: "mock-cm-3", fromName: "이수아", message: "무향이라 아침에 쓰기 부담 없네요. 온라인도 같은 혜택인가요?", createdTime: "2026-05-23T13:05:00Z", likeCount: 2 },
 ]
 
-async function getPageToken(pageId: string, userToken: string): Promise<string | null> {
-  try {
-    const res = await fetch(`${GRAPH}/${pageId}?fields=access_token&access_token=${userToken}`)
-    const data = (await res.json()) as { access_token?: string }
-    return data.access_token ?? null
-  } catch {
-    return null
-  }
-}
-
 type RawPost = {
   id: string
   message?: string
@@ -109,17 +99,15 @@ export async function listPagePosts(
   userToken: string | undefined,
   cursor?: string,
 ): Promise<FbPagePostsResult> {
-  if (!pageId || !userToken) return { posts: FB_PAGE_POSTS_MOCK, mock: true }
-  try {
-    const pageToken = await getPageToken(pageId, userToken)
-    if (!pageToken) return { posts: FB_PAGE_POSTS_MOCK, mock: true }
+  if (!pageId || !userToken) throw new MetaGraphError("Facebook 페이지가 연결되지 않았어요.", 401, { code: "missing_credentials" })
+  const pageToken = await getPageToken(pageId, userToken)
+  if (!pageToken) throw new MetaGraphError("Facebook Page token을 확인할 수 없어요.", 502, { code: "missing_page_token" })
     const fields = "id,message,full_picture,permalink_url,created_time,reactions.summary(total_count),comments.summary(total_count)"
     const after = cursor ? `&after=${encodeURIComponent(cursor)}` : ""
-    const res = await fetch(`${GRAPH}/${pageId}/posts?fields=${fields}&limit=15${after}&access_token=${pageToken}`)
-    if (!res.ok) return { posts: FB_PAGE_POSTS_MOCK, mock: true }
-    const data = (await res.json()) as { data?: RawPost[]; paging?: { cursors?: { after?: string }; next?: string } }
+    const res = await fetch(`${GRAPH}/${pageId}/posts?fields=${fields}&limit=15${after}&access_token=${pageToken}`, { cache: "no-store" })
+    const data = await readGraphBody(res) as { data?: RawPost[]; paging?: { cursors?: { after?: string }; next?: string }; error?: { message?: string } }
+    if (!res.ok || hasGraphError(data)) throw new MetaGraphError(graphErrorMessage(data, "Facebook 게시물 조회 실패"), graphStatus(res.status, data), data)
     const raw = data.data ?? []
-    if (raw.length === 0) return { posts: FB_PAGE_POSTS_MOCK, mock: true }
     const posts: FbPagePost[] = raw.map((p) => ({
       id: p.id,
       message: p.message ?? "",
@@ -131,9 +119,6 @@ export async function listPagePosts(
     }))
     const nextCursor = data.paging?.next ? data.paging.cursors?.after : undefined
     return { posts, nextCursor, mock: false }
-  } catch {
-    return { posts: FB_PAGE_POSTS_MOCK, mock: true }
-  }
 }
 
 type RawComment = {
@@ -149,14 +134,13 @@ export async function listPostComments(
   pageId: string | undefined,
   userToken: string | undefined,
 ): Promise<FbPostCommentsResult> {
-  if (!pageId || !userToken) return { comments: FB_COMMENTS_MOCK, mock: true }
-  try {
-    const pageToken = await getPageToken(pageId, userToken)
-    if (!pageToken) return { comments: FB_COMMENTS_MOCK, mock: true }
+  if (!pageId || !userToken) throw new MetaGraphError("Facebook 페이지가 연결되지 않았어요.", 401, { code: "missing_credentials" })
+  const pageToken = await getPageToken(pageId, userToken)
+  if (!pageToken) throw new MetaGraphError("Facebook Page token을 확인할 수 없어요.", 502, { code: "missing_page_token" })
     const fields = "id,from{name,picture{url}},message,created_time,like_count"
-    const res = await fetch(`${GRAPH}/${postId}/comments?fields=${fields}&limit=25&access_token=${pageToken}`)
-    if (!res.ok) return { comments: FB_COMMENTS_MOCK, mock: true }
-    const data = (await res.json()) as { data?: RawComment[] }
+    const res = await fetch(`${GRAPH}/${postId}/comments?fields=${fields}&limit=25&access_token=${pageToken}`, { cache: "no-store" })
+    const data = await readGraphBody(res) as { data?: RawComment[]; error?: { message?: string } }
+    if (!res.ok || hasGraphError(data)) throw new MetaGraphError(graphErrorMessage(data, "Facebook 댓글 조회 실패"), graphStatus(res.status, data), data)
     const raw = data.data ?? []
     const comments: FbComment[] = raw.map((c) => ({
       id: c.id,
@@ -167,7 +151,4 @@ export async function listPostComments(
       likeCount: c.like_count ?? 0,
     }))
     return { comments, mock: false }
-  } catch {
-    return { comments: FB_COMMENTS_MOCK, mock: true }
-  }
 }

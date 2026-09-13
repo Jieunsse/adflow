@@ -1,6 +1,12 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { getToken } from "next-auth/jwt"
-import { putIgPending } from "@/lib/ig-token-store"
+import {
+  getInstagramRedirectUri,
+  IG_PENDING_COOKIE,
+  IG_STATE_COOKIE,
+  openIgState,
+  sealIgPending,
+} from "@/lib/ig-token-store"
 
 const IG_GRAPH = "https://graph.instagram.com"
 
@@ -12,31 +18,29 @@ export async function GET(req: NextRequest) {
   const errorReason = searchParams.get("error_reason")
 
   const fail = (reason?: string) => {
-    console.error("[IG callback] fail:", reason)
-    return NextResponse.redirect(new URL(`/settings?tab=account&igError=${encodeURIComponent(reason ?? "1")}`, req.url))
+    const res = NextResponse.redirect(new URL(`/connect?igError=${encodeURIComponent(reason ?? "1")}`, req.url))
+    res.cookies.delete(IG_STATE_COOKIE)
+    return res
   }
-
-  console.log("[IG callback] called. error:", error, "hasCode:", !!code, "hasState:", !!state)
 
   if (error || errorReason === "user_denied") return fail("cancelled")
 
-  const storedState = req.cookies.get("adflow_ig_state")?.value
-  console.log("[IG callback] state match:", state === storedState, "storedState:", !!storedState)
-  if (!state || state !== storedState) return fail("state_mismatch")
+  const storedState = req.cookies.get(IG_STATE_COOKIE)?.value
+  const stateData = storedState ? openIgState(storedState) : null
+  if (!state || !stateData || state !== stateData.state) return fail("state_mismatch")
   if (!code) return fail()
 
   const clientId = process.env.INSTAGRAM_CLIENT_ID
   const clientSecret = process.env.INSTAGRAM_CLIENT_SECRET
   if (!clientId || !clientSecret) return fail("no_credentials")
 
-  const redirectUri = process.env.INSTAGRAM_REDIRECT_URI ?? `${req.nextUrl.origin}/api/instagram/callback`
-  console.log("[IG callback] redirectUri:", redirectUri)
+  const redirectUri = getInstagramRedirectUri(req)
+  if (!redirectUri || redirectUri !== stateData.redirectUri) return fail("redirect_uri_mismatch")
 
   // NextAuth 세션에서 사용자 식별자 읽기 (스토어 키로 사용)
   const jwtToken = await getToken({ req })
   const storeKey = (jwtToken?.sub ?? jwtToken?.email ?? jwtToken?.jti) as string | undefined
-  console.log("[IG callback] storeKey resolved:", !!storeKey)
-  if (!storeKey) return fail("no_session")
+  if (!storeKey || storeKey !== stateData.ownerKey || jwtToken?.browseMode) return fail("no_session")
 
   try {
     // 단기 토큰 교환
@@ -52,31 +56,47 @@ export async function GET(req: NextRequest) {
       }),
     })
     const shortData = await shortRes.json() as { access_token?: string; error_message?: string }
-    if (!shortData.access_token) return fail("token_exchange_failed")
+    if (!shortRes.ok || !shortData.access_token) return fail("token_exchange_failed")
 
     // 장기 토큰 교환 (60일)
-    const longRes = await fetch(
-      `${IG_GRAPH}/access_token?grant_type=ig_exchange_token&client_secret=${clientSecret}&access_token=${shortData.access_token}`
-    )
-    const longData = await longRes.json() as { access_token?: string }
-    const igAccessToken = longData.access_token ?? shortData.access_token
+    const longUrl = new URL(`${IG_GRAPH}/access_token`)
+    longUrl.searchParams.set("grant_type", "ig_exchange_token")
+    longUrl.searchParams.set("client_secret", clientSecret)
+    longUrl.searchParams.set("access_token", shortData.access_token)
+    const longRes = await fetch(longUrl)
+    const longData = await longRes.json() as { access_token?: string; expires_in?: number }
+    if (!longRes.ok || !longData.access_token || (longData.expires_in !== undefined && longData.expires_in <= 0)) {
+      return fail("long_token_exchange_failed")
+    }
+    const igAccessToken = longData.access_token
 
     // 사용자 정보
-    const meRes = await fetch(`${IG_GRAPH}/me?fields=id,username&access_token=${igAccessToken}`)
+    const meUrl = new URL(`${IG_GRAPH}/me`)
+    meUrl.searchParams.set("fields", "id,username")
+    meUrl.searchParams.set("access_token", igAccessToken)
+    const meRes = await fetch(meUrl)
     const me = await meRes.json() as { id?: string; username?: string }
-    console.log("[IG callback] success. igUserId:", me.id, "username:", me.username)
+    if (!meRes.ok || !me.id || !me.username) return fail("invalid_profile")
 
-    putIgPending(storeKey, {
+    const pendingCookie = sealIgPending({
+      ownerKey: storeKey,
       igAccessToken,
-      igUserId: me.id ?? "",
-      igUsername: me.username ?? "",
+      igUserId: me.id,
+      igUsername: me.username,
     })
+    if (!pendingCookie) return fail("no_secret")
 
-    const res = NextResponse.redirect(new URL("/settings?tab=account&igLinked=1", req.url))
-    res.cookies.delete("adflow_ig_state")
+    const res = NextResponse.redirect(new URL("/connect?igLinked=1", req.url))
+    res.cookies.delete(IG_STATE_COOKIE)
+    res.cookies.set(IG_PENDING_COOKIE, pendingCookie, {
+      httpOnly: true,
+      sameSite: "lax",
+      path: "/",
+      maxAge: 300,
+      secure: process.env.NODE_ENV === "production",
+    })
     return res
-  } catch (e) {
-    console.error("[IG callback] exception:", e)
+  } catch {
     return fail()
   }
 }

@@ -8,6 +8,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+import java.util.HexFormat;
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -29,6 +34,12 @@ class FileControllerTest {
     return jwt()
         .jwt(j -> j.subject(email).claim("email", email).claim("roles", java.util.List.of("LEAD")))
         .authorities(new SimpleGrantedAuthority("ROLE_LEAD"));
+  }
+
+  private String signature(String path, String expires) throws Exception {
+    Mac mac = Mac.getInstance("HmacSHA256");
+    mac.init(new SecretKeySpec("test-internal-secret".getBytes(StandardCharsets.UTF_8), "HmacSHA256"));
+    return HexFormat.of().formatHex(mac.doFinal(("PUT\n" + path + "\n" + expires).getBytes(StandardCharsets.UTF_8)));
   }
 
   /** 파일 인가는 브랜드 프로필 소유에 물려 있다. 먼저 프로필을 하나 만들어 둔다. */
@@ -72,6 +83,64 @@ class FileControllerTest {
     mockMvc
         .perform(get("/files/product-images/bp_f/p_1.png").with(owner("f@example.com")))
         .andExpect(status().isNotFound());
+  }
+
+  @Test
+  void 공개_미디어는_로그인없이_읽고_업로드는_인증이_필요하다() throws Exception {
+    String name = "123e4567-e89b-42d3-a456-426614174000.png";
+    String path = "/files/published-media/" + name;
+    String expires = String.valueOf(Instant.now().plusSeconds(60).getEpochSecond());
+    byte[] bytes = new byte[] {0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a};
+
+    mockMvc
+        .perform(
+            put(path)
+                .queryParam("expires", expires)
+                .queryParam("signature", signature(path, expires))
+                .contentType(MediaType.IMAGE_PNG)
+                .content(bytes))
+        .andExpect(status().isOk());
+
+    mockMvc
+        .perform(get("/files/published-media/" + name))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.IMAGE_PNG))
+        .andExpect(content().bytes(bytes));
+
+    mockMvc
+        .perform(
+            put(path)
+                .with(owner("media@example.com"))
+                .contentType(MediaType.IMAGE_PNG)
+                .content(bytes))
+        .andExpect(status().isUnauthorized());
+  }
+
+  @Test
+  void 짧은_서명은_로그인없이_직접_업로드하고_덮어쓰기는_막는다() throws Exception {
+    String name = "123e4567-e89b-42d3-a456-426614174001.png";
+    String path = "/files/published-media/" + name;
+    String expires = String.valueOf(Instant.now().plusSeconds(60).getEpochSecond());
+    String signature = signature(path, expires);
+    byte[] bytes = new byte[] {0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a};
+
+    mockMvc
+        .perform(
+            put(path)
+                .queryParam("expires", expires)
+                .queryParam("signature", signature)
+                .contentType(MediaType.IMAGE_PNG)
+                .content(bytes))
+        .andExpect(status().isOk());
+
+    mockMvc
+        .perform(
+            put(path)
+                .queryParam("expires", expires)
+                .queryParam("signature", signature)
+                .contentType(MediaType.IMAGE_PNG)
+                .content(bytes))
+        .andExpect(status().isConflict());
   }
 
   @Test

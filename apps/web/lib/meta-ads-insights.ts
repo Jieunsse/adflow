@@ -71,6 +71,23 @@ export interface CampaignSummary {
   bidAmount?: number | null
 }
 
+export type AnalysisCampaignMetrics = {
+  id: string
+  impressions: number
+  clicks: number
+  spend: number
+  linkClick?: number
+  landingPageView?: number
+  purchaseValue?: number
+  purchaseCount?: number
+}
+
+export type AnalysisTrend = {
+  daily: AccountDailyPoint[]
+  campaignMetrics: AnalysisCampaignMetrics[]
+  placements: Array<'facebook' | 'instagram'>
+}
+
 const OBJECTIVE_LABEL: Record<string, string> = {
   OUTCOME_TRAFFIC: '트래픽',
   OUTCOME_SALES: '전환',
@@ -148,6 +165,17 @@ interface RawCampaign {
   }> }
   insights?: { data?: Array<{ impressions?: string; clicks?: string; ctr?: string; spend?: string; actions?: Array<{ action_type?: string; value?: string }>; action_values?: Array<{ action_type?: string; value?: string }>; purchase_roas?: Array<{ action_type?: string; value?: string }> }> }
   issues_info?: RawIssueInfo[]
+}
+
+type RawDailyInsight = {
+  date_start: string
+  campaign_id?: string
+  publisher_platform?: string
+  spend?: string
+  impressions?: string
+  clicks?: string
+  actions?: Array<{ action_type?: string; value?: string }>
+  action_values?: Array<{ action_type?: string; value?: string }>
 }
 
 const CAMPAIGN_FIELDS = (period: InsightsPeriod) => [
@@ -416,6 +444,73 @@ function parseAdStudyResult(data: RawAdStudy): { winner: 'A' | 'B' | null; confi
   return { winner: null, confidence: conf }
 }
 
+function insightValue(rows: RawDailyInsight['actions'] | RawDailyInsight['action_values'], type: string): number | undefined {
+  const row = rows?.find((item) => item.action_type === type)
+  return row ? Number(row.value ?? 0) : undefined
+}
+
+function purchaseValue(rows: RawDailyInsight['actions'] | RawDailyInsight['action_values']): number | undefined {
+  return insightValue(rows, 'purchase') ?? insightValue(rows, 'omni_purchase')
+}
+
+function analysisRange(days: number): string {
+  const until = new Date()
+  const since = new Date(until)
+  since.setUTCDate(since.getUTCDate() - (days - 1))
+  return encodeURIComponent(JSON.stringify({ since: since.toISOString().slice(0, 10), until: until.toISOString().slice(0, 10) }))
+}
+
+function mergeAnalysisInsights(rows: RawDailyInsight[], campaignId?: string): AnalysisTrend {
+  const daily = new Map<string, AccountDailyPoint>()
+  const campaigns = new Map<string, AnalysisCampaignMetrics>()
+  const placements = new Set<'facebook' | 'instagram'>()
+
+  for (const row of rows) {
+    if (row.publisher_platform === 'facebook' || row.publisher_platform === 'instagram') placements.add(row.publisher_platform)
+    const id = row.campaign_id ?? campaignId
+    const spend = Math.round(Number(row.spend ?? 0))
+    const impressions = Math.round(Number(row.impressions ?? 0))
+    const clicks = Math.round(Number(row.clicks ?? 0))
+    const linkClick = insightValue(row.actions, 'link_click')
+    const landingPageView = insightValue(row.actions, 'landing_page_view')
+    const purchaseCount = purchaseValue(row.actions)
+    const revenue = purchaseValue(row.action_values)
+    const point = daily.get(row.date_start) ?? {
+      date: row.date_start,
+      spend: 0,
+      impressions: 0,
+      clicks: 0,
+      landingPageView: 0,
+      purchaseValue: 0,
+      purchaseCount: 0,
+    }
+    point.spend += spend
+    point.impressions += impressions
+    point.clicks += clicks
+    point.landingPageView += landingPageView ?? 0
+    point.purchaseValue += revenue ?? 0
+    point.purchaseCount += purchaseCount ?? 0
+    daily.set(row.date_start, point)
+
+    if (!id) continue
+    const metric = campaigns.get(id) ?? { id, spend: 0, impressions: 0, clicks: 0 }
+    metric.spend += spend
+    metric.impressions += impressions
+    metric.clicks += clicks
+    if (linkClick != null) metric.linkClick = (metric.linkClick ?? 0) + linkClick
+    if (landingPageView != null) metric.landingPageView = (metric.landingPageView ?? 0) + landingPageView
+    if (purchaseCount != null) metric.purchaseCount = (metric.purchaseCount ?? 0) + purchaseCount
+    if (revenue != null) metric.purchaseValue = (metric.purchaseValue ?? 0) + revenue
+    campaigns.set(id, metric)
+  }
+
+  return {
+    daily: [...daily.values()].sort((a, b) => a.date.localeCompare(b.date)),
+    campaignMetrics: [...campaigns.values()],
+    placements: [...placements],
+  }
+}
+
 export const metaAdsInsights = {
   // ADR-038 §4 — ad study 의 Meta 유의성 결과. null=진행 중(폴 재시도), winner=null=inconclusive(챔피언 방어).
   async getSplitTestResult(studyId: string, token: string): Promise<{ winner: 'A' | 'B' | null; confidence: number } | null> {
@@ -520,6 +615,29 @@ export const metaAdsInsights = {
       purchaseValue: Math.round(extract(d.action_values, 'purchase') + extract(d.action_values, 'omni_purchase')),
       purchaseCount: Math.round(extract(d.actions, 'purchase') + extract(d.actions, 'omni_purchase')),
     }))
+  },
+
+  // 상세 분석은 캠페인 단위 일별 행을 한 번에 받아, 기간·캠페인·게재위치가 같은 수치를 가리키게 한다.
+  async getAnalysisTrend(
+    token: string,
+    accountId: string,
+    days: number,
+    campaignId?: string,
+    placement?: 'facebook' | 'instagram',
+  ): Promise<AnalysisTrend> {
+    const target = campaignId ? `/${campaignId}/insights` : `/${accountId}/insights`
+    const level = campaignId ? '' : '&level=campaign'
+    let next: string | undefined =
+      `${target}?time_increment=1&time_range=${analysisRange(days)}${level}` +
+      '&breakdowns=publisher_platform&fields=campaign_id,spend,impressions,clicks,actions,action_values&limit=500&access_token=' + token
+    const rows: RawDailyInsight[] = []
+    while (next) {
+      const page = await graphFetch<{ data?: RawDailyInsight[]; paging?: { next?: string } }>(next)
+      rows.push(...(page.data ?? []))
+      next = page.paging?.next
+    }
+    const all = mergeAnalysisInsights(rows, campaignId)
+    return placement ? { ...mergeAnalysisInsights(rows.filter((row) => row.publisher_platform === placement), campaignId), placements: all.placements } : all
   },
 
   async listCampaigns(token: string, accountId: string, period: InsightsPeriod = 'all'): Promise<CampaignSummary[]> {

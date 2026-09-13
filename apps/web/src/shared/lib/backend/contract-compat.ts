@@ -51,12 +51,13 @@ export type AutoRelaunchIsCompatible = Assert<
   AssignableTo<Api<"AutoRelaunchState">, AutoRelaunchEntry>
 >;
 
-// 게재 영수증은 계약이 지켜주지 못하는 필드가 셋이다.
+// 게재 영수증은 계약이 지켜주지 못하는 필드가 넷이다.
 //   adIds          — TS 튜플 [string, string]. springdoc 이 prefixItems 를 내지 않는다.
 //   abTestVariantB — 판별 유니온.
 //   goalId         — const 배열에서 파생된 유니온. Java 로 옮기면 목록이 두 곳에 살아 드리프트한다.
-// 셋의 왕복은 CampaignLaunchControllerTest·CampaignLaunchPostgresIT 가 런타임으로 지킨다.
-type LaunchOpaque = "adIds" | "abTestVariantB" | "goalId";
+// quickStart      — 프론트가 해석하는 재사용 설정 JSON.
+// 넷의 왕복은 CampaignLaunchControllerTest·CampaignLaunchPostgresIT 가 런타임으로 지킨다.
+type LaunchOpaque = "adIds" | "abTestVariantB" | "goalId" | "quickStart";
 export type CampaignLaunchIsCompatible = Assert<
   AssignableTo<Omit<Api<"CampaignLaunch">, LaunchOpaque>, Omit<LaunchedCampaign, LaunchOpaque>>
 >;

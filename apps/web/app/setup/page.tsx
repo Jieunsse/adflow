@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import Icon from "@shared/ui/Icon";
 import { Button } from "@shared/ui/Button";
 import { fetchAdIdentityPages, type AdIdentityPage } from "@entities/page/api";
+import { saveWorkspaceTarget } from "@shared/lib/workspace-meta-target-client";
 
 interface AdAccount {
   id: string;
@@ -124,12 +125,16 @@ function SetupFlow() {
   async function selectAccount(account: AdAccount) {
     setSelecting(account.id);
     setError(null);
-    await update({ adAccountId: account.id, adAccountName: account.name });
-    setLoading(true);
     try {
+      await saveWorkspaceTarget({ adAccountId: account.id, adAccountName: account.name });
+      await update({ adAccountId: account.id, adAccountName: account.name });
+      setLoading(true);
       setPages(await fetchAdIdentityPages());
     } catch {
-      setError("페이스북 페이지 목록을 불러오지 못했어요.");
+      setError("연결 정보를 저장하거나 페이스북 페이지 목록을 불러오지 못했어요.");
+      setSelecting(null);
+      setLoading(false);
+      return;
     }
     setSelecting(null);
     setLoading(false);
@@ -138,14 +143,26 @@ function SetupFlow() {
 
   async function selectPage(page: AdIdentityPage) {
     setSelecting(page.id);
-    await update({
-      pageId: page.id,
-      pageName: page.name,
-      igUserId: page.igUserId ?? "",
-      igUsername: page.igUsername ?? "",
-      browseMode: false,
-    });
-    window.location.href = nextUrl;
+    setError(null);
+    try {
+      await saveWorkspaceTarget({
+        pageId: page.id,
+        pageName: page.name,
+        igUserId: page.igUserId ?? "",
+        igUsername: page.igUsername ?? "",
+      });
+      await update({
+        pageId: page.id,
+        pageName: page.name,
+        igUserId: page.igUserId ?? "",
+        igUsername: page.igUsername ?? "",
+        browseMode: false,
+      });
+      window.location.href = nextUrl;
+    } catch {
+      setError("연결 정보를 저장하지 못했어요. 다시 시도해주세요.");
+      setSelecting(null);
+    }
   }
 
   async function browseAround() {

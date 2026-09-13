@@ -105,6 +105,7 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
         children: [
           { href: "/members", label: "구성원 · 권한", icon: "users" },
           { href: "/billing", label: "청구 및 결제", icon: "wallet" },
+          { href: "/connect", label: "연결", icon: "link" },
           { href: "/settings", label: "설정", icon: "settings" },
         ],
       },
@@ -165,8 +166,13 @@ export default function Sidebar() {
   const userName = session?.user?.name ?? "";
   const userInitial = userName.trim().charAt(0).toUpperCase() || "M";
   const userRole = session?.role;
-  const adAccountName = session?.adAccountName;
-  const pageName = session?.pageName;
+  const workspaceTargetQ = useQuery({
+    queryKey: ["workspace-meta-target"],
+    queryFn: async () => (await fetch("/api/workspace/meta-target").then((res) => res.json())) as { target?: { adAccountName?: string; pageName?: string } },
+    enabled: !browseMode,
+  });
+  const adAccountName = workspaceTargetQ.data?.target?.adAccountName ?? session?.adAccountName;
+  const pageName = workspaceTargetQ.data?.target?.pageName ?? session?.pageName;
   const connected = !!(adAccountName && pageName);
 
   const [openItems, setOpenItems] = useState<Set<string>>(() => {

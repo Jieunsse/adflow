@@ -1,6 +1,7 @@
 import type { AuthOptions } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import FacebookProvider from "next-auth/providers/facebook"
+import { decode } from "next-auth/jwt"
 import { credentialsCache, type MetaCredentials } from "./meta-credentials"
 import { exchangeForBackendToken } from "@shared/lib/backend/exchange"
 
@@ -8,7 +9,7 @@ type Providers = NonNullable<AuthOptions["providers"]>
 
 const GRAPH = "https://graph.facebook.com/v20.0"
 const SCOPE =
-  "public_profile,ads_management,ads_read,pages_show_list,pages_read_engagement,business_management,instagram_basic,instagram_manage_insights"
+  "public_profile,email,ads_management,ads_read,pages_show_list,pages_read_engagement,business_management,instagram_basic,instagram_manage_insights"
 
 // Exchanges the short-lived (1-2h) login token for a 60-day long-lived token.
 // Falls back to the short-lived token on failure — works for now but expires soon.
@@ -18,14 +19,14 @@ async function exchangeForLongLivedToken(
   clientSecret: string,
 ): Promise<string> {
   try {
-    const url =
-      `${GRAPH}/oauth/access_token?grant_type=fb_exchange_token` +
-      `&client_id=${clientId}` +
-      `&client_secret=${clientSecret}` +
-      `&fb_exchange_token=${shortLivedToken}`
+    const url = new URL(`${GRAPH}/oauth/access_token`)
+    url.searchParams.set("grant_type", "fb_exchange_token")
+    url.searchParams.set("client_id", clientId)
+    url.searchParams.set("client_secret", clientSecret)
+    url.searchParams.set("fb_exchange_token", shortLivedToken)
     const res = await fetch(url)
     const data = (await res.json()) as { access_token?: string }
-    return data.access_token ?? shortLivedToken
+    return res.ok ? data.access_token ?? shortLivedToken : shortLivedToken
   } catch {
     return shortLivedToken
   }
@@ -66,10 +67,10 @@ function buildCommonOptions(meta?: MetaCredentials): AuthOptions {
     // 명시 지정 필수 — 없으면 NextAuth가 authOptions 해시로 자체 폴백해서
     // proxy.ts(withAuth, process.env.NEXTAUTH_SECRET 직접 참조)와 세션 암호화 키가 어긋난다.
     secret: process.env.NEXTAUTH_SECRET,
-    debug: true,
+    debug: false,
     logger: {
-      error(code, metadata) {
-        console.error("[NextAuth][error]", code, JSON.stringify(metadata, null, 2))
+      error(code) {
+        console.error("[NextAuth][error]", code)
       },
       warn(code) {
         console.warn("[NextAuth][warn]", code)
@@ -85,6 +86,7 @@ function buildCommonOptions(meta?: MetaCredentials): AuthOptions {
           token.browseMode = true
           if (!token.role) token.role = "팀장"
         }
+        if (account && account.provider !== "guest") token.browseMode = false
         if (account?.access_token && meta) {
           token.accessToken = await exchangeForLongLivedToken(
             account.access_token,
@@ -121,30 +123,47 @@ function buildCommonOptions(meta?: MetaCredentials): AuthOptions {
           }
         }
         if (trigger === "update" && session) {
-          if (session.adAccountId !== undefined) {
-            token.adAccountId = session.adAccountId
-            token.adAccountName = session.adAccountName
+          const requested = session as typeof session & { igSessionUpdate?: unknown }
+          const currentToken = token as typeof token & { igSessionUpdateJti?: unknown }
+          if (typeof requested.adAccountId === "string" && requested.adAccountId.length <= 200) {
+            token.adAccountId = requested.adAccountId
+            if (typeof requested.adAccountName === "string" && requested.adAccountName.length <= 200) token.adAccountName = requested.adAccountName
           }
-          if (session.pageId !== undefined) {
-            token.pageId = session.pageId
-            token.pageName = session.pageName
+          if (typeof requested.pageId === "string" && requested.pageId.length <= 200) {
+            token.pageId = requested.pageId
+            if (typeof requested.pageName === "string" && requested.pageName.length <= 200) token.pageName = requested.pageName
           }
-          if (session.pixelId !== undefined) {
-            token.pixelId = session.pixelId
-            token.pixelName = session.pixelName
+          if (typeof requested.pixelId === "string" && requested.pixelId.length <= 200) {
+            token.pixelId = requested.pixelId
+            if (typeof requested.pixelName === "string" && requested.pixelName.length <= 200) token.pixelName = requested.pixelName
           }
-          if (session.igUserId !== undefined) {
-            token.igUserId = session.igUserId
-            token.igUsername = session.igUsername
+          if (typeof requested.igUserId === "string" && requested.igUserId.length <= 200) {
+            if (requested.igUserId !== token.igUserId) delete token.igAccessToken
+            token.igUserId = requested.igUserId
+            if (typeof requested.igUsername === "string" && requested.igUsername.length <= 200) token.igUsername = requested.igUsername
           }
-          if (session.igAccessToken !== undefined) {
-            token.igAccessToken = session.igAccessToken
-          }
-          if (session.browseMode !== undefined) {
-            token.browseMode = session.browseMode
-          }
-          if (session.role !== undefined) {
-            token.role = session.role
+
+          if (token.sub === "guest" && requested.browseMode === true) token.browseMode = true
+
+          if (typeof requested.igSessionUpdate === "string" && process.env.NEXTAUTH_SECRET) {
+            try {
+              const issued = await decode({ token: requested.igSessionUpdate, secret: process.env.NEXTAUTH_SECRET }) as
+                ({ purpose?: unknown; ownerKey?: unknown; igAccessToken?: unknown; igUserId?: unknown; igUsername?: unknown; exp?: unknown; jti?: unknown } | null)
+              const ownerKey = token.sub ?? token.email ?? token.jti
+              if (issued?.purpose === "ig-session-update" && issued.ownerKey === ownerKey &&
+                typeof issued.jti === "string" && issued.jti !== currentToken.igSessionUpdateJti &&
+                typeof issued.exp === "number" && issued.exp > Math.floor(Date.now() / 1000) &&
+                typeof issued.igAccessToken === "string" && issued.igAccessToken.length > 0 &&
+                typeof issued.igUserId === "string" && issued.igUserId.length > 0 &&
+                typeof issued.igUsername === "string") {
+                token.igAccessToken = issued.igAccessToken
+                token.igUserId = issued.igUserId
+                token.igUsername = issued.igUsername
+                currentToken.igSessionUpdateJti = issued.jti
+              }
+            } catch {
+              // Invalid client-supplied update capability is ignored.
+            }
           }
         }
         return token

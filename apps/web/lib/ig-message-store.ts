@@ -3,7 +3,7 @@
 // 단계 4 — Supabase 직접 접근을 걷어냈다. webhook 은 세션 없이 호출되므로 사용자 JWT 를 쓰는
 // callBackend 대신 내부 시크릿으로 부른다. 읽기 경로도 같은 문을 쓴다(인증 모드를 하나로).
 //
-// 실패는 전부 삼킨다 — DM 캐시는 Meta Graph 의 사본이고, 캐시 실패가 화면을 깨면 안 된다.
+// 읽기 실패는 빈 캐시로 처리하지만, 쓰기 실패는 호출자에게 돌려야 webhook 이 재시도할 수 있다.
 
 import { backendBaseUrl, internalSecret } from "@shared/lib/backend/client";
 
@@ -42,7 +42,9 @@ async function call(path: string, init?: { method: string; body: string }): Prom
 
 export async function saveIgMessages(items: IgMessageRow[]): Promise<void> {
   if (items.length === 0) return;
-  await call("/internal/ig-messages", { method: "POST", body: JSON.stringify({ items }) });
+  const res = await call("/internal/ig-messages", { method: "POST", body: JSON.stringify({ items }) });
+  if (!res) throw new Error("ig_message_store_unavailable");
+  if (!res.ok) throw new Error(`ig_message_store_${res.status}`);
 }
 
 /** conversationId 를 주면 그 스레드(오래된 순), 없으면 인박스 전체(최신순). */

@@ -1,6 +1,7 @@
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { NextResponse } from "next/server"
+import { getWorkspaceMetaTarget } from "@/lib/workspace-meta-target"
 
 const GRAPH = "https://graph.facebook.com/v20.0"
 const IG_GRAPH = "https://graph.instagram.com"
@@ -14,7 +15,8 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  const pageId = session.pageId
+  const target = await getWorkspaceMetaTarget()
+  const pageId = target.pageId ?? session.pageId
   const igAccessToken = session.igAccessToken
 
   const [pageJson, igJson] = await Promise.all([

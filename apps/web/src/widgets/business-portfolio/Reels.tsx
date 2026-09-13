@@ -10,6 +10,7 @@ import { KpiCard } from "@shared/ui/primitives";
 import DualChart from "@shared/ui/DualChart";
 import Icon from "@shared/ui/Icon";
 import { cn } from "@shared/lib/cn";
+import { uploadInstagramFile } from "@shared/lib/instagram-upload";
 import {
   summarizeReels,
   serializeReelsReportText,
@@ -18,7 +19,6 @@ import {
   type IgReelsPanel,
 } from "@/lib/instagram-reels";
 
-type UploadResp = { ok: true; url: string } | { ok: false; error: string };
 type PublishResp =
   | { ok: true; mediaId: string; permalink?: string; mock?: boolean }
   | { ok: false; error: string; status?: number };
@@ -195,15 +195,7 @@ function UploadDialog({
   const uploadFile = useCallback(async (file: File) => {
     setUploading(true);
     try {
-      const fd = new FormData();
-      fd.append("file", file);
-      const res = await fetch("/api/instagram/reels/upload", { method: "POST", body: fd });
-      const data = (await res.json()) as UploadResp;
-      if (data.ok) {
-        setVideoUrl(data.url);
-      } else {
-        showToast(`업로드 실패 — ${data.error}`);
-      }
+      setVideoUrl(await uploadInstagramFile(file, "video", "/api/instagram/reels/upload"));
     } catch (e) {
       showToast(`업로드 실패 — ${e instanceof Error ? e.message : "요청 실패"}`);
     } finally {

@@ -87,6 +87,26 @@ export type LaunchedCampaign = {
   abTestAxis?: AbTestAxis;
   abTestVariantA?: string;
   abTestVariantB?: AbTestVariantB;
+  quickStart?: QuickStartSettings;
+};
+
+export type QuickStartSettings = {
+  brandProfileId?: string;
+  productId?: string;
+  target: string;
+  tone: string;
+  outcomeHint: string;
+  cta: CtaId;
+  dailyBudget: string;
+  durationDays: number;
+  ageMin: number;
+  ageMax: number;
+  gender: Gender;
+  countries: string[];
+  personaLocation: string[];
+  landingUrl: string;
+  delivery: DeliveryStatus;
+  platforms: AdPlatform;
 };
 
 export type LaunchState = {

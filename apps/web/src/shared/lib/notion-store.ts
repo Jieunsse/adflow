@@ -6,8 +6,55 @@
 // Notion OAuth 콜백은 Spring JWT 를 들고 오지 않아서 내부 시크릿 경로를 쓴다.
 
 import { backendBaseUrl, internalSecret } from "@shared/lib/backend/client";
+import { promises as fs } from "node:fs";
+import path from "node:path";
+import { getDataDir } from "@/lib/meta-credentials";
 
 const PATH = "/internal/notion-connections";
+const workspaceOwnerFile = () => path.join(getDataDir(), "workspace-notion-owner.txt");
+const workspaceAuditFile = () => path.join(getDataDir(), "workspace-notion-audit.json");
+
+export type WorkspaceNotionAudit = { actor: string; action: "set" | "clear"; timestamp: string };
+
+export async function getWorkspaceNotionAudit(): Promise<WorkspaceNotionAudit[]> {
+  try {
+    return JSON.parse(await fs.readFile(workspaceAuditFile(), "utf8")) as WorkspaceNotionAudit[];
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") return [];
+    throw error;
+  }
+}
+
+async function appendWorkspaceNotionAudit(actor: string, action: WorkspaceNotionAudit["action"]): Promise<void> {
+  await fs.mkdir(getDataDir(), { recursive: true });
+  const audit = await getWorkspaceNotionAudit();
+  audit.push({ actor, action, timestamp: new Date().toISOString() });
+  await fs.writeFile(workspaceAuditFile(), JSON.stringify(audit, null, 2), { mode: 0o600 });
+}
+
+export async function getWorkspaceNotionOwner(): Promise<string | null> {
+  try {
+    return (await fs.readFile(workspaceOwnerFile(), "utf8")).trim() || null;
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") return null;
+    throw error;
+  }
+}
+
+export async function setWorkspaceNotionOwner(ownerKey: string, actor: string): Promise<void> {
+  await fs.mkdir(getDataDir(), { recursive: true });
+  await fs.writeFile(workspaceOwnerFile(), ownerKey, { mode: 0o600 });
+  await appendWorkspaceNotionAudit(actor, "set");
+}
+
+export async function clearWorkspaceNotionOwner(actor: string): Promise<void> {
+  try {
+    await fs.unlink(workspaceOwnerFile());
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+  }
+  await appendWorkspaceNotionAudit(actor, "clear");
+}
 
 export type NotionConnection = {
   accessToken: string;

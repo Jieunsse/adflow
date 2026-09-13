@@ -72,6 +72,7 @@ describe("draft-persistence", () => {
 
   it("creative/launch/studio 없는 파편은 무효로 판정한다", () => {
     expect(parseDraft(JSON.stringify({ step: 1 }))).toBeNull();
+    expect(parseDraft(JSON.stringify({ step: 3, creative: {}, launch: {}, studio: {} }))).toBeNull();
   });
 
   it("쿼터 초과 시 이미지 필드를 생략하고 나머지는 저장한다", () => {

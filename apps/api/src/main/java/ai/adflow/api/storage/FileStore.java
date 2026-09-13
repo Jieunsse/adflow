@@ -1,8 +1,10 @@
 package ai.adflow.api.storage;
 
 import java.io.IOException;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -16,14 +18,16 @@ import org.springframework.web.server.ResponseStatusException;
  *
  * <p>구현체가 하나뿐이라 인터페이스를 뽑지 않았다. 표면이 넷뿐이라 나중에 뽑는 비용이 거의 없다.
  *
- * <p>경로는 {bucket}/{brandProfileId}/{name} 3세그먼트로 고정한다. 세그먼트마다 화이트리스트를
- * 통과해야 하므로 ".." 도 인코딩된 슬래시도 루트를 벗어나지 못한다.
+ * <p>비공개 경로는 {bucket}/{brandProfileId}/{name} 3세그먼트로 고정한다. 공개 미디어는 별도
+ * published-media/{name} prefix만 사용한다. 세그먼트마다 화이트리스트를 통과해야 하므로 ".." 도
+ * 인코딩된 슬래시도 루트를 벗어나지 못한다.
  */
 @Component
 public class FileStore {
 
-  /** 설계 §5 의 버킷 2개. 이 목록 밖은 받지 않는다. */
+  /** 설계 §5 의 비공개 버킷 2개. 이 목록 밖은 받지 않는다. */
   private static final Set<String> BUCKETS = Set.of("product-images", "reference-materials");
+  private static final String PUBLISHED_BUCKET = "published-media";
 
   private static final Pattern SEGMENT = Pattern.compile("[A-Za-z0-9._-]{1,128}");
 
@@ -44,11 +48,28 @@ public class FileStore {
     return bucket + "/" + brandProfileId + "/" + name;
   }
 
+  public String publishedPath(String name) {
+    requireSegment(name);
+    return PUBLISHED_BUCKET + "/" + name;
+  }
+
   public void save(String relativePath, byte[] bytes) {
     Path target = resolve(relativePath);
     try {
       Files.createDirectories(target.getParent());
       Files.write(target, bytes);
+    } catch (IOException e) {
+      throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "파일을 저장하지 못했어요.", e);
+    }
+  }
+
+  public void saveNew(String relativePath, byte[] bytes) {
+    Path target = resolve(relativePath);
+    try {
+      Files.createDirectories(target.getParent());
+      Files.write(target, bytes, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE);
+    } catch (FileAlreadyExistsException e) {
+      throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 사용 중인 미디어예요.", e);
     } catch (IOException e) {
       throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "파일을 저장하지 못했어요.", e);
     }

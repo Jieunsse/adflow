@@ -1,15 +1,14 @@
 "use client";
 
-// STEP 03 게재 — 시안 1e. 좌: 확정한 소재, 우: 채널·예산·기간·예상 성과 + 검수 요청.
-// 시안에 없지만 게재에 반드시 필요한 것(도착 링크·타겟·A/B·고급)은 "세부 설정"으로 접어 둔다 —
-// 평소 화면은 시안 그대로, 필요할 때만 펼친다.
+// STEP 03 게재 — 좌: 확정한 소재, 우: 채널·예산·기간·필수 조건. 검토 화면에서만 실제 Meta 전송을 실행한다.
+// 도착 링크·타겟은 즉시 보이고, A/B·입찰 같은 전문 설정만 접어 둔다.
 // 게재 성공(state.launchedCampaign) 시 같은 자리가 시안 2c(검수 요청됨) 로 전환.
 
 import { useEffect, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useQuery } from "@tanstack/react-query";
 import { useCreativeDraft } from "@entities/creative/model";
-import { useLaunchDraft, type LaunchParams, type LaunchResponse } from "@entities/campaign/model";
+import { useLaunchDraft, type LaunchParams, type LaunchResponse, type QuickStartSettings } from "@entities/campaign/model";
 import { adIdentityPagesQueryKey, fetchAdIdentityPages } from "@entities/page/api";
 import { saveLaunchedCampaign } from "@entities/campaign/launched-storage";
 import { createBrowseCampaign } from "@entities/campaign/browse/seed";
@@ -45,7 +44,9 @@ import PreLaunchSafetyModal from "./PreLaunchSafetyModal";
 import TargetStep from "./TargetStep";
 import BoostPostFlow from "./BoostPostFlow";
 import ReviewRequestedCard from "./ReviewRequestedCard";
+import ReviewStep from "./ReviewStep";
 import { validateLaunch, type ValidationIssue } from "@features/launch-validation";
+import { CREATE_EVENTS, recordCreateEvent } from "@entities/creative/create-events";
 
 const BUDGET_MIN = 10_000;
 const BUDGET_MAX = 100_000;
@@ -65,6 +66,12 @@ interface Props {
   goCreative: () => void;
   brandName?: string;
   onRestart: () => void;
+  onReview: () => void;
+  reviewing: boolean;
+  onBackReview: () => void;
+  onEditBrief: () => void;
+  quickStart: QuickStartSettings;
+  preferQuickTargeting: boolean;
 }
 
 const CARD_DOM_ID: Record<PlanCardId, string> = {
@@ -72,7 +79,9 @@ const CARD_DOM_ID: Record<PlanCardId, string> = {
   target: "plan-card-target",
 };
 
-export default function LaunchStep({ onNext, goSettings, goCreative, brandName, onRestart }: Props) {
+export default function LaunchStep({
+  onNext, goSettings, goCreative, brandName, onRestart, onReview, reviewing, onBackReview, onEditBrief, quickStart, preferQuickTargeting,
+}: Props) {
   const creative = useCreativeDraft();
   const launch = useLaunchDraft();
   const state = launch.state;
@@ -83,9 +92,9 @@ export default function LaunchStep({ onNext, goSettings, goCreative, brandName, 
   // STEP 03 진입 시 — 소재 스튜디오 AI가 채운 타겟팅으로 연령·성별 prefill.
   const targeting = creative.state.targeting;
   useEffect(() => {
-    if (!targeting) return;
+    if (!targeting || preferQuickTargeting) return;
     dispatch({ type: "APPLY_CREATIVE_TARGETING", targeting });
-  }, [targeting, dispatch]);
+  }, [targeting, dispatch, preferQuickTargeting]);
 
   const { data: session } = useSession();
   const accountConnected = !!(session?.adAccountId && session?.pageId);
@@ -142,11 +151,13 @@ export default function LaunchStep({ onNext, goSettings, goCreative, brandName, 
       if (!result.ok) { showToast(result.reason); return; }
     }
     const params = buildLaunchParams(creative.state, state, { skipAdCreation, brandName });
+    recordCreateEvent(CREATE_EVENTS.campaignRequested);
     if (browseMode) {
       // ADR-033 — Browse Mode 시연 레이어. 목록 merge·상세 빨리감기가 이 레코드를 단일 소스로 사용.
       const plan = planBrowseLaunch(params, { brandName, ts: Date.now() });
-      dispatch({ type: "SET_LAUNCHED_CAMPAIGN", value: plan.launched });
-      saveLaunchedCampaign(plan.launched);
+      const launched = { ...plan.launched, quickStart };
+      dispatch({ type: "SET_LAUNCHED_CAMPAIGN", value: launched });
+      saveLaunchedCampaign(launched);
       // 둘러보기는 실 Gemini 이미지(수 MB base64)를 쓴다 — localStorage 용량 초과로 캠페인이 조용히 버려지지 않게 축소.
       const imageUrl = await shrinkImageDataUrl(plan.browseCampaign.imageUrl);
       createBrowseCampaign({ ...plan.browseCampaign, imageUrl });
@@ -156,7 +167,7 @@ export default function LaunchStep({ onNext, goSettings, goCreative, brandName, 
     }
     launchMutation.mutate(params, {
       onSuccess: (data) => {
-        const launched = buildLaunchedCampaign(data, params);
+        const launched = { ...buildLaunchedCampaign(data, params), quickStart };
         dispatch({ type: "SET_LAUNCHED_CAMPAIGN", value: launched });
         saveLaunchedCampaign(launched);
         addNotification({ type: "launch", message: launchSuccessMessage(params) });
@@ -183,8 +194,6 @@ export default function LaunchStep({ onNext, goSettings, goCreative, brandName, 
       countriesCount: state.countries.length,
     });
     if (invalidCard) {
-      // 도착 링크·타겟은 "세부 설정" 안에 접혀 있다 — 펼쳐야 스크롤할 자리가 생긴다.
-      setAdvancedOpen(true);
       requestAnimationFrame(() => {
         document.getElementById(CARD_DOM_ID[invalidCard])?.scrollIntoView({ behavior: "smooth", block: "center" });
       });
@@ -216,12 +225,29 @@ export default function LaunchStep({ onNext, goSettings, goCreative, brandName, 
     isPending: launchMutation.isPending,
     alreadyLaunched: !!state.launchedCampaign,
   });
-  const canLaunch = !blockReason;
   const canSkipLaunch = (accountConnected || browseMode) && hasCreative && state.countries.length > 0 && !launchMutation.isPending && !state.launchedCampaign;
 
   if (state.launchedCampaign) return <ReviewRequestedCard onRestart={onRestart} />;
 
   if (isBoostPost) return <BoostPostFlow onNext={onNext} />;
+
+  if (reviewing) {
+    return (
+      <>
+        <ReviewStep
+          blockReason={blockReason}
+          launching={launchMutation.isPending}
+          onBack={onBackReview}
+          onEditBrief={onEditBrief}
+          onEditCreative={goCreative}
+          onLaunch={handleLaunch}
+        />
+        {modalOpen && (
+          <PreLaunchSafetyModal issues={safetyIssues} onClose={handleSafetyClose} onConfirm={handleSafetyConfirm} />
+        )}
+      </>
+    );
+  }
 
   const budgetNum = parseInt(state.budget.replace(/[^\d]/g, ""), 10) || 0;
   const days = calcDaysBetween(state.dateStart, state.dateEnd);
@@ -349,6 +375,23 @@ export default function LaunchStep({ onNext, goSettings, goCreative, brandName, 
             </div>
           </PanelCard>
 
+          <PanelCard id={CARD_DOM_ID.destination} className="p-[18px]">
+            <DestinationField urlAttempted={urlAttempted} />
+            {profile?.uniqueSections.includes("call_schedule") && (
+              <><hr className="h-px bg-[var(--w-line-neutral)] my-[18px] border-0" /><CallScheduleSection /></>
+            )}
+            {profile?.uniqueSections.includes("messages_auto_reply") && (
+              <><hr className="h-px bg-[var(--w-line-neutral)] my-[18px] border-0" /><MessagesAutoReplyCallout /></>
+            )}
+            {profile?.uniqueSections.includes("page_activity") && (
+              <><hr className="h-px bg-[var(--w-line-neutral)] my-[18px] border-0" /><PageActivityCallout /></>
+            )}
+          </PanelCard>
+
+          <PanelCard id={CARD_DOM_ID.target} className="p-[18px]">
+            <TargetStep />
+          </PanelCard>
+
           <div className="bg-[var(--w-primary-soft)] rounded-[var(--w-radius-12)] p-[18px]">
             <div className="font-semibold text-[13px] leading-[1.4] text-[var(--w-primary-normal)] mb-2.5">예상 성과</div>
             <div className="flex gap-7 flex-wrap">
@@ -384,7 +427,7 @@ export default function LaunchStep({ onNext, goSettings, goCreative, brandName, 
               <span className="font-bold text-[15px] leading-[1.4] text-[var(--w-fg-strong)]">세부 설정</span>
               <span className="flex items-center gap-2">
                 <span className="font-normal text-[12px] leading-[1.4] text-[var(--w-fg-neutral)]">
-                  도착 링크 · 타겟 · A/B · 고급
+                  A/B 소재 시험 · 고급
                 </span>
                 <Icon
                   name="chev-down"
@@ -396,21 +439,6 @@ export default function LaunchStep({ onNext, goSettings, goCreative, brandName, 
             </button>
             {advancedOpen && (
               <div className="flex flex-col gap-[18px] mt-[18px]">
-                <div id={CARD_DOM_ID.destination}>
-                  <DestinationField urlAttempted={urlAttempted} />
-                  {profile?.uniqueSections.includes("call_schedule") && (
-                    <><hr className="h-px bg-[var(--w-line-neutral)] my-[18px] border-0" /><CallScheduleSection /></>
-                  )}
-                  {profile?.uniqueSections.includes("messages_auto_reply") && (
-                    <><hr className="h-px bg-[var(--w-line-neutral)] my-[18px] border-0" /><MessagesAutoReplyCallout /></>
-                  )}
-                  {profile?.uniqueSections.includes("page_activity") && (
-                    <><hr className="h-px bg-[var(--w-line-neutral)] my-[18px] border-0" /><PageActivityCallout /></>
-                  )}
-                </div>
-                <hr className="h-px bg-[var(--w-line-neutral)] border-0" />
-                <div id={CARD_DOM_ID.target}><TargetStep /></div>
-                <hr className="h-px bg-[var(--w-line-neutral)] border-0" />
                 <ABCreativeKnob />
                 <hr className="h-px bg-[var(--w-line-neutral)] border-0" />
                 <DetailKnobs />
@@ -443,8 +471,8 @@ export default function LaunchStep({ onNext, goSettings, goCreative, brandName, 
             <Button variant="secondary" size="lg" type="button" onClick={goCreative}>
               ← 소재로
             </Button>
-            <Button variant="primary" size="lg" type="button" onClick={handleLaunch} disabled={!canLaunch}>
-              {launchMutation.isPending ? "요청하는 중…" : "검수 요청하기"}
+            <Button variant="primary" size="lg" type="button" onClick={onReview} disabled={launchMutation.isPending}>
+              검토하기
             </Button>
           </div>
         </div>

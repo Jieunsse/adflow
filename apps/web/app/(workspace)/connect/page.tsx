@@ -1,5 +1,5 @@
-import { redirect } from "next/navigation";
+import { ConnectionManager } from "./ConnectionManager";
 
 export default function ConnectPage() {
-  redirect("/settings?tab=account");
+  return <ConnectionManager />;
 }

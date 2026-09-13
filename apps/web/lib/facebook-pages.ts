@@ -1,4 +1,4 @@
-const GRAPH = "https://graph.facebook.com/v20.0"
+import { GRAPH, MetaGraphError, graphErrorMessage, graphStatus, hasGraphError, readGraphBody } from "./instagram-graph"
 
 export type FbManagedPage = {
   id: string
@@ -20,25 +20,23 @@ export type FbManagedPagesResult = {
 export async function getFacebookManagedPages(
   userToken: string | undefined,
 ): Promise<FbManagedPagesResult> {
-  if (!userToken) return { pages: FB_PAGES_MOCK, mock: true }
-  try {
-    const res = await fetch(`${GRAPH}/me/accounts?fields=id,name,picture{url}&limit=100&access_token=${userToken}`)
-    if (!res.ok) return { pages: FB_PAGES_MOCK, mock: true }
-    const data = await res.json() as {
+  if (!userToken) throw new MetaGraphError("Facebook 로그인이 필요합니다.", 401, { code: "missing_credentials" })
+  const res = await fetch(`${GRAPH}/me/accounts?fields=id,name,picture{url}&limit=100&access_token=${userToken}`, { cache: "no-store" })
+  const data = await readGraphBody(res) as {
       data?: Array<{
         id: string
         name?: string
         picture?: { data?: { url?: string } }
       }>
-    }
+      error?: { message?: string }
+  }
+  if (!res.ok || hasGraphError(data)) {
+    throw new MetaGraphError(graphErrorMessage(data, "Facebook 페이지 조회 실패"), graphStatus(res.status, data), data)
+  }
     const pages = (data.data ?? []).map(p => ({
       id: p.id,
       name: p.name ?? p.id,
       pictureUrl: p.picture?.data?.url,
     }))
-    if (pages.length === 0) return { pages: FB_PAGES_MOCK, mock: true }
     return { pages, mock: false }
-  } catch {
-    return { pages: FB_PAGES_MOCK, mock: true }
-  }
 }

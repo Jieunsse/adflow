@@ -20,6 +20,13 @@ async function providerIds(): Promise<string[]> {
   });
 }
 
+async function updateJwt(token: Record<string, unknown>, session: Record<string, unknown>) {
+  vi.resetModules();
+  const { getAuthOptionsForNextAuth } = await import("./auth");
+  const options = await getAuthOptionsForNextAuth();
+  return options.callbacks?.jwt?.({ token, trigger: "update", session } as never);
+}
+
 describe("getAuthOptionsForNextAuth", () => {
   const original = process.env.ADFLOW_BROWSE_ONLY;
 
@@ -43,5 +50,20 @@ describe("getAuthOptionsForNextAuth", () => {
     const ids = await providerIds();
     expect(ids).not.toContain("facebook");
     expect(ids).toContain("guest");
+  });
+
+  it("session update 로 role·browseMode·raw access token 을 바꿀 수 없어요", async () => {
+    const token = { sub: "user-1", role: "팀원·검토", browseMode: false, igAccessToken: "server-token" };
+    const updated = await updateJwt(token, { role: "팀장", browseMode: true, igAccessToken: "attacker-token" });
+    expect(updated).toMatchObject({ role: "팀원·검토", browseMode: false, igAccessToken: "server-token" });
+  });
+
+  it("legacy Instagram identity 가 바뀌면 기존 token 을 지워요", async () => {
+    const updated = await updateJwt(
+      { sub: "user-1", igUserId: "old-ig", igAccessToken: "old-token" },
+      { igUserId: "new-ig", igUsername: "new-user" },
+    );
+    expect(updated).toMatchObject({ igUserId: "new-ig", igUsername: "new-user" });
+    expect(updated?.igAccessToken).toBeUndefined();
   });
 });

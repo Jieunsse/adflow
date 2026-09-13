@@ -12,9 +12,7 @@ import { SegControl } from "@shared/ui/SegControl";
 import { fmtKRW, campaignRunDays } from "@shared/lib/format";
 import { useBrandProfileStorage } from "@features/brand-profile/model/useBrandProfileStorage";
 import { upsertProfile } from "@features/brand-profile/model/brandProfileStore";
-import { bepRoas } from "@entities/insights/profit";
-import { useGoalsStorage } from "@features/goal/model/useGoalsStorage";
-import { deriveFunnel, pickWorstDrop, type AccountDailyPoint, type FunnelStage } from "@entities/insights/account-trend";
+import type { AccountDailyPoint } from "@entities/insights/account-trend";
 import {
   splitWindow,
   derivePeriodKpis,
@@ -23,7 +21,7 @@ import {
   toCampaignTableRow,
   type CampaignTableRow,
 } from "@entities/insights/period-kpis";
-import { deriveActionQueue, deriveHeroNarrative, type ActionButton } from "@entities/insights/action-queue";
+import { deriveActionQueue, deriveHeroNarrative, type ActionButton, type ActionItem } from "@entities/insights/action-queue";
 import { deriveAccountVerdict, deriveCampaignVerdicts, type AccountVerdictCampaign } from "@entities/insights/account-verdict";
 import { buildRecent7Report, serializeReportText, toCampaignsCsv, type Recent7Report } from "@entities/insights/report";
 import { listBrowse, BROWSE_CHANGE_EVENT } from "@entities/campaign/browse/store";
@@ -34,27 +32,20 @@ import { billingQueryKey, fetchBilling } from "@entities/billing/api";
 import BillingAlertWidget from "@widgets/billing-alert";
 import { DashboardHero, DashboardHeroNoConversion, heroRangeLabel } from "@widgets/dashboard-hero";
 import { ActionQueue } from "@widgets/action-queue";
-import { EvidenceRail, buildEvidenceMetrics, funnelLeakNote } from "@widgets/evidence-rail";
 import type { CampaignSummary } from "@/lib/meta-ads";
 import { Dialog, DialogContent, DialogTitle } from "@shared/ui/Dialog";
 import { useToast } from "@shared/ui/Toast";
 
-type Period = "7d" | "30d";
 type BrowseExample = "good" | "poor";
-const PERIOD_DAYS: Record<Period, number> = { "7d": 7, "30d": 30 };
-const TREND_DAYS: Record<Period, number> = { "7d": 14, "30d": 60 };
-const PERIOD_STORY: Record<Period, string> = { "7d": "최근 7일 성과", "30d": "최근 30일 성과" };
+const REPORT_PERIOD = "7d";
+const REPORT_TREND_DAYS = 14;
+const REPORT_STORY = "최근 7일 성과";
+const EMPTY_CAMPAIGNS: CampaignSummary[] = [];
+const EMPTY_DAILY: AccountDailyPoint[] = [];
 
-// ADR-063 — 퍼널 단 클릭 = 캠페인 목록으로 이동해 해당 기준으로 정렬. 대시보드에 표를 다시 만들지 않는다.
-const FUNNEL_SORT_PRESET: Partial<Record<FunnelStage["key"], string>> = {
-  clicks: "ctr",
-  landing: "landingRate",
-  purchase: "roas",
-};
-
-async function fetchDashboardCampaigns(period: Period, example?: BrowseExample): Promise<CampaignSummary[]> {
+async function fetchDashboardCampaigns(example?: BrowseExample): Promise<CampaignSummary[]> {
   try {
-    return await fetchCampaigns(period, example);
+    return await fetchCampaigns(REPORT_PERIOD, example);
   } catch (error) {
     if ((error as { code?: number }).code === 401) return [];
     throw error;
@@ -96,7 +87,6 @@ export default function DashboardPage() {
 
   const accountConnected = !!(session?.adAccountName && session?.pageName);
   const browseMode = !!session?.browseMode;
-  const [period, setPeriod] = useState<Period>("7d");
   const [browseExample, setBrowseExample] = useState<BrowseExample>("good");
 
   const { profile: brandProfile, profiles: brandProfiles, activeId: brandActiveId } = useBrandProfileStorage(!!session?.browseMode);
@@ -120,16 +110,8 @@ export default function DashboardPage() {
   });
 
   const campaignsQ = useQuery({
-    queryKey: ["campaigns", period, browseMode ? browseExample : null],
-    queryFn: () => fetchDashboardCampaigns(period, browseMode ? browseExample : undefined),
-    enabled: !!session?.adAccountId || !!session?.browseMode,
-    staleTime: 60_000,
-  });
-
-  // ADR-064 — 최근 7일 리포트는 대시보드 기간 토글(30일)과 무관하게 항상 7일 창. period="7d" 쿼리 고정 재사용(캐시 공유).
-  const report7dCampaignsQ = useQuery({
-    queryKey: ["campaigns", "7d", browseMode ? browseExample : null],
-    queryFn: () => fetchDashboardCampaigns("7d", browseMode ? browseExample : undefined),
+    queryKey: ["campaigns", REPORT_PERIOD, browseMode ? browseExample : null],
+    queryFn: () => fetchDashboardCampaigns(browseMode ? browseExample : undefined),
     enabled: !!session?.adAccountId || !!session?.browseMode,
     staleTime: 60_000,
   });
@@ -145,46 +127,26 @@ export default function DashboardPage() {
     return () => window.removeEventListener(BROWSE_CHANGE_EVENT, load);
   }, [browseMode]);
 
-  const campaigns = campaignsQ.data ?? [];
-  const customBrowseRows = browseRows.filter((campaign) => !campaign.id.startsWith("browse_demo_"));
-  const allCampaigns = browseMode ? [...customBrowseRows, ...campaigns] : campaigns;
+  const campaigns = campaignsQ.data ?? EMPTY_CAMPAIGNS;
+  const customBrowseRows = useMemo(() => browseRows.filter((campaign) => !campaign.id.startsWith("browse_demo_")), [browseRows]);
+  const allCampaigns = useMemo(() => browseMode ? [...customBrowseRows, ...campaigns] : campaigns, [browseMode, campaigns, customBrowseRows]);
 
-  const report7dCampaigns = report7dCampaignsQ.data ?? [];
-  const report7dTableCampaigns = browseMode ? [...customBrowseRows, ...report7dCampaigns] : report7dCampaigns;
-
-  const trendDays = TREND_DAYS[period];
   const trendQ = useQuery({
-    queryKey: ["dashboard", "trend", trendDays, browseMode ? browseExample : null],
-    queryFn: () => fetchTrend(trendDays, browseMode ? browseExample : undefined),
+    queryKey: ["dashboard", "trend", REPORT_TREND_DAYS, browseMode ? browseExample : null],
+    queryFn: () => fetchTrend(REPORT_TREND_DAYS, browseMode ? browseExample : undefined),
     enabled: !!session?.adAccountId || !!session?.browseMode,
     staleTime: 5 * 60_000,
   });
-  const dailyAll = trendQ.data ?? [];
+  const dailyAll = trendQ.data ?? EMPTY_DAILY;
 
   const { current: dailyCurrent, previous: dailyPrevious } = useMemo(
-    () => splitWindow(dailyAll, PERIOD_DAYS[period]),
-    [dailyAll, period],
+    () => splitWindow(dailyAll, 7),
+    [dailyAll],
   );
 
   const conversion = useMemo(() => deriveConversionSummary(campaigns), [campaigns]);
-  const { goals } = useGoalsStorage(!!session?.browseMode);
   const periodKpis = useMemo(() => derivePeriodKpis(dailyCurrent, dailyPrevious), [dailyCurrent, dailyPrevious]);
   const revenueRoas = useMemo(() => deriveRevenueRoasDelta(dailyCurrent, dailyPrevious), [dailyCurrent, dailyPrevious]);
-
-  const funnel = useMemo(
-    () =>
-      deriveFunnel(
-        campaigns.map((c) => ({
-          impressions: c.impressions,
-          clicks: c.clicks,
-          landingPageView: c.landingPageView,
-          purchaseCount: c.purchaseCount,
-        })),
-      ),
-    [campaigns],
-  );
-  // "도착 이후만 고치면 돼요" — 사람이 도달한 단(from)을 말해야 문장이 성립한다(to 를 쓰면 "구매 이후").
-  const worstDrop = pickWorstDrop(funnel.stages);
 
   const narrative = useMemo(
     () =>
@@ -193,53 +155,38 @@ export default function DashboardPage() {
         marginRate,
         clicksDeltaPct: periodKpis.clicks.deltaPct,
         cpcDeltaPct: periodKpis.cpc.deltaPct,
-        leakStageLabel: worstDrop?.from.label,
       }),
-    [conversion, marginRate, periodKpis.clicks.deltaPct, periodKpis.cpc.deltaPct, worstDrop?.from.label],
+    [conversion, marginRate, periodKpis.clicks.deltaPct, periodKpis.cpc.deltaPct],
   );
 
-  const actionItems = useMemo(
-    () =>
-      deriveActionQueue({
+  const actionItems = useMemo(() => {
+    const items = deriveActionQueue({
         campaigns: allCampaigns,
         marginRate,
         totalSpend: periodKpis.spend.value,
         roasDeltaPct: revenueRoas.roasApprox,
-      }),
-    [allCampaigns, marginRate, periodKpis.spend.value, revenueRoas.roasApprox],
-  );
+      }).filter((item) => item.id.startsWith("pause-") || item.id.startsWith("bep-") || item.id === "coverage");
+    return items.map((item): ActionItem => {
+      const campaign = item.buttons.find((button) => button.target.kind === "campaign")?.target;
+      return {
+        ...item,
+        title: item.id.startsWith("pause-") ? item.title.replace(" 광고를 지금 멈추세요", "의 성과를 확인해보세요") : item.title,
+        body: item.id.startsWith("bep-") ? item.body.replace(/라, 지금 예산을 30% 올리면 공헌이익이 .*?더 나빠져요\./, "예요.") : item.body,
+        buttons: [{ label: "상세 분석 보기", variant: "secondary", target: campaign?.kind === "campaign" ? campaign : { kind: "campaigns" } }],
+      };
+    });
+  }, [allCampaigns, marginRate, periodKpis.spend.value, revenueRoas.roasApprox]);
 
-  const bep = bepRoas(marginRate);
-  const evidenceMetrics = useMemo(
-    () =>
-      buildEvidenceMetrics({
-        roas: conversion?.roas ?? null,
-        roasDeltaPct: revenueRoas.roasApprox,
-        bep,
-        conversionCount: conversion?.conversionCount ?? null,
-        revenue: revenueRoas.revenue.value,
-        revenueDeltaPct: revenueRoas.revenue.deltaPct,
-        cpa: conversion?.cpa ?? null,
-        targetCpa:
-          conversion && marginRate != null && conversion.conversionCount > 0
-            ? Math.round((conversion.conversionValue / conversion.conversionCount) * marginRate)
-            : null,
-      }),
-    [conversion, revenueRoas, dailyCurrent, bep, marginRate],
-  );
-
-  // ADR-064 — 최근 7일 리포트. 항상 splitWindow(dailyAll, 7) 재사용 — 대시보드 7일 토글과 같은 기간 정의·같은 숫자.
-  const { current: report7dCurrent, previous: report7dPrevious } = useMemo(() => splitWindow(dailyAll, 7), [dailyAll]);
-  const report7dKpis = useMemo(() => derivePeriodKpis(report7dCurrent, report7dPrevious), [report7dCurrent, report7dPrevious]);
-  const report7dVerdict = useMemo(() => deriveAccountVerdict(report7dCampaigns.map(toVerdictCampaign)), [report7dCampaigns]);
-  const report7dConversion = useMemo(() => deriveConversionSummary(report7dCampaigns), [report7dCampaigns]);
-  const report7dVerdicts = useMemo(() => deriveCampaignVerdicts(report7dCampaigns.map(toVerdictCampaign)), [report7dCampaigns]);
-  const report7dRows = useMemo(() => report7dTableCampaigns.map(toCampaignTableRow), [report7dTableCampaigns]);
+  const report7dKpis = periodKpis;
+  const report7dVerdict = useMemo(() => deriveAccountVerdict(campaigns.map(toVerdictCampaign)), [campaigns]);
+  const report7dConversion = conversion;
+  const report7dVerdicts = useMemo(() => deriveCampaignVerdicts(campaigns.map(toVerdictCampaign)), [campaigns]);
+  const report7dRows = useMemo(() => allCampaigns.map(toCampaignTableRow), [allCampaigns]);
   const recent7Report: Recent7Report = useMemo(
     () =>
       buildRecent7Report({
-        current: report7dCurrent,
-        previous: report7dPrevious,
+        current: dailyCurrent,
+        previous: dailyPrevious,
         kpis: report7dKpis,
         verdict: report7dVerdict,
         campaignRows: report7dRows,
@@ -248,30 +195,17 @@ export default function DashboardPage() {
         conversionSpend: report7dConversion?.conversionSpend,
         marginRate,
       }),
-    [report7dCurrent, report7dPrevious, report7dKpis, report7dVerdict, report7dRows, report7dVerdicts, report7dConversion, marginRate],
+    [dailyCurrent, dailyPrevious, report7dKpis, report7dVerdict, report7dRows, report7dVerdicts, report7dConversion, marginRate],
   );
   const [reportOpen, setReportOpen] = useState(false);
   const [marginOpen, setMarginOpen] = useState(false);
 
   const loading = campaignsQ.isLoading || trendQ.isLoading;
-  const hasData = !loading && campaigns.length > 0;
 
-  const goMeasurement = () => router.push("/settings?tab=measure");
+  const goMeasurement = () => router.push("/settings#measurement");
   const onAction = (b: ActionButton) => {
-    switch (b.target.kind) {
-      case "campaign":
-        return router.push(`/campaigns/${b.target.id}`);
-      case "campaigns":
-        return router.push("/campaigns");
-      case "measurement":
-        return goMeasurement();
-      case "margin":
-        return setMarginOpen(true);
-    }
-  };
-  const goFunnelStage = (key: FunnelStage["key"]) => {
-    const sort = FUNNEL_SORT_PRESET[key];
-    router.push(sort ? `/campaigns?sort=${sort}&dir=asc` : "/campaigns");
+    const campaign = b.target.kind === "campaign" ? `&campaignId=${encodeURIComponent(b.target.id)}` : "";
+    router.push(`/analysis?period=7d${campaign}`);
   };
 
   const rangeLabel = heroRangeLabel(dailyCurrent.map((d) => d.date));
@@ -280,7 +214,7 @@ export default function DashboardPage() {
     <div className="!mx-auto flex w-full !max-w-[1280px] flex-col gap-7 px-8 py-8 pb-12" data-screen-label="대시보드">
         <div className="flex justify-between items-center gap-4 min-h-11 flex-wrap">
           <div className="flex items-center gap-2.5 min-w-0">
-            <h1 className="w-h4 m-0">광고 현황</h1>
+            <h1 className="w-h4 m-0">이번 주 광고 리포트</h1>
             {browseMode && <Chip variant="neutral" size="sm">{browseExample === "good" ? "좋은 예시" : "나쁜 예시"}</Chip>}
           </div>
           <div className="flex items-center justify-end gap-2 shrink-0 flex-wrap">
@@ -291,11 +225,6 @@ export default function DashboardPage() {
                 options={[{ value: "good", label: "좋은 예시" }, { value: "poor", label: "나쁜 예시" }]}
               />
             )}
-            <SegControl
-              value={period}
-              onChange={setPeriod}
-              options={[{ value: "7d", label: "7일" }, { value: "30d", label: "30일" }]}
-            />
             <Button variant="secondary" type="button" onClick={() => setReportOpen(true)}>리포트 받기</Button>
             <Button variant="primary" type="button" onClick={goCreate}><Icon name="plus" size={16} /> 새 광고 만들기</Button>
           </div>
@@ -344,7 +273,7 @@ export default function DashboardPage() {
                 loading={loading}
                 narrative={narrative}
                 rangeLabel={rangeLabel}
-                periodLabel={PERIOD_STORY[period]}
+                periodLabel={REPORT_STORY}
                 onSetMargin={() => setMarginOpen(true)}
               />
             ) : (
@@ -356,23 +285,12 @@ export default function DashboardPage() {
                 ctr={periodKpis.ctr.value}
                 cpc={periodKpis.cpc.value}
                 rangeLabel={rangeLabel}
-                periodLabel={PERIOD_STORY[period]}
+                periodLabel={REPORT_STORY}
                 onMeasure={goMeasurement}
               />
             )}
 
-            <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] gap-7 items-start">
-              <ActionQueue loading={loading} items={actionItems} onAction={onAction} />
-              <EvidenceRail
-                loading={loading}
-                metrics={evidenceMetrics}
-                funnel={funnel}
-                funnelNote={hasData ? funnelLeakNote(funnel.stages, (narrative?.contribution ?? 0) < 0) : undefined}
-                onFunnelStage={goFunnelStage}
-                goalEmpty={goals.length === 0}
-                onSetGoal={() => router.push("/goals")}
-              />
-            </div>
+            <ActionQueue loading={loading} items={actionItems} onAction={onAction} onViewAll={() => router.push("/analysis?period=7d")} />
           </>
         )}
     </div>

@@ -91,6 +91,11 @@ public class CampaignLaunch extends OwnerScoped {
   @Column(name = "ab_test_variant_b", columnDefinition = "text")
   private JsonNode abTestVariantB;
 
+  /** 빠르게 만들기가 재사용하는 카피 방향·타겟·예산 스냅샷. 서버는 내용을 해석하지 않는다. */
+  @Convert(converter = JsonNodeConverter.class)
+  @Column(name = "quick_start", columnDefinition = "text")
+  private JsonNode quickStart;
+
   @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   @JsonProperty("campaignId")
   public String getCampaignId() { return getId(); }
@@ -127,4 +132,6 @@ public class CampaignLaunch extends OwnerScoped {
   public void setAbTestVariantA(String v) { this.abTestVariantA = v; }
   public JsonNode getAbTestVariantB() { return abTestVariantB; }
   public void setAbTestVariantB(JsonNode v) { this.abTestVariantB = v; }
+  public JsonNode getQuickStart() { return quickStart; }
+  public void setQuickStart(JsonNode v) { this.quickStart = v; }
 }

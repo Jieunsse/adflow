@@ -4,8 +4,10 @@ import ai.adflow.api.internal.InternalSecret;
 import jakarta.servlet.DispatcherType;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authorization.AuthorizationDecision;
 import org.springframework.security.authorization.AuthorizationManager;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -30,8 +32,9 @@ public class SecurityConfig {
                 internalSecret.matches(context.getRequest().getHeader(InternalSecret.HEADER)));
 
     http
-        // 브라우저가 직접 호출하지 않는다(Next.js 서버 전용). 세션도 쿠키도 쓰지 않는 무상태 API.
+        // 일반 API는 Next.js 서버 전용이고, 브라우저는 서명된 published-media PUT만 직접 호출한다.
         .csrf(AbstractHttpConfigurer::disable)
+        .cors(Customizer.withDefaults())
         .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(
             auth ->
@@ -40,6 +43,12 @@ public class SecurityConfig {
                 auth.dispatcherTypeMatchers(DispatcherType.ERROR)
                     .permitAll()
                     .requestMatchers("/actuator/**", "/v3/api-docs/**", "/swagger-ui/**")
+                    .permitAll()
+                    .requestMatchers(HttpMethod.GET, "/files/published-media/**")
+                    .permitAll()
+                    .requestMatchers(HttpMethod.PUT, "/files/published-media/**")
+                    .permitAll()
+                    .requestMatchers(HttpMethod.OPTIONS, "/files/published-media/**")
                     .permitAll()
                     // 교환·갱신은 JWT 를 받기 전/재발급 단계고, cron·Meta webhook 은 세션 없이 도는
                     // 기계 호출이라 JWT 를 실을 수 없다. 여는 것이 아니라 자물쇠를 바꾸는 것이다.

@@ -3,8 +3,11 @@ import { listComments } from "./instagram-comments"
 
 const fetchMock = vi.fn()
 
-function jsonResponse(body: object, ok = true, status = 200) {
-  return { ok, status, json: async () => body }
+function jsonResponse(body: object, _ok = true, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "Content-Type": "application/json" },
+  })
 }
 
 const VALID_COMMENT = {

@@ -6,6 +6,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Goal, GoalMetric } from "@entities/insights/goal";
 import { bepRoas } from "@entities/insights/profit";
+import { clearGoalDraft, loadGoalDraft, saveGoalDraft } from "@features/goal/model/goal-draft";
 import {
   deriveBackcastMap,
   deriveGoalOutlook,
@@ -78,34 +79,55 @@ const BENEFITS: { icon: IconName; title: string; desc: string; bg: string; fg: s
 
 export type GoalWizardProps = {
   goal: Goal | null;
+  step: number;
   inputs: BackcastInputs;
   current: { roas?: number | null; cpa?: number | null };
   marginRate: number | null;
   /** 이름 스텝의 "가져오기" 칩 — 진행 중인 캠페인 이름. */
   campaignNames: string[];
   onSave: (goal: Goal) => void;
+  onStepChange: (step: number) => void;
   onClose: () => void;
   onOpenTracker: (goalId: string) => void;
 };
 
 export function GoalWizard({
   goal,
+  step,
   inputs,
   current,
   marginRate,
   campaignNames,
   onSave,
+  onStepChange,
   onClose,
   onOpenTracker,
 }: GoalWizardProps) {
-  const [step, setStep] = useState(0);
-  const [name, setName] = useState(goal?.name ?? "");
-  const [metric, setMetric] = useState<GoalMetric>(goal?.lag.metric ?? "roas");
-  const [targetDraft, setTargetDraft] = useState(() =>
-    goal && goal.lag.metric !== "contribution" ? String(goal.lag.target) : "",
-  );
-  const [periodDays, setPeriodDays] = useState(goal?.periodDays ?? 30);
+  const goalId = goal?.id ?? null;
+  const initialName = goal?.name ?? "";
+  const initialMetric = goal?.lag.metric ?? "roas";
+  const initialTargetDraft = goal && initialMetric !== "contribution" ? String(goal.lag.target) : "";
+  const initialPeriodDays = goal?.periodDays ?? 30;
+  const [name, setName] = useState(initialName);
+  const [metric, setMetric] = useState<GoalMetric>(initialMetric);
+  const [targetDraft, setTargetDraft] = useState(initialTargetDraft);
+  const [periodDays, setPeriodDays] = useState(initialPeriodDays);
   const [savedGoal, setSavedGoal] = useState<Goal | null>(null);
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    const draft = loadGoalDraft(goalId);
+    setName(draft?.name ?? initialName);
+    setMetric(draft?.metric ?? initialMetric);
+    setTargetDraft(draft?.targetDraft ?? initialTargetDraft);
+    setPeriodDays(draft?.periodDays ?? initialPeriodDays);
+    setHydrated(true);
+  }, [goalId, initialMetric, initialName, initialPeriodDays, initialTargetDraft]);
+
+  useEffect(() => {
+    if (!hydrated || savedGoal) return;
+    saveGoalDraft({ goalId, name, metric, targetDraft, periodDays });
+  }, [goalId, hydrated, metric, name, periodDays, savedGoal, targetDraft]);
 
   const bep = bepRoas(marginRate);
   const isContribution = metric === "contribution";
@@ -129,9 +151,9 @@ export function GoalWizard({
 
   const goNext = () => {
     if (!canAdvance) return;
-    setStep((s) => Math.min(CONFIRM_STEP, s + 1));
+    onStepChange(Math.min(CONFIRM_STEP, step + 1));
   };
-  const goPrev = () => setStep((s) => Math.max(0, s - 1));
+  const goPrev = () => onStepChange(Math.max(0, step - 1));
 
   // Enter 로 다음 스텝. 한글 조합 중 Enter 는 조합 확정이라 넘기면 안 된다(isComposing).
   useEffect(() => {
@@ -139,11 +161,11 @@ export function GoalWizard({
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "Enter" || e.isComposing) return;
       e.preventDefault();
-      if (canAdvance) setStep((s) => Math.min(CONFIRM_STEP, s + 1));
+      if (canAdvance) onStepChange(Math.min(CONFIRM_STEP, step + 1));
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [step, canAdvance, savedGoal]);
+  }, [step, canAdvance, savedGoal, onStepChange]);
 
   const save = () => {
     if (name.trim() === "" || !targetValid || target == null) return;
@@ -158,6 +180,7 @@ export function GoalWizard({
       createdAt: goal?.createdAt ?? new Date().toISOString(),
     };
     onSave(next);
+    clearGoalDraft();
     setSavedGoal(next);
   };
 
@@ -168,7 +191,7 @@ export function GoalWizard({
           goal={savedGoal}
           outlook={outlook}
           leadCount={map.rows.filter((r) => r.target != null).length}
-          onOpenTracker={() => onOpenTracker(savedGoal.id)}
+          onOpenTracker={() => { clearGoalDraft(); onOpenTracker(savedGoal.id); }}
           onClose={onClose}
         />
       </Shell>
@@ -676,13 +699,11 @@ function TargetStep({
       <div className="flex items-end gap-2.5 pb-3.5 border-b-2 border-[var(--w-primary-normal)] w-fit max-w-full">
         <input
           ref={ref}
-          type="number"
-          inputMode="decimal"
-          step={isCpa ? 100 : 0.1}
-          min={0}
-          value={draft}
-          placeholder={isCpa ? "15000" : "3.0"}
-          onChange={(e) => onChange(e.target.value)}
+          type="text"
+          inputMode={isCpa ? "numeric" : "decimal"}
+          value={isCpa && draft ? fmt(Number(draft)) : draft}
+          placeholder={isCpa ? "15,000" : "3.0"}
+          onChange={(e) => onChange(isCpa ? e.target.value.replace(/\D/g, "") : e.target.value)}
           // field-sizing 으로 숫자 폭에 맞춰 줄어든다 — 고정폭이면 단위 'x' 가 저 멀리 떨어진다.
           size={4}
           className="w-auto [field-sizing:content] min-w-[2ch] max-w-full bg-transparent border-none outline-none font-bold text-[56px] sm:text-[76px] leading-none tracking-[-0.045em] text-[var(--w-fg-strong)] [font-variant-numeric:tabular-nums] placeholder:text-[var(--w-fg-alternative)] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { useSession, signIn, signOut } from "next-auth/react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Icon, { type IconName } from "@shared/ui/Icon";
@@ -15,8 +14,23 @@ import { Skeleton } from "@shared/ui/Skeleton";
 import { cn } from "@shared/lib/cn";
 import { fetchAdIdentityPages } from "@entities/page/api";
 import { fetchProfilePictures, profilePicturesQueryKey } from "@entities/page/profile-pictures";
+import { saveWorkspaceTarget } from "@shared/lib/workspace-meta-target-client";
 
 type AccountInfo = { connected: boolean; accountId: string; accountName: string; currency: string };
+type WorkspaceTarget = {
+  adAccountId?: string; adAccountName?: string; pageId?: string; pageName?: string;
+  pixelId?: string; pixelName?: string; igUserId?: string; igUsername?: string;
+};
+
+export function canApplyIgToken(targetIgUserId: string | null, incomingIgUserId: string, isLeader: boolean) {
+  return targetIgUserId ? targetIgUserId === incomingIgUserId : isLeader;
+}
+
+async function fetchWorkspaceTarget() {
+  const res = await fetch("/api/workspace/meta-target");
+  if (!res.ok) throw new Error("워크스페이스 연결 정보를 불러오지 못했어요.");
+  return (await res.json()) as { target: WorkspaceTarget; lastChange: { actor: string; timestamp: string } | null };
+}
 
 // 둘러보기 모드: 실제 로그인 유저가 보는 '연결됨' 화면을 그대로 보여주되 내용만 목업(그린루틴)으로 채워요.
 const BROWSE_CONN = {
@@ -33,21 +47,36 @@ const BROWSE_CONN = {
 } as const;
 const BROWSE_BLOCK_MSG = "둘러보기 모드예요. 실제 계정 연결은 로그인 후에 바꿀 수 있어요.";
 
-async function applyIgToken({ update, showToast, onSuccess }: {
+async function applyIgToken({ update, showToast, onSuccess, targetIgUserId, isLeader }: {
   update: (data: Record<string, unknown>) => Promise<unknown>;
   showToast: (msg: string) => void;
   onSuccess?: () => void;
+  targetIgUserId: string | null;
+  isLeader: boolean;
 }) {
   try {
     const r = await fetch("/api/instagram/token");
-    const data = await r.json() as { igAccessToken?: string; igUserId?: string; igUsername?: string; error?: string };
-    console.log("[IG connect] token response:", r.status, data.error ?? (data.igAccessToken ? "token ok" : "no token"));
-    if (!r.ok || !data.igAccessToken) {
+    const data = await r.json() as { igSessionUpdate?: string; igUserId?: string; igUsername?: string; error?: string };
+    if (!r.ok || !data.igSessionUpdate) {
       showToast(`토큰 저장 실패 (${r.status}) — ${data.error ?? "토큰 없음"}`);
       return false;
     }
-    const newSession = await update({ igAccessToken: data.igAccessToken, igUserId: data.igUserId, igUsername: data.igUsername });
-    console.log("[IG] update result:", (newSession as Record<string, unknown>)?.igAccessToken ? "igAccessToken present" : "igAccessToken MISSING", newSession);
+    if (!data.igUserId || !data.igUsername) {
+      showToast("Instagram 계정 정보를 확인하지 못했어요.");
+      return false;
+    }
+    if (!canApplyIgToken(targetIgUserId, data.igUserId, isLeader)) {
+      showToast(targetIgUserId ? "현재 워크스페이스에 선택된 Instagram 계정과 달라요." : "팀장만 Instagram 연결 대상을 저장할 수 있어요.");
+      return false;
+    }
+    if (!targetIgUserId) {
+      await saveWorkspaceTarget({ igUserId: data.igUserId, igUsername: data.igUsername });
+    }
+    const updated = await update({ igSessionUpdate: data.igSessionUpdate });
+    if (!(updated as { igAccessToken?: string } | null)?.igAccessToken) {
+      showToast("Instagram 토큰을 세션에 적용하지 못했어요. 다시 연결해주세요.");
+      return false;
+    }
     showToast("Instagram 게시 권한이 연결됐어요");
     onSuccess?.();
     return true;
@@ -75,14 +104,14 @@ type PickerItem = {
   igUsername?: string | null;
 };
 
-async function fetchPickerList(kind: PickerKind): Promise<PickerItem[]> {
+async function fetchPickerList(kind: PickerKind, adAccountId?: string): Promise<PickerItem[]> {
   if (kind === "page") {
     return (await fetchAdIdentityPages()).map((page) => ({
       id: page.id, name: page.name, igUserId: page.igUserId, igUsername: page.igUsername,
     }));
   }
 
-  const url = kind === "account" ? "/api/setup/ad-accounts" : "/api/setup/pixels";
+  const url = kind === "account" ? "/api/setup/ad-accounts" : `/api/setup/pixels${adAccountId ? `?adAccountId=${encodeURIComponent(adAccountId)}` : ""}`;
   const res = await fetch(url);
   const data = await res.json();
   if (!res.ok || data?.error) throw new Error(data?.error ?? "목록을 불러오지 못했어요");
@@ -101,7 +130,6 @@ function connCardClass(tone: "neutral" | "warn" | "danger" | "muted") {
 }
 
 export function ConnectionManager({ embedded = false }: { embedded?: boolean }) {
-  const router = useRouter();
   const showToast = useToast();
   const { data: session, update } = useSession();
   const queryClient = useQueryClient();
@@ -111,36 +139,16 @@ export function ConnectionManager({ embedded = false }: { embedded?: boolean }) 
   const [reauthing, setReauthing] = useState(false);
   const [applyingToken, setApplyingToken] = useState(false);
 
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    console.log("[IG connect] search:", window.location.search, "igLinked:", params.get("igLinked"));
-    if (params.get("igLinked") === "1") {
-      window.history.replaceState({}, "", "/settings?tab=account");
-      applyIgToken({ update, showToast, onSuccess: () => window.location.reload() });
-    }
-    if (params.get("igError")) {
-      window.history.replaceState({}, "", "/settings?tab=account");
-      showToast("Instagram 연결에 실패했어요. 다시 시도해주세요.");
-    }
-    if (params.get("notionLinked") === "1") {
-      window.history.replaceState({}, "", "/settings?tab=account");
-      queryClient.invalidateQueries({ queryKey: ["notion-status"] });
-      showToast("Notion 워크스페이스를 연결했어요");
-    }
-    if (params.get("notionError")) {
-      window.history.replaceState({}, "", "/settings?tab=account");
-      showToast("Notion 연결에 실패했어요. 다시 시도해주세요.");
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   const browseMode = !!session?.browseMode;
-  const connected = !!(session?.adAccountId && session?.pageId);
+  const isLeader = session?.role === "팀장" || browseMode;
+  const targetQ = useQuery({ queryKey: ["workspace-meta-target"], queryFn: fetchWorkspaceTarget, enabled: !browseMode });
+  const target = targetQ.data?.target;
+  const connected = !!(target?.adAccountId && target?.pageId);
   const showConnected = connected || browseMode;
 
   const accountQ = useQuery({ queryKey: ["account"], queryFn: fetchAccount, enabled: connected });
   const picturesQ = useQuery({
-    queryKey: profilePicturesQueryKey(session?.pageId, session?.igUserId),
+    queryKey: profilePicturesQueryKey(target?.pageId, target?.igUserId),
     queryFn: fetchProfilePictures,
     enabled: connected,
     staleTime: 5 * 60 * 1000,
@@ -148,46 +156,71 @@ export function ConnectionManager({ embedded = false }: { embedded?: boolean }) 
   const tokenExpired = (accountQ.error as { code?: number } | null)?.code === 401;
   const accountStatus: "active" | "disabled" = accountQ.data && accountQ.data.connected === false ? "disabled" : "active";
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("igLinked") === "1") {
+      window.history.replaceState({}, "", "/connect");
+      applyIgToken({ update, showToast, targetIgUserId: igUserId, isLeader, onSuccess: () => window.location.reload() });
+    }
+    if (params.get("igError")) {
+      window.history.replaceState({}, "", "/connect");
+      showToast("Instagram 연결에 실패했어요. 다시 시도해주세요.");
+    }
+    if (params.get("notionLinked") === "1") {
+      window.history.replaceState({}, "", "/connect");
+      queryClient.invalidateQueries({ queryKey: ["notion-status"] });
+      showToast("Notion 워크스페이스를 연결했어요");
+    }
+    if (params.get("notionError")) {
+      window.history.replaceState({}, "", "/connect");
+      showToast("Notion 연결에 실패했어요. 다시 시도해주세요.");
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const memberName = browseMode ? BROWSE_CONN.memberName : session?.user?.name ?? "";
   const memberImage = browseMode ? null : session?.user?.image ?? null;
-  const accountName = browseMode ? BROWSE_CONN.accountName : session?.adAccountName ?? accountQ.data?.accountName ?? "—";
-  const accountId = browseMode ? BROWSE_CONN.accountId : session?.adAccountId ?? accountQ.data?.accountId ?? "—";
+  const accountName = browseMode ? BROWSE_CONN.accountName : target?.adAccountName ?? accountQ.data?.accountName ?? "—";
+  const accountId = browseMode ? BROWSE_CONN.accountId : target?.adAccountId ?? "—";
   const currency = browseMode ? BROWSE_CONN.currency : accountQ.data?.currency ?? "—";
-  const pageName = browseMode ? BROWSE_CONN.pageName : session?.pageName ?? "—";
-  const pageId = browseMode ? BROWSE_CONN.pageId : session?.pageId ?? "—";
-  const pixelName = browseMode ? BROWSE_CONN.pixelName : session?.pixelName ?? null;
-  const pixelId = browseMode ? BROWSE_CONN.pixelId : session?.pixelId ?? null;
-  const igUserId = browseMode ? BROWSE_CONN.igUserId : session?.igUserId || null;
-  const igUsername = browseMode ? BROWSE_CONN.igUsername : session?.igUsername || null;
+  const pageName = browseMode ? BROWSE_CONN.pageName : target?.pageName ?? "—";
+  const pageId = browseMode ? BROWSE_CONN.pageId : target?.pageId ?? "—";
+  const pixelName = browseMode ? BROWSE_CONN.pixelName : target?.pixelName ?? null;
+  const pixelId = browseMode ? BROWSE_CONN.pixelId : target?.pixelId ?? null;
+  const igUserId = browseMode ? BROWSE_CONN.igUserId : target?.igUserId || null;
+  const igUsername = browseMode ? BROWSE_CONN.igUsername : target?.igUsername || null;
 
   const handleReauth = () => {
     if (browseMode) { showToast(BROWSE_BLOCK_MSG); return; }
-    setReauthing(true); signIn("facebook", { callbackUrl: "/settings?tab=account" });
+    setReauthing(true);
+    void signIn("facebook", { callbackUrl: "/connect" }).catch(() => {
+      setReauthing(false);
+      showToast("Meta 재인증을 시작하지 못했어요. 잠시 후 다시 시도해주세요.");
+    });
   };
   const handleDisconnect = () => { signOut({ callbackUrl: "/login" }); };
   const handleChange = (kind: PickerKind) => () => {
     if (browseMode) { showToast(BROWSE_BLOCK_MSG); return; }
+    if (!isLeader) { showToast("팀장만 워크스페이스 연결 대상을 변경할 수 있어요."); return; }
     setPickerOpen(kind);
   };
 
   const pickAccount = async (it: PickerItem) => {
-    await update?.({ adAccountId: it.id, adAccountName: it.name });
+    await saveWorkspaceTarget({ adAccountId: it.id, adAccountName: it.name, pixelId: "", pixelName: "" });
+    await targetQ.refetch();
     setPickerOpen(null);
     showToast(`'${it.name}'(으)로 변경했어요`);
     accountQ.refetch();
   };
   const pickPage = async (it: PickerItem) => {
-    await update?.({
-      pageId: it.id,
-      pageName: it.name,
-      igUserId: it.igUserId ?? "",
-      igUsername: it.igUsername ?? "",
-    });
+    await saveWorkspaceTarget({ pageId: it.id, pageName: it.name, igUserId: it.igUserId ?? "", igUsername: it.igUsername ?? "" });
+    await targetQ.refetch();
     setPickerOpen(null);
     showToast(`'${it.name}'(으)로 변경했어요`);
   };
   const pickPixel = async (it: PickerItem) => {
-    await update?.({ pixelId: it.id, pixelName: it.name });
+    await saveWorkspaceTarget({ pixelId: it.id, pixelName: it.name });
+    await targetQ.refetch();
     setPickerOpen(null);
     showToast(`'${it.name}'(으)로 변경했어요`);
   };
@@ -203,7 +236,7 @@ export function ConnectionManager({ embedded = false }: { embedded?: boolean }) 
       </div>}
 
       {!showConnected ? (
-        <UnconnectedCTA onConnect={() => router.push("/setup")} />
+        <UnconnectedCTA editable={isLeader} onConnect={() => setPickerOpen(target?.adAccountId ? "page" : "account")} />
       ) : accountQ.isLoading ? (
         <ConnectSkeleton />
       ) : accountQ.isError && !tokenExpired ? (
@@ -222,7 +255,7 @@ export function ConnectionManager({ embedded = false }: { embedded?: boolean }) 
               username={igUsername}
               id={igUserId}
               picture={picturesQ.data?.igPicture ?? null}
-              pageId={session?.pageId ?? null}
+              pageId={pageId === "—" ? null : pageId}
               igAccessToken={browseMode ? "browse-token" : session?.igAccessToken ?? null}
               disabled={tokenExpired}
               browseMode={browseMode}
@@ -230,7 +263,7 @@ export function ConnectionManager({ embedded = false }: { embedded?: boolean }) 
               applyingToken={applyingToken}
               onApplyToken={async () => {
                 setApplyingToken(true);
-                await applyIgToken({ update, showToast, onSuccess: () => window.location.reload() });
+                await applyIgToken({ update, showToast, targetIgUserId: igUserId, isLeader, onSuccess: () => window.location.reload() });
                 setApplyingToken(false);
               }}
               onReload={() => {
@@ -243,13 +276,14 @@ export function ConnectionManager({ embedded = false }: { embedded?: boolean }) 
 
           <PermissionsDisclosure open={permsOpen} onToggle={() => setPermsOpen((o) => !o)} />
 
+          {targetQ.data?.lastChange && <div className="font-medium text-[12px] text-[var(--w-fg-neutral)]">마지막 변경: {new Date(targetQ.data.lastChange.timestamp).toLocaleString("ko-KR")} · {targetQ.data.lastChange.actor}</div>}
           <div className="flex items-center gap-4 px-[22px] py-[18px] bg-[rgba(255,66,66,0.04)] dark:bg-[rgba(255,66,66,0.06)] border border-[rgba(255,66,66,0.20)] rounded-[14px] mt-1">
             <div style={{ flex: 1 }}>
-              <div className="font-bold text-[14px] leading-[1.3] text-[var(--w-status-negative)]">Meta 연결 해제</div>
-              <div className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)] mt-1">해제하면 캠페인 성과 조회·게재 제어가 멈춰요. 다시 연결하려면 로그아웃 후 Facebook으로 다시 로그인하면 돼요.</div>
+              <div className="font-bold text-[14px] leading-[1.3] text-[var(--w-status-negative)]">Meta 로그아웃</div>
+              <div className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)] mt-1">이 기기의 Meta 인증을 종료해요. 워크스페이스 연결 대상은 유지돼요.</div>
             </div>
             <Button variant="danger" type="button" onClick={() => browseMode ? showToast(BROWSE_BLOCK_MSG) : setConfirmDisconnect(true)}>
-              <Icon name="link" size={14} /> 연결 해제
+              <Icon name="logout" size={14} /> Meta 로그아웃
             </Button>
           </div>
         </div>
@@ -260,23 +294,23 @@ export function ConnectionManager({ embedded = false }: { embedded?: boolean }) 
           <span className="font-semibold text-[11px] leading-[1.45] tracking-[0.04em] uppercase text-[var(--w-fg-neutral)]">콘텐츠 소스</span>
           <h2 className="m-0 font-bold text-[18px] leading-[1.3] tracking-[-0.016em] text-[var(--w-fg-strong)]" style={{ marginTop: 4 }}>외부 자료 연결</h2>
         </div>
-        <NotionCard browseMode={browseMode} onBrowseBlock={() => showToast(BROWSE_BLOCK_MSG)} />
+        <NotionCard browseMode={browseMode} editable={isLeader} onBrowseBlock={() => showToast(BROWSE_BLOCK_MSG)} />
       </div>
 
       {pickerOpen === "account" && (
-        <PickerModal kind="account" title="광고 계정 변경" subtitle="이 워크스페이스에서 사용할 Meta 광고 계정을 골라주세요." currentId={session?.adAccountId} onClose={() => setPickerOpen(null)} onPick={pickAccount} />
+        <PickerModal kind="account" title="광고 계정 변경" subtitle="이 워크스페이스에서 사용할 Meta 광고 계정을 골라주세요." currentId={target?.adAccountId} onClose={() => setPickerOpen(null)} onPick={pickAccount} />
       )}
       {pickerOpen === "page" && (
-        <PickerModal kind="page" title="페이스북 페이지 변경" subtitle="광고가 어느 페이지 명의로 게재될지 골라주세요." currentId={session?.pageId} onClose={() => setPickerOpen(null)} onPick={pickPage} />
+        <PickerModal kind="page" title="페이스북 페이지 변경" subtitle="광고가 어느 페이지 명의로 게재될지 골라주세요." currentId={target?.pageId} onClose={() => setPickerOpen(null)} onPick={pickPage} />
       )}
       {pickerOpen === "pixel" && (
-        <PickerModal kind="pixel" title="Facebook Pixel 선택" subtitle="광고 성과 추적에 사용할 Pixel을 골라주세요. 없으면 건너뛰어도 돼요." currentId={session?.pixelId} onClose={() => setPickerOpen(null)} onPick={pickPixel} />
+        <PickerModal kind="pixel" title="Facebook Pixel 선택" subtitle="광고 성과 추적에 사용할 Pixel을 골라주세요. 없으면 건너뛰어도 돼요." currentId={target?.pixelId} adAccountId={target?.adAccountId} onClose={() => setPickerOpen(null)} onPick={pickPixel} />
       )}
       {confirmDisconnect && (
         <ConfirmModal
-          title="Meta 연결을 해제할까요?"
-          desc="해제하면 집행 중인 캠페인의 성과·제어를 AdFlow에서 볼 수 없고, 다시 연결하기 전엔 새 광고를 게재할 수 없어요. 이미 Meta에 올라간 광고 자체는 Meta에서 계속 돌아갑니다. (로그아웃되며, 다시 연결하려면 Facebook으로 다시 로그인하면 돼요.)"
-          confirmLabel="연결 해제"
+          title="Meta에서 로그아웃할까요?"
+          desc="이 기기의 Meta 인증만 종료해요. 워크스페이스가 사용하는 광고 계정·페이지·Pixel 선택은 바뀌지 않아요."
+          confirmLabel="Meta 로그아웃"
           tone="danger"
           onClose={() => setConfirmDisconnect(false)}
           onConfirm={handleDisconnect}
@@ -571,14 +605,14 @@ function InstagramCard({ username, id, picture, pageId, igAccessToken, disabled,
 }
 
 // ADR-043 — Notion Connection 카드. Meta 연결과 독립(자체 상태 조회).
-function NotionCard({ browseMode, onBrowseBlock }: { browseMode: boolean; onBrowseBlock: () => void }) {
+function NotionCard({ browseMode, editable, onBrowseBlock }: { browseMode: boolean; editable: boolean; onBrowseBlock: () => void }) {
   const showToast = useToast();
   const [disconnecting, setDisconnecting] = useState(false);
   const statusQ = useQuery({
     queryKey: ["notion-status"],
     queryFn: async () => {
       const res = await fetch("/api/notion/status");
-      return (await res.json()) as { connected: boolean; workspaceName: string | null; workspaceIcon: string | null };
+      return (await res.json()) as { connected: boolean; workspaceName: string | null; workspaceIcon: string | null; lastChange?: { actor: string; timestamp: string } | null };
     },
     enabled: !browseMode,
   });
@@ -612,12 +646,13 @@ function NotionCard({ browseMode, onBrowseBlock }: { browseMode: boolean; onBrow
                 ? "브랜드 프로필 만들 때 '노션에서 가져오기'로 흩어진 브랜드 자료를 끌어올 수 있어요."
                 : "노션에 정리해둔 브랜드 자료를 브랜드 프로필로 가져오려면 워크스페이스를 연결하세요."}
             </div>
+            {statusQ.data?.lastChange && <div className="font-medium text-[12px] leading-[1.4] text-[var(--w-fg-alternative)] mt-2">마지막 변경: {new Date(statusQ.data.lastChange.timestamp).toLocaleString("ko-KR")} · {statusQ.data.lastChange.actor}</div>}
           </div>
           <div className="flex flex-col gap-2.5 items-end flex-none">
             {connected
               ? <span className="inline-flex items-center gap-[5px] px-[9px] py-[3px] rounded-full font-semibold text-[12px] leading-none text-[var(--w-status-positive)] bg-[rgba(0,191,64,0.10)] dark:bg-[rgba(73,229,125,0.14)] dark:text-[#49e57d]"><span className="w-1.5 h-1.5 rounded-full bg-[var(--w-status-positive)] dark:bg-[#49e57d]" /> 연결됨</span>
               : <span className="inline-flex items-center gap-[5px] px-2.5 py-1 rounded-full font-semibold text-[12px] leading-none text-[var(--w-status-cautionary)] bg-[rgba(255,146,0,0.12)]"><Icon name="warn" size={12} /> 미연결</span>}
-            {connected ? (
+            {connected && editable ? (
               <Button variant="ghost" size="sm" type="button" onClick={handleDisconnect} disabled={disconnecting}>
                 <Icon name="link" size={13} /> {disconnecting ? "해제 중…" : "연결 해제"}
               </Button>
@@ -625,11 +660,11 @@ function NotionCard({ browseMode, onBrowseBlock }: { browseMode: boolean; onBrow
               <Button variant="primary" size="sm" type="button" onClick={onBrowseBlock}>
                 <Icon name="link" size={13} /> Notion 연결하기
               </Button>
-            ) : (
+            ) : !connected && editable ? (
               <a className={buttonVariants({ variant: "primary", size: "sm" })} href="/api/notion/connect">
                 <Icon name="link" size={13} /> Notion 연결하기
               </a>
-            )}
+            ) : null}
           </div>
         </div>
       </div>
@@ -676,7 +711,7 @@ function PermissionsDisclosure({ open, onToggle }: { open: boolean; onToggle: ()
   );
 }
 
-function UnconnectedCTA({ onConnect }: { onConnect: () => void }) {
+function UnconnectedCTA({ editable, onConnect }: { editable: boolean; onConnect: () => void }) {
   return (
     <div className="relative overflow-hidden bg-[var(--w-bg-elevated)] border border-[var(--w-line-normal)] rounded-[18px] p-[48px_48px_40px] text-center before:content-[''] before:absolute before:inset-x-0 before:top-0 before:h-[220px] before:bg-[radial-gradient(circle_at_50%_0%,rgba(0,102,255,0.08),transparent_60%)] dark:before:bg-[radial-gradient(circle_at_50%_0%,rgba(0,102,255,0.18),transparent_60%)] before:pointer-events-none">
       <div className="relative inline-flex items-center justify-center gap-3.5 mb-[22px] z-[1]">
@@ -698,8 +733,12 @@ function UnconnectedCTA({ onConnect }: { onConnect: () => void }) {
           <li className="flex items-center gap-2.5 font-medium text-[14px] leading-[1.45] text-[var(--w-fg-strong)] [&_svg]:text-[var(--w-fg-neutral)]"><Icon name="doc" size={15} /> 관리 중인 페이스북 페이지 1개</li>
         </ul>
       </div>
-      <Button variant="fb" type="button" onClick={onConnect}><Icon name="facebook" size={16} /> 광고 계정·페이지 연결하기</Button>
-      <div className="font-medium text-[12px] leading-[1.5] text-[var(--w-fg-alternative)] mt-3.5 relative z-[1]">이미 Facebook으로 로그인돼 있어요. 광고 계정과 페이지를 골라주세요.</div>
+      {editable ? (
+        <>
+          <Button variant="fb" type="button" onClick={onConnect}><Icon name="facebook" size={16} /> 광고 계정·페이지 연결하기</Button>
+          <div className="font-medium text-[12px] leading-[1.5] text-[var(--w-fg-alternative)] mt-3.5 relative z-[1]">이미 Facebook으로 로그인돼 있어요. 광고 계정과 페이지를 골라주세요.</div>
+        </>
+      ) : <div className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)] relative z-[1]">팀장이 워크스페이스 연결을 완료하면 여기에서 확인할 수 있어요.</div>}
     </div>
   );
 }
@@ -714,10 +753,10 @@ function CtaFeature({ icon, title, desc }: { icon: IconName; title: string; desc
   );
 }
 
-function PickerModal({ kind, title, subtitle, currentId, onClose, onPick }: {
-  kind: PickerKind; title: string; subtitle: string; currentId?: string; onClose: () => void; onPick: (it: PickerItem) => void | Promise<void>;
+function PickerModal({ kind, title, subtitle, currentId, adAccountId, onClose, onPick }: {
+  kind: PickerKind; title: string; subtitle: string; currentId?: string; adAccountId?: string; onClose: () => void; onPick: (it: PickerItem) => void | Promise<void>;
 }) {
-  const q = useQuery({ queryKey: ["picker-list", kind], queryFn: () => fetchPickerList(kind) });
+  const q = useQuery({ queryKey: ["picker-list", kind, adAccountId], queryFn: () => fetchPickerList(kind, adAccountId) });
   const [picking, setPicking] = useState<string | null>(null);
   const items = q.data ?? [];
 

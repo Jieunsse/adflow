@@ -12,6 +12,7 @@ import type { Session } from 'next-auth'
 import { authOptions } from './auth'
 import { resolveAccessToken, resolveAdAccountId } from './env'
 import { AuthError, withRouteHandler } from './route-handler'
+import { getWorkspaceMetaTarget } from './workspace-meta-target'
 
 // accessToken 은 baseline(모든 가드 라우트 필요). 아래는 추가 요구 tier.
 export type SessionRequirement = 'adAccount' | 'page' | 'ig'
@@ -55,6 +56,25 @@ export function requireMetaSession(
   }
 }
 
+export async function getWorkspaceSession(session: Session | null): Promise<Session | null> {
+  if (!session || session.browseMode) return session
+
+  const target = await getWorkspaceMetaTarget()
+  const igTargetChanged = target.igUserId !== undefined && target.igUserId !== session.igUserId
+  return {
+    ...session,
+    adAccountId: target.adAccountId ?? session.adAccountId,
+    adAccountName: target.adAccountName ?? session.adAccountName,
+    pageId: target.pageId ?? session.pageId,
+    pageName: target.pageName ?? session.pageName,
+    pixelId: target.pixelId ?? session.pixelId,
+    pixelName: target.pixelName ?? session.pixelName,
+    igUserId: target.igUserId ?? session.igUserId,
+    igUsername: target.igUsername ?? session.igUsername,
+    igAccessToken: igTargetChanged ? undefined : session.igAccessToken,
+  }
+}
+
 export interface MetaSessionOptions {
   // browse 세션일 때 route 고유 mock 페이로드를 반환(guard 는 payload 를 소유하지 않음).
   // 없으면 browse 세션은 real-only 로 간주 → requireMetaSession 이 401.
@@ -75,7 +95,8 @@ export function withMetaSession<C = unknown>(
       if (session?.browseMode && opts.onBrowse) {
         return opts.onBrowse(session, req)
       }
-      const s = requireMetaSession(session, requires)
+      const workspaceSession = await getWorkspaceSession(session)
+      const s = requireMetaSession(workspaceSession, requires)
       return handler(req, s, ctx)
     })
 }

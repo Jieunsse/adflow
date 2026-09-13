@@ -1,7 +1,7 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import Icon from "@shared/ui/Icon";
 import IdField from "@shared/ui/IdField";
@@ -11,27 +11,13 @@ import { Card } from "@shared/ui/Card";
 import { cn } from "@shared/lib/cn";
 import { useToast } from "@shared/ui/Toast";
 import { useNotifSettings } from "@shared/lib/notifications";
-import { notifyScopedStorageChange, useScopedStorage } from "@shared/lib/storage/useScopedStorage";
+import { notifyScopedStorageChange } from "@shared/lib/storage/useScopedStorage";
 import { onboardedKey } from "@widgets/onboarding-guard";
-import { ConnectionManager } from "../connect/ConnectionManager";
-
-type Tab = "account" | "measure" | "notif" | "danger";
-const TABS: [Tab, string][] = [["account", "연결 관리"], ["measure", "전환 측정"], ["notif", "알림"], ["danger", "계정 관리"]];
-const isTab = (v: string | null): v is Tab => TABS.some(([k]) => k === v);
 
 export default function SettingsPage() {
-  // useSearchParams 는 Suspense 경계를 요구한다(정적 렌더 중 CSR bailout).
-  return (
-    <Suspense fallback={null}>
-      <SettingsBody />
-    </Suspense>
-  );
-}
-
-function SettingsBody() {
-  // 대시보드 "측정 스크립트 받기" 등 딥링크(?tab=measure). 이후 탭 전환은 로컬 상태.
-  const initialTab = useSearchParams().get("tab");
-  const [tab, setTab] = useState<Tab>(isTab(initialTab) ? initialTab : "account");
+  const { data: session } = useSession();
+  const browseMode = !!session?.browseMode;
+  const isLeader = session?.role === "팀장" || browseMode;
 
   return (
     <div className="px-12 py-9 pb-16 max-w-[1280px] w-full mx-auto flex flex-col gap-7" data-screen-label="설정">
@@ -39,41 +25,34 @@ function SettingsBody() {
         <div>
           <span className="font-semibold text-[11px] leading-[1.45] tracking-[0.04em] uppercase text-[var(--w-fg-neutral)]">설정</span>
           <h1 className="m-0 font-bold text-[28px] leading-[1.25] tracking-[-0.024em] text-[var(--w-fg-strong)]" style={{ marginTop: 4 }}>설정</h1>
-          <p className="font-medium text-[14px] leading-[1.5] tracking-[0.004em] text-[var(--w-fg-neutral)] mt-1.5 mb-0">서비스 연결, 전환 측정, 알림을 관리해요.</p>
+          <p className="font-medium text-[14px] leading-[1.5] tracking-[0.004em] text-[var(--w-fg-neutral)] mt-1.5 mb-0">내 환경과 워크스페이스 운영 설정을 관리해요.</p>
         </div>
       </div>
 
-      <div className="inline-flex gap-0.5 p-[3px] bg-[var(--w-bg-alternative)] rounded-[10px]">
-        {TABS.map(([k, l]) => (
-          <button
-            key={k}
-            type="button"
-            onClick={() => setTab(k)}
-            className={cn(
-              "border-none px-3.5 py-2 rounded-lg font-semibold text-[13px] leading-none cursor-pointer transition-[background,color] duration-[120ms]",
-              tab === k
-                ? "bg-[var(--w-bg-elevated)] text-[var(--w-fg-strong)] shadow-[0_1px_2px_rgba(23,23,23,0.08)]"
-                : "bg-transparent text-[var(--w-fg-neutral)]"
-            )}
-          >
-            {l}
-          </button>
-        ))}
-      </div>
+      <section className="flex flex-col gap-3">
+        <div><span className="w-overline text-[var(--w-fg-neutral)]">내 환경</span><h2 className="w-h3 m-0 mt-1 text-[var(--w-fg-strong)]">이 기기 설정</h2></div>
+        <div className="flex flex-col gap-5"><NotifTab /><DangerTab /></div>
+      </section>
 
-      {tab === "account" && <AccountTab />}
-      {tab === "measure" && <MeasureTab />}
-      {tab === "notif" && <NotifTab />}
-      {tab === "danger" && <DangerTab />}
+      <section id="measurement" className="flex flex-col gap-3">
+        <div><span className="w-overline text-[var(--w-fg-neutral)]">워크스페이스</span><h2 className="w-h3 m-0 mt-1 text-[var(--w-fg-strong)]">전환 측정</h2></div>
+        <MeasureTab />
+      </section>
+
+      {isLeader && (
+        <section className="flex flex-col gap-3">
+          <div><span className="w-overline text-[var(--w-fg-neutral)]">관리자</span><h2 className="w-h3 m-0 mt-1 text-[var(--w-fg-strong)]">서비스 자격증명</h2></div>
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+            <MetaAppCard previewMode={browseMode} />
+            <GeminiApiKeyCard previewMode={browseMode} />
+          </div>
+        </section>
+      )}
     </div>
   );
 }
 
 // ── 전환 측정 ────────────────────────────────────────────────────────────────
-// 대시보드가 "손익을 계산할 수 없는 광고비"를 지적할 때 보내는 곳. 픽셀 ID 를 받아 붙여넣을
-// 스크립트를 만들어 준다. ID 는 이 브라우저에만 저장 — 서버 설치·검증까지는 아직 안 한다.
-const PIXEL_ID_KEY = "adflow_pixel_id";
-
 function pixelBaseSnippet(id: string) {
   return `<!-- Meta Pixel Code -->
 <script>
@@ -108,7 +87,17 @@ const MEASURE_STEPS: [string, string][] = [
 
 function MeasureTab() {
   const showToast = useToast();
-  const [pixelId, setPixelId] = useScopedStorage<string>("local", PIXEL_ID_KEY, "");
+  const router = useRouter();
+  const [pixelId, setPixelId] = useState("");
+  const [pixelName, setPixelName] = useState("");
+  useEffect(() => {
+    fetch("/api/workspace/meta-target")
+      .then((res) => res.json())
+      .then((data: { target?: { pixelId?: string; pixelName?: string } }) => {
+        setPixelId(data.target?.pixelId ?? "");
+        setPixelName(data.target?.pixelName ?? "");
+      });
+  }, []);
   const activeId = pixelId || "<픽셀 ID>";
 
   const copy = (text: string, label: string) => {
@@ -126,21 +115,22 @@ function MeasureTab() {
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
               <h2 className="m-0 font-bold text-[17px] leading-[1.3] tracking-[-0.012em] text-[var(--w-fg-strong)]">전환 측정</h2>
-              {pixelId ? <Chip variant="success" size="sm" dot>ID 저장됨</Chip> : <Chip variant="warn" size="sm">미설정</Chip>}
+              {pixelId ? <Chip variant="success" size="sm" dot>연결됨</Chip> : <Chip variant="warn" size="sm">미설정</Chip>}
             </div>
             <p className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)] mt-1 mb-0">
-              구매가 어디서 일어났는지 알아야 ROAS와 손익을 계산할 수 있어요. 픽셀 ID를 넣으면 붙여넣을 스크립트를 만들어 드려요.
+              구매가 어디서 일어났는지 알아야 ROAS와 손익을 계산할 수 있어요. 연결에서 고른 워크스페이스 Pixel로 코드를 만들어요.
             </p>
           </div>
         </div>
         <hr className="h-px bg-[var(--w-line-neutral)] my-[18px] border-0" />
-        {/* key=pixelId — storage hydrate(마운트 뒤 비동기) 가 끝나면 입력값을 저장된 ID 로 다시 세운다. */}
-        <PixelIdForm
-          key={pixelId}
-          saved={pixelId}
-          onSave={(id) => { setPixelId(id); showToast("픽셀 ID를 저장했어요."); }}
-          onClear={() => setPixelId("")}
-        />
+        {pixelId ? (
+          <IdField label="워크스페이스 Pixel" id={pixelId} desc={pixelName || "연결 화면에서 선택한 전환 측정 Pixel이에요."} />
+        ) : (
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <p className="m-0 font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)]">Pixel을 선택하면 아래 코드에 자동으로 채워져요.</p>
+            <Button variant="secondary" size="sm" type="button" onClick={() => router.push("/connect")}>연결에서 Pixel 선택</Button>
+          </div>
+        )}
       </Card>
 
       <Card variant="lg" className="flex flex-col gap-0">
@@ -164,7 +154,7 @@ function MeasureTab() {
         desc="방문·조회를 잡아요. 이게 없으면 구매 이벤트도 안 잡혀요."
         code={pixelBaseSnippet(activeId)}
         onCopy={() => copy(pixelBaseSnippet(activeId), "기본 코드")}
-        warn={!pixelId ? "픽셀 ID를 먼저 저장하면 코드에 자동으로 채워져요." : undefined}
+        warn={!pixelId ? "연결에서 Pixel을 선택하면 코드에 자동으로 채워져요." : undefined}
       />
       <SnippetCard
         title="구매 이벤트 — 주문 완료 페이지"
@@ -178,34 +168,6 @@ function MeasureTab() {
         <span>붙인 뒤 Meta 이벤트 관리자에서 &apos;테스트 이벤트&apos;로 실제로 들어오는지 확인해 주세요. 데이터는 보통 20분 안에 대시보드에 반영돼요.</span>
       </div>
     </div>
-  );
-}
-
-function PixelIdForm({ saved, onSave, onClear }: { saved: string; onSave: (id: string) => void; onClear: () => void }) {
-  const [draft, setDraft] = useState(saved);
-  const valid = /^\d{10,20}$/.test(draft.trim());
-
-  return (
-    <>
-      <label className="font-semibold text-[13px] text-[var(--w-fg-strong)]" htmlFor="pixel-id">Meta 픽셀 ID</label>
-      <div className="flex items-center gap-2 mt-2 flex-wrap">
-        <input
-          id="pixel-id"
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          placeholder="1234567890123456"
-          inputMode="numeric"
-          className="w-[260px] px-3 py-2 rounded-lg border border-[var(--w-line-normal)] bg-[var(--w-bg-elevated)] font-medium text-[14px] [font-family:var(--w-font-mono)] text-[var(--w-fg-strong)] focus:outline-none focus:border-[var(--w-primary-normal)]"
-        />
-        <Button variant="primary" size="md" type="button" disabled={!valid} onClick={() => onSave(draft.trim())}>저장</Button>
-        {saved && <Button variant="ghost" size="md" type="button" onClick={onClear}>지우기</Button>}
-      </div>
-      <p className="font-medium text-[12px] leading-[1.5] text-[var(--w-fg-neutral)] mt-2 mb-0">
-        {draft.trim() && !valid
-          ? "픽셀 ID는 숫자 10~20자리예요. 다시 확인해 주세요."
-          : "이 브라우저에만 저장돼요. 아래 스크립트에 자동으로 채워 넣는 용도예요."}
-      </p>
-    </>
   );
 }
 
@@ -228,20 +190,6 @@ function SnippetCard({ title, desc, code, onCopy, warn }:{ title: string; desc: 
     </Card>
   );
 }
-
-function AccountTab() {
-  const { data: session } = useSession();
-  const browseMode = !!session?.browseMode;
-
-  return (
-    <div className="flex flex-col gap-5">
-      {(session?.role === "팀장" || browseMode) && <MetaAppCard previewMode={browseMode} />}
-      {(session?.role === "팀장" || browseMode) && <GeminiApiKeyCard previewMode={browseMode} />}
-      <ConnectionManager embedded />
-    </div>
-  );
-}
-
 
 interface MetaAppState {
   configured: boolean;

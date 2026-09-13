@@ -31,6 +31,8 @@ function LoginContent() {
   const errorCode = searchParams.get("error");
   const errorMessage = errorCode ? (ERROR_MESSAGES[errorCode] ?? ERROR_MESSAGES.Default) : null;
   const [loading, setLoading] = useState(false);
+  const [facebookAvailable, setFacebookAvailable] = useState<boolean | null>(null);
+  const [loginError, setLoginError] = useState<string | null>(null);
 
   useEffect(() => {
     const prev = document.documentElement.getAttribute("data-theme");
@@ -40,19 +42,45 @@ function LoginContent() {
     };
   }, []);
 
-  if (errorCode && typeof window !== "undefined") {
-    console.error("[AdFlow][login] NextAuth error code:", errorCode, "| URL:", window.location.href);
+  useEffect(() => {
+    fetch("/api/auth/providers", { cache: "no-store" })
+      .then((res) => res.ok ? res.json() : {})
+      .then((providers: Record<string, unknown>) => setFacebookAvailable(!!providers.facebook))
+      .catch(() => setFacebookAvailable(false));
+  }, []);
+
+  async function handleLogin() {
+    if (facebookAvailable !== true) return;
+    setLoading(true);
+    setLoginError(null);
+    try {
+      const result = await signIn("facebook", { callbackUrl: "/dashboard", redirect: false });
+      if (result?.error) setLoginError(ERROR_MESSAGES[result.error] ?? ERROR_MESSAGES.Default);
+      else if (result?.url) window.location.assign(result.url);
+      else setLoginError(ERROR_MESSAGES.Default);
+    } catch {
+      setLoginError(ERROR_MESSAGES.Default);
+    } finally {
+      setLoading(false);
+    }
   }
 
-  function handleLogin() {
+  async function handleBrowse() {
     setLoading(true);
-    signIn("facebook", { callbackUrl: "/dashboard" });
+    setLoginError(null);
+    try {
+      const result = await signIn("guest", { callbackUrl: "/dashboard", redirect: false });
+      if (result?.error) setLoginError(ERROR_MESSAGES[result.error] ?? ERROR_MESSAGES.Default);
+      else if (result?.url) window.location.assign(result.url);
+      else setLoginError(ERROR_MESSAGES.Default);
+    } catch {
+      setLoginError(ERROR_MESSAGES.Default);
+    } finally {
+      setLoading(false);
+    }
   }
 
-  function handleBrowse() {
-    setLoading(true);
-    signIn("guest", { callbackUrl: "/dashboard" });
-  }
+  const visibleError = loginError ?? errorMessage;
 
   return (
     <div
@@ -111,13 +139,13 @@ function LoginContent() {
               Meta에 광고까지 자동으로 집행해드려요.
             </p>
 
-            {errorMessage && (
+            {visibleError && (
               <div className="flex items-start gap-2.5 px-[14px] py-3 rounded-[10px] border border-transparent bg-[rgba(255,66,66,0.08)] border-[rgba(255,66,66,0.20)] text-[var(--w-status-negative)]" style={{ marginBottom: 16 }}>
                 <Icon name="warn" size={16} />
                 <div>
                   <div style={{ font: "700 13px/1.4 var(--w-font-sans)" }}>로그인할 수 없어요</div>
-                  <div style={{ font: "500 12.5px/1.5 var(--w-font-sans)", marginTop: 2 }}>{errorMessage}</div>
-                  <div style={{ font: "500 11.5px/1.5 var(--w-font-sans)", marginTop: 4, opacity: 0.6 }}>에러 코드: {errorCode}</div>
+                  <div style={{ font: "500 12.5px/1.5 var(--w-font-sans)", marginTop: 2 }}>{visibleError}</div>
+                  {errorCode && <div style={{ font: "500 11.5px/1.5 var(--w-font-sans)", marginTop: 4, opacity: 0.6 }}>에러 코드: {errorCode}</div>}
                 </div>
               </div>
             )}
@@ -132,10 +160,17 @@ function LoginContent() {
               </div>
             ) : (
               <>
-                <Button variant="primary" size="lg" block type="button" onClick={handleLogin} disabled={loading}>
-                  {loading ? <Icon name="spinner" size={16} /> : <Icon name="facebook" size={16} />}
-                  {loading ? "Facebook에 연결 중…" : "Facebook으로 로그인"}
-                </Button>
+                {facebookAvailable === false ? (
+                  <div className="flex items-start gap-2.5 px-[14px] py-3 rounded-[10px] border border-[var(--w-line-alternative)] bg-[var(--w-bg-alternative)] text-[var(--w-fg-neutral)]">
+                    <Icon name="info" size={16} />
+                    <div style={{ font: "500 12.5px/1.5 var(--w-font-sans)" }}>현재 Facebook 로그인을 사용할 수 없어요. 관리자에게 Meta 앱 설정을 확인해주세요.</div>
+                  </div>
+                ) : (
+                  <Button variant="primary" size="lg" block type="button" onClick={handleLogin} disabled={loading || facebookAvailable !== true}>
+                    {loading ? <Icon name="spinner" size={16} /> : <Icon name="facebook" size={16} />}
+                    {facebookAvailable === null ? "Facebook 로그인 확인 중…" : loading ? "Facebook에 연결 중…" : "Facebook으로 로그인"}
+                  </Button>
+                )}
                 <Button variant="secondary" size="lg" block type="button" onClick={handleBrowse} disabled={loading} style={{ marginTop: 10 }}>
                   로그인 없이 서비스 둘러보기
                 </Button>

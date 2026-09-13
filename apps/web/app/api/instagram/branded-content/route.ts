@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
+import { getWorkspaceSession } from "@/lib/meta-session"
 
 export type BrandedContentItem = {
   id: string
@@ -68,9 +69,13 @@ const MOCK: BrandedContentItem[] = [
   },
 ]
 
-export async function GET(): Promise<NextResponse<BrandedContentResponse>> {
+export async function GET() {
   const session = await getServerSession(authOptions)
+  try {
+    await getWorkspaceSession(session)
+  } catch {
+    return NextResponse.json({ error: "연결 대상 백엔드를 사용할 수 없어요." }, { status: 503 })
+  }
   // V1: 실 Graph 호출 미구현. 세션 존재해도 mock 반환. 추후 GET /{ig-user-id}?fields=tagged_media{...,is_eligible_for_branded_content} 로 교체.
-  void session
   return NextResponse.json({ items: MOCK, mock: true })
 }

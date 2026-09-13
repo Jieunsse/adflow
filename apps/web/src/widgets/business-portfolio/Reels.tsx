@@ -6,7 +6,7 @@ import { Button } from "@shared/ui/Button";
 import { Card } from "@shared/ui/Card";
 import { Dialog, DialogContent, DialogTitle } from "@shared/ui/Dialog";
 import { useToast } from "@shared/ui/Toast";
-import { KpiCard } from "@shared/ui/primitives";
+import { EmptyState as SharedEmptyState, KpiCard } from "@shared/ui/primitives";
 import DualChart from "@shared/ui/DualChart";
 import Icon from "@shared/ui/Icon";
 import { cn } from "@shared/lib/cn";
@@ -46,22 +46,6 @@ function MockBadge() {
     >
       샘플 데이터
     </div>
-  );
-}
-
-function EmptyState() {
-  return (
-    <Card className="flex flex-col items-center gap-2 py-12 px-6 text-center">
-      <Icon name="play" size={32} style={{ opacity: 0.35 }} />
-      <span
-        style={{
-          font: "600 14px/1.4 var(--w-font-sans)",
-          color: "var(--w-fg-strong)",
-        }}
-      >
-        아직 릴스가 없어요. 첫 릴스를 올려보세요.
-      </span>
-    </Card>
   );
 }
 
@@ -398,7 +382,7 @@ export default function Reels() {
       </Card>
 
       {reels.length === 0 && !mock ? (
-        <EmptyState />
+        <SharedEmptyState icon={<Icon name="play" size={32} />} title="아직 릴스가 없어요. 첫 릴스를 올려보세요." />
       ) : (
         <div
           className="grid gap-3"

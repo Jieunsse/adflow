@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card } from "@shared/ui/Card";
 import { cn } from "@shared/lib/cn";
 import Icon from "@shared/ui/Icon";
+import { EmptyState as SharedEmptyState } from "@shared/ui/primitives";
 import type { IgStoriesPanel, IgStory } from "@/lib/instagram-stories";
 
 function relativeTime(iso: string): string {
@@ -120,32 +121,6 @@ function MockBadge() {
   );
 }
 
-function EmptyState() {
-  return (
-    <Card className="flex flex-col items-center gap-2 py-12 px-6 text-center">
-      <Icon name="image" size={32} style={{ opacity: 0.35 }} />
-      <span
-        style={{
-          font: "600 14px/1.4 var(--w-font-sans)",
-          color: "var(--w-fg-strong)",
-        }}
-      >
-        지금 활성 스토리가 없어요
-      </span>
-      <span
-        style={{
-          font: "500 12.5px/1.6 var(--w-font-sans)",
-          color: "var(--w-fg-neutral)",
-        }}
-      >
-        스토리는 게시 후 24시간이 지나면 자동으로 사라져요.
-        <br />
-        만료된 스토리 보기는 곧 제공할게요.
-      </span>
-    </Card>
-  );
-}
-
 export default function Stories() {
   const q = useQuery({
     queryKey: ["ig-stories"],
@@ -178,7 +153,9 @@ export default function Stories() {
 
   const { stories, mock } = q.data;
 
-  if (stories.length === 0 && !mock) return <EmptyState />;
+  if (stories.length === 0 && !mock) {
+    return <SharedEmptyState icon={<Icon name="image" size={32} />} title="지금 활성 스토리가 없어요" desc="스토리는 게시 후 24시간이 지나면 자동으로 사라져요. 만료된 스토리 보기는 곧 제공할게요." />;
+  }
 
   return (
     <div className="flex flex-col gap-3">

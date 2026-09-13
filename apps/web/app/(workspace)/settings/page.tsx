@@ -8,6 +8,7 @@ import IdField from "@shared/ui/IdField";
 import { Chip } from "@shared/ui/Chip";
 import { Button } from "@shared/ui/Button";
 import { Card } from "@shared/ui/Card";
+import { Toggle } from "@shared/ui/Toggle";
 import { cn } from "@shared/lib/cn";
 import { useToast } from "@shared/ui/Toast";
 import { useNotifSettings } from "@shared/lib/notifications";
@@ -400,14 +401,6 @@ function NotifTab() {
         <Icon name="info" size={12} /> 설정이 이 브라우저에 저장돼요.
       </div>
     </Card>
-  );
-}
-
-function Toggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void }) {
-  return (
-    <button type="button" onClick={() => onChange(!on)} aria-pressed={on} style={{ width: 40, height: 24, borderRadius: 999, background: on ? "var(--w-primary-normal)" : "var(--w-fg-assistive)", border: "none", cursor: "pointer", position: "relative", transition: "background 160ms ease", flex: "0 0 auto" }}>
-      <span style={{ position: "absolute", top: 2, left: on ? 18 : 2, width: 20, height: 20, borderRadius: "50%", background: "#fff", transition: "left 160ms cubic-bezier(0.16,1,0.3,1)", boxShadow: "0 1px 3px rgba(0,0,0,0.2)" }} />
-    </button>
   );
 }
 

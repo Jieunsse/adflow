@@ -13,6 +13,7 @@ import { fmtKRW, campaignRunDays } from "@shared/lib/format";
 import { useBrandProfileStorage } from "@features/brand-profile/model/useBrandProfileStorage";
 import { upsertProfile } from "@features/brand-profile/model/brandProfileStore";
 import type { AccountDailyPoint } from "@entities/insights/account-trend";
+import { fetchAccountTrend, insightsKeys } from "@entities/insights/api";
 import {
   splitWindow,
   derivePeriodKpis,
@@ -50,16 +51,6 @@ async function fetchDashboardCampaigns(example?: BrowseExample): Promise<Campaig
     if ((error as { code?: number }).code === 401) return [];
     throw error;
   }
-}
-
-// ADR-059 — 계정 횡단 일별 합산 추세. days = 델타 비교용 직전 기간 포함 창.
-async function fetchTrend(days: number, example?: BrowseExample): Promise<AccountDailyPoint[]> {
-  const params = new URLSearchParams({ days: String(days) });
-  if (example) params.set("example", example);
-  const res = await fetch(`/api/dashboard/trend?${params}`);
-  if (!res.ok) return [];
-  const data = await res.json();
-  return (data.daily ?? []) as AccountDailyPoint[];
 }
 
 function toVerdictCampaign(c: CampaignSummary): AccountVerdictCampaign {
@@ -132,8 +123,8 @@ export default function DashboardPage() {
   const allCampaigns = useMemo(() => browseMode ? [...customBrowseRows, ...campaigns] : campaigns, [browseMode, campaigns, customBrowseRows]);
 
   const trendQ = useQuery({
-    queryKey: ["dashboard", "trend", REPORT_TREND_DAYS, browseMode ? browseExample : null],
-    queryFn: () => fetchTrend(REPORT_TREND_DAYS, browseMode ? browseExample : undefined),
+    queryKey: insightsKeys.accountTrend(REPORT_TREND_DAYS, browseMode ? browseExample : undefined),
+    queryFn: () => fetchAccountTrend(REPORT_TREND_DAYS, browseMode ? browseExample : undefined),
     enabled: !!session?.adAccountId || !!session?.browseMode,
     staleTime: 5 * 60_000,
   });

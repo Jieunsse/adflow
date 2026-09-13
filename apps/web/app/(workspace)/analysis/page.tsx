@@ -11,6 +11,7 @@ import { Chip } from "@shared/ui/Chip";
 import { ChartLegend } from "@shared/ui/DualChart";
 import { fmtKRW, shortDate, campaignRunDays } from "@shared/lib/format";
 import { campaignKeys, fetchCampaigns } from "@entities/campaign/api";
+import { fetchAnalysisTrend, insightsKeys } from "@entities/insights/api";
 import { CAMPAIGN_STATUS_MAP } from "@entities/campaign/status";
 import { deriveConversionSummary, derivePeriodKpis, deriveRevenueRoasDelta, splitWindow, toCampaignTableRow, type CampaignTableRow } from "@entities/insights/period-kpis";
 import { toCampaignsCsv } from "@entities/insights/report";
@@ -26,21 +27,6 @@ type SortDir = "asc" | "desc";
 type AnalysisRow = CampaignTableRow & { revenue: number | null; cpa: number | null };
 const EMPTY_CAMPAIGNS: CampaignSummary[] = [];
 const EMPTY_DAILY: AccountDailyPoint[] = [];
-
-type TrendResponse = {
-  daily: AccountDailyPoint[];
-  campaignMetrics: AnalysisCampaignMetrics[];
-  placements: Placement[];
-};
-
-async function fetchTrend(days: number, campaignId?: string, placement?: Placement): Promise<TrendResponse> {
-  const params = new URLSearchParams({ days: String(days), analysis: "1" });
-  if (campaignId) params.set("campaignId", campaignId);
-  if (placement) params.set("placement", placement);
-  const res = await fetch(`/api/dashboard/trend?${params}`);
-  if (!res.ok) throw new Error("분석 데이터를 불러오지 못했어요.");
-  return res.json() as Promise<TrendResponse>;
-}
 
 function downloadCsv(campaigns: CampaignSummary[]) {
   const blob = new Blob([toCampaignsCsv(campaigns.map(toCampaignTableRow))], { type: "text/csv;charset=utf-8" });
@@ -147,8 +133,8 @@ export default function AnalysisPage() {
   const selectedCampaign = campaigns.find((campaign) => campaign.id === requestedCampaignId);
   const campaignId = selectedCampaign?.id;
   const trendQ = useQuery({
-    queryKey: ["analysis", "trend", days * 2, campaignId ?? null, requestedPlacementValue ?? null],
-    queryFn: () => fetchTrend(days * 2, campaignId, requestedPlacementValue),
+    queryKey: insightsKeys.analysisTrend(days * 2, campaignId, requestedPlacementValue),
+    queryFn: () => fetchAnalysisTrend(days * 2, campaignId, requestedPlacementValue),
     enabled,
     staleTime: 60_000,
   });

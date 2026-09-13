@@ -7,13 +7,13 @@ import { useMemo } from "react";
 import { useSession } from "next-auth/react";
 import { useQuery } from "@tanstack/react-query";
 import type { CampaignSummary } from "@/lib/meta-ads";
-import type { AccountDailyPoint } from "@entities/insights/account-trend";
 import type { BackcastInputs } from "@entities/insights/backcast";
 import { splitWindow, derivePeriodKpis, deriveConversionSummary, deriveRevenueRoasDelta } from "@entities/insights/period-kpis";
 import { listBrowse } from "@entities/campaign/browse/store";
 import { seedAutoPilotDemo } from "@entities/campaign/browse/seed";
 import { browseCampaignToSummary } from "@entities/campaign/browse/summary";
 import { fetchCampaigns } from "@entities/campaign/api";
+import { fetchAccountTrend, insightsKeys } from "@entities/insights/api";
 import { useGoalsStorage } from "./useGoalsStorage";
 
 const PERIOD_DAYS = 30;
@@ -26,13 +26,6 @@ async function fetchGoalCampaigns(): Promise<CampaignSummary[]> {
     if ((error as { code?: number }).code === 401) return [];
     throw error;
   }
-}
-
-async function fetchTrend(): Promise<AccountDailyPoint[]> {
-  const res = await fetch(`/api/dashboard/trend?days=${TREND_DAYS}`);
-  if (!res.ok) return [];
-  const data = await res.json();
-  return (data.daily ?? []) as AccountDailyPoint[];
 }
 
 export type GoalMeasurements = ReturnType<typeof useGoalMeasurements>;
@@ -56,7 +49,7 @@ export function useGoalMeasurements() {
 
   const enabled = !!session?.adAccountId || browseMode;
   const campaignsQ = useQuery({ queryKey: ["goal", "campaigns", "30d"], queryFn: fetchGoalCampaigns, enabled, staleTime: 60_000 });
-  const trendQ = useQuery({ queryKey: ["dashboard", "trend", TREND_DAYS], queryFn: fetchTrend, enabled, staleTime: 5 * 60_000 });
+  const trendQ = useQuery({ queryKey: insightsKeys.accountTrend(TREND_DAYS), queryFn: () => fetchAccountTrend(TREND_DAYS), enabled, staleTime: 5 * 60_000 });
 
   const campaigns = useMemo(
     () => (browseMode ? [...(browseRows ?? []), ...(campaignsQ.data ?? [])] : campaignsQ.data ?? []),

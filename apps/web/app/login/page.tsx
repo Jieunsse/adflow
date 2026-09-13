@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useEffect, useState } from "react";
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import Icon from "@shared/ui/Icon";
@@ -28,6 +28,7 @@ function LoginStat({ k, v }: { k: string; v: string }) {
 
 function LoginContent() {
   const searchParams = useSearchParams();
+  const { status: sessionStatus } = useSession();
   const errorCode = searchParams.get("error");
   const errorMessage = errorCode ? (ERROR_MESSAGES[errorCode] ?? ERROR_MESSAGES.Default) : null;
   const [loading, setLoading] = useState(false);
@@ -168,7 +169,7 @@ function LoginContent() {
                     {facebookAvailable === null ? "Facebook 로그인 확인 중…" : loading ? "Facebook에 연결 중…" : "Facebook으로 로그인"}
                   </Button>
                 )}
-                <Button variant="secondary" size="lg" block type="button" onClick={handleBrowse} disabled={loading} style={{ marginTop: 10 }}>
+                <Button variant="secondary" size="lg" block type="button" onClick={handleBrowse} disabled={loading || sessionStatus === "loading"} style={{ marginTop: 10 }}>
                   로그인 없이 서비스 둘러보기
                 </Button>
                 <p style={{ font: "500 12px/1.6 var(--w-font-sans)", color: "var(--w-fg-neutral)", margin: "16px 0 0", textAlign: "center" }}>

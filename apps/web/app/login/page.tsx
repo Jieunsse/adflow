@@ -69,10 +69,7 @@ function LoginContent() {
     setLoading(true);
     setLoginError(null);
     try {
-      const result = await signIn("guest", { callbackUrl: "/dashboard", redirect: false });
-      if (result?.error) setLoginError(ERROR_MESSAGES[result.error] ?? ERROR_MESSAGES.Default);
-      else if (result?.url) window.location.assign(result.url);
-      else setLoginError(ERROR_MESSAGES.Default);
+      await signIn("guest", { callbackUrl: "/dashboard" });
     } catch {
       setLoginError(ERROR_MESSAGES.Default);
     } finally {

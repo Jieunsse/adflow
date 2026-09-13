@@ -33,6 +33,7 @@ export default function OnboardingGuard() {
   useEffect(() => {
     if (status !== "authenticated") return;
     if (EXEMPT_PATHS.some((p) => pathname.startsWith(p))) return;
+    if (session?.browseMode) return;
 
     const key = onboardedKey(session?.user?.email);
 

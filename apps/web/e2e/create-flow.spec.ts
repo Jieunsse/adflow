@@ -26,7 +26,8 @@ test("둘러보기에서 광고를 만들고 검수를 요청해요", async ({ p
   await page.getByRole("button", { name: "게재 설정으로 →" }).click();
 
   await expect(page.getByRole("heading", { name: "언제, 얼마나 보여줄까요" })).toBeVisible();
-  await page.getByRole("button", { name: "검수 요청하기" }).click();
+  await page.getByRole("button", { name: "검토하기" }).click();
+  await page.getByRole("button", { name: "Meta에 광고 게재하기" }).click();
   await expect(page.getByText("검수를 요청했어요")).toBeVisible();
   expect(pageErrors).toEqual([]);
 });

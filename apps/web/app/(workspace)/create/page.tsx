@@ -27,9 +27,11 @@ import { refineInstruction, type RefineId } from "@entities/creative/refine-pres
 import {
   loadDraftFromSession,
   clearDraftFromSession,
+  saveDraftToSession,
   hydrateCreativeDraft,
   hydrateLaunchDraft,
   type CreateDraftSnapshot,
+  type StudioPhase,
 } from "@entities/creative/draft-persistence";
 import BriefStep from "@widgets/create-flow/BriefStep";
 import CreateFlowProgress from "@widgets/create-flow/CreateFlowProgress";
@@ -711,6 +713,12 @@ function CreateFlow() {
     if (selected.primaryText) creative.dispatch({ type: "SET_PRIMARY_TEXT", primaryText: selected.primaryText });
   };
 
+  // URL 단계 전환으로 페이지가 다시 마운트돼도 소재 내부 단계가 이전 초안으로 되돌아가지 않게 즉시 저장한다.
+  const persistStudioPhase = (nextPhase: StudioPhase) => {
+    studio.setPhase(nextPhase);
+    saveDraftToSession(step, creative.state, launch.state, { ...studio.snapshot, phase: nextPhase });
+  };
+
 
   return (
     <div className={`px-12 py-9 pb-16 max-w-[1280px] w-full mx-auto flex flex-col gap-7 min-h-[calc(100vh-64px)]${browseMode && step !== 0 ? " justify-center" : ""}`} data-screen-label="광고 만들기">
@@ -788,7 +796,10 @@ function CreateFlow() {
           regenerating={generating}
           onRegenerate={() => handleGenerate()}
           onEditBrief={() => goToStep(0)}
-          onNext={() => studio.setPhase("image")}
+          onNext={() => {
+            handleSelectVersion(studio.headlineIdx);
+            persistStudioPhase("image");
+          }}
           attribution={attribution}
           nudge={nudge}
           onNudgeAdd={handleNudgeAdd}
@@ -807,8 +818,8 @@ function CreateFlow() {
           setImageDataUrl={(v) => launch.dispatch({ type: "SET_IMAGE_DATA_URL", value: v })}
           finalImageDataUrl={launch.state.finalImageDataUrl}
           setFinalImageDataUrl={(v) => launch.dispatch({ type: "SET_FINAL_IMAGE_DATA_URL", value: v })}
-          onBackToCompare={() => studio.setPhase("compare")}
-          onNext={() => studio.setPhase("refine")}
+          onBackToCompare={() => persistStudioPhase("compare")}
+          onNext={() => persistStudioPhase("refine")}
         />
       )}
 

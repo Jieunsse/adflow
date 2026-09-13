@@ -23,6 +23,7 @@ export async function GET() {
   const session = await getServerSession(authOptions);
   const email = session?.user?.email;
   if (!email) return NextResponse.json({ ok: false, onboarded: false }, { status: 401 });
+  if (session.browseMode) return NextResponse.json({ ok: true, onboarded: true });
 
   const supabase = getSupabaseServer();
   if (!supabase) return NextResponse.json({ ok: false, onboarded: false }, { status: 503 });

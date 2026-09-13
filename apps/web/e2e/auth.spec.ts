@@ -29,10 +29,11 @@ test("Facebook 로그인은 필요한 권한을 포함한 Meta 승인 화면으�
   ]);
   const url = new URL(authorization.url());
   const scopes = new Set(url.searchParams.get("scope")?.split(","));
+  const expectedOrigin = new URL(page.url()).origin;
 
   expect(url.searchParams.get("response_type")).toBe("code");
   expect(url.searchParams.get("redirect_uri")).toBe(
-    "http://localhost:3000/api/auth/callback/facebook",
+    `${expectedOrigin}/api/auth/callback/facebook`,
   );
   for (const scope of [
     "ads_management",

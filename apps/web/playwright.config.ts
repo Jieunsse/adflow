@@ -1,6 +1,8 @@
 import { defineConfig } from "@playwright/test";
 
-const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:3000";
+const playwrightPort = Number(process.env.PLAYWRIGHT_PORT ?? 3100);
+const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? `http://localhost:${playwrightPort}`;
+const useExternalServer = Boolean(process.env.PLAYWRIGHT_BASE_URL);
 
 export default defineConfig({
   testDir: "./e2e",
@@ -9,9 +11,13 @@ export default defineConfig({
     baseURL,
     trace: "retain-on-failure",
   },
-  webServer: {
-    command: "pnpm dev",
-    url: `${baseURL}/login`,
-    reuseExistingServer: !process.env.CI,
-  },
+  ...(useExternalServer
+    ? {}
+    : {
+        webServer: {
+          command: `PORT=${playwrightPort} NEXTAUTH_URL=http://localhost:${playwrightPort} pnpm dev`,
+          url: `${baseURL}/login`,
+          reuseExistingServer: false,
+        },
+      }),
 });

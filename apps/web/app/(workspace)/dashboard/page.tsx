@@ -202,10 +202,10 @@ export default function DashboardPage() {
   const rangeLabel = heroRangeLabel(dailyCurrent.map((d) => d.date));
 
   return (
-    <div className="!mx-auto flex w-full !max-w-[1280px] flex-col gap-7 px-8 py-8 pb-12" data-screen-label="대시보드">
+    <div className="!mx-auto flex w-full !max-w-[1280px] flex-col gap-7 px-5 py-7 pb-12 sm:px-8 sm:py-8 lg:px-12 lg:py-9" data-screen-label="대시보드">
         <div className="flex justify-between items-center gap-4 min-h-11 flex-wrap">
           <div className="flex items-center gap-2.5 min-w-0">
-            <h1 className="w-h4 m-0">이번 주 광고 리포트</h1>
+            <h1 className="w-h3 m-0">이번 주 광고 리포트</h1>
             {browseMode && <Chip variant="neutral" size="sm">{browseExample === "good" ? "좋은 예시" : "나쁜 예시"}</Chip>}
           </div>
           <div className="flex items-center justify-end gap-2 shrink-0 flex-wrap">
@@ -290,7 +290,7 @@ export default function DashboardPage() {
 
 function NextStepSlot({ onCreate }: { onCreate: () => void }) {
   return (
-    <Card className="flex flex-col items-center text-center gap-3 py-14 rounded-[20px]">
+    <Card className="flex flex-col items-center text-center gap-3 py-14 rounded-[var(--w-radius-20)]">
       <span className="grid place-items-center w-[72px] h-[72px] rounded-full bg-[var(--w-primary-soft)] text-[var(--w-primary-press)]">
         <Icon name="sparkles" size={32} />
       </span>

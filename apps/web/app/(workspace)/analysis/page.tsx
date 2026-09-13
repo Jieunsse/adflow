@@ -80,11 +80,12 @@ function MetricSummary({ label, value, delta }: { label: string; value: string; 
 
 function PerformanceTrendChart({ labels, spend, revenue, roas }: { labels: string[]; spend: number[]; revenue: number[]; roas: number[] }) {
   const width = 800;
-  const height = 250;
-  const padX = 12;
-  const padTop = 16;
-  const padBottom = 28;
-  const innerWidth = width - padX * 2;
+  const height = 280;
+  const padX = 52;
+  const padRight = 48;
+  const padTop = 24;
+  const padBottom = 34;
+  const innerWidth = width - padX - padRight;
   const innerHeight = height - padTop - padBottom;
   const count = labels.length;
   const maxCurrency = Math.max(...spend, ...revenue, 1) * 1.15;
@@ -95,22 +96,36 @@ function PerformanceTrendChart({ labels, spend, revenue, roas }: { labels: strin
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
   const tooltipWidth = 172;
   const tooltipHeight = 96;
-  const tooltipX = hoverIndex != null && xOf(hoverIndex) > width - tooltipWidth - padX ? xOf(hoverIndex) - tooltipWidth - 12 : (hoverIndex == null ? 0 : xOf(hoverIndex) + 12);
+  const tooltipX = hoverIndex == null
+    ? 0
+    : xOf(hoverIndex) > width - tooltipWidth - padRight
+      ? xOf(hoverIndex) - tooltipWidth - 12
+      : xOf(hoverIndex) + 12;
+  const pointY = hoverIndex == null
+    ? padTop
+    : Math.min(
+        padTop + innerHeight - (spend[hoverIndex] / maxCurrency) * innerHeight,
+        padTop + innerHeight - (revenue[hoverIndex] / maxCurrency) * innerHeight,
+        padTop + innerHeight - (roas[hoverIndex] / maxRoas) * innerHeight,
+      );
+  const tooltipY = Math.min(Math.max(pointY - tooltipHeight / 2, padTop), height - padBottom - tooltipHeight);
   const hoverLabel = hoverIndex == null ? "광고비, 매출, ROAS 추이" : `${labels[hoverIndex]}: 광고비 ${fmtKRW(spend[hoverIndex])}, 매출 ${fmtKRW(revenue[hoverIndex])}, ROAS ${roas[hoverIndex].toFixed(2)}배`;
+  const currencyTick = (index: number) => fmtKRW(Math.round((maxCurrency / 3) * (3 - index)));
+  const roasTick = (index: number) => `${((maxRoas / 3) * (3 - index)).toFixed(1)}x`;
   const selectPoint = (clientX: number, rect: DOMRect) => setHoverIndex(Math.max(0, Math.min(count - 1, Math.round(((clientX - rect.left) / rect.width) * (count - 1)))));
 
-  return <svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" className="w-full h-[250px] cursor-crosshair focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--w-focus-ring)]" role="img" tabIndex={0} aria-label={hoverLabel} onPointerMove={(event) => selectPoint(event.clientX, event.currentTarget.getBoundingClientRect())} onPointerLeave={() => setHoverIndex(null)} onFocus={() => setHoverIndex(0)} onBlur={() => setHoverIndex(null)} onKeyDown={(event) => {
+  return <svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" className="w-full h-[280px] cursor-crosshair focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--w-focus-ring)]" role="img" tabIndex={0} aria-label={hoverLabel} onPointerMove={(event) => selectPoint(event.clientX, event.currentTarget.getBoundingClientRect())} onPointerLeave={() => setHoverIndex(null)} onFocus={() => setHoverIndex(0)} onBlur={() => setHoverIndex(null)} onKeyDown={(event) => {
     if (event.key === "Escape") return setHoverIndex(null);
     if (event.key === "ArrowRight") { event.preventDefault(); return setHoverIndex((index) => Math.min(count - 1, (index ?? -1) + 1)); }
     if (event.key === "ArrowLeft") { event.preventDefault(); return setHoverIndex((index) => Math.max(0, (index ?? count) - 1)); }
   }}>
     <title>광고비, 매출, ROAS 추이</title>
     <desc>광고비와 매출은 같은 금액 축, ROAS는 별도 축으로 표시해 일별 흐름을 비교할 수 있어요.</desc>
-    {[0, 1, 2, 3].map((index) => <line key={index} x1={padX} x2={width - padX} y1={padTop + (innerHeight / 3) * index} y2={padTop + (innerHeight / 3) * index} stroke="var(--w-line-alternative)" />)}
-    <path d={line(spend, maxCurrency)} fill="none" stroke="var(--w-primary-normal)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
-    <path d={line(revenue, maxCurrency)} fill="none" stroke="var(--w-status-positive)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
-    <path d={line(roas, maxRoas)} fill="none" stroke="var(--w-cyan-600)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
-    {hoverIndex != null && <><line x1={xOf(hoverIndex)} x2={xOf(hoverIndex)} y1={padTop} y2={padTop + innerHeight} stroke="var(--w-line-normal)" strokeDasharray="3 3" /><circle cx={xOf(hoverIndex)} cy={padTop + innerHeight - (spend[hoverIndex] / maxCurrency) * innerHeight} r="4" fill="var(--w-common-100)" stroke="var(--w-primary-normal)" strokeWidth="2" /><circle cx={xOf(hoverIndex)} cy={padTop + innerHeight - (revenue[hoverIndex] / maxCurrency) * innerHeight} r="4" fill="var(--w-common-100)" stroke="var(--w-status-positive)" strokeWidth="2" /><circle cx={xOf(hoverIndex)} cy={padTop + innerHeight - (roas[hoverIndex] / maxRoas) * innerHeight} r="4" fill="var(--w-common-100)" stroke="var(--w-cyan-600)" strokeWidth="2" /><g transform={`translate(${tooltipX} ${padTop + 8})`} pointerEvents="none"><rect width={tooltipWidth} height={tooltipHeight} rx="8" fill="var(--w-bg-elevated)" stroke="var(--w-line-normal)" /><text x="12" y="20" fill="var(--w-fg-strong)" fontSize="11" style={{ fontFamily: "var(--w-font-sans)", fontWeight: 600 }}>{labels[hoverIndex]}</text><text x="12" y="42" fill="var(--w-primary-normal)" fontSize="11" style={{ fontFamily: "var(--w-font-mono)" }}>광고비 {fmtKRW(spend[hoverIndex])}</text><text x="12" y="61" fill="var(--w-status-positive)" fontSize="11" style={{ fontFamily: "var(--w-font-mono)" }}>매출 {fmtKRW(revenue[hoverIndex])}</text><text x="12" y="80" fill="var(--w-cyan-600)" fontSize="11" style={{ fontFamily: "var(--w-font-mono)" }}>ROAS {roas[hoverIndex].toFixed(2)}x</text></g></>}
+    {[0, 1, 2, 3].map((index) => <g key={index}><line x1={padX} x2={width - padRight} y1={padTop + (innerHeight / 3) * index} y2={padTop + (innerHeight / 3) * index} stroke="var(--w-line-alternative)" /><text x={padX - 10} y={padTop + (innerHeight / 3) * index + 4} textAnchor="end" fill="var(--w-fg-neutral)" fontSize="10" style={{ fontFamily: "var(--w-font-mono)", fontWeight: 500 }}>{index === 3 ? "₩0" : currencyTick(index)}</text><text x={width - padRight + 10} y={padTop + (innerHeight / 3) * index + 4} fill="var(--w-fg-neutral)" fontSize="10" style={{ fontFamily: "var(--w-font-mono)", fontWeight: 500 }}>{index === 3 ? "0x" : roasTick(index)}</text></g>)}
+    <path d={line(spend, maxCurrency)} fill="none" stroke="var(--w-primary-normal)" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" />
+    <path d={line(revenue, maxCurrency)} fill="none" stroke="var(--w-status-positive)" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" />
+    <path d={line(roas, maxRoas)} fill="none" stroke="var(--w-cyan-600)" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" />
+    {hoverIndex != null && <><line x1={xOf(hoverIndex)} x2={xOf(hoverIndex)} y1={padTop} y2={padTop + innerHeight} stroke="var(--w-line-container)" strokeDasharray="3 3" /><circle cx={xOf(hoverIndex)} cy={padTop + innerHeight - (spend[hoverIndex] / maxCurrency) * innerHeight} r="4.5" fill="var(--w-common-100)" stroke="var(--w-primary-normal)" strokeWidth="2" /><circle cx={xOf(hoverIndex)} cy={padTop + innerHeight - (revenue[hoverIndex] / maxCurrency) * innerHeight} r="4.5" fill="var(--w-common-100)" stroke="var(--w-status-positive)" strokeWidth="2" /><circle cx={xOf(hoverIndex)} cy={padTop + innerHeight - (roas[hoverIndex] / maxRoas) * innerHeight} r="4.5" fill="var(--w-common-100)" stroke="var(--w-cyan-600)" strokeWidth="2" /><g transform={`translate(${tooltipX} ${tooltipY})`} pointerEvents="none"><rect width={tooltipWidth} height={tooltipHeight} rx="8" fill="var(--w-bg-elevated)" stroke="var(--w-line-normal)" /><text x="12" y="20" fill="var(--w-fg-strong)" fontSize="11" style={{ fontFamily: "var(--w-font-sans)", fontWeight: 600 }}>{labels[hoverIndex]}</text><text x="12" y="42" fill="var(--w-primary-normal)" fontSize="11" style={{ fontFamily: "var(--w-font-mono)" }}>광고비 {fmtKRW(spend[hoverIndex])}</text><text x="12" y="61" fill="var(--w-status-positive)" fontSize="11" style={{ fontFamily: "var(--w-font-mono)" }}>매출 {fmtKRW(revenue[hoverIndex])}</text><text x="12" y="80" fill="var(--w-cyan-600)" fontSize="11" style={{ fontFamily: "var(--w-font-mono)" }}>ROAS {roas[hoverIndex].toFixed(2)}x</text></g></>}
     {labels.map((label, index) => (index % labelEvery === 0 || index === count - 1) && <text key={label} x={xOf(index)} y={height - 8} textAnchor="middle" fill="var(--w-fg-neutral)" fontSize="11" style={{ fontFamily: "var(--w-font-sans)", fontWeight: 500 }}>{label}</text>)}
   </svg>;
 }

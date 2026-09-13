@@ -7,6 +7,7 @@ import { useSession } from "next-auth/react";
 import Icon from "@shared/ui/Icon";
 import { Button } from "@shared/ui/Button";
 import { Card } from "@shared/ui/Card";
+import { ErrorState } from "@shared/ui/ErrorState";
 import { Chip } from "@shared/ui/Chip";
 import { listTournaments, roundAdKpis, deriveBeat, isDecisionBeat, AXIS_LABEL as TOUR_AXIS_LABEL, TOURNAMENT_CHANGE_EVENT, type Tournament, type TourBeat, type TourRound } from "@entities/ab-test/tournament/tournament";
 import { leverLabel } from "@entities/ab-test/tournament/lever";
@@ -84,14 +85,11 @@ export default function AbTestsPage() {
   if (realQ.isError) {
     return (
       <div className="px-12 py-9 pb-16 max-w-[760px] w-full mx-auto" data-screen-label="A/B 테스트">
-        <Card className="py-12 px-8 flex flex-col items-center gap-3 text-center">
-          <div style={{ width: 56, height: 56, borderRadius: "50%", background: "var(--w-bg-alternative)", color: "var(--w-fg-alternative)", display: "grid", placeItems: "center" }}>
-            <Icon name="warn" size={24} />
-          </div>
-          <div className="font-bold text-[17px] leading-[1.3] text-[var(--w-fg-strong)]">불러오지 못했어요</div>
-          <div className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)] max-w-[420px]">{realQ.error instanceof Error ? realQ.error.message : "잠시 후 다시 시도해 주세요"}</div>
-          <Button variant="secondary" type="button" className="mt-2" onClick={() => realQ.refetch()}>다시 시도</Button>
-        </Card>
+        <ErrorState
+          title="토너먼트를 불러오지 못했어요"
+          reason={realQ.error instanceof Error ? realQ.error.message : "잠시 후 다시 시도해 주세요"}
+          onAction={() => realQ.refetch()}
+        />
       </div>
     );
   }

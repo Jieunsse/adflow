@@ -29,7 +29,7 @@ import { getMockCampaignAdIds, seedMockAdRows } from "@/lib/mock-campaigns";
 import { CTAS } from "@entities/creative/options";
 import { DEMO_AD_IMAGES } from "@/lib/demo/mock-images";
 import type { CampaignSummary, InsightsPeriod } from "@/lib/meta-ads";
-import type { AdInsightsRow } from "@entities/insights/types";
+import { campaignDetailKeys, fetchCampaignDetail, fetchCampaignInsights, type CampaignDetailInsights } from "@entities/campaign/detail-api";
 import { Button, buttonVariants } from "@shared/ui/Button";
 import { Card } from "@shared/ui/Card";
 import { Callout } from "@shared/ui/Callout";
@@ -48,14 +48,7 @@ const AbTestResultCard = dynamic(() => import("@widgets/performance-step/AbTestR
 
 type Period = "all" | InsightsPeriod;
 // PRD-ab-testing.md §7.2 — Insights 응답에 광고별 row 추가 가능.
-type Insights = {
-  impressions: number;
-  clicks: number;
-  ctr: number;
-  spend: number;
-  daily: { date: string; clicks: number; ctr: number; spend: number }[];
-  ads?: [AdInsightsRow, AdInsightsRow];
-};
+type Insights = CampaignDetailInsights;
 type ControlParams = { campaignId: string; adSetId?: string; adId?: string; action: "pause" | "resume" | "set-daily-budget"; dailyBudget?: number };
 type ControlResult = { ok: true };
 
@@ -75,14 +68,6 @@ type AutoPilotUi = {
   onRequestEnable: () => void;
   onDisable: () => void;
 };
-
-async function fetchJson<T>(url: string, notFoundIs401Msg = "광고 계정을 먼저 연결해주세요."): Promise<T> {
-  const res = await fetch(url);
-  const data = await res.json();
-  if (res.status === 401) throw Object.assign(new Error(data?.error ?? notFoundIs401Msg), { code: 401 });
-  if (!res.ok) throw new Error(data?.error ?? "불러오지 못했어요");
-  return data as T;
-}
 
 function CampaignDetailFlow() {
   const router = useRouter();
@@ -175,7 +160,7 @@ function CampaignDetailFlow() {
     return () => window.removeEventListener(BROWSE_CHANGE_EVENT, reload);
   }, [id]);
 
-  const metaQ = useQuery({ queryKey: ["campaign-meta", id], queryFn: () => fetchJson<{ campaign: CampaignSummary }>(`/api/campaign/${id}`).then((d) => d.campaign), enabled: !browseCamp });
+  const metaQ = useQuery({ queryKey: campaignDetailKeys.detail(id), queryFn: () => fetchCampaignDetail(id), enabled: !browseCamp });
 
   const browseSummary = useMemo(() => (browseCamp ? browseCampaignToSummary(browseCamp) : null), [browseCamp]);
   const c = browseSummary ?? metaQ.data;
@@ -200,9 +185,15 @@ function CampaignDetailFlow() {
     return null;
   }, [launchedSnapshot, c, id]);
 
-  const adIdsParam = abInfo ? `&adIds=${abInfo.adIds[0]},${abInfo.adIds[1]}` : "";
-  const insQ = useQuery({ queryKey: ["insights", id, period, abInfo?.adIds?.join(",")], queryFn: () => fetchJson<Insights>(`/api/insights/${id}?period=${period}${adIdsParam}`), enabled: !browseCamp });
-  const control = useApiMutation<ControlParams, ControlResult>("/api/campaign/control");
+  const insightAdIds = abInfo?.adIds;
+  const insQ = useQuery({
+    queryKey: campaignDetailKeys.insights(id, period, insightAdIds),
+    queryFn: () => fetchCampaignInsights(id, period, insightAdIds),
+    enabled: !browseCamp,
+  });
+  const control = useApiMutation<ControlParams, ControlResult>("/api/campaign/control", {
+    invalidateKeys: [campaignDetailKeys.detail(id), campaignDetailKeys.insights(id, period, insightAdIds)],
+  });
 
   // ADR-033 — Browse Mode: 성과는 buildBrowseInsights(fastForwardDays) 로, 로딩·에러는 API 대신 즉시 해소.
   const insData = browseCamp ? (buildBrowseInsights(browseCamp, quality) as Insights) : insQ.data;
@@ -220,7 +211,7 @@ function CampaignDetailFlow() {
 
   const applyControl = (p: Omit<ControlParams, "campaignId">, msg: string) => {
     control.mutate({ campaignId: id, ...p }, {
-      onSuccess: () => { showToast(msg); metaQ.refetch(); insQ.refetch(); },
+      onSuccess: () => showToast(msg),
       onError: (e) => showToast(e instanceof Error ? e.message : "적용에 실패했어요"),
     });
   };

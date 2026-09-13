@@ -13,24 +13,21 @@ import { Card } from "@shared/ui/Card";
 import { Skeleton } from "@shared/ui/Skeleton";
 import { ErrorState } from "@shared/ui/ErrorState";
 import { cn } from "@shared/lib/cn";
-import { fetchAdIdentityPages } from "@entities/page/api";
 import { fetchProfilePictures, profilePicturesQueryKey } from "@entities/page/profile-pictures";
+import {
+  fetchPickerList,
+  fetchAccount,
+  fetchWorkspaceTarget,
+  workspaceKeys,
+  type AccountInfo,
+  type PickerItem,
+  type PickerKind,
+  type WorkspaceTarget,
+} from "@entities/workspace/api";
 import { saveWorkspaceTarget } from "@shared/lib/workspace-meta-target-client";
-
-type AccountInfo = { connected: boolean; accountId: string; accountName: string; currency: string };
-type WorkspaceTarget = {
-  adAccountId?: string; adAccountName?: string; pageId?: string; pageName?: string;
-  pixelId?: string; pixelName?: string; igUserId?: string; igUsername?: string;
-};
 
 export function canApplyIgToken(targetIgUserId: string | null, incomingIgUserId: string, isLeader: boolean) {
   return targetIgUserId ? targetIgUserId === incomingIgUserId : isLeader;
-}
-
-async function fetchWorkspaceTarget() {
-  const res = await fetch("/api/workspace/meta-target");
-  if (!res.ok) throw new Error("워크스페이스 연결 정보를 불러오지 못했어요.");
-  return (await res.json()) as { target: WorkspaceTarget; lastChange: { actor: string; timestamp: string } | null };
 }
 
 // 둘러보기 모드: 실제 로그인 유저가 보는 '연결됨' 화면을 그대로 보여주되 내용만 목업(그린루틴)으로 채워요.
@@ -87,43 +84,6 @@ async function applyIgToken({ update, showToast, onSuccess, targetIgUserId, isLe
   }
 }
 
-async function fetchAccount(): Promise<AccountInfo> {
-  const res = await fetch("/api/account");
-  const data = await res.json();
-  if (res.status === 401) throw Object.assign(new Error(data?.error ?? "Meta 인증이 만료됐어요. 다시 로그인해주세요."), { code: 401 });
-  if (!res.ok) throw new Error(data?.error ?? "연결 정보를 불러오지 못했어요");
-  return data as AccountInfo;
-}
-
-type PickerKind = "account" | "page" | "pixel";
-type PickerItem = {
-  id: string;
-  name: string;
-  currency?: string;
-  status?: "active" | "disabled";
-  igUserId?: string | null;
-  igUsername?: string | null;
-};
-
-async function fetchPickerList(kind: PickerKind, adAccountId?: string): Promise<PickerItem[]> {
-  if (kind === "page") {
-    return (await fetchAdIdentityPages()).map((page) => ({
-      id: page.id, name: page.name, igUserId: page.igUserId, igUsername: page.igUsername,
-    }));
-  }
-
-  const url = kind === "account" ? "/api/setup/ad-accounts" : `/api/setup/pixels${adAccountId ? `?adAccountId=${encodeURIComponent(adAccountId)}` : ""}`;
-  const res = await fetch(url);
-  const data = await res.json();
-  if (!res.ok || data?.error) throw new Error(data?.error ?? "목록을 불러오지 못했어요");
-  if (kind === "account") {
-    return ((data.accounts ?? []) as { id: string; name: string; currency: string; account_status: number }[]).map((a) => ({
-      id: a.id, name: a.name, currency: a.currency, status: a.account_status === 1 ? "active" : "disabled",
-    }));
-  }
-  return ((data.pixels ?? []) as { id: string; name: string }[]).map((p) => ({ id: p.id, name: p.name }));
-}
-
 function connCardClass(tone: "neutral" | "warn" | "danger" | "muted") {
   const border = tone === "warn" ? "border-[rgba(255,146,0,0.42)]" : tone === "danger" ? "border-[rgba(255,66,66,0.42)]" : "border-[var(--w-line-normal)]";
   const bg = tone === "muted" ? "bg-[var(--w-bg-alternative)]" : "bg-[var(--w-bg-elevated)]";
@@ -142,12 +102,12 @@ export function ConnectionManager({ embedded = false }: { embedded?: boolean }) 
 
   const browseMode = !!session?.browseMode;
   const isLeader = session?.role === "팀장" || browseMode;
-  const targetQ = useQuery({ queryKey: ["workspace-meta-target"], queryFn: fetchWorkspaceTarget, enabled: !browseMode });
+  const targetQ = useQuery({ queryKey: workspaceKeys.target, queryFn: fetchWorkspaceTarget, enabled: !browseMode });
   const target = targetQ.data?.target;
   const connected = !!(target?.adAccountId && target?.pageId);
   const showConnected = connected || browseMode;
 
-  const accountQ = useQuery({ queryKey: ["account"], queryFn: fetchAccount, enabled: connected });
+  const accountQ = useQuery({ queryKey: workspaceKeys.account, queryFn: fetchAccount, enabled: connected });
   const picturesQ = useQuery({
     queryKey: profilePicturesQueryKey(target?.pageId, target?.igUserId),
     queryFn: fetchProfilePictures,
@@ -208,7 +168,7 @@ export function ConnectionManager({ embedded = false }: { embedded?: boolean }) 
 
   const updateTargetCache = (nextTarget: WorkspaceTarget) => {
     queryClient.setQueryData<{ target: WorkspaceTarget; lastChange: { actor: string; timestamp: string } | null }>(
-      ["workspace-meta-target"],
+      workspaceKeys.target,
       (current) => ({ target: nextTarget, lastChange: current?.lastChange ?? null }),
     );
   };
@@ -275,7 +235,7 @@ export function ConnectionManager({ embedded = false }: { embedded?: boolean }) 
                 setApplyingToken(false);
               }}
               onReload={() => {
-                queryClient.invalidateQueries({ queryKey: ["picker-list", "page"] });
+                queryClient.invalidateQueries({ queryKey: workspaceKeys.pickerAll("page") });
                 setPickerOpen("page");
               }}
             />
@@ -764,7 +724,7 @@ function CtaFeature({ icon, title, desc }: { icon: IconName; title: string; desc
 function PickerModal({ kind, title, subtitle, currentId, adAccountId, onClose, onPick }: {
   kind: PickerKind; title: string; subtitle: string; currentId?: string; adAccountId?: string; onClose: () => void; onPick: (it: PickerItem) => void | Promise<void>;
 }) {
-  const q = useQuery({ queryKey: ["picker-list", kind, adAccountId], queryFn: () => fetchPickerList(kind, adAccountId) });
+  const q = useQuery({ queryKey: workspaceKeys.picker(kind, adAccountId), queryFn: () => fetchPickerList(kind, adAccountId) });
   const [picking, setPicking] = useState<string | null>(null);
   const items = q.data ?? [];
 

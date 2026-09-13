@@ -11,6 +11,7 @@ import { usePresenterConsole } from "@shared/lib/usePresenterConsole";
 import NotificationBell from "@shared/ui/NotificationBell";
 import LogoutButton from "@shared/ui/LogoutButton";
 import { campaignKeys, fetchCampaigns } from "@entities/campaign/api";
+import { fetchWorkspaceTarget, workspaceKeys } from "@entities/workspace/api";
 import { cn } from "@shared/lib/cn";
 
 interface NavItem {
@@ -167,8 +168,8 @@ export default function Sidebar() {
   const userInitial = userName.trim().charAt(0).toUpperCase() || "M";
   const userRole = session?.role;
   const workspaceTargetQ = useQuery({
-    queryKey: ["workspace-meta-target"],
-    queryFn: async () => (await fetch("/api/workspace/meta-target").then((res) => res.json())) as { target?: { adAccountName?: string; pageName?: string } },
+    queryKey: workspaceKeys.target,
+    queryFn: fetchWorkspaceTarget,
     enabled: !browseMode,
   });
   const adAccountName = workspaceTargetQ.data?.target?.adAccountName ?? session?.adAccountName;

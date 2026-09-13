@@ -8,7 +8,8 @@ import { Button, buttonVariants } from "@shared/ui/Button";
 import { Card } from "@shared/ui/Card";
 import ChannelInsights, { type ChannelKpi, type ChannelPostRow } from "@widgets/business-portfolio/ChannelInsights";
 import { suggestChannelOptimizations } from "@entities/insights/channel-optimization";
-import { IG_MOCK_GOOD, IG_MOCK_POOR, type IgAccountInsights } from "@/lib/instagram-insights";
+import { fetchInstagramInsights, instagramKeys } from "@entities/instagram/api";
+import { IG_MOCK_GOOD, IG_MOCK_POOR } from "@/lib/instagram-insights";
 
 function fmtK(n: number): string {
   if (n >= 10000) return `${(n / 10000).toFixed(1)}만`;
@@ -22,12 +23,8 @@ export default function InstagramInsightsPage() {
   const [scenario, setScenario] = useState<"good" | "poor">("good");
 
   const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ["ig-insights"],
-    queryFn: async (): Promise<IgAccountInsights> => {
-      const res = await fetch("/api/instagram/insights");
-      if (!res.ok) throw new Error("Instagram 데이터를 불러오지 못했어요");
-      return res.json();
-    },
+    queryKey: instagramKeys.insights,
+    queryFn: fetchInstagramInsights,
     staleTime: 5 * 60 * 1000,
   });
 

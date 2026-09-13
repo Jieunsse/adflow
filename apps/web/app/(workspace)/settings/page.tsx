@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
+import { useQuery } from "@tanstack/react-query";
 import Icon from "@shared/ui/Icon";
 import IdField from "@shared/ui/IdField";
 import { Chip } from "@shared/ui/Chip";
@@ -14,6 +15,7 @@ import { useToast } from "@shared/ui/Toast";
 import { useNotifSettings } from "@shared/lib/notifications";
 import { notifyScopedStorageChange } from "@shared/lib/storage/useScopedStorage";
 import { onboardedKey } from "@widgets/onboarding-guard";
+import { fetchWorkspaceTarget, workspaceKeys } from "@entities/workspace/api";
 
 export default function SettingsPage() {
   const { data: session } = useSession();
@@ -89,16 +91,9 @@ const MEASURE_STEPS: [string, string][] = [
 function MeasureTab() {
   const showToast = useToast();
   const router = useRouter();
-  const [pixelId, setPixelId] = useState("");
-  const [pixelName, setPixelName] = useState("");
-  useEffect(() => {
-    fetch("/api/workspace/meta-target")
-      .then((res) => res.json())
-      .then((data: { target?: { pixelId?: string; pixelName?: string } }) => {
-        setPixelId(data.target?.pixelId ?? "");
-        setPixelName(data.target?.pixelName ?? "");
-      });
-  }, []);
+  const targetQ = useQuery({ queryKey: workspaceKeys.target, queryFn: fetchWorkspaceTarget });
+  const pixelId = targetQ.data?.target.pixelId ?? "";
+  const pixelName = targetQ.data?.target.pixelName ?? "";
   const activeId = pixelId || "<픽셀 ID>";
 
   const copy = (text: string, label: string) => {

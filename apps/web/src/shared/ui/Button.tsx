@@ -14,9 +14,9 @@ const BASE =
   "inline-flex items-center justify-center gap-1.5 border font-semibold leading-none tracking-[-0.002em] cursor-pointer transition-[background,border-color,color,box-shadow,transform] duration-[120ms] whitespace-nowrap disabled:cursor-not-allowed active:scale-[0.97]";
 
 const SIZE: Record<ButtonSize, string> = {
-  sm: "h-8 px-3 text-[13px] rounded-lg gap-[5px]",
-  md: "h-10 px-[18px] text-[14px] rounded-[10px]",
-  lg: "h-12 px-6 text-[15px] rounded-xl",
+  sm: "h-8 px-3 text-[13px] rounded-[var(--w-radius-8)] gap-[5px]",
+  md: "h-10 px-[18px] text-[14px] rounded-[var(--w-radius-8)]",
+  lg: "h-12 px-6 text-[15px] rounded-[var(--w-radius-12)]",
 };
 
 const VARIANT: Record<ButtonVariant, string> = {
@@ -37,7 +37,7 @@ const VARIANT: Record<ButtonVariant, string> = {
     "bg-[var(--w-fg-strong)] text-[var(--w-bg-elevated)] border-transparent " +
     "hover:bg-[var(--w-neutral-700)] disabled:opacity-50",
   fb:
-    "h-[46px] px-[22px] gap-2 font-bold text-[14px] rounded-[10px] " +
+    "h-[46px] px-[22px] gap-2 font-bold text-[14px] rounded-[var(--w-radius-8)] " +
     "bg-[var(--w-brand-facebook)] text-white border-[var(--w-brand-facebook)] " +
     "hover:bg-[var(--w-brand-facebook-hover)] hover:border-[var(--w-brand-facebook-hover)]",
 };

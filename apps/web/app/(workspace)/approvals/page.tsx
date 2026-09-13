@@ -9,8 +9,9 @@ import { Card } from "@shared/ui/Card";
 import { Chip, type ChipVariant } from "@shared/ui/Chip";
 import { Skeleton } from "@shared/ui/Skeleton";
 import { EmptyState } from "@shared/ui/primitives";
+import { ErrorState } from "@shared/ui/ErrorState";
 import { cn } from "@shared/lib/cn";
-import { fetchCampaigns } from "@entities/campaign/api";
+import { campaignKeys, fetchCampaigns } from "@entities/campaign/api";
 import type { CampaignSummary, CampaignIssueReason } from "@/lib/meta-ads";
 
 type ApprovalsFilter = "all" | "review" | "issue";
@@ -36,7 +37,7 @@ export default function ApprovalsPage() {
   const [filter, setFilter] = useState<ApprovalsFilter>("all");
   const [openReason, setOpenReason] = useState<{ campaignName: string; reason: CampaignIssueReason } | null>(null);
 
-  const q = useQuery({ queryKey: ["campaigns", "all"], queryFn: () => fetchCampaigns("all") });
+  const q = useQuery({ queryKey: campaignKeys.list("all"), queryFn: () => fetchCampaigns("all") });
   const all = q.data ?? [];
   const isUnauthorized = (q.error as { code?: number } | null)?.code === 401;
 
@@ -70,7 +71,7 @@ export default function ApprovalsPage() {
       </div>
 
       {isUnauthorized ? (
-        <ErrorCard
+        <ErrorState
           icon="link"
           title="광고 계정을 먼저 연결해주세요"
           reason="Meta 광고 계정과 페이지를 연결해야 심사 현황을 불러올 수 있어요."
@@ -78,7 +79,7 @@ export default function ApprovalsPage() {
           onAction={() => router.push("/setup")}
         />
       ) : q.isError ? (
-        <ErrorCard
+        <ErrorState
           title="심사 현황을 불러오지 못했어요"
           reason={q.error instanceof Error ? q.error.message : "잠시 후 다시 시도해 주세요"}
           ctaLabel="다시 시도"
@@ -296,19 +297,6 @@ function TableSkeleton() {
           ))}
         </tbody>
       </table>
-    </Card>
-  );
-}
-
-function ErrorCard({ icon = "warn", title, reason, ctaLabel = "다시 시도", onAction }: { icon?: "warn" | "link"; title: string; reason: string; ctaLabel?: string; onAction: () => void }) {
-  return (
-    <Card className="py-10 px-8 flex flex-col items-center gap-3 text-center">
-      <div style={{ width: 56, height: 56, borderRadius: "50%", background: "rgba(255,66,66,0.10)", color: "var(--w-status-negative)", display: "grid", placeItems: "center" }}>
-        <Icon name={icon} size={24} />
-      </div>
-      <div style={{ font: "700 17px/1.3 var(--w-font-sans)", color: "var(--w-fg-strong)", letterSpacing: "-0.01em" }}>{title}</div>
-      <div style={{ font: "500 13px/1.5 var(--w-font-sans)", color: "var(--w-fg-neutral)", maxWidth: 380 }}>{reason}</div>
-      <Button variant="secondary" type="button" className="mt-2" onClick={onAction}>{ctaLabel}</Button>
     </Card>
   );
 }

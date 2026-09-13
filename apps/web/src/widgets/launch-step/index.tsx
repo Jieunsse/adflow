@@ -17,6 +17,7 @@ import { type ObjectivePhase1Id } from "@entities/creative/options";
 import { isBoost, goalDefOf } from "@entities/creative/outcome-routing";
 import { profileOf } from "@entities/launch-objective/profile";
 import { useApiMutation } from "@shared/lib/api/useApiMutation";
+import { campaignKeys } from "@entities/campaign/api";
 import { addNotification } from "@shared/lib/notifications";
 import { useAutoRelaunch } from "@shared/lib/autoRelaunch";
 import { useToast } from "@shared/ui/Toast";
@@ -99,7 +100,9 @@ export default function LaunchStep({
   const { data: session } = useSession();
   const accountConnected = !!(session?.adAccountId && session?.pageId);
   const browseMode = !!session?.browseMode;
-  const launchMutation = useApiMutation<LaunchParams, LaunchResponse>("/api/campaign");
+  const launchMutation = useApiMutation<LaunchParams, LaunchResponse>("/api/campaign", {
+    invalidateKeys: [campaignKeys.all],
+  });
   const showToast = useToast();
 
   const outcomeChip = creative.state.outcome;

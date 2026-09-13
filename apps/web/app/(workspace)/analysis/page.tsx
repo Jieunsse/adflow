@@ -10,7 +10,7 @@ import { Card } from "@shared/ui/Card";
 import { Chip } from "@shared/ui/Chip";
 import { ChartLegend } from "@shared/ui/DualChart";
 import { fmtKRW, shortDate, campaignRunDays } from "@shared/lib/format";
-import { fetchCampaigns } from "@entities/campaign/api";
+import { campaignKeys, fetchCampaigns } from "@entities/campaign/api";
 import { CAMPAIGN_STATUS_MAP } from "@entities/campaign/status";
 import { deriveConversionSummary, derivePeriodKpis, deriveRevenueRoasDelta, splitWindow, toCampaignTableRow, type CampaignTableRow } from "@entities/insights/period-kpis";
 import { toCampaignsCsv } from "@entities/insights/report";
@@ -142,7 +142,7 @@ export default function AnalysisPage() {
   const dir: SortDir = searchParams.get("dir") === "asc" ? "asc" : "desc";
   const days = period === "7d" ? 7 : 30;
   const enabled = !!session?.adAccountId || !!session?.browseMode;
-  const campaignsQ = useQuery({ queryKey: ["campaigns", period], queryFn: () => fetchCampaigns(period), enabled, staleTime: 60_000 });
+  const campaignsQ = useQuery({ queryKey: campaignKeys.list(period), queryFn: () => fetchCampaigns(period), enabled, staleTime: 60_000 });
   const campaigns = campaignsQ.data ?? EMPTY_CAMPAIGNS;
   const selectedCampaign = campaigns.find((campaign) => campaign.id === requestedCampaignId);
   const campaignId = selectedCampaign?.id;

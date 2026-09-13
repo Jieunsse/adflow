@@ -19,7 +19,7 @@ import { tournamentClient } from "@entities/ab-test/tournament/client";
 import { TOUR_OBJECTIVE_OPTIONS, tourMetricSpec } from "@entities/ab-test/tournament/objective-metric";
 import type { TourAxis, TourVariant } from "@entities/ab-test/tournament/tournament";
 import { MOCK_CAMPAIGN_SUMMARIES } from "@/lib/mock-campaigns";
-import { fetchCampaigns } from "@entities/campaign/api";
+import { campaignKeys, fetchCampaigns } from "@entities/campaign/api";
 import { listBrowse, BROWSE_CHANGE_EVENT } from "@entities/campaign/browse/store";
 import { browseCampaignToSummary } from "@entities/campaign/browse/summary";
 import type { CampaignSummary } from "@/lib/meta-ads";
@@ -146,7 +146,7 @@ export default function TournamentSetup({ real = false }: { real?: boolean }) {
     return () => window.removeEventListener(BROWSE_CHANGE_EVENT, load);
   }, [real]);
   const realCampaignsQ = useQuery({
-    queryKey: ["campaigns", "all"],
+    queryKey: campaignKeys.list("all"),
     queryFn: () => fetchCampaigns("all"),
     enabled: real && championMode === "existing",
     retry: false,

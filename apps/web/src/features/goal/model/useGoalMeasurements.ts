@@ -55,7 +55,7 @@ export function useGoalMeasurements() {
   const browseRows = browseQ.data;
 
   const enabled = !!session?.adAccountId || browseMode;
-  const campaignsQ = useQuery({ queryKey: ["campaigns", "30d"], queryFn: fetchGoalCampaigns, enabled, staleTime: 60_000 });
+  const campaignsQ = useQuery({ queryKey: ["goal", "campaigns", "30d"], queryFn: fetchGoalCampaigns, enabled, staleTime: 60_000 });
   const trendQ = useQuery({ queryKey: ["dashboard", "trend", TREND_DAYS], queryFn: fetchTrend, enabled, staleTime: 5 * 60_000 });
 
   const campaigns = useMemo(

@@ -1,6 +1,10 @@
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQueryClient, type QueryKey } from '@tanstack/react-query'
 
-export function useApiMutation<TParams, TResult>(endpoint: string) {
+export function useApiMutation<TParams, TResult>(
+  endpoint: string,
+  options: { invalidateKeys?: readonly QueryKey[] } = {},
+) {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (params: TParams): Promise<TResult> => {
       const res = await fetch(endpoint, {
@@ -11,6 +15,11 @@ export function useApiMutation<TParams, TResult>(endpoint: string) {
       const data = await res.json()
       if (!res.ok) throw new Error((data as { error?: string }).error ?? '알 수 없는 오류')
       return data as TResult
+    },
+    onSuccess: async () => {
+      await Promise.all(
+        (options.invalidateKeys ?? []).map((queryKey) => queryClient.invalidateQueries({ queryKey })),
+      );
     },
   })
 }

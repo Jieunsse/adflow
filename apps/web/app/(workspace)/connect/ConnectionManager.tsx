@@ -11,6 +11,7 @@ import { maskId } from "@shared/lib/format";
 import { Button, buttonVariants } from "@shared/ui/Button";
 import { Card } from "@shared/ui/Card";
 import { Skeleton } from "@shared/ui/Skeleton";
+import { ErrorState } from "@shared/ui/ErrorState";
 import { cn } from "@shared/lib/cn";
 import { fetchAdIdentityPages } from "@entities/page/api";
 import { fetchProfilePictures, profilePicturesQueryKey } from "@entities/page/profile-pictures";
@@ -155,6 +156,7 @@ export function ConnectionManager({ embedded = false }: { embedded?: boolean }) 
   });
   const tokenExpired = (accountQ.error as { code?: number } | null)?.code === 401;
   const accountStatus: "active" | "disabled" = accountQ.data && accountQ.data.connected === false ? "disabled" : "active";
+  const igUserId = browseMode ? BROWSE_CONN.igUserId : target?.igUserId || null;
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -187,7 +189,6 @@ export function ConnectionManager({ embedded = false }: { embedded?: boolean }) 
   const pageId = browseMode ? BROWSE_CONN.pageId : target?.pageId ?? "—";
   const pixelName = browseMode ? BROWSE_CONN.pixelName : target?.pixelName ?? null;
   const pixelId = browseMode ? BROWSE_CONN.pixelId : target?.pixelId ?? null;
-  const igUserId = browseMode ? BROWSE_CONN.igUserId : target?.igUserId || null;
   const igUsername = browseMode ? BROWSE_CONN.igUsername : target?.igUsername || null;
 
   const handleReauth = () => {
@@ -205,22 +206,29 @@ export function ConnectionManager({ embedded = false }: { embedded?: boolean }) 
     setPickerOpen(kind);
   };
 
+  const updateTargetCache = (nextTarget: WorkspaceTarget) => {
+    queryClient.setQueryData<{ target: WorkspaceTarget; lastChange: { actor: string; timestamp: string } | null }>(
+      ["workspace-meta-target"],
+      (current) => ({ target: nextTarget, lastChange: current?.lastChange ?? null }),
+    );
+  };
+
   const pickAccount = async (it: PickerItem) => {
-    await saveWorkspaceTarget({ adAccountId: it.id, adAccountName: it.name, pixelId: "", pixelName: "" });
-    await targetQ.refetch();
+    const nextTarget = await saveWorkspaceTarget({ adAccountId: it.id, adAccountName: it.name, pixelId: "", pixelName: "" });
+    updateTargetCache(nextTarget as WorkspaceTarget);
     setPickerOpen(null);
     showToast(`'${it.name}'(으)로 변경했어요`);
-    accountQ.refetch();
+    void accountQ.refetch();
   };
   const pickPage = async (it: PickerItem) => {
-    await saveWorkspaceTarget({ pageId: it.id, pageName: it.name, igUserId: it.igUserId ?? "", igUsername: it.igUsername ?? "" });
-    await targetQ.refetch();
+    const nextTarget = await saveWorkspaceTarget({ pageId: it.id, pageName: it.name, igUserId: it.igUserId ?? "", igUsername: it.igUsername ?? "" });
+    updateTargetCache(nextTarget as WorkspaceTarget);
     setPickerOpen(null);
     showToast(`'${it.name}'(으)로 변경했어요`);
   };
   const pickPixel = async (it: PickerItem) => {
-    await saveWorkspaceTarget({ pixelId: it.id, pixelName: it.name });
-    await targetQ.refetch();
+    const nextTarget = await saveWorkspaceTarget({ pixelId: it.id, pixelName: it.name });
+    updateTargetCache(nextTarget as WorkspaceTarget);
     setPickerOpen(null);
     showToast(`'${it.name}'(으)로 변경했어요`);
   };
@@ -240,10 +248,10 @@ export function ConnectionManager({ embedded = false }: { embedded?: boolean }) 
       ) : accountQ.isLoading ? (
         <ConnectSkeleton />
       ) : accountQ.isError && !tokenExpired ? (
-        <ErrorCard
+        <ErrorState
           title="연결 정보를 불러오지 못했어요"
           reason={accountQ.error instanceof Error ? accountQ.error.message : "Meta API 응답이 지연되거나 일시적 네트워크 오류일 수 있어요. 잠시 후 다시 시도해 주세요."}
-          onRetry={() => accountQ.refetch()}
+          onAction={() => accountQ.refetch()}
         />
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -875,16 +883,5 @@ function ConnectSkeleton() {
         </Card>
       ))}
     </div>
-  );
-}
-
-function ErrorCard({ title, reason, onRetry }: { title: string; reason: string; onRetry: () => void }) {
-  return (
-    <Card style={{ padding: "40px 32px", display: "flex", flexDirection: "column", alignItems: "center", gap: 12, textAlign: "center" }}>
-      <div style={{ width: 56, height: 56, borderRadius: "50%", background: "rgba(255,66,66,0.10)", color: "var(--w-status-negative)", display: "grid", placeItems: "center" }}><Icon name="warn" size={24} /></div>
-      <div className="font-bold text-[17px] leading-[1.3] text-[var(--w-fg-strong)]" style={{ letterSpacing: "-0.01em" }}>{title}</div>
-      <div className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)]" style={{ maxWidth: 380 }}>{reason}</div>
-      <Button variant="secondary" type="button" style={{ marginTop: 8 }} onClick={onRetry}>다시 시도</Button>
-    </Card>
   );
 }

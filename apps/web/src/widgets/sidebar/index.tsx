@@ -10,7 +10,7 @@ import { useTheme, type ThemeChoice } from "@shared/lib/useTheme";
 import { usePresenterConsole } from "@shared/lib/usePresenterConsole";
 import NotificationBell from "@shared/ui/NotificationBell";
 import LogoutButton from "@shared/ui/LogoutButton";
-import { fetchCampaigns } from "@entities/campaign/api";
+import { campaignKeys, fetchCampaigns } from "@entities/campaign/api";
 import { cn } from "@shared/lib/cn";
 
 interface NavItem {
@@ -212,7 +212,7 @@ export default function Sidebar() {
   // /approvals 배지 — review + issue 캠페인 합. 같은 queryKey 로 /campaigns·/approvals 페이지와 캐시 공유.
   // 광고 계정 연결 전(=session 없거나 미연결)엔 fetch 안 함 (401 무한 호출 회피).
   const approvalsQ = useQuery({
-    queryKey: ["campaigns", "all"],
+    queryKey: campaignKeys.list("all"),
     queryFn: () => fetchCampaigns("all"),
     enabled: connected,
     retry: false,

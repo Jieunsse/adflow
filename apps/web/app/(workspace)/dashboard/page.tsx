@@ -27,7 +27,7 @@ import { buildRecent7Report, serializeReportText, toCampaignsCsv, type Recent7Re
 import { listBrowse, BROWSE_CHANGE_EVENT } from "@entities/campaign/browse/store";
 import { seedAutoPilotDemo } from "@entities/campaign/browse/seed";
 import { browseCampaignToSummary } from "@entities/campaign/browse/summary";
-import { fetchCampaigns } from "@entities/campaign/api";
+import { campaignKeys, fetchCampaigns } from "@entities/campaign/api";
 import { billingQueryKey, fetchBilling } from "@entities/billing/api";
 import BillingAlertWidget from "@widgets/billing-alert";
 import { DashboardHero, DashboardHeroNoConversion, heroRangeLabel } from "@widgets/dashboard-hero";
@@ -110,7 +110,7 @@ export default function DashboardPage() {
   });
 
   const campaignsQ = useQuery({
-    queryKey: ["campaigns", REPORT_PERIOD, browseMode ? browseExample : null],
+    queryKey: campaignKeys.list(REPORT_PERIOD, browseMode ? browseExample : undefined),
     queryFn: () => fetchDashboardCampaigns(browseMode ? browseExample : undefined),
     enabled: !!session?.adAccountId || !!session?.browseMode,
     staleTime: 60_000,

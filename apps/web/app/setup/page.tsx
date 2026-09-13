@@ -126,10 +126,13 @@ function SetupFlow() {
     setSelecting(account.id);
     setError(null);
     try {
-      await saveWorkspaceTarget({ adAccountId: account.id, adAccountName: account.name });
-      await update({ adAccountId: account.id, adAccountName: account.name });
       setLoading(true);
-      setPages(await fetchAdIdentityPages());
+      const [, , nextPages] = await Promise.all([
+        saveWorkspaceTarget({ adAccountId: account.id, adAccountName: account.name }),
+        update({ adAccountId: account.id, adAccountName: account.name }),
+        fetchAdIdentityPages(),
+      ]);
+      setPages(nextPages);
     } catch {
       setError("연결 정보를 저장하거나 페이스북 페이지 목록을 불러오지 못했어요.");
       setSelecting(null);

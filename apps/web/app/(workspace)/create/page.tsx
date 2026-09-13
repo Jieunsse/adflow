@@ -721,10 +721,10 @@ function CreateFlow() {
 
 
   return (
-    <div className={`px-12 py-9 pb-16 max-w-[1280px] w-full mx-auto flex flex-col gap-7 min-h-[calc(100vh-64px)]${browseMode && step !== 0 ? " justify-center" : ""}`} data-screen-label="광고 만들기">
+    <div className={`px-5 py-7 sm:px-8 sm:py-8 lg:px-12 lg:py-9 pb-16 max-w-[1280px] w-full mx-auto flex flex-col gap-7 min-h-[calc(100vh-64px)]${browseMode && step !== 0 ? " justify-center" : ""}`} data-screen-label="광고 만들기">
       {!launched && <CreateFlowProgress current={reviewing ? 3 : step as 0 | 1 | 2} />}
       {prefillBanner && (
-        <div className="flex items-center gap-3 p-[14px] bg-[var(--w-primary-soft)] rounded-xl">
+        <div className="flex flex-wrap items-center gap-3 p-[14px] bg-[var(--w-primary-soft)] rounded-xl">
           <Icon name="sparkles" size={16} />
           <p style={{ flex: 1, font: "500 13px/1.5 var(--w-font-sans)", color: "var(--w-fg-strong)", margin: 0 }}>
             {prefillBanner}
@@ -746,7 +746,7 @@ function CreateFlow() {
 
       {/* 게재까지 끝낸 화면(시안 2c) 위에 "이어하기" 띠가 남으면 무엇이 지금인지 헷갈린다. */}
       {resumeDraft && !launched && (
-        <div className="flex items-center gap-3 p-[14px] bg-[var(--w-primary-soft)] rounded-xl">
+        <div className="flex flex-wrap items-center gap-3 p-[14px] bg-[var(--w-primary-soft)] rounded-xl">
           <Icon name="clock" size={16} />
           <p style={{ flex: 1, font: "500 13px/1.5 var(--w-font-sans)", color: "var(--w-fg-strong)", margin: 0 }}>
             작업하던 광고가 있어요. 이어서 만들까요?

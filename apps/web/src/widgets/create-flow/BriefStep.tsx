@@ -122,7 +122,7 @@ export default function BriefStep(p: Props) {
             type="button"
             aria-pressed={p.mode === "quick"}
             onClick={() => p.setMode("quick")}
-            className={`rounded-[var(--w-radius-8)] px-3 py-3 text-left ${p.mode === "quick" ? "bg-[var(--w-primary-soft)]" : "hover:bg-[var(--w-bg-normal)]"}`}
+            className={`rounded-[var(--w-radius-8)] px-3 py-3 text-left transition-[background,box-shadow] duration-[120ms] ${p.mode === "quick" ? "bg-[var(--w-primary-soft)] shadow-[inset_0_0_0_1.5px_var(--w-primary-normal)]" : "hover:bg-[var(--w-bg-normal)]"}`}
           >
             <span className="w-label block text-[var(--w-fg-strong)]">빠르게 만들기</span>
             <span className="w-caption mt-1 block">목표와 제품만 고르면 최근 설정을 적용해요.</span>
@@ -131,7 +131,7 @@ export default function BriefStep(p: Props) {
             type="button"
             aria-pressed={p.mode === "detailed"}
             onClick={() => p.setMode("detailed")}
-            className={`rounded-[var(--w-radius-8)] px-3 py-3 text-left ${p.mode === "detailed" ? "bg-[var(--w-primary-soft)]" : "hover:bg-[var(--w-bg-normal)]"}`}
+            className={`rounded-[var(--w-radius-8)] px-3 py-3 text-left transition-[background,box-shadow] duration-[120ms] ${p.mode === "detailed" ? "bg-[var(--w-primary-soft)] shadow-[inset_0_0_0_1.5px_var(--w-primary-normal)]" : "hover:bg-[var(--w-bg-normal)]"}`}
           >
             <span className="w-label block text-[var(--w-fg-strong)]">상세 설정</span>
             <span className="w-caption mt-1 block">고객·메시지·근거까지 직접 정해요.</span>
@@ -148,7 +148,7 @@ export default function BriefStep(p: Props) {
               onClick={() => setBriefStage(Number(number) as 1 | 2 | 3)}
               disabled={number !== "01" && !outcome}
               aria-current={briefStage === Number(number) ? "step" : undefined}
-              className={`rounded-[var(--w-radius-8)] px-3 py-2.5 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${briefStage === Number(number) ? "bg-[var(--w-primary-soft)]" : "hover:bg-[var(--w-bg-normal)]"}`}
+              className={`rounded-[var(--w-radius-8)] px-3 py-2.5 text-left transition-[background,box-shadow] duration-[120ms] disabled:cursor-not-allowed disabled:opacity-50 ${briefStage === Number(number) ? "bg-[var(--w-primary-soft)] shadow-[inset_0_0_0_1.5px_var(--w-primary-normal)]" : "hover:bg-[var(--w-bg-normal)]"}`}
             >
               <span className={`mr-2 inline-grid h-5 w-5 place-items-center rounded-full text-[11px] font-bold ${briefStage === Number(number) ? "bg-[var(--w-primary-normal)] text-[var(--w-primary-on)]" : "bg-[var(--w-bg-neutral)] text-[var(--w-fg-neutral)]"}`}>{number}</span>
               <span className="w-caption text-[var(--w-fg-strong)]">{label}</span>

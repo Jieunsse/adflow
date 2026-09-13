@@ -16,6 +16,7 @@ export default function CreateFlowProgress({ current }: { current: 0 | 1 | 2 | 3
               <span className={cn("h-px w-8 sm:w-12", done ? "bg-[var(--w-primary-normal)]" : "bg-[var(--w-line-normal)]")} />
             )}
             <span
+              aria-current={active ? "step" : undefined}
               className={cn(
                 "grid h-6 w-6 place-items-center rounded-full border text-[11px] font-bold",
                 active || done

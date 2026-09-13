@@ -33,17 +33,6 @@ create table if not exists influencer_campaigns (
 );
 create index if not exists influencer_campaigns_user_email on influencer_campaigns (user_email);
 
-create table if not exists sops (
-  id text primary key,
-  user_email text not null,
-  name text not null,
-  description text,
-  sections jsonb not null default '[]',
-  created_at text not null,
-  updated_at text not null
-);
-create index if not exists sops_user_email on sops (user_email);
-
 create table if not exists personas (
   id text primary key,
   user_email text not null,
@@ -93,8 +82,8 @@ create table if not exists reference_materials (
   type text not null,
   mime_type text not null,
   size_bytes bigint not null,
-  storage_url text not null,
-  uploaded_at bigint not null
+  storage_path text not null,
+  uploaded_at timestamptz not null default now()
 );
 create index if not exists reference_materials_user_profile_uploaded on reference_materials (user_email, brand_profile_id, uploaded_at desc);
 
@@ -170,6 +159,7 @@ create table if not exists tournaments (
 create index if not exists tournaments_user_status on tournaments (user_email, status);
 
 create table if not exists cron_runs (
+  id bigint generated always as identity primary key,
   job text not null,
   ok boolean not null,
   scanned int not null default 0,
@@ -180,10 +170,17 @@ create table if not exists cron_runs (
   started_at timestamptz not null,
   finished_at timestamptz not null default now()
 );
+create index if not exists cron_runs_job_finished on cron_runs (job, finished_at desc);
+
+create table if not exists cron_locks (
+  job text primary key,
+  locked_at timestamptz not null default now()
+);
 
 insert into storage.buckets (id, name, public)
-values ('product-images', 'product-images', true), ('reference-materials', 'reference-materials', true)
+values ('product-images', 'product-images', true), ('reference-materials', 'reference-materials', false)
 on conflict (id) do nothing;
+update storage.buckets set public = false where id = 'reference-materials';
 
 insert into storage.buckets (id, name, public)
 values ('published-media', 'published-media', true)
@@ -194,7 +191,6 @@ alter table brand_profiles enable row level security;
 alter table library_items enable row level security;
 alter table creators enable row level security;
 alter table influencer_campaigns enable row level security;
-alter table sops enable row level security;
 alter table personas enable row level security;
 alter table campaign_launches enable row level security;
 alter table auto_relaunch_states enable row level security;
@@ -207,3 +203,13 @@ alter table workspace_meta_targets enable row level security;
 alter table workspace_meta_target_audits enable row level security;
 alter table tournaments enable row level security;
 alter table cron_runs enable row level security;
+alter table cron_locks enable row level security;
+
+alter table personas add constraint personas_brand_profile_fk
+  foreign key (brand_profile_id) references brand_profiles(id) on delete cascade;
+alter table products add constraint products_brand_profile_fk
+  foreign key (brand_profile_id) references brand_profiles(id) on delete cascade;
+alter table reference_materials add constraint reference_materials_brand_profile_fk
+  foreign key (brand_profile_id) references brand_profiles(id) on delete cascade;
+alter table tournaments add constraint tournaments_status_check
+  check (status in ('running', 'completed', 'stopped', 'winner'));

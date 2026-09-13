@@ -1,9 +1,8 @@
 // Next API 라우트가 Supabase를 감싸는 공통 저장소 핸들러.
 
-import { getToken } from "next-auth/jwt";
 import { NextResponse, type NextRequest } from "next/server";
 import { getSupabaseServer } from "@shared/lib/supabase/server";
-import { isRealOwner } from "@shared/lib/store/ownerKey";
+import { getSupabaseOwner } from "@shared/lib/supabase/auth";
 
 type StoreConfig = { table: string; idColumn?: string; orderColumn?: string };
 
@@ -23,10 +22,10 @@ async function context(req: NextRequest, path: string): Promise<
   | { error: NextResponse }
   | { owner: string; config: StoreConfig; supabase: NonNullable<ReturnType<typeof getSupabaseServer>> }
 > {
-  const owner = (await getToken({ req, secret: process.env.NEXTAUTH_SECRET }))?.email;
+  const owner = await getSupabaseOwner(req);
   const config = STORES[path];
   const supabase = getSupabaseServer();
-  if (!config || !isRealOwner(typeof owner === "string" ? owner : null) || !supabase) {
+  if (!config || !owner || !supabase) {
     return { error: NextResponse.json({ error: "저장 기능을 사용할 수 없어요." }, { status: 401 }) };
   }
   return { owner: owner as string, config, supabase };

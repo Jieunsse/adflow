@@ -31,16 +31,16 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  const materials = (data ?? []).map((row) => ({
+  const materials = await Promise.all((data ?? []).map(async (row) => ({
     id: row.id,
     brandProfileId: row.brand_profile_id,
     name: row.name,
     type: row.type,
     mimeType: row.mime_type,
     sizeBytes: row.size_bytes,
-    storageUrl: row.storage_url,
-    uploadedAt: row.uploaded_at,
-  }));
+    storageUrl: (await sb.storage.from(BUCKET).createSignedUrl(row.storage_path, 3600)).data?.signedUrl,
+    uploadedAt: new Date(row.uploaded_at).getTime(),
+  })));
   return NextResponse.json(materials);
 }
 
@@ -70,9 +70,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
   if (uploadError) return NextResponse.json({ error: uploadError.message }, { status: 500 });
 
-  const { data: urlData } = sb.storage.from(BUCKET).getPublicUrl(storagePath);
-  const storageUrl = urlData.publicUrl;
-
   const row = {
     id: materialId,
     brand_profile_id: id,
@@ -81,8 +78,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     type,
     mime_type: file.type,
     size_bytes: file.size,
-    storage_url: storageUrl,
-    uploaded_at: Date.now(),
+    storage_path: storagePath,
   };
 
   const { error: insertError } = await sb.from(TABLE).insert(row);
@@ -98,7 +94,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     type: row.type,
     mimeType: row.mime_type,
     sizeBytes: row.size_bytes,
-    storageUrl: row.storage_url,
-    uploadedAt: row.uploaded_at,
+    storageUrl: (await sb.storage.from(BUCKET).createSignedUrl(storagePath, 3600)).data?.signedUrl,
+    uploadedAt: Date.now(),
   });
 }

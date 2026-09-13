@@ -17,6 +17,7 @@ export type CronRunSummary = {
 };
 
 export type CronRun = {
+  id: number;
   job: string;
   ok: boolean;
   scanned: number;
@@ -27,6 +28,19 @@ export type CronRun = {
   started_at: string;
   finished_at: string;
 };
+
+export async function acquireCronLock(job: string): Promise<boolean> {
+  const c = getSupabaseServer();
+  if (!c) return false;
+  await c.from("cron_locks").delete().eq("job", job).lt("locked_at", new Date(Date.now() - 30 * 60_000).toISOString());
+  const { error } = await c.from("cron_locks").insert({ job });
+  return !error;
+}
+
+export async function releaseCronLock(job: string): Promise<void> {
+  const c = getSupabaseServer();
+  if (c) await c.from("cron_locks").delete().eq("job", job);
+}
 
 export async function recordCronRun(run: CronRunSummary): Promise<void> {
   try {

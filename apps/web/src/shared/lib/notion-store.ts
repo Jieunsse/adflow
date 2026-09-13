@@ -1,4 +1,5 @@
 import { getSupabaseServer } from "./supabase-server";
+import { decryptToken, encryptToken } from "./notion-token-crypto";
 
 // ADR-043 — Notion Connection 영속. server-side only.
 // user_key = NextAuth sub/email (라우트에서 getToken 으로 해석해 넘긴다).
@@ -52,7 +53,7 @@ export async function getNotionConnection(userKey: string): Promise<NotionConnec
     .maybeSingle();
   if (error || !data) return null;
   return {
-    accessToken: data.access_token,
+    accessToken: decryptToken(data.access_token),
     botId: data.bot_id ?? undefined,
     workspaceId: data.workspace_id ?? undefined,
     workspaceName: data.workspace_name ?? undefined,
@@ -65,7 +66,7 @@ export async function saveNotionConnection(userKey: string, conn: NotionConnecti
   if (!supabase) return;
   const { error } = await supabase.from(TABLE).upsert({
     user_key: userKey,
-    access_token: conn.accessToken,
+    access_token: encryptToken(conn.accessToken),
     bot_id: conn.botId ?? null,
     workspace_id: conn.workspaceId ?? null,
     workspace_name: conn.workspaceName ?? null,

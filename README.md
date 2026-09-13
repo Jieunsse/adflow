@@ -16,9 +16,10 @@ pnpm dev
 
 1. Supabase 프로젝트를 만들어요.
 2. SQL Editor에서 [supabase/schema.sql](./supabase/schema.sql)을 실행해요.
-3. apps/web/.env.local에 SUPABASE_URL과 server-side 전용 SUPABASE_SECRET_KEY를 넣어요.
+3. apps/web/.env.local에 SUPABASE_URL, server-side 전용 SUPABASE_SECRET_KEY, 토큰 암호화용 ADFLOW_TOKEN_ENCRYPTION_KEY를 넣어요.
 
 SUPABASE_SECRET_KEY는 브라우저 코드나 NEXT_PUBLIC_* 변수에 넣으면 안 돼요.
+ADFLOW_TOKEN_ENCRYPTION_KEY는 Notion 등 외부 서비스 토큰을 암호화하는 서버 전용 키예요. 설정 후 바꾸면 기존 암호화 토큰을 복호화할 수 없어요.
 
 ## 명령
 

@@ -16,6 +16,7 @@ export default function GoalTrackerClient({ goalId }: { goalId: string }) {
   const m = useGoalMeasurements();
   const router = useRouter();
   const [editing, setEditing] = useState(false);
+  const [step, setStep] = useState(0);
 
   const goal = m.goals.find((g) => g.id === goalId) ?? null;
 
@@ -28,11 +29,13 @@ export default function GoalTrackerClient({ goalId }: { goalId: string }) {
     return (
       <GoalWizard
         goal={goal}
+        step={step}
         inputs={m.inputs}
         current={m.current}
         marginRate={m.marginRate}
         campaignNames={m.campaigns.filter((c) => c.status === "live").map((c) => c.name)}
         onSave={save}
+        onStepChange={setStep}
         onClose={() => setEditing(false)}
         onOpenTracker={(id) => {
           setEditing(false);

@@ -12,17 +12,17 @@ describe("datesForQuickStart", () => {
 
 describe("latestQuickStart", () => {
   it("선택한 제품의 가장 최근 성공 설정만 찾아요", () => {
-    const settings = quickStart({ productId: "prd_1" });
+    const settings = makeQuickStart({ productId: "prd_1" });
     expect(latestQuickStart([launched(settings)], null, "prd_1")?.settings).toBe(settings);
   });
 
   it("제품을 특정할 수 없으면 브랜드의 최신 설정을 써요", () => {
-    const settings = quickStart({ brandProfileId: "bp_1", productId: "prd_1" });
+    const settings = makeQuickStart({ brandProfileId: "bp_1", productId: "prd_1" });
     expect(latestQuickStart([launched(settings)], "bp_1", null)?.settings).toBe(settings);
   });
 });
 
-function quickStart(ids: { brandProfileId?: string; productId?: string }) {
+function makeQuickStart(ids: { brandProfileId?: string; productId?: string }) {
   return {
     ...ids,
     target: "고객",
@@ -42,7 +42,7 @@ function quickStart(ids: { brandProfileId?: string; productId?: string }) {
   };
 }
 
-function launched(quickStart: ReturnType<typeof quickStart>) {
+function launched(quickStart: ReturnType<typeof makeQuickStart>) {
   return {
     campaignId: "camp_1",
     adSetId: "set",

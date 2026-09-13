@@ -49,7 +49,7 @@ export type SetupFormState = {
   prohibitedWords: string[];
 };
 
-// POST /api/tournaments 바디 — Spring + Meta delivery 봉투.
+// POST /api/tournaments 바디 — Supabase + Meta delivery 봉투.
 export type TournamentRequestBody = {
   brandProfileId: string;
   productId: string;

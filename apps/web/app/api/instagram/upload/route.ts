@@ -18,6 +18,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: "업로드 정보가 올바르지 않아요." }, { status: 400 })
   }
 
-  const result = prepareInstagramMedia("image", body.mimeType, body.size)
+  const result = await prepareInstagramMedia("image", body.mimeType, body.size)
   return NextResponse.json(result.ok ? result : { ok: false, error: result.error }, { status: result.ok ? 200 : result.status })
 }

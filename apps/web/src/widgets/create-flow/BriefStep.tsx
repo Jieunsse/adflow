@@ -198,7 +198,7 @@ export default function BriefStep(p: Props) {
             </div>
             <div className={`mt-4 rounded-[var(--w-radius-12)] px-3.5 py-3 ${selectedObjective ? "bg-[var(--w-primary-soft)]" : "bg-[var(--w-bg-neutral)]"}`} aria-live="polite">
               <p className={`w-caption m-0 ${selectedObjective ? "text-[var(--w-primary-heavy)]" : ""}`}>
-                {selectedObjective ? selectedObjective.outcomeDescription : "목표를 고르면 다음에 채울 정보가 열려요."}
+                {selectedObjective && "outcomeDescription" in selectedObjective ? selectedObjective.outcomeDescription : "목표를 고르면 다음에 채울 정보가 열려요."}
               </p>
             </div>
           </section>}

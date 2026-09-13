@@ -10,7 +10,6 @@
     "start": "pnpm --filter adflow start",
     "lint": "pnpm --filter adflow lint",
     "test": "pnpm --filter adflow test",
-    "test:e2e": "pnpm --filter adflow test:e2e",
-    "contracts:generate": "pnpm --filter @adflow/contracts generate"
+    "test:e2e": "pnpm --filter adflow test:e2e"
   }
 }

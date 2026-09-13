@@ -28,7 +28,7 @@ export async function GET() {
     const audit = await getWorkspaceMetaTargetAudit()
     return NextResponse.json({ target, lastChange: audit.at(-1) ?? null })
   } catch {
-    return NextResponse.json({ error: "연결 대상 저장소를 사용할 수 없어요. 백엔드 설정을 확인해 주세요." }, { status: 503 })
+    return NextResponse.json({ error: "연결 대상 저장소를 사용할 수 없어요. Supabase 설정을 확인해 주세요." }, { status: 503 })
   }
 }
 
@@ -55,6 +55,6 @@ export async function PATCH(req: Request) {
     const target = await updateWorkspaceMetaTarget(patch, actor)
     return NextResponse.json({ target })
   } catch {
-    return NextResponse.json({ error: "연결 대상 저장소를 사용할 수 없어요. 백엔드 설정을 확인해 주세요." }, { status: 503 })
+    return NextResponse.json({ error: "연결 대상 저장소를 사용할 수 없어요. Supabase 설정을 확인해 주세요." }, { status: 503 })
   }
 }

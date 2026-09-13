@@ -1,69 +1,36 @@
-// Server-side workspace target. This installation serves one customer workspace;
-// user access tokens remain in each user's session and are never stored here.
-import { backendBaseUrl, internalSecret } from "@shared/lib/backend/client"
+import { getSupabaseServer } from "@shared/lib/supabase/server";
 
 export type WorkspaceMetaTarget = {
-  adAccountId?: string
-  adAccountName?: string
-  pageId?: string
-  pageName?: string
-  pixelId?: string
-  pixelName?: string
-  igUserId?: string
-  igUsername?: string
-}
-
-export type WorkspaceTargetAudit = {
-  actor: string
-  timestamp: string
-  before: WorkspaceMetaTarget
-  after: WorkspaceMetaTarget
-}
-
-async function call(path: string, init?: { method: string; body?: string }): Promise<Response> {
-  const base = backendBaseUrl()
-  const secret = internalSecret()
-  if (!base || !secret) throw new Error("workspace_meta_target_backend_not_configured")
-
-  let response: Response
-  try {
-    response = await fetch(`${base}${path}`, {
-      method: init?.method ?? "GET",
-      headers: {
-        "X-Internal-Secret": secret,
-        ...(init?.body ? { "Content-Type": "application/json" } : {}),
-      },
-      ...(init?.body ? { body: init.body } : {}),
-      cache: "no-store",
-    })
-  } catch {
-    throw new Error("workspace_meta_target_backend_unreachable")
-  }
-  if (!response.ok) throw new Error(`workspace_meta_target_backend_${response.status}`)
-  return response
-}
+  adAccountId?: string; adAccountName?: string; pageId?: string; pageName?: string;
+  pixelId?: string; pixelName?: string; igUserId?: string; igUsername?: string;
+};
+export type WorkspaceTargetAudit = { actor: string; timestamp: string; before: WorkspaceMetaTarget; after: WorkspaceMetaTarget };
+const KEY = "workspace";
 
 export async function getWorkspaceMetaTarget(): Promise<WorkspaceMetaTarget> {
-  const response = await call("/internal/workspace-meta-target")
-  const body = await response.json() as { target?: WorkspaceMetaTarget }
-  return body.target ?? {}
+  const sb = getSupabaseServer();
+  if (!sb) throw new Error("workspace_meta_target_not_configured");
+  const { data, error } = await sb.from("workspace_meta_targets").select("data").eq("user_email", KEY).maybeSingle();
+  if (error) throw error;
+  return (data?.data as WorkspaceMetaTarget | null) ?? {};
 }
 
 export async function getWorkspaceMetaTargetAudit(): Promise<WorkspaceTargetAudit[]> {
-  const response = await call("/internal/workspace-meta-target/audit")
-  const body = await response.json() as WorkspaceTargetAudit[]
-  return Array.isArray(body) ? body : []
+  const sb = getSupabaseServer();
+  if (!sb) throw new Error("workspace_meta_target_not_configured");
+  const { data, error } = await sb.from("workspace_meta_target_audits").select("actor, created_at, before_data, after_data").eq("user_email", KEY).order("created_at", { ascending: true });
+  if (error) throw error;
+  return (data ?? []).map((row) => ({ actor: row.actor, timestamp: row.created_at, before: row.before_data ?? {}, after: row.after_data ?? {} }));
 }
 
-export async function updateWorkspaceMetaTarget(
-  patch: WorkspaceMetaTarget,
-  actor: string,
-): Promise<WorkspaceMetaTarget> {
-  const query = new URLSearchParams({ actor })
-  const response = await call(`/internal/workspace-meta-target?${query}`, {
-    method: "PATCH",
-    body: JSON.stringify(patch),
-  })
-  const body = await response.json() as { target?: WorkspaceMetaTarget }
-  return body.target ?? {}
+export async function updateWorkspaceMetaTarget(patch: WorkspaceMetaTarget, actor: string): Promise<WorkspaceMetaTarget> {
+  const sb = getSupabaseServer();
+  if (!sb) throw new Error("workspace_meta_target_not_configured");
+  const before = await getWorkspaceMetaTarget();
+  const after = { ...before, ...patch };
+  const { error } = await sb.from("workspace_meta_targets").upsert({ user_email: KEY, data: after, updated_at: new Date().toISOString() });
+  if (error) throw error;
+  const audit = await sb.from("workspace_meta_target_audits").insert({ user_email: KEY, actor, action: "update", before_data: before, after_data: after });
+  if (audit.error) throw audit.error;
+  return after;
 }

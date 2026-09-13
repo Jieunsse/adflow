@@ -632,7 +632,7 @@ export const metaAdsInsights = {
       '&breakdowns=publisher_platform&fields=campaign_id,spend,impressions,clicks,actions,action_values&limit=500&access_token=' + token
     const rows: RawDailyInsight[] = []
     while (next) {
-      const page = await graphFetch<{ data?: RawDailyInsight[]; paging?: { next?: string } }>(next)
+      const page: { data?: RawDailyInsight[]; paging?: { next?: string } } = await graphFetch(next)
       rows.push(...(page.data ?? []))
       next = page.paging?.next
     }

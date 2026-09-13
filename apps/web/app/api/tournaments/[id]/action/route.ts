@@ -46,7 +46,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: "토너먼트를 찾을 수 없어요." }, { status: 404 });
   }
 
-  // 저장은 전부 Spring 이 한다 — 필요한 필드만 고쳐야 낙관적 락이 걸린다. 애그리거트를 통째로
+  // 저장은 전부 Supabase 가 한다 — 필요한 필드만 고쳐야 낙관적 락이 걸린다. 애그리거트를 통째로
   // 다시 올리면 폴러가 방금 쓴 결과를 덮는다.
   return withRouteHandler(true, "", async () => {
     const b = (await req.json()) as Partial<ActionBody>;
@@ -55,7 +55,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         await editOnBackend(id, "confirm-champion", { variant: b.variant });
         break;
       case "regenerate-champion": {
-        // 카피 생성만 여기서(Gemini). 확정 전에만 허용하는 판단은 Spring 이 한다.
+        // 카피 생성만 여기서(Gemini). 확정 전에만 허용하는 판단은 저장 계층이 한다.
         const champion = await getRealTournamentRunner().regenerateChampion(existing);
         if (champion) await editOnBackend(id, "replace-champion", { variant: champion });
         break;

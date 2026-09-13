@@ -1,67 +1,40 @@
-// ADR-024 Product 개별 조작 — 단계 4 에서 Spring 으로 재배선.
-// 백엔드가 upsert 라 PUT 과 POST 의 몸통이 같다. 외부 계약(FormData)은 동결이다.
-
 import { NextResponse, type NextRequest } from "next/server";
-import { callBackend } from "@shared/lib/backend/call";
-import { toPublicUrl, toStoragePath } from "@shared/lib/backend/files";
-import { type ProductRow, deleteProductImage, putProductImage } from "../shared";
+import { getSupabaseServer } from "@shared/lib/supabase/server";
+import { getSupabaseOwner } from "@shared/lib/supabase/auth";
+import { deleteProductImage, putProductImage, type ProductRow } from "../shared";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string; productId: string }> },
-) {
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string; productId: string }> }) {
   const { id, productId } = await params;
-
+  const owner = await getSupabaseOwner(req);
+  const sb = getSupabaseServer();
+  if (!owner || !sb) return NextResponse.json({ error: "로그인이 필요해요." }, { status: 401 });
   const form = await req.formData();
   const raw = form.get("data");
-  if (typeof raw !== "string") return NextResponse.json({ error: "data required" }, { status: 400 });
-
-  const entry = JSON.parse(raw) as Omit<ProductRow, "id" | "brandProfileId">;
-  let imagePath = toStoragePath(entry.imageUrl);
-
+  if (typeof raw !== "string") return NextResponse.json({ error: "data가 필요해요." }, { status: 400 });
+  const entry = JSON.parse(raw) as ProductRow;
+  let imageUrl = entry.imageUrl;
   const image = form.get("image");
   if (image instanceof File) {
     const uploaded = await putProductImage(req, id, productId, image);
     if (uploaded.error) return uploaded.error;
-    if (uploaded.path) imagePath = uploaded.path;
+    imageUrl = uploaded.path ?? imageUrl;
   }
-
-  const row: ProductRow = {
-    ...entry,
-    id: productId,
-    brandProfileId: id,
-    imageUrl: imagePath,
-  };
-
-  const save = await callBackend(req, "/stores/products", {
-    method: "POST",
-    body: JSON.stringify({ item: row }),
-    contentType: "application/json",
-  });
-  if (!save.ok) return NextResponse.json({ error: save.message }, { status: save.status });
-  if (!save.res.ok) {
-    return NextResponse.json({ error: "제품을 저장하지 못했어요." }, { status: save.res.status });
-  }
-
-  return NextResponse.json({ ...row, imageUrl: toPublicUrl(imagePath) });
+  const row = { id: productId, user_email: owner, brand_profile_id: id, name: entry.name, description: entry.description, image_url: imageUrl ?? null, price: entry.price ?? null, target_url: entry.targetUrl ?? null, created_at: entry.createdAt };
+  const { error } = await sb.from("products").upsert(row);
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json({ ...entry, id: productId, brandProfileId: id, imageUrl });
 }
 
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string; productId: string }> },
-) {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string; productId: string }> }) {
   const { id, productId } = await params;
-
-  // 항목을 지우기 전에 경로를 읽어야 한다 — 지운 뒤엔 어느 파일이었는지 알 길이 없다.
+  const owner = await getSupabaseOwner(req);
+  const sb = getSupabaseServer();
+  if (!owner || !sb) return NextResponse.json({ error: "로그인이 필요해요." }, { status: 401 });
   await deleteProductImage(req, id, productId);
-
-  const del = await callBackend(req, `/stores/products?id=${encodeURIComponent(productId)}`, {
-    method: "DELETE",
-  });
-  if (!del.ok) return NextResponse.json({ error: del.message }, { status: del.status });
-
+  const { error } = await sb.from("products").delete().eq("id", productId).eq("brand_profile_id", id).eq("user_email", owner);
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true });
 }

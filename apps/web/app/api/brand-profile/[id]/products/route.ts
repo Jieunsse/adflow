@@ -1,56 +1,88 @@
-// ADR-024 Product — 단계 4 에서 Supabase 직접 접근을 Spring 으로 갈아끼웠다.
-// 외부 계약은 동결이다: GET 은 맨 배열, POST 는 FormData(data, image).
+import { NextRequest, NextResponse } from "next/server";
+import { getSupabaseServer } from "@shared/lib/supabase-server";
+import { getSupabaseOwner } from "@shared/lib/supabase/auth";
 
-import { NextResponse, type NextRequest } from "next/server";
-import { callBackend } from "@shared/lib/backend/call";
-import { toPublicUrl, toStoragePath } from "@shared/lib/backend/files";
-import { type ProductRow, expose, putProductImage } from "./shared";
-
-export const dynamic = "force-dynamic";
-export const runtime = "nodejs";
+const BUCKET = "product-images";
+const TABLE = "products";
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const call = await callBackend(req, `/stores/products?brandProfileId=${encodeURIComponent(id)}`);
-  if (!call.ok) return NextResponse.json({ error: call.message }, { status: call.status });
-  if (!call.res.ok) {
-    return NextResponse.json({ error: "제품을 불러오지 못했어요." }, { status: call.res.status });
-  }
+  const sb = getSupabaseServer();
+  const owner = await getSupabaseOwner(req);
+  if (!owner) return NextResponse.json({ error: "로그인이 필요해요." }, { status: 401 });
+  if (!sb) return NextResponse.json([], { status: 200 });
 
-  const { items } = (await call.res.json()) as { items: ProductRow[] };
-  return NextResponse.json(items.map(expose));
+  const { data, error } = await sb
+    .from(TABLE)
+    .select("*")
+    .eq("brand_profile_id", id)
+    .eq("user_email", owner)
+    .order("created_at", { ascending: true });
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  return NextResponse.json(
+    (data ?? []).map(rowToEntry)
+  );
 }
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  const sb = getSupabaseServer();
+  const owner = await getSupabaseOwner(req);
+  if (!owner) return NextResponse.json({ error: "로그인이 필요해요." }, { status: 401 });
+  if (!sb) return NextResponse.json({ error: "Supabase not configured" }, { status: 500 });
 
-  const form = await req.formData();
-  const raw = form.get("data");
+  const formData = await req.formData();
+  const raw = formData.get("data");
   if (typeof raw !== "string") return NextResponse.json({ error: "data required" }, { status: 400 });
 
-  const entry = JSON.parse(raw) as ProductRow;
-  if (!entry.id) return NextResponse.json({ error: "id required" }, { status: 400 });
+  const entry = JSON.parse(raw) as {
+    id: string; name: string; description: string;
+    price?: string; targetUrl?: string; createdAt: number;
+  };
 
-  // 클라가 조립된 URL 을 되돌려 보낸다 — 저장 경로로 되돌려야 접두사가 겹치지 않는다.
-  let imagePath = toStoragePath(entry.imageUrl);
-
-  const image = form.get("image");
-  if (image instanceof File) {
-    const uploaded = await putProductImage(req, id, entry.id, image);
-    if (uploaded.error) return uploaded.error;
-    if (uploaded.path) imagePath = uploaded.path;
+  let imageUrl: string | undefined;
+  const imageFile = formData.get("image");
+  if (imageFile instanceof File) {
+    const ext = imageFile.name.split(".").pop() ?? "jpg";
+    const path = `${id}/${entry.id}.${ext}`;
+    const buf = await imageFile.arrayBuffer();
+    const { error: upErr } = await sb.storage.from(BUCKET).upload(path, buf, {
+      contentType: imageFile.type, upsert: true,
+    });
+    if (!upErr) {
+      imageUrl = sb.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
+    }
   }
 
-  const row: ProductRow = { ...entry, brandProfileId: id, imageUrl: imagePath };
-  const save = await callBackend(req, "/stores/products", {
-    method: "POST",
-    body: JSON.stringify({ item: row }),
-    contentType: "application/json",
-  });
-  if (!save.ok) return NextResponse.json({ error: save.message }, { status: save.status });
-  if (!save.res.ok) {
-    return NextResponse.json({ error: "제품을 저장하지 못했어요." }, { status: save.res.status });
-  }
+  const row = {
+    id: entry.id,
+    brand_profile_id: id,
+    user_email: owner,
+    name: entry.name,
+    description: entry.description,
+    image_url: imageUrl ?? null,
+    price: entry.price ?? null,
+    target_url: entry.targetUrl ?? null,
+    created_at: entry.createdAt,
+  };
 
-  return NextResponse.json({ ...row, imageUrl: toPublicUrl(imagePath) });
+  const { error } = await sb.from(TABLE).insert(row);
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  return NextResponse.json(rowToEntry(row));
+}
+
+function rowToEntry(row: Record<string, unknown>) {
+  return {
+    id: row.id,
+    brandProfileId: row.brand_profile_id,
+    name: row.name,
+    description: row.description,
+    imageUrl: row.image_url ?? undefined,
+    price: row.price ?? undefined,
+    targetUrl: row.target_url ?? undefined,
+    createdAt: row.created_at,
+  };
 }

@@ -1,5 +1,5 @@
-import { createHmac, randomUUID } from "node:crypto"
-import { backendBaseUrl, internalSecret } from "@shared/lib/backend/client"
+import { randomUUID } from "node:crypto"
+import { getSupabaseServer } from "@shared/lib/supabase/server"
 
 type Kind = "image" | "video"
 
@@ -12,11 +12,11 @@ type PrepareResult =
   | { ok: true; uploadUrl: string; url: string }
   | { ok: false; status: number; error: string }
 
-export function prepareInstagramMedia(
+export async function prepareInstagramMedia(
   kind: Kind,
   mimeType: unknown,
   size: unknown,
-): PrepareResult {
+): Promise<PrepareResult> {
   const spec = SPECS[kind]
   const mime = typeof mimeType === "string" ? mimeType.toLowerCase() : ""
   const bytes = typeof size === "number" ? size : NaN
@@ -25,15 +25,15 @@ export function prepareInstagramMedia(
     return { ok: false, status: 400, error: kind === "image" ? "파일이 8MB 를 넘었거나 비어 있어요." : "100MB 이하 영상만 올릴 수 있어요." }
   }
 
-  const base = backendBaseUrl()
-  const secret = internalSecret()
-  if (!base || !secret) return { ok: false, status: 503, error: "파일 저장 서버가 설정되지 않았어요." }
-
   const extension = mime === "image/jpeg" ? "jpg" : mime === "video/quicktime" ? "mov" : mime.split("/")[1]
   const name = `${randomUUID()}.${extension}`
-  const path = `/files/published-media/${name}`
-  const expires = Math.floor(Date.now() / 1000) + 300
-  const signature = createHmac("sha256", secret).update(`PUT\n${path}\n${expires}`).digest("hex")
-  const query = `expires=${expires}&signature=${signature}`
-  return { ok: true, uploadUrl: `${base}${path}?${query}`, url: `${base}${path}` }
+  const base = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL
+  const sb = getSupabaseServer()
+  if (!base || !sb) return { ok: false, status: 503, error: "파일 저장소가 설정되지 않았어요." }
+  const bucket = "published-media"
+  const path = `${bucket}/${name}`
+  const signed = await sb.storage.from(bucket).createSignedUploadUrl(name)
+  if (signed.error) return { ok: false, status: 503, error: "파일 업로드 주소를 만들지 못했어요." }
+  const encodedPath = path.split("/").map(encodeURIComponent).join("/")
+  return { ok: true, uploadUrl: `${base}/storage/v1/object/upload/sign/${encodedPath}?token=${encodeURIComponent(signed.data.token)}`, url: sb.storage.from(bucket).getPublicUrl(name).data.publicUrl }
 }

@@ -105,7 +105,7 @@ create table if not exists onboarded_users (
 
 create table if not exists ig_messages (
   id text primary key,
-  user_email text not null,
+  user_email text,
   ig_user_id text not null,
   conversation_id text not null,
   participant_id text not null,
@@ -128,10 +128,22 @@ create table if not exists notion_connections (
   updated_at timestamptz not null default now()
 );
 
+create table if not exists workspace_notion_settings (
+  user_email text primary key,
+  owner_key text not null,
+  updated_at timestamptz not null default now()
+);
+create table if not exists workspace_notion_audits (
+  id bigint generated always as identity primary key,
+  user_email text not null,
+  actor text not null,
+  action text not null,
+  created_at timestamptz not null default now()
+);
+
 create table if not exists workspace_meta_targets (
   user_email text primary key,
-  page_id text,
-  instagram_user_id text,
+  data jsonb not null default '{}',
   updated_at timestamptz not null default now()
 );
 
@@ -171,6 +183,10 @@ create table if not exists cron_runs (
 
 insert into storage.buckets (id, name, public)
 values ('product-images', 'product-images', true), ('reference-materials', 'reference-materials', true)
+on conflict (id) do nothing;
+
+insert into storage.buckets (id, name, public)
+values ('published-media', 'published-media', true)
 on conflict (id) do nothing;
 
 -- All application reads and writes use the server-only service-role client.

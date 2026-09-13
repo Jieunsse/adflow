@@ -34,6 +34,7 @@ import { Button, buttonVariants } from "@shared/ui/Button";
 import { Card } from "@shared/ui/Card";
 import { Callout } from "@shared/ui/Callout";
 import { Chip, type ChipVariant } from "@shared/ui/Chip";
+import { ErrorState } from "@shared/ui/ErrorState";
 import { Skeleton } from "@shared/ui/Skeleton";
 import { SegControl } from "@shared/ui/SegControl";
 import { cn } from "@shared/lib/cn";
@@ -284,9 +285,9 @@ function CampaignDetailFlow() {
       </div>
 
       {metaUnauthorized ? (
-        <DetailErrorCard icon="link" title="광고 계정을 먼저 연결해주세요" reason="Meta 광고 계정과 페이지를 연결해야 캠페인을 볼 수 있어요." ctaLabel="계정 연결로 가기" onAction={() => router.push("/setup")} />
+        <ErrorState icon="link" title="광고 계정을 먼저 연결해주세요" reason="Meta 광고 계정과 페이지를 연결해야 캠페인을 볼 수 있어요." ctaLabel="계정 연결로 가기" onAction={() => router.push("/setup")} />
       ) : !browseCamp && metaQ.isError ? (
-        <DetailErrorCard title="캠페인 정보를 불러오지 못했어요" reason={metaQ.error instanceof Error ? metaQ.error.message : "잠시 후 다시 시도해 주세요"} ctaLabel="다시 시도" onAction={() => metaQ.refetch()} />
+        <ErrorState title="캠페인 정보를 불러오지 못했어요" reason={metaQ.error instanceof Error ? metaQ.error.message : "잠시 후 다시 시도해 주세요"} ctaLabel="다시 시도" onAction={() => metaQ.refetch()} />
       ) : activeTab === "info" ? (
         <CampaignConfigurationTab c={c} isLoading={metaLoading} campaignId={id} onRefetch={metaQ.refetch} isAbCampaign={abInfo !== null} />
       ) : (
@@ -334,7 +335,7 @@ function CampaignDetailFlow() {
               <div className="font-semibold text-[14px] leading-[1.3] text-[var(--w-fg-strong)]">성과를 불러오는 중…</div>
             </Card>
           ) : insError ? (
-            <DetailErrorCard title="성과를 불러오지 못했어요" reason={insQ.error instanceof Error ? insQ.error.message : "Meta API 응답 오류 — 잠시 후 다시 시도해 주세요"} ctaLabel="다시 시도" onAction={() => insQ.refetch()} />
+            <ErrorState title="성과를 불러오지 못했어요" reason={insQ.error instanceof Error ? insQ.error.message : "Meta API 응답 오류 — 잠시 후 다시 시도해 주세요"} ctaLabel="다시 시도" onAction={() => insQ.refetch()} />
           ) : !c ? null : c.status === "review" || !insData || insData.daily.length === 0 ? (
             <Card className="py-10 px-8 flex flex-col items-center gap-3 text-center">
               <div style={{ width: 56, height: 56, borderRadius: "50%", background: "var(--w-primary-soft)", color: "var(--w-primary-press)", display: "grid", placeItems: "center" }}><Icon name="clock" size={24} /></div>
@@ -672,17 +673,6 @@ function OptCard({ icon, good, title, lines, children }: { icon: IconName; good:
         {children && <div style={{ marginTop: 12 }}>{children}</div>}
       </div>
     </div>
-  );
-}
-
-function DetailErrorCard({ icon = "warn", title, reason, ctaLabel, onAction }: { icon?: IconName; title: string; reason: string; ctaLabel: string; onAction: () => void }) {
-  return (
-    <Card className="py-10 px-8 flex flex-col items-center gap-3 text-center">
-      <div style={{ width: 56, height: 56, borderRadius: "50%", background: "var(--w-status-negative-soft)", color: "var(--w-status-negative)", display: "grid", placeItems: "center" }}><Icon name={icon} size={24} /></div>
-      <div className="font-bold text-[17px] leading-[1.3] text-[var(--w-fg-strong)]">{title}</div>
-      <div className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)]" style={{ maxWidth: 380 }}>{reason}</div>
-      <Button variant="secondary" type="button" style={{ marginTop: 8 }} onClick={onAction}>{ctaLabel}</Button>
-    </Card>
   );
 }
 

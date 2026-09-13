@@ -139,9 +139,7 @@ export function createServerRunner(deps: {
     const t = typeof input === "string" ? await store.get(input) : input;
     if (!t) throw new Error("토너먼트를 찾을 수 없어요.");
     const gen = await genCreative(t);
-    t.champion = initialChampion(gen);
-    await store.upsert(t);
-    return t.champion;
+    return initialChampion(gen);
   }
 
   async function confirmChampion(id: string, edited?: TourVariant): Promise<void> {

@@ -1,15 +1,17 @@
 import { defineConfig } from "@playwright/test";
 
+const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:3000";
+
 export default defineConfig({
   testDir: "./e2e",
   workers: 1,
   use: {
-    baseURL: "http://localhost:3000",
+    baseURL,
     trace: "retain-on-failure",
   },
   webServer: {
     command: "pnpm dev",
-    url: "http://localhost:3000/login",
+    url: `${baseURL}/login`,
     reuseExistingServer: !process.env.CI,
   },
 });

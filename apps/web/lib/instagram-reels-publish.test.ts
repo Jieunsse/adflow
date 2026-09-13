@@ -86,7 +86,7 @@ describe("publishReel", () => {
   it("폴링이 계속 IN_PROGRESS 면 타임아웃으로 ok:false 를 반환한다", async () => {
     fetchMock
       .mockResolvedValueOnce(jsonResponse({ id: "container_1" }))
-      .mockResolvedValue(jsonResponse({ status_code: "IN_PROGRESS" }))
+      .mockImplementation(() => Promise.resolve(jsonResponse({ status_code: "IN_PROGRESS" })))
 
     const resultPromise = publishReel(BASE_SESSION, BASE_INPUT)
     await vi.runAllTimersAsync()

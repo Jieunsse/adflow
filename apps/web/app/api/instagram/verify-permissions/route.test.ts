@@ -4,6 +4,9 @@ const getServerSession = vi.fn()
 const fetchMock = vi.fn()
 
 vi.mock("next-auth", () => ({ getServerSession }))
+vi.mock("@/lib/meta-session", () => ({
+  getWorkspaceSession: (session: unknown) => Promise.resolve(session),
+}))
 
 describe("GET /api/instagram/verify-permissions", () => {
   beforeEach(() => {

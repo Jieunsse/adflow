@@ -56,6 +56,7 @@ function isOAuthException(body: unknown): boolean {
 
 export async function listComments(opts: {
   mediaId: string
+  igUserId?: string
   igAccessToken?: string
   pageId?: string
   accessToken?: string

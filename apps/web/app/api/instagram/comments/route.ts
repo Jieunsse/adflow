@@ -20,6 +20,7 @@ export async function GET(req: NextRequest) {
 
   const result = await listComments({
     mediaId,
+    igUserId: session.igUserId,
     igAccessToken: session.igAccessToken,
     pageId: session.pageId,
     accessToken: session.accessToken,

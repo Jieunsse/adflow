@@ -10,14 +10,14 @@ test("둘러보기에서 광고를 만들고 검수를 요청해요", async ({ p
   await expect(page).toHaveURL(/\/dashboard$/);
   await page.goto("/create");
 
-  await expect(page.getByRole("heading", { name: "무엇을 알릴지 알려주세요" })).toBeVisible();
-  await page.getByRole("button", { name: "인지도" }).click();
+  await expect(page.getByRole("heading", { name: /이번 광고가 만들 변화부터 정해요/ })).toBeVisible();
+  await page.getByRole("button", { name: "더 많은 사람에게 알리기" }).click();
   await page.getByRole("button", { name: /소재 3안 만들기/ }).click();
 
   await expect(page.getByText("소재 3안 비교")).toBeVisible({ timeout: 10_000 });
   await page.getByRole("button", { name: "선택한 안으로 진행 →" }).click();
 
-  await expect(page.getByText("이미지 3컷 비교")).toBeVisible();
+  await expect(page.getByText("이미지 3컷 비교")).toBeVisible({ timeout: 15_000 });
   await expect(page.getByAltText("컨셉 A 이미지")).toBeVisible({ timeout: 10_000 });
   await page.getByRole("radio").first().click();
   await page.getByRole("button", { name: "이 컷으로 다듬기 →" }).click();

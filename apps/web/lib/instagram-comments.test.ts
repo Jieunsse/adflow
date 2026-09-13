@@ -22,6 +22,7 @@ const VALID_COMMENT = {
 
 const BASE_OPTS = {
   mediaId: "media_123",
+  igUserId: "ig_123",
   igAccessToken: "IGAAX_test_token",
 }
 

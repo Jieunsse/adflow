@@ -47,6 +47,9 @@ export function encrypt(plaintext: string): string {
 
 export function decrypt(encoded: string): string {
   const buf = Buffer.from(encoded, "base64")
+  if (!/^[A-Za-z0-9+/]*={0,2}$/.test(encoded) || buf.toString("base64") !== encoded) {
+    throw new Error("암호화 payload 형식이 올바르지 않아요.")
+  }
   const iv = buf.subarray(0, 12)
   const tag = buf.subarray(12, 28)
   const enc = buf.subarray(28)

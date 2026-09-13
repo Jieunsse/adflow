@@ -15,7 +15,7 @@ pnpm dev
 실사용 저장 기능은 Supabase가 필요해요.
 
 1. Supabase 프로젝트를 만들어요.
-2. SQL Editor에서 [supabase/schema.sql](./supabase/schema.sql)을 실행해요.
+2. `supabase link --project-ref <project-ref>` 후 `supabase db push --linked`를 실행해요.
 3. apps/web/.env.local에 SUPABASE_URL, server-side 전용 SUPABASE_SECRET_KEY, 토큰 암호화용 ADFLOW_TOKEN_ENCRYPTION_KEY를 넣어요.
 
 SUPABASE_SECRET_KEY는 브라우저 코드나 NEXT_PUBLIC_* 변수에 넣으면 안 돼요.

@@ -200,7 +200,7 @@ export function GoalWizard({
 
   return (
     <Shell>
-      <WizardHeader step={step} />
+      <WizardHeader step={step} onClose={onClose} />
       {/* 이름은 질문과 다음 순서를 한 화면에 보여준다. 이후 단계만 문장을 채운다. */}
       {step > 0 && step < CONFIRM_STEP && (
         <SentenceStrip
@@ -333,11 +333,21 @@ function Shell({ children }: { children: React.ReactNode }) {
   );
 }
 
-function WizardHeader({ step }: { step: number }) {
+function WizardHeader({ step, onClose }: { step: number; onClose: () => void }) {
   const isConfirm = step === CONFIRM_STEP;
   const pct = isConfirm ? 100 : ((step + 1) / STEP_TITLES.length) * 100;
   return (
     <div className="flex shrink-0 items-center gap-4 border-b border-[var(--w-line-alternative)] px-1 pb-5 sm:px-2">
+      <Button
+        variant="ghost"
+        size="sm"
+        type="button"
+        className="!h-8 !w-8 !shrink-0 !px-0"
+        aria-label="목표 만들기 닫기"
+        onClick={onClose}
+      >
+        <Icon name="x" size={16} />
+      </Button>
       <div className="flex flex-1 flex-col gap-1">
         <span className="w-overline">성과 목표</span>
         <span className="w-h4">새 목표 세우기</span>
@@ -350,7 +360,14 @@ function WizardHeader({ step }: { step: number }) {
           <span className="text-[var(--w-fg-alternative)]"> / {STEP_TITLES.length}</span>
         </span>
       )}
-      <div className="h-1 w-20 overflow-hidden rounded-full bg-[var(--w-bg-neutral)] sm:w-32">
+      <div
+        className="h-1 w-20 overflow-hidden rounded-full bg-[var(--w-bg-neutral)] sm:w-32"
+        role="progressbar"
+        aria-label="목표 만들기 진행률"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={pct}
+      >
         <div className="h-full rounded-full bg-[var(--w-primary-normal)] transition-[width] duration-200" style={{ width: `${pct}%` }} />
       </div>
     </div>

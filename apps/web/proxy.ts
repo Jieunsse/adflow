@@ -16,7 +16,7 @@ export default withAuth(
       "/api/instagram/token",
     ]).has(pathname)
     const isSetupPath = isSetupBootstrapPath || pathname.startsWith("/api/setup")
-    let workspaceSession: Session | null = token
+    const workspaceSession: Session | null = token
       ? {
           expires: "",
           user: { name: token.name, email: token.email, image: token.picture },

@@ -115,6 +115,7 @@ export function GoalWizard({
   const [savedGoal, setSavedGoal] = useState<Goal | null>(null);
   const [hydrated, setHydrated] = useState(false);
 
+  /* eslint-disable react-hooks/set-state-in-effect -- localStorage draft hydration must update the controlled fields. */
   useEffect(() => {
     const draft = loadGoalDraft(goalId);
     setName(draft?.name ?? initialName);
@@ -123,6 +124,7 @@ export function GoalWizard({
     setPeriodDays(draft?.periodDays ?? initialPeriodDays);
     setHydrated(true);
   }, [goalId, initialMetric, initialName, initialPeriodDays, initialTargetDraft]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   useEffect(() => {
     if (!hydrated || savedGoal) return;

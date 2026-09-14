@@ -84,13 +84,16 @@ export default function BriefStep(p: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, browseMode, hasBrandProfile]);
 
+  /* eslint-disable react-hooks/set-state-in-effect -- clear the nested step when its parent selection disappears. */
   useEffect(() => {
     if (!outcome) setBriefStage(1);
   }, [outcome]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
-  useEffect(() => {
+  const handleModeChange = (mode: "quick" | "detailed") => {
     setBriefStage(1);
-  }, [p.mode]);
+    p.setMode(mode);
+  };
 
   const handleFiles = async (files: FileList | null) => {
     if (!files?.length) return;
@@ -121,7 +124,7 @@ export default function BriefStep(p: Props) {
           <button
             type="button"
             aria-pressed={p.mode === "quick"}
-            onClick={() => p.setMode("quick")}
+            onClick={() => handleModeChange("quick")}
             className={`rounded-[var(--w-radius-8)] px-3 py-3 text-left transition-[background,box-shadow] duration-[120ms] ${p.mode === "quick" ? "bg-[var(--w-primary-soft)] shadow-[inset_0_0_0_1.5px_var(--w-primary-normal)]" : "hover:bg-[var(--w-bg-normal)]"}`}
           >
             <span className="w-label block text-[var(--w-fg-strong)]">빠르게 만들기</span>
@@ -130,7 +133,7 @@ export default function BriefStep(p: Props) {
           <button
             type="button"
             aria-pressed={p.mode === "detailed"}
-            onClick={() => p.setMode("detailed")}
+            onClick={() => handleModeChange("detailed")}
             className={`rounded-[var(--w-radius-8)] px-3 py-3 text-left transition-[background,box-shadow] duration-[120ms] ${p.mode === "detailed" ? "bg-[var(--w-primary-soft)] shadow-[inset_0_0_0_1.5px_var(--w-primary-normal)]" : "hover:bg-[var(--w-bg-normal)]"}`}
           >
             <span className="w-label block text-[var(--w-fg-strong)]">상세 설정</span>

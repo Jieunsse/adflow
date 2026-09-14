@@ -24,7 +24,7 @@ export default function OpenGraphImage() {
             AdFlow
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
-            <div style={{ fontSize: 15, fontWeight: 700, letterSpacing: "0.14em", opacity: 0.78 }}>TODAY'S CAMPAIGN</div>
+            <div style={{ fontSize: 15, fontWeight: 700, letterSpacing: "0.14em", opacity: 0.78 }}>TODAY&apos;S CAMPAIGN</div>
             <div style={{ display: "flex", flexDirection: "column", fontSize: 40, fontWeight: 800, lineHeight: 1.25, letterSpacing: "-0.04em" }}>
               <span>AI가 만든 카피로</span>
               <span>첫 주에 CTR</span>

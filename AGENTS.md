@@ -18,6 +18,16 @@
   - 드롭다운·팝오버·토스트 = `--w-shadow-emphasize` / 모달·시트 = `--w-shadow-strong` (`--w-shadow-heavy`는 보류)
 - 마이그레이션은 점진 — 만지는 코드의 raw 값만 기회적 치환. `shared/ui` 는 근원이라 별도 1회 스윕 대상.
 
+## 새 UI 부품 (shadcn/ui) — [`docs/planning/DesignSystem-adflow.md`](./docs/planning/DesignSystem-adflow.md)
+
+리브랜딩한 새 디자인 시스템은 shadcn/ui 위에 짓는다. 지금 화면의 Wanted 토큰(위 절)과 함께 있다가 화면을 옮길 때 바꾼다.
+
+- 부품 추가는 `cd apps/web && npx shadcn@latest add <이름>` → `src/shared/ui/kit/`(소문자 파일). `src/shared/ui/*.tsx`(대문자)는 기존 Wanted 부품.
+- 추가한 직후 피그마 Components 페이지와 맞춘다. **모서리**: 태그 `rounded`(4) · 버튼·입력 `rounded-lg`(8) · 카드 `rounded-xl`(12) · 창 `rounded-2xl`(16). shadcn 기본 `rounded-md`는 바꾼다 (Tailwind 기본 단계를 일부러 그대로 둠). **그림자**는 떠 있는 층에만. **버튼** 높이 44/32.
+- 색은 shadcn 색 클래스(`bg-primary`, `text-muted-foreground`, `bg-status-<blocked|waiting|progress|done|quiet>-bg` 등). 값의 단일 소스는 `app/styles/shadcn.css`.
+- 색 변수는 `.adflow` 안에만 있다(레거시 `:root`의 `--border`·`--accent`와 이름이 겹침). 포털을 쓰는 부품(Dialog·Popover·Select 등)은 `container`를 `.adflow`로 준다 — `src/shared/ui/Dialog.tsx`의 `adflowContainer` 참고.
+- 아이콘은 `lucide-react`(기존 `Icon.tsx`와 같은 모양).
+
 ## UX 라이팅 (서비스 문구) — [`.document/UX-WRITING.md`](./.document/UX-WRITING.md)
 
 유저에게 보이는 **화면 문구**(버튼·안내·빈상태·에러·툴팁)는 `.document/UX-WRITING.md` 를 따른다. 디자인 토큰과 같은 결의 **컨벤션**(lint 아닌 리뷰/에이전트 강제).

@@ -3,6 +3,7 @@
    AdFlow styles below — those are still used by /legacy-create. */
 @import "./styles/design-system.css";
 @import "./styles/adflow.css";
+@import "./styles/shadcn.css";
 
 @tailwind base;
 @tailwind components;

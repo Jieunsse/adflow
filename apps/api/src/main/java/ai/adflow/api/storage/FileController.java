@@ -1,5 +1,6 @@
 package ai.adflow.api.storage;
 
+import ai.adflow.api.workspace.Workspaces;
 import ai.adflow.api.store.brand.BrandProfileRepository;
 import java.util.Map;
 import org.springframework.http.HttpStatus;
@@ -30,8 +31,11 @@ public class FileController {
 
   private final FileStore store;
   private final BrandProfileRepository brandProfiles;
+  private final Workspaces workspaces;
 
-  public FileController(FileStore store, BrandProfileRepository brandProfiles) {
+  public FileController(
+      FileStore store, BrandProfileRepository brandProfiles, Workspaces workspaces) {
+    this.workspaces = workspaces;
     this.store = store;
     this.brandProfiles = brandProfiles;
   }
@@ -80,7 +84,7 @@ public class FileController {
     boolean mine =
         brandProfiles
             .findById(brandProfileId)
-            .map(bp -> jwt.getSubject().equals(bp.getOwnerKey()))
+            .map(bp -> workspaces.idOf(jwt).equals(bp.getOwnerKey()))
             .orElse(false);
     if (!mine) {
       throw new ResponseStatusException(HttpStatus.FORBIDDEN, "이 브랜드 프로필의 파일이 아니에요.");

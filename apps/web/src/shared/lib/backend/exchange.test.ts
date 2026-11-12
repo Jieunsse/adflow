@@ -8,7 +8,6 @@ function realUser() {
   return {
     ownerKey: "owner@example.com",
     email: "owner@example.com",
-    role: "팀장" as const,
     metaConnection: { accessToken: "EAAG-token" },
   };
 }

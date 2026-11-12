@@ -1,5 +1,6 @@
 package ai.adflow.api.store.product;
 
+import ai.adflow.api.workspace.Workspaces;
 import ai.adflow.api.store.ItemRequest;
 import ai.adflow.api.store.ItemsResponse;
 import jakarta.transaction.Transactional;
@@ -27,9 +28,11 @@ import org.springframework.web.server.ResponseStatusException;
 public class ProductController {
 
   private final ProductRepository repository;
+  private final Workspaces workspaces;
 
-  public ProductController(ProductRepository repository) {
+  public ProductController(ProductRepository repository, Workspaces workspaces) {
     this.repository = repository;
+    this.workspaces = workspaces;
   }
 
   @GetMapping
@@ -37,7 +40,7 @@ public class ProductController {
       @AuthenticationPrincipal Jwt jwt, @RequestParam("brandProfileId") String brandProfileId) {
     return new ItemsResponse<>(
         repository.findByOwnerKeyAndBrandProfileIdOrderByCreatedAtAsc(
-            jwt.getSubject(), brandProfileId));
+            workspaces.idOf(jwt), brandProfileId));
   }
 
   @PostMapping
@@ -54,11 +57,11 @@ public class ProductController {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "브랜드 프로필이 없어요.");
     }
 
-    item.setOwnerKey(jwt.getSubject());
+    item.setOwnerKey(workspaces.idOf(jwt));
     item.setUpdatedAt(Instant.now());
 
     // 지우고 새로 넣는다 — StoreController 와 같은 이유(클라가 항상 전체 문서를 보낸다).
-    repository.deleteByIdAndOwnerKey(item.getId(), jwt.getSubject());
+    repository.deleteByIdAndOwnerKey(item.getId(), workspaces.idOf(jwt));
     repository.flush();
     repository.save(item);
 
@@ -69,7 +72,7 @@ public class ProductController {
   @Transactional
   public Map<String, Boolean> remove(
       @AuthenticationPrincipal Jwt jwt, @RequestParam("id") String id) {
-    repository.deleteByIdAndOwnerKey(id, jwt.getSubject());
+    repository.deleteByIdAndOwnerKey(id, workspaces.idOf(jwt));
     return Map.of("ok", true);
   }
 }

@@ -18,7 +18,11 @@ import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
-import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
+import ai.adflow.api.workspace.Workspaces;
+import java.util.List;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.web.server.ResponseStatusException;
 
 /** HS256 대칭키 서명. 발급자와 검증자가 모두 이 서비스라 비대칭키가 필요 없다. */
 @Configuration
@@ -77,15 +81,22 @@ public class JwtConfig {
                 new OAuth2Error("invalid_token", "이 토큰은 " + expected + " 용이 아니에요.", null));
   }
 
-  /** roles 클레임(["LEAD"])을 ROLE_LEAD authority 로 바꾼다 — hasRole("LEAD") 가 동작하게. */
+  /**
+   * 역할은 토큰의 roles 클레임이 아니라 DB 의 소속에서 읽는다 — 역할을 바꾸거나 내보낸 일이 다음
+   * 요청부터 적용되게 (정책서 5.3). 내보낸 사람은 권한 없이 통과하고, 데이터 접근은 Workspaces 가 막는다.
+   */
   @Bean
-  JwtAuthenticationConverter jwtAuthenticationConverter() {
-    JwtGrantedAuthoritiesConverter authorities = new JwtGrantedAuthoritiesConverter();
-    authorities.setAuthorityPrefix("ROLE_");
-    authorities.setAuthoritiesClaimName(ROLES_CLAIM);
-
+  JwtAuthenticationConverter jwtAuthenticationConverter(Workspaces workspaces) {
     JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
-    converter.setJwtGrantedAuthoritiesConverter(authorities);
+    converter.setJwtGrantedAuthoritiesConverter(
+        jwt -> {
+          try {
+            Role role = workspaces.current(jwt.getSubject()).getRole();
+            return List.<GrantedAuthority>of(new SimpleGrantedAuthority("ROLE_" + role.authority()));
+          } catch (ResponseStatusException removed) {
+            return List.of();
+          }
+        });
     return converter;
   }
 }

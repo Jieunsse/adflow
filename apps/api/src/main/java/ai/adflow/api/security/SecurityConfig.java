@@ -3,6 +3,7 @@ package ai.adflow.api.security;
 import ai.adflow.api.internal.InternalSecret;
 import jakarta.servlet.DispatcherType;
 import org.springframework.context.annotation.Bean;
+import org.springframework.http.HttpMethod;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authorization.AuthorizationDecision;
 import org.springframework.security.authorization.AuthorizationManager;
@@ -45,6 +46,11 @@ public class SecurityConfig {
                     // 기계 호출이라 JWT 를 실을 수 없다. 여는 것이 아니라 자물쇠를 바꾸는 것이다.
                     .requestMatchers(InternalSecret.PATTERNS)
                     .access(hasInternalSecret)
+                    // 브랜드 프로필·브랜드 규칙을 고치는 일은 팀장만 (정책서 5.2, 확정).
+                    .requestMatchers(HttpMethod.POST, "/stores/brand-profiles", "/stores/sops")
+                    .hasRole("LEAD")
+                    .requestMatchers(HttpMethod.DELETE, "/stores/brand-profiles", "/stores/sops")
+                    .hasRole("LEAD")
                     .anyRequest()
                     .authenticated())
         .oauth2ResourceServer(o -> o.jwt(jwt -> jwt.jwtAuthenticationConverter(converter)));

@@ -4,6 +4,7 @@ import ai.adflow.api.connection.MetaConnection;
 import ai.adflow.api.connection.MetaConnectionRepository;
 import ai.adflow.api.security.Role;
 import ai.adflow.api.security.TokenIssuer;
+import ai.adflow.api.workspace.Workspaces;
 import jakarta.validation.Valid;
 import java.time.Instant;
 import org.springframework.beans.factory.annotation.Value;
@@ -30,12 +31,13 @@ public class AuthExchangeController {
 
   private final MetaConnectionRepository repository;
   private final TokenIssuer tokenIssuer;
+  private final Workspaces workspaces;
 
   public AuthExchangeController(
-      MetaConnectionRepository repository,
-      TokenIssuer tokenIssuer) {
+      MetaConnectionRepository repository, TokenIssuer tokenIssuer, Workspaces workspaces) {
     this.repository = repository;
     this.tokenIssuer = tokenIssuer;
+    this.workspaces = workspaces;
   }
 
   @PostMapping("/exchange")
@@ -46,13 +48,18 @@ public class AuthExchangeController {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "둘러보기 게스트는 토큰을 발급받지 않아요.");
     }
 
-    Role role = request.role() == null ? Role.LEAD : Role.fromDisplayName(request.role());
+    // 역할은 요청이 아니라 소속에서 정한다. 요청의 역할을 믿으면 누구나 팀장으로 들어온다.
+    Role role = workspaces.current(request.email()).getRole();
     persist(request, role);
 
     TokenIssuer.Issued issued = tokenIssuer.issue(request.ownerKey(), request.email(), role);
     return ResponseEntity.ok(
         new ExchangeResponse(
-            issued.token(), issued.expiresAt(), issued.refreshToken(), issued.refreshExpiresAt()));
+            issued.token(),
+            issued.expiresAt(),
+            issued.refreshToken(),
+            issued.refreshExpiresAt(),
+            role.displayName()));
   }
 
 

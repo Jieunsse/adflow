@@ -141,9 +141,9 @@ public class TournamentAdvanceService {
     t.setPendingHypothesis(null);
   }
 
-  /** ADR-047 — 소유 유저의 같은 브랜드 토너먼트에서 resolved 가설을 평탄화한다. */
+  /** ADR-047 — 같은 워크스페이스의 같은 브랜드 토너먼트에서 resolved 가설을 평탄화한다. */
   private List<Hypothesis> ledgerFor(Tournament t) {
-    String ownerKey = t.getDelivery() == null ? null : t.getDelivery().getOwnerEmail();
+    String ownerKey = t.getOwnerKey();
     if (ownerKey == null) return List.of();
 
     List<List<Hypothesis>> byTournament = new ArrayList<>();

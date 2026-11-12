@@ -20,7 +20,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/stores/tournaments": {
+    "/workspace/members": {
         parameters: {
             query?: never;
             header?: never;
@@ -36,7 +36,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/stores/sops": {
+    "/stores/tournaments": {
         parameters: {
             query?: never;
             header?: never;
@@ -52,7 +52,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/stores/reference-materials": {
+    "/stores/sops": {
         parameters: {
             query?: never;
             header?: never;
@@ -68,7 +68,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/stores/products": {
+    "/stores/reference-materials": {
         parameters: {
             query?: never;
             header?: never;
@@ -84,7 +84,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/stores/personas": {
+    "/stores/products": {
         parameters: {
             query?: never;
             header?: never;
@@ -95,6 +95,22 @@ export interface paths {
         put?: never;
         post: operations["upsert_4"];
         delete: operations["remove_5"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/stores/personas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_5"];
+        put?: never;
+        post: operations["upsert_5"];
+        delete: operations["remove_6"];
         options?: never;
         head?: never;
         patch?: never;
@@ -123,22 +139,6 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_5"];
-        put?: never;
-        post: operations["upsert_5"];
-        delete: operations["remove_6"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/stores/influencer-campaigns": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
         get: operations["list_6"];
         put?: never;
         post: operations["upsert_6"];
@@ -148,7 +148,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/stores/creators": {
+    "/stores/influencer-campaigns": {
         parameters: {
             query?: never;
             header?: never;
@@ -164,7 +164,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/stores/campaign-launches": {
+    "/stores/creators": {
         parameters: {
             query?: never;
             header?: never;
@@ -180,7 +180,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/stores/brand-profiles": {
+    "/stores/campaign-launches": {
         parameters: {
             query?: never;
             header?: never;
@@ -196,7 +196,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/stores/auto-relaunch": {
+    "/stores/brand-profiles": {
         parameters: {
             query?: never;
             header?: never;
@@ -212,7 +212,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/internal/tournaments": {
+    "/stores/auto-relaunch": {
         parameters: {
             query?: never;
             header?: never;
@@ -223,6 +223,22 @@ export interface paths {
         put?: never;
         post: operations["upsert_11"];
         delete: operations["remove_12"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/internal/tournaments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_12"];
+        put?: never;
+        post: operations["upsert_12"];
+        delete: operations["remove_13"];
         options?: never;
         head?: never;
         patch?: never;
@@ -302,7 +318,7 @@ export interface paths {
         get: operations["get"];
         put?: never;
         post: operations["save"];
-        delete: operations["remove_13"];
+        delete: operations["remove_14"];
         options?: never;
         head?: never;
         patch?: never;
@@ -315,9 +331,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_12"];
+        get: operations["list_13"];
         put?: never;
-        post: operations["upsert_12"];
+        post: operations["upsert_13"];
         delete?: never;
         options?: never;
         head?: never;
@@ -472,6 +488,16 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        UpsertRequest: {
+            email?: string;
+            role?: string;
+        };
+        MemberView: {
+            email?: string;
+            role?: string;
+            /** Format: date-time */
+            joinedAt?: string;
+        };
         AutoRefill: {
             /** Format: double */
             addBudget: number;
@@ -892,11 +918,11 @@ export interface components {
             refreshToken?: string;
             /** Format: date-time */
             refreshExpiresAt?: string;
+            role?: string;
         };
         ExchangeRequest: {
             ownerKey?: string;
             email?: string;
-            role?: string;
             metaConnection?: components["schemas"]["MetaConnectionPayload"];
         };
         MetaConnectionPayload: {
@@ -1038,9 +1064,7 @@ export interface operations {
     };
     list: {
         parameters: {
-            query?: {
-                brandProfileId?: string;
-            };
+            query?: never;
             header?: never;
             path?: never;
             cookie?: never;
@@ -1053,7 +1077,9 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ItemsResponseTournament"];
+                    "*/*": {
+                        [key: string]: components["schemas"]["MemberView"][];
+                    };
                 };
             };
         };
@@ -1067,7 +1093,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ItemRequestTournament"];
+                "application/json": components["schemas"]["UpsertRequest"];
             };
         };
         responses: {
@@ -1077,9 +1103,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": {
-                        [key: string]: boolean;
-                    };
+                    "*/*": components["schemas"]["MemberView"];
                 };
             };
         };
@@ -1087,7 +1111,7 @@ export interface operations {
     remove_1: {
         parameters: {
             query: {
-                id: string;
+                email: string;
             };
             header?: never;
             path?: never;
@@ -1110,7 +1134,9 @@ export interface operations {
     };
     list_1: {
         parameters: {
-            query?: never;
+            query?: {
+                brandProfileId?: string;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -1123,7 +1149,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ItemsResponseSop"];
+                    "*/*": components["schemas"]["ItemsResponseTournament"];
                 };
             };
         };
@@ -1137,7 +1163,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ItemRequestSop"];
+                "application/json": components["schemas"]["ItemRequestTournament"];
             };
         };
         responses: {
@@ -1180,9 +1206,7 @@ export interface operations {
     };
     list_2: {
         parameters: {
-            query: {
-                brandProfileId: string;
-            };
+            query?: never;
             header?: never;
             path?: never;
             cookie?: never;
@@ -1195,7 +1219,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ItemsResponseReferenceMaterial"];
+                    "*/*": components["schemas"]["ItemsResponseSop"];
                 };
             };
         };
@@ -1209,7 +1233,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ItemRequestReferenceMaterial"];
+                "application/json": components["schemas"]["ItemRequestSop"];
             };
         };
         responses: {
@@ -1267,7 +1291,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ItemsResponseProduct"];
+                    "*/*": components["schemas"]["ItemsResponseReferenceMaterial"];
                 };
             };
         };
@@ -1281,7 +1305,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ItemRequestProduct"];
+                "application/json": components["schemas"]["ItemRequestReferenceMaterial"];
             };
         };
         responses: {
@@ -1324,6 +1348,78 @@ export interface operations {
     };
     list_4: {
         parameters: {
+            query: {
+                brandProfileId: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ItemsResponseProduct"];
+                };
+            };
+        };
+    };
+    upsert_4: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ItemRequestProduct"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: boolean;
+                    };
+                };
+            };
+        };
+    };
+    remove_5: {
+        parameters: {
+            query: {
+                id: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: boolean;
+                    };
+                };
+            };
+        };
+    };
+    list_5: {
+        parameters: {
             query?: never;
             header?: never;
             path?: never;
@@ -1342,7 +1438,7 @@ export interface operations {
             };
         };
     };
-    upsert_4: {
+    upsert_5: {
         parameters: {
             query?: never;
             header?: never;
@@ -1368,7 +1464,7 @@ export interface operations {
             };
         };
     };
-    remove_5: {
+    remove_6: {
         parameters: {
             query: {
                 id: string;
@@ -1458,7 +1554,7 @@ export interface operations {
             };
         };
     };
-    list_5: {
+    list_6: {
         parameters: {
             query?: never;
             header?: never;
@@ -1478,76 +1574,6 @@ export interface operations {
             };
         };
     };
-    upsert_5: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ItemRequestLibraryItem"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": {
-                        [key: string]: boolean;
-                    };
-                };
-            };
-        };
-    };
-    remove_6: {
-        parameters: {
-            query: {
-                id: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": {
-                        [key: string]: boolean;
-                    };
-                };
-            };
-        };
-    };
-    list_6: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ItemsResponseInfluencerCampaign"];
-                };
-            };
-        };
-    };
     upsert_6: {
         parameters: {
             query?: never;
@@ -1557,7 +1583,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ItemRequestInfluencerCampaign"];
+                "application/json": components["schemas"]["ItemRequestLibraryItem"];
             };
         };
         responses: {
@@ -1613,7 +1639,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ItemsResponseCreator"];
+                    "*/*": components["schemas"]["ItemsResponseInfluencerCampaign"];
                 };
             };
         };
@@ -1627,7 +1653,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ItemRequestCreator"];
+                "application/json": components["schemas"]["ItemRequestInfluencerCampaign"];
             };
         };
         responses: {
@@ -1683,7 +1709,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ItemsResponseCampaignLaunch"];
+                    "*/*": components["schemas"]["ItemsResponseCreator"];
                 };
             };
         };
@@ -1697,7 +1723,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ItemRequestCampaignLaunch"];
+                "application/json": components["schemas"]["ItemRequestCreator"];
             };
         };
         responses: {
@@ -1753,7 +1779,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ItemsResponseBrandProfile"];
+                    "*/*": components["schemas"]["ItemsResponseCampaignLaunch"];
                 };
             };
         };
@@ -1767,7 +1793,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ItemRequestBrandProfile"];
+                "application/json": components["schemas"]["ItemRequestCampaignLaunch"];
             };
         };
         responses: {
@@ -1823,7 +1849,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ItemsResponseAutoRelaunchState"];
+                    "*/*": components["schemas"]["ItemsResponseBrandProfile"];
                 };
             };
         };
@@ -1837,7 +1863,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ItemRequestAutoRelaunchState"];
+                "application/json": components["schemas"]["ItemRequestBrandProfile"];
             };
         };
         responses: {
@@ -1880,6 +1906,76 @@ export interface operations {
     };
     list_11: {
         parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ItemsResponseAutoRelaunchState"];
+                };
+            };
+        };
+    };
+    upsert_11: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ItemRequestAutoRelaunchState"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: boolean;
+                    };
+                };
+            };
+        };
+    };
+    remove_12: {
+        parameters: {
+            query: {
+                id: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: boolean;
+                    };
+                };
+            };
+        };
+    };
+    list_12: {
+        parameters: {
             query?: {
                 status?: string;
                 ownerKey?: string;
@@ -1902,7 +1998,7 @@ export interface operations {
             };
         };
     };
-    upsert_11: {
+    upsert_12: {
         parameters: {
             query: {
                 ownerKey: string;
@@ -1930,7 +2026,7 @@ export interface operations {
             };
         };
     };
-    remove_12: {
+    remove_13: {
         parameters: {
             query: {
                 id: string;
@@ -2098,7 +2194,7 @@ export interface operations {
             };
         };
     };
-    remove_13: {
+    remove_14: {
         parameters: {
             query: {
                 userKey: string;
@@ -2122,7 +2218,7 @@ export interface operations {
             };
         };
     };
-    list_12: {
+    list_13: {
         parameters: {
             query: {
                 igUserId: string;
@@ -2145,7 +2241,7 @@ export interface operations {
             };
         };
     };
-    upsert_12: {
+    upsert_13: {
         parameters: {
             query?: never;
             header?: never;

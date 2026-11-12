@@ -1,9 +1,11 @@
 package ai.adflow.api.store;
 
+import ai.adflow.api.workspace.Workspaces;
 import jakarta.transaction.Transactional;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -21,11 +23,14 @@ import org.springframework.web.server.ResponseStatusException;
  * 계약은 프론트의 createSyncedStore 가 이미 쓰던 것 그대로다 —
  * GET → {items}, POST {item}, DELETE ?id=. 프론트를 고치지 않으려고 봉투를 승계했다.
  *
- * owner 는 항상 JWT subject 에서 온다. 요청 본문의 값은 신뢰하지 않는다.
+ * owner 는 항상 JWT subject(이메일)의 소속 워크스페이스다. 요청 본문의 값은 신뢰하지 않는다.
  */
 public abstract class StoreController<T extends OwnerScoped> {
 
   private final OwnerScopedRepository<T> repository;
+
+  // 하위 컨트롤러 10개의 생성자를 건드리지 않으려고 필드로 받는다.
+  @Autowired private Workspaces workspaces;
 
   protected StoreController(OwnerScopedRepository<T> repository) {
     this.repository = repository;
@@ -33,7 +38,7 @@ public abstract class StoreController<T extends OwnerScoped> {
 
   @GetMapping
   public ItemsResponse<T> list(@AuthenticationPrincipal Jwt jwt) {
-    List<T> items = repository.findByOwnerKeyOrderByUpdatedAtDesc(jwt.getSubject());
+    List<T> items = repository.findByOwnerKeyOrderByUpdatedAtDesc(workspaces.idOf(jwt));
     return new ItemsResponse<>(items);
   }
 
@@ -47,13 +52,14 @@ public abstract class StoreController<T extends OwnerScoped> {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "저장할 항목이 없어요.");
     }
 
-    item.setOwnerKey(jwt.getSubject());
+    String owner = workspaces.idOf(jwt);
+    item.setOwnerKey(owner);
     item.setUpdatedAt(Instant.now());
 
     // 지우고 새로 넣는다. 클라이언트가 항상 전체 문서를 보내므로(createSyncedStore 의 postItem)
     // 병합이 필요 없고, 자식 컬렉션의 고아 처리·detached 병합 함정을 통째로 피한다.
     // ponytail: 애그리거트가 수십 행 규모라 이 방식으로 충분하다. 커지면 병합으로 바꾼다.
-    repository.deleteByIdAndOwnerKey(item.getId(), jwt.getSubject());
+    repository.deleteByIdAndOwnerKey(item.getId(), owner);
     repository.flush();
     repository.save(item);
 
@@ -64,7 +70,7 @@ public abstract class StoreController<T extends OwnerScoped> {
   @Transactional
   public ResponseEntity<Map<String, Boolean>> remove(
       @AuthenticationPrincipal Jwt jwt, @RequestParam("id") String id) {
-    repository.deleteByIdAndOwnerKey(id, jwt.getSubject());
+    repository.deleteByIdAndOwnerKey(id, workspaces.idOf(jwt));
     return ResponseEntity.ok(Map.of("ok", true));
   }
 }

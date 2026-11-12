@@ -2,6 +2,7 @@ package ai.adflow.api.internal.tournament;
 
 import ai.adflow.api.store.ItemRequest;
 import ai.adflow.api.store.ItemsResponse;
+import ai.adflow.api.workspace.Workspaces;
 import ai.adflow.api.tournament.Tournament;
 import ai.adflow.api.tournament.TournamentAdvanceService;
 import ai.adflow.api.tournament.TournamentEditService;
@@ -38,12 +39,15 @@ public class InternalTournamentController {
   private final TournamentSettleService settleService;
   private final TournamentAdvanceService advanceService;
   private final TournamentEditService editService;
+  private final Workspaces workspaces;
 
   public InternalTournamentController(
       TournamentRepository repository,
       TournamentSettleService settleService,
       TournamentAdvanceService advanceService,
-      TournamentEditService editService) {
+      TournamentEditService editService,
+      Workspaces workspaces) {
+    this.workspaces = workspaces;
     this.repository = repository;
     this.settleService = settleService;
     this.advanceService = advanceService;
@@ -60,11 +64,13 @@ public class InternalTournamentController {
       @RequestParam(value = "ownerKey", required = false) String ownerKey,
       @RequestParam(value = "brandProfileId", required = false) String brandProfileId) {
 
+    // 웹은 ownerKey 로 로그인 이메일을 보낸다. 저장 주인은 그 사람의 워크스페이스다.
+    String owner = ownerKey == null ? null : workspaces.current(ownerKey).getWorkspaceId();
     List<Tournament> items;
-    if (ownerKey != null && brandProfileId != null) {
-      items = repository.findByOwnerKeyAndBrandProfileIdOrderByCreatedAtDesc(ownerKey, brandProfileId);
-    } else if (ownerKey != null) {
-      items = repository.findByOwnerKeyOrderByCreatedAtDesc(ownerKey);
+    if (owner != null && brandProfileId != null) {
+      items = repository.findByOwnerKeyAndBrandProfileIdOrderByCreatedAtDesc(owner, brandProfileId);
+    } else if (owner != null) {
+      items = repository.findByOwnerKeyOrderByCreatedAtDesc(owner);
     } else if (status != null) {
       items = repository.findByStatusOrderByCreatedAtDesc(status);
     } else {
@@ -96,11 +102,12 @@ public class InternalTournamentController {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "브랜드 프로필이 없어요.");
     }
 
-    item.setOwnerKey(ownerKey);
+    String owner = workspaces.current(ownerKey).getWorkspaceId();
+    item.setOwnerKey(owner);
     item.setUpdatedAt(Instant.now());
 
     // TournamentController 와 같은 판단 — 클라가 항상 전체 애그리거트를 보내므로 지우고 새로 넣는다.
-    repository.deleteByIdAndOwnerKey(item.getId(), ownerKey);
+    repository.deleteByIdAndOwnerKey(item.getId(), owner);
     repository.flush();
     repository.save(item);
 

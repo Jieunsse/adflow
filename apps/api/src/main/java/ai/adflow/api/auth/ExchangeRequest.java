@@ -6,7 +6,6 @@ import jakarta.validation.constraints.NotBlank;
 public record ExchangeRequest(
     @NotBlank String ownerKey,
     @NotBlank String email,
-    String role,
     MetaConnectionPayload metaConnection) {
 
   public record MetaConnectionPayload(

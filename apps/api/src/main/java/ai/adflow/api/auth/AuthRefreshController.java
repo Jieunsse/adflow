@@ -1,10 +1,9 @@
 package ai.adflow.api.auth;
 
-import ai.adflow.api.security.JwtConfig;
 import ai.adflow.api.security.Role;
 import ai.adflow.api.security.TokenIssuer;
+import ai.adflow.api.workspace.Workspaces;
 import jakarta.validation.Valid;
-import java.util.List;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -30,12 +29,15 @@ public class AuthRefreshController {
 
   private final JwtDecoder refreshJwtDecoder;
   private final TokenIssuer tokenIssuer;
+  private final Workspaces workspaces;
 
   public AuthRefreshController(
       @Qualifier("refreshJwtDecoder") JwtDecoder refreshJwtDecoder,
-      TokenIssuer tokenIssuer) {
+      TokenIssuer tokenIssuer,
+      Workspaces workspaces) {
     this.refreshJwtDecoder = refreshJwtDecoder;
     this.tokenIssuer = tokenIssuer;
+    this.workspaces = workspaces;
   }
 
   @PostMapping("/refresh")
@@ -50,14 +52,18 @@ public class AuthRefreshController {
           HttpStatus.UNAUTHORIZED, "갱신 토큰이 유효하지 않아요. 다시 로그인해 주세요.");
     }
 
-    List<String> roles = jwt.getClaimAsStringList(JwtConfig.ROLES_CLAIM);
-    Role role = roles == null || roles.isEmpty() ? Role.LEAD : Role.fromAuthority(roles.get(0));
     String email = jwt.getClaimAsString("email");
+    // 내보낸 사람은 여기서 403 이 나 갱신되지 않는다.
+    Role role = workspaces.current(jwt.getSubject()).getRole();
 
     TokenIssuer.Issued issued = tokenIssuer.issue(jwt.getSubject(), email, role);
     return ResponseEntity.ok(
         new ExchangeResponse(
-            issued.token(), issued.expiresAt(), issued.refreshToken(), issued.refreshExpiresAt()));
+            issued.token(),
+            issued.expiresAt(),
+            issued.refreshToken(),
+            issued.refreshExpiresAt(),
+            role.displayName()));
   }
 
 }

@@ -1,8 +1,8 @@
 package ai.adflow.api.me;
 
 import ai.adflow.api.connection.MetaConnectionRepository;
-import ai.adflow.api.security.Role;
-import java.util.List;
+import ai.adflow.api.workspace.Member;
+import ai.adflow.api.workspace.Workspaces;
 import java.util.Map;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -18,20 +18,22 @@ import org.springframework.web.bind.annotation.RestController;
 public class MeController {
 
   private final MetaConnectionRepository repository;
+  private final Workspaces workspaces;
 
-  public MeController(MetaConnectionRepository repository) {
+  public MeController(MetaConnectionRepository repository, Workspaces workspaces) {
     this.repository = repository;
+    this.workspaces = workspaces;
   }
 
   @GetMapping
   public Map<String, String> me(@AuthenticationPrincipal Jwt jwt) {
-    List<String> roles = jwt.getClaimAsStringList("roles");
-    String authority = (roles == null || roles.isEmpty()) ? Role.LEAD.authority() : roles.get(0);
+    Member member = workspaces.current(jwt.getSubject());
     String email = jwt.getClaimAsString("email");
     return Map.of(
         "ownerKey", jwt.getSubject(),
+        "workspaceId", member.getWorkspaceId(),
         "email", email == null ? "" : email,
-        "role", Role.fromAuthority(authority).displayName());
+        "role", member.getRole().displayName());
   }
 
   /** 자격증명 교체·삭제는 팀장만 (설계 §4 인가). */

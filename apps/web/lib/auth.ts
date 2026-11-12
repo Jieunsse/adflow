@@ -91,8 +91,6 @@ function buildCommonOptions(meta?: MetaCredentials): AuthOptions {
             meta.clientId,
             meta.clientSecret,
           )
-          // 첫 로그인 시 기본 역할: 팀장 (DB 연동 전 임시)
-          if (!token.role) token.role = "팀장"
         }
         // 로그인 직후 Spring 백엔드와 1회 교환. 게스트·백엔드 미설정이면 내부에서 건너뛴다.
         // 실패해도 로그인을 깨지 않는다 — 단계 1 에서 프론트 데이터는 여전히 Supabase.
@@ -100,7 +98,6 @@ function buildCommonOptions(meta?: MetaCredentials): AuthOptions {
           const issued = await exchangeForBackendToken({
             ownerKey: token.email,
             email: token.email,
-            role: token.role,
             metaConnection: {
               accessToken: token.accessToken,
               igAccessToken: token.igAccessToken,
@@ -118,6 +115,10 @@ function buildCommonOptions(meta?: MetaCredentials): AuthOptions {
             token.backendToken = issued.token
             token.backendTokenExpiresAt = issued.expiresAt
             token.backendRefreshToken = issued.refreshToken
+            token.role = issued.role
+          } else if (!token.role) {
+            // 백엔드가 없는 환경(설치 마법사·로컬)에서는 막을 서버도 없다. 예전처럼 팀장으로 둔다.
+            token.role = "팀장"
           }
         }
         if (trigger === "update" && session) {
@@ -142,9 +143,6 @@ function buildCommonOptions(meta?: MetaCredentials): AuthOptions {
           }
           if (session.browseMode !== undefined) {
             token.browseMode = session.browseMode
-          }
-          if (session.role !== undefined) {
-            token.role = session.role
           }
         }
         return token

@@ -1,5 +1,6 @@
 package ai.adflow.api.tournament;
 
+import ai.adflow.api.workspace.Workspaces;
 import ai.adflow.api.store.ItemRequest;
 import ai.adflow.api.store.ItemsResponse;
 import jakarta.transaction.Transactional;
@@ -31,9 +32,11 @@ import org.springframework.web.server.ResponseStatusException;
 public class TournamentController {
 
   private final TournamentRepository repository;
+  private final Workspaces workspaces;
 
-  public TournamentController(TournamentRepository repository) {
+  public TournamentController(TournamentRepository repository, Workspaces workspaces) {
     this.repository = repository;
+    this.workspaces = workspaces;
   }
 
   @GetMapping
@@ -43,9 +46,9 @@ public class TournamentController {
 
     List<Tournament> items =
         brandProfileId == null
-            ? repository.findByOwnerKeyOrderByCreatedAtDesc(jwt.getSubject())
+            ? repository.findByOwnerKeyOrderByCreatedAtDesc(workspaces.idOf(jwt))
             : repository.findByOwnerKeyAndBrandProfileIdOrderByCreatedAtDesc(
-                jwt.getSubject(), brandProfileId);
+                workspaces.idOf(jwt), brandProfileId);
     return new ItemsResponse<>(items);
   }
 
@@ -53,7 +56,7 @@ public class TournamentController {
   public ResponseEntity<Tournament> get(@AuthenticationPrincipal Jwt jwt, @PathVariable String id) {
     return repository
         .findById(id)
-        .filter(t -> jwt.getSubject().equals(t.getOwnerKey()))
+        .filter(t -> workspaces.idOf(jwt).equals(t.getOwnerKey()))
         .map(ResponseEntity::ok)
         .orElseGet(() -> ResponseEntity.notFound().build());
   }
@@ -71,12 +74,12 @@ public class TournamentController {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "브랜드 프로필이 없어요.");
     }
 
-    item.setOwnerKey(jwt.getSubject());
+    item.setOwnerKey(workspaces.idOf(jwt));
     item.setUpdatedAt(Instant.now());
 
     // 지우고 새로 넣는다 — 클라가 항상 전체 애그리거트를 보내므로 자식 컬렉션의 고아 처리와
     // detached 병합 함정을 통째로 피한다(StoreController 와 같은 판단).
-    repository.deleteByIdAndOwnerKey(item.getId(), jwt.getSubject());
+    repository.deleteByIdAndOwnerKey(item.getId(), workspaces.idOf(jwt));
     repository.flush();
     repository.save(item);
 
@@ -87,7 +90,7 @@ public class TournamentController {
   @Transactional
   public Map<String, Boolean> remove(
       @AuthenticationPrincipal Jwt jwt, @RequestParam("id") String id) {
-    repository.deleteByIdAndOwnerKey(id, jwt.getSubject());
+    repository.deleteByIdAndOwnerKey(id, workspaces.idOf(jwt));
     return Map.of("ok", true);
   }
 }

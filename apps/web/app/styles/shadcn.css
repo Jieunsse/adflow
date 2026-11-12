@@ -8,13 +8,13 @@
   --card-foreground: 232.5 7.8% 20%;
   --popover: 0 0% 100%;
   --popover-foreground: 232.5 7.8% 20%;
-  --primary: 231.4 29.2% 47.1%; /* primary/default #555F9B */
+  --primary: 235.3 47.1% 52.5%; /* primary/default #4D56BF */
   --primary-foreground: 0 0% 100%;
-  --primary-hover: 231.1 31.6% 37.8%; /* primary/hover #424B7F */
-  --primary-pressed: 231.4 33.3% 28.8%; /* primary/pressed #313862 */
-  --secondary-hover: 227.4 70.4% 94.7%; /* primary/soft-hover #E8ECFB */
+  --primary-hover: 235.2 45.9% 42.7%; /* primary/hover #3B439F */
+  --primary-pressed: 236.2 47.3% 32.7%; /* primary/pressed #2C317B */
+  --secondary-hover: 227 92% 95.1%; /* primary/soft-hover #E7ECFE */
   --secondary: 229.1 100% 97.8%; /* primary/soft #F4F6FF */
-  --secondary-foreground: 231.1 31.6% 37.8%; /* primary/soft-fg #424B7F */
+  --secondary-foreground: 235.2 45.9% 42.7%; /* primary/soft-fg #3B439F */
   --muted: 230 27.3% 95.7%; /* bg/subtle #F1F2F7 */
   --muted-foreground: 226.7 4.4% 39.8%; /* fg/muted #61636A */
   --accent: 230 27.3% 95.7%; /* 마우스 올림 바탕 = bg/subtle */
@@ -23,8 +23,8 @@
   --destructive-foreground: 0 0% 100%;
   --border: 228 9.8% 90%; /* line/default #E3E4E8 */
   --input: 229.1 11.8% 81.8%; /* line/strong #CBCDD6 */
-  --ring: 229.1 41.8% 69%; /* focus/ring #8F9BD1 */
-  --chart-1: 235.3 35.4% 49.8%; /* chart/series-1 #5259AC */
+  --ring: 230.7 82.1% 73.7%; /* focus/ring #8596F3 */
+  --chart-1: 235.3 47.1% 52.5%; /* chart/series-1 #4D56BF = 주 색 */
   --chart-2: 21.7 73.5% 55.7%; /* #E1773B */
   --chart-3: 326.8 51.8% 39%; /* #973069 */
   --chart-4: 60.6 71.8% 29.2%; /* #7F8015 */

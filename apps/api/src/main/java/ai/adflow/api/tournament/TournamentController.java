@@ -33,10 +33,33 @@ public class TournamentController {
 
   private final TournamentRepository repository;
   private final Workspaces workspaces;
+  private final LaunchApprovalService approvals;
 
-  public TournamentController(TournamentRepository repository, Workspaces workspaces) {
+  public TournamentController(
+      TournamentRepository repository, Workspaces workspaces, LaunchApprovalService approvals) {
     this.repository = repository;
     this.workspaces = workspaces;
+    this.approvals = approvals;
+  }
+
+  public record RejectRequest(String reason) {}
+
+  /** 다음 실험 게재 요청 (기능 7). 직원 누구나. */
+  @PostMapping("/{id}/launch-request")
+  public Tournament requestLaunch(@AuthenticationPrincipal Jwt jwt, @PathVariable String id) {
+    return approvals.request(workspaces.current(jwt.getSubject()), id);
+  }
+
+  /** 승인하면 바로 Meta 에 올린다. 전송이 실패한 요청은 같은 경로로 다시 시도한다. */
+  @PostMapping("/{id}/launch-request/approve")
+  public Tournament approveLaunch(@AuthenticationPrincipal Jwt jwt, @PathVariable String id) {
+    return approvals.approve(workspaces.current(jwt.getSubject()), id);
+  }
+
+  @PostMapping("/{id}/launch-request/reject")
+  public Tournament rejectLaunch(
+      @AuthenticationPrincipal Jwt jwt, @PathVariable String id, @RequestBody RejectRequest body) {
+    return approvals.reject(workspaces.current(jwt.getSubject()), id, body.reason());
   }
 
   @GetMapping

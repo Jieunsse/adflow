@@ -11,6 +11,10 @@ import { Skeleton } from "@shared/ui/Skeleton";
 import { EmptyState } from "@shared/ui/primitives";
 import { cn } from "@shared/lib/cn";
 import { fetchCampaigns } from "@entities/campaign/api";
+import { useSession } from "next-auth/react";
+import Link from "next/link";
+import { tournamentClient } from "@entities/ab-test/tournament/client";
+import { MIN_ROUND_DAYS } from "@entities/ab-test/tournament/engine";
 import type { CampaignSummary, CampaignIssueReason } from "@/lib/meta-ads";
 
 type ApprovalsFilter = "all" | "review" | "issue";
@@ -60,7 +64,7 @@ export default function ApprovalsPage() {
         <div>
           <span className="font-semibold text-[11px] leading-[1.45] tracking-[0.04em] uppercase text-[var(--w-fg-neutral)]">승인 대기</span>
           <h1 className="m-0 font-bold text-[28px] leading-[1.25] tracking-[-0.024em] text-[var(--w-fg-strong)]" style={{ marginTop: 4 }}>승인 대기</h1>
-          <p className="font-medium text-[14px] leading-[1.5] tracking-[0.004em] text-[var(--w-fg-neutral)] mt-1.5 mb-0">Meta 심사를 기다리는 캠페인과, 정책 이슈로 막힌 캠페인을 한곳에서 확인하세요.</p>
+          <p className="font-medium text-[14px] leading-[1.5] tracking-[0.004em] text-[var(--w-fg-neutral)] mt-1.5 mb-0">게재 요청을 승인하고, Meta 심사를 기다리거나 정책 이슈로 막힌 캠페인을 한곳에서 확인해요.</p>
         </div>
         <div style={{ display: "inline-flex", gap: 8 }}>
           <Button variant="secondary" type="button" onClick={() => q.refetch()} disabled={q.isFetching}>
@@ -68,6 +72,10 @@ export default function ApprovalsPage() {
           </Button>
         </div>
       </div>
+
+      <LaunchRequestsSection />
+
+      <h2 className="m-0 font-bold text-[18px] leading-[1.4] text-[var(--w-fg-strong)]">Meta 검토</h2>
 
       {isUnauthorized ? (
         <ErrorCard
@@ -310,5 +318,53 @@ function ErrorCard({ icon = "warn", title, reason, ctaLabel = "다시 시도", o
       <div style={{ font: "500 13px/1.5 var(--w-font-sans)", color: "var(--w-fg-neutral)", maxWidth: 380 }}>{reason}</div>
       <Button variant="secondary" type="button" className="mt-2" onClick={onAction}>{ctaLabel}</Button>
     </Card>
+  );
+}
+
+// 승인할 것 (기능명세 7-1) — 승인 대기 중인 다음 실험 게재 요청. 승인·반려는 실험 상세에서 한다.
+// shortcut: 워크스페이스 전체 요청을 보여 준다. "내가 승인할 수 있는 것"(담당 브랜드)만 거르는 일은 브랜드 목록 화면을 만들 때 한다.
+function LaunchRequestsSection() {
+  const { data: session } = useSession();
+  const browseMode = !!session?.browseMode;
+  const q = useQuery({
+    queryKey: ["tournaments", "launch-requests", browseMode],
+    queryFn: () => tournamentClient(browseMode).list(),
+    enabled: !!session,
+  });
+  const pending = (q.data ?? []).filter((t) => t.launchRequest?.status === "pending");
+  const won = (n: number) => `${Math.round(n).toLocaleString("ko-KR")}원`;
+
+  return (
+    <section className="flex flex-col gap-3">
+      <h2 className="m-0 font-bold text-[18px] leading-[1.4] text-[var(--w-fg-strong)]">
+        승인할 것 {pending.length > 0 && <Chip variant="neutral">{pending.length}</Chip>}
+      </h2>
+      {q.isLoading ? (
+        <Skeleton className="h-16 w-full" />
+      ) : pending.length === 0 ? (
+        <Card className="py-6 px-5 font-medium text-[13px] text-[var(--w-fg-neutral)]">승인을 기다리는 게재 요청이 없어요.</Card>
+      ) : (
+        <Card className="divide-y divide-[var(--w-line-normal)]">
+          {pending.map((t) => (
+            <Link
+              key={t.id}
+              href={`/ab-tests/${t.id}`}
+              className="flex items-center justify-between gap-4 py-3.5 px-5 hover:bg-[var(--w-bg-alternative)]"
+            >
+              <div className="flex flex-col gap-0.5">
+                <span className="font-semibold text-[14px] text-[var(--w-fg-strong)]">{t.productName}</span>
+                <span className="font-medium text-[12px] text-[var(--w-fg-neutral)]">
+                  {t.launchRequest?.requestedBy ?? "팀원"} 요청
+                  {t.launchRequest?.requestedAt ? ` · ${new Date(t.launchRequest.requestedAt).toLocaleString("ko-KR")}` : ""}
+                </span>
+              </div>
+              <span className="font-semibold text-[13px] text-[var(--w-fg-strong)]">
+                예상 {won(t.dailyBudget * (t.delivery?.roundDays ?? MIN_ROUND_DAYS))}
+              </span>
+            </Link>
+          ))}
+        </Card>
+      )}
+    </section>
   );
 }

@@ -74,6 +74,15 @@ export type TourRound = {
   hypothesis?: Hypothesis; // ADR-044 — 이 라운드가 검증하는 가설. 동인은 hypothesis.lever, axis 는 표시 파생 유지
 };
 
+export type LaunchRequest = {
+  status: "pending" | "launching" | "failed" | "rejected";
+  requestedBy?: string;
+  requestedAt?: string;
+  decidedBy?: string;
+  decidedAt?: string;
+  rejectReason?: string;
+};
+
 // ADR-054 — 완전 무인화: manual-n 폐기, auto 단일. 와이어 형태 동결이라 필드는 유지하되 값은 항상 auto
 // (레거시 행 흡수는 Spring 의 Tournament.getMode 가 한다).
 export type TourMode = "auto";
@@ -121,6 +130,8 @@ export type Tournament = {
   championSourceName?: string; // existing 일 때 원본 캠페인명 (provenance 표기용)
   championConfirmed?: boolean; // 출발 광고 승인 결정 지점 통과 여부
   pendingChallenger?: TourVariant; // 결정 대기 중인 챌린저 제안 (게재 전)
+  // 다음 실험 게재 요청과 승인 (기능 7). 게재에 성공하면 초안과 함께 사라진다
+  launchRequest?: LaunchRequest;
   pendingHypothesis?: Hypothesis; // ADR-044 — pendingChallenger 와 짝인 가설 (게재 시 라운드로 이동)
   prohibitedWords?: string[]; // ADR-054 — 브랜드 금칙어. 챌린저 생성 Gemini 프롬프트에 주입해 구조 차단(브레이크 X)
   brandDescription?: string; // 셋업 시 고른 브랜드 컨텍스트 — 라운드별 Gemini 주입

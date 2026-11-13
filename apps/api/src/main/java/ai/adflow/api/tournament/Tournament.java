@@ -77,6 +77,45 @@ public class Tournament extends OwnerScoped {
     public void setHardCap(Double v) { this.hardCap = v; }
   }
 
+  /**
+   * 다음 실험(pendingChallenger)의 게재 요청과 승인 (정책서 11.2). 상태: pending(승인 대기) · launching(승인돼
+   * Meta 에 올리는 중) · failed(승인 뒤 Meta 전송 실패, 승인 없이 다시 시도) · rejected(반려).
+   * 게재에 성공하면 초안과 함께 사라진다.
+   */
+  @Embeddable
+  public static class LaunchRequest {
+    @Column(name = "launch_status")
+    private String status;
+
+    @Column(name = "launch_requested_by")
+    private String requestedBy;
+
+    @Column(name = "launch_requested_at")
+    private String requestedAt;
+
+    @Column(name = "launch_decided_by")
+    private String decidedBy;
+
+    @Column(name = "launch_decided_at")
+    private String decidedAt;
+
+    @Column(name = "launch_reject_reason", length = 1000)
+    private String rejectReason;
+
+    public String getStatus() { return status; }
+    public void setStatus(String v) { this.status = v; }
+    public String getRequestedBy() { return requestedBy; }
+    public void setRequestedBy(String v) { this.requestedBy = v; }
+    public String getRequestedAt() { return requestedAt; }
+    public void setRequestedAt(String v) { this.requestedAt = v; }
+    public String getDecidedBy() { return decidedBy; }
+    public void setDecidedBy(String v) { this.decidedBy = v; }
+    public String getDecidedAt() { return decidedAt; }
+    public void setDecidedAt(String v) { this.decidedAt = v; }
+    public String getRejectReason() { return rejectReason; }
+    public void setRejectReason(String v) { this.rejectReason = v; }
+  }
+
   /** 자동 봉투 (ADR-054/061). 소진 = 사람이 결정할 유일한 지점. */
   @Embeddable
   public static class Envelope {
@@ -168,6 +207,8 @@ public class Tournament extends OwnerScoped {
   @Embedded private TourRound.HypothesisData pendingHypothesis;
 
   @Embedded private Envelope envelope;
+
+  @Embedded private LaunchRequest launchRequest;
 
   @ElementCollection(fetch = FetchType.EAGER)
   @CollectionTable(
@@ -276,7 +317,13 @@ public class Tournament extends OwnerScoped {
         : pendingChallenger;
   }
 
-  public void setPendingChallenger(Variant v) { this.pendingChallenger = v; }
+  /** 초안이 바뀌면 그 초안에 대한 요청·승인도 무효다 (정책서 9.6: 승인 대기 중 소재를 고치면 다시 요청). */
+  public void setPendingChallenger(Variant v) {
+    this.pendingChallenger = v;
+    this.launchRequest = null;
+  }
+  public LaunchRequest getLaunchRequest() { return launchRequest; }
+  public void setLaunchRequest(LaunchRequest v) { this.launchRequest = v; }
   public TourRound.HypothesisData getPendingHypothesis() { return TourRound.nullIfEmpty(pendingHypothesis); }
   public void setPendingHypothesis(TourRound.HypothesisData v) { this.pendingHypothesis = v; }
 

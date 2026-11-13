@@ -128,7 +128,7 @@ public class InternalTournamentController {
   }
 
   /**
-   * 화면의 수동 액션 — 다음 챌린저 세우기 · 게재.
+   * 화면의 수동 액션 — 다음 챌린저 세우기.
    *
    * <p>폴러가 쓰는 코드와 <b>같은 함수</b>다. 레버 선택과 실 게재를 TS 에도 두면 사람이 누른 라운드와
    * 폴러가 띄운 라운드가 다른 규칙으로 만들어진다 — 실제 광고가 만들어지는 경로라 특히 위험하다.
@@ -143,7 +143,7 @@ public class InternalTournamentController {
 
     switch (step) {
       case "propose" -> advanceService.propose(t);
-      case "launch" -> advanceService.launch(t);
+      // launch 는 여기 없다 — 게재는 승인(/stores/tournaments/{id}/launch-request/approve)으로만 한다.
       default -> throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "알 수 없는 액션이에요.");
     }
     return repository.save(t);

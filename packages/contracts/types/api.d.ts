@@ -84,6 +84,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/stores/tournaments/{id}/launch-request": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["requestLaunch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/stores/tournaments/{id}/launch-request/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["rejectLaunch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/stores/tournaments/{id}/launch-request/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["approveLaunch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/stores/sops": {
         parameters: {
             query?: never;
@@ -634,6 +682,14 @@ export interface components {
             /** Format: double */
             spend: number;
         };
+        LaunchRequest: {
+            status?: string;
+            requestedBy?: string;
+            requestedAt?: string;
+            decidedBy?: string;
+            decidedAt?: string;
+            rejectReason?: string;
+        };
         TourRound: {
             /** Format: int32 */
             index: number;
@@ -673,6 +729,7 @@ export interface components {
             pendingChallenger?: components["schemas"]["Variant"];
             pendingHypothesis?: components["schemas"]["HypothesisData"];
             envelope?: components["schemas"]["Envelope"];
+            launchRequest?: components["schemas"]["LaunchRequest"];
             prohibitedWords?: string[];
             brandDescription?: string;
             productDescription?: string;
@@ -721,6 +778,9 @@ export interface components {
             ctrB: number;
             /** Format: double */
             confidence: number;
+        };
+        RejectRequest: {
+            reason?: string;
         };
         ItemRequestSop: {
             item?: components["schemas"]["Sop"];
@@ -1368,6 +1428,76 @@ export interface operations {
                     "*/*": {
                         [key: string]: boolean;
                     };
+                };
+            };
+        };
+    };
+    requestLaunch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Tournament"];
+                };
+            };
+        };
+    };
+    rejectLaunch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RejectRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Tournament"];
+                };
+            };
+        };
+    };
+    approveLaunch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Tournament"];
                 };
             };
         };

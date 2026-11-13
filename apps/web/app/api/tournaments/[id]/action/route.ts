@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { withRouteHandler, ValidationError } from "@/lib/route-handler";
+import { callBackend } from "@shared/lib/backend/call";
 import {
   getRealTournamentRunner,
   tournamentStore,
@@ -24,7 +25,9 @@ type Action =
   | "regenerate-champion"
   | "propose-challenger"
   | "set-challenger"
-  | "launch"
+  | "request-launch"
+  | "approve-launch"
+  | "reject-launch"
   | "refill-envelope"
   | "resume";
 
@@ -32,6 +35,7 @@ interface ActionBody {
   action: Action;
   variant?: TourVariant; // confirm-champion(edited) / set-challenger
   addBudget?: number; // refill-envelope
+  reason?: string; // reject-launch
 }
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -67,17 +71,27 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         if (!b.variant) throw new ValidationError("챌린저 내용이 없어요.");
         await editOnBackend(id, "set-challenger", { variant: b.variant });
         break;
-      case "launch":
-        // 게재 승인은 팀장·팀원·게재만 (정책서 5.2). 역할은 로그인 때 서버가 정해 세션에 넣은 값이다.
-        if (session.role !== "팀장" && session.role !== "팀원·게재") {
+      case "request-launch":
+      case "approve-launch":
+      case "reject-launch": {
+        // 게재 요청·승인·반려는 Spring 의 JWT 경로로 간다. 역할과 담당 검사는 서버가 DB 기준으로 한다.
+        const path = { "request-launch": "", "approve-launch": "/approve", "reject-launch": "/reject" }[b.action];
+        const call = await callBackend(req, `/stores/tournaments/${encodeURIComponent(id)}/launch-request${path}`, {
+          method: "POST",
+          ...(b.action === "reject-launch"
+            ? { body: JSON.stringify({ reason: b.reason ?? "" }), contentType: "application/json" }
+            : {}),
+        });
+        if (!call.ok) return NextResponse.json({ error: call.message }, { status: call.status });
+        if (!call.res.ok) {
+          const data = (await call.res.json().catch(() => ({}))) as { error?: string };
           return NextResponse.json(
-            { error: "게재는 팀장과 팀원·게재만 할 수 있어요. 담당 팀장에게 요청해 주세요." },
-            { status: 403 },
+            { error: data.error ?? "요청을 처리하지 못했어요. 잠시 뒤 다시 해 주세요." },
+            { status: call.res.status },
           );
         }
-        // 실제 Meta 게재 — 폴러와 같은 경로여야 광고가 같은 규칙으로 만들어진다.
-        await advanceOnBackend(id, "launch");
         break;
+      }
       case "refill-envelope":
         await editOnBackend(id, "refill-envelope", { addBudget: b.addBudget });
         break;

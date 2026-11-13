@@ -4,35 +4,34 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { withRouteHandler } from "@/lib/route-handler";
-import { tournamentStore, editOnBackend, ownerKeyFrom } from "@entities/ab-test/tournament/real";
+import { tournamentStore, editOnBackend, isInMyWorkspace } from "@entities/ab-test/tournament/real";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-async function ownerGuardedTournament(id: string) {
+async function ownerGuardedTournament(req: NextRequest, id: string) {
   const session = await getServerSession(authOptions);
   if (!session || session.browseMode || !session.accessToken || !session.adAccountId || !session.pageId) {
     return { error: NextResponse.json({ error: "Meta 광고 계정·페이지 연결이 필요해요." }, { status: 409 }) };
   }
-  const ownerKey = ownerKeyFrom(session.user?.email, session.accessToken);
   const t = await tournamentStore.get(id);
-  if (!t || t.delivery?.ownerEmail !== ownerKey) {
+  if (!t || !(await isInMyWorkspace(req, id))) {
     return { error: NextResponse.json({ error: "토너먼트를 찾을 수 없어요." }, { status: 404 }) };
   }
   return { tournament: t };
 }
 
-export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const guard = await ownerGuardedTournament(id);
+  const guard = await ownerGuardedTournament(req, id);
   if (guard.error) return guard.error;
   return NextResponse.json({ tournament: guard.tournament });
 }
 
 // 조기 종료(endTournament).
-export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const guard = await ownerGuardedTournament(id);
+  const guard = await ownerGuardedTournament(req, id);
   if (guard.error) return guard.error;
   return withRouteHandler(true, "", async () => {
     await editOnBackend(id, "end");

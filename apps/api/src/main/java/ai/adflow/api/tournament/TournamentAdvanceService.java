@@ -15,12 +15,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 /**
- * auto 무인 체인 (ADR-054) — 봉투가 남아 있으면 다음 챌린저를 세우고 게재한다. TS: server-runner.ts 의
- * proposeChallenger · launchRound · autoAdvance.
+ * 다음 실험 준비 — 판정이 끝나면 다음 도전 소재 초안(가설 + 챌린저)을 만들어 둔다. TS: server-runner.ts 의
+ * proposeChallenger · launchRound.
  *
- * <p>정지 지점은 하나뿐이다: 게재 실패(lastError). 금칙어는 생성 단계에서 구조로 배제되고 정체는
- * 레버 폴백으로 돌파하므로 사람을 기다릴 자리가 없다. 봉투 소진도 자동 완료가 아니라 winner-handling
- * 으로 surface 한다.
+ * <p>게재는 하지 않는다 (기능명세 3, 정책서 11.3). 사람이 초안을 보고 게재를 눌러야 Meta 에 올라간다.
+ * 예전에는 폴러가 초안을 만든 즉시 게재까지 했다(ADR-054 무인 체인).
  */
 @Service
 public class TournamentAdvanceService {
@@ -43,7 +42,7 @@ public class TournamentAdvanceService {
     this.clock = clock;
   }
 
-  /** 게재까지 갔으면 true. 게이트에 막혔거나 실패면 false. */
+  /** 새 초안을 만들었으면 true. 이미 초안이 있거나 게이트에 막혔거나 카피 생성이 실패하면 false. */
   @Transactional
   public boolean autoAdvance(String id) {
     Tournament t = repository.findById(id).orElse(null);
@@ -52,40 +51,32 @@ public class TournamentAdvanceService {
     if (t.getLastError() != null) return false;
     if (!Boolean.TRUE.equals(t.getChampionConfirmed())) return false;
     if (hasRunningRound(t)) return false;
+    if (t.getPendingChallenger() != null) return false;
+    // 판정 불가 뒤에는 기간·예산을 늘릴지 사람이 정한다 (정책서 13.3). 그 전에 다음 초안을 만들지 않는다.
+    if (!t.getRounds().isEmpty() && "unjudgeable".equals(t.getRounds().get(t.getRounds().size() - 1).getStatus())) {
+      return false;
+    }
 
     // ADR-061 — 봉투 소진 시 autoRefill opt-in 이고 hardCap 미만이면 자동 충전.
     if (TourEngine.isEnvelopeExhausted(TourStates.of(t)) && TourEngine.canAutoRefill(TourStates.of(t))) {
       Tournament.Envelope env = t.getEnvelope();
       double base = env.getTotalBudget() == null ? nz(t.getSpentBudget()) : env.getTotalBudget();
       env.setTotalBudget(base + env.getAutoRefill().getAddBudget());
-      repository.save(t);
     }
-    if (TourEngine.isEnvelopeExhausted(TourStates.of(t))) return false;
-
-    if (t.getPendingChallenger() == null) {
-      try {
-        propose(t);
-      } catch (RuntimeException e) {
-        // 카피 생성 실패는 일시적이다 — 다음 폴에 재시도한다.
-        log.warn("챌린저 생성 실패, 다음 폴에 재시도합니다: {} — {}", id, e.getMessage());
-        return false;
-      }
+    if (TourEngine.isEnvelopeExhausted(TourStates.of(t))) {
+      repository.save(t);
+      return false;
     }
 
     try {
-      launch(t);
-      repository.save(t);
-      return true;
+      propose(t);
     } catch (RuntimeException e) {
-      // ADR-053 — Meta 가 split test 게재를 거절하면 사전 탐지가 불가능하다. 한국어로 박아두고
-      // 자동 진행을 멈춘다. 조용히 방치되지 않게 화면이 상세 배너로 surface 한다.
-      Tournament fresh = repository.findById(id).orElse(null);
-      if (fresh != null) {
-        fresh.setLastError(e.getMessage());
-        repository.save(fresh);
-      }
+      // 카피 생성 실패는 일시적이다 — 다음 폴에 재시도한다.
+      log.warn("챌린저 생성 실패, 다음 폴에 재시도합니다: {} — {}", id, e.getMessage());
       return false;
     }
+    repository.save(t);
+    return true;
   }
 
   /** ADR-044/047 — Ledger 투영으로 다음 레버를 고르고 가설 + 챌린저를 pending 으로 보관. */
@@ -113,6 +104,7 @@ public class TournamentAdvanceService {
   public void launch(Tournament t) {
     Tournament.Variant challenger = t.getPendingChallenger();
     if (challenger == null) throw new IllegalStateException("게재할 챌린저가 없어요.");
+    if (hasRunningRound(t)) throw new IllegalStateException("이미 진행 중인 실험이 있어요. 판정이 끝난 뒤에 게재해 주세요.");
 
     int index = t.getRounds().size() + 1;
     TourRound round = new TourRound();

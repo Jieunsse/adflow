@@ -1,3 +1,5 @@
+import type { NextRequest } from "next/server";
+import { callBackend } from "@shared/lib/backend/call";
 // 실 유저 토너먼트 조립점 (ADR-038) — server-side only. Spring store + Meta 게재 어댑터로
 // 서버 오케스트레이터를 만든다. cron 폴러·API 라우트가 이 한 곳에서 같은 러너를 얻는다.
 //
@@ -20,3 +22,9 @@ export function ownerKeyFrom(email: string | null | undefined, accessToken: stri
 }
 
 export { backendTournamentStore as tournamentStore, advanceOnBackend, editOnBackend } from "./backend-store";
+
+// 같은 워크스페이스의 실험인지. Spring 의 JWT 경로가 워크스페이스로 거른다 — 만든 사람이 아니어도 된다.
+export async function isInMyWorkspace(req: NextRequest, id: string): Promise<boolean> {
+  const call = await callBackend(req, `/stores/tournaments/${encodeURIComponent(id)}`);
+  return call.ok && call.res.ok;
+}

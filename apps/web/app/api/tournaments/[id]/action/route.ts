@@ -12,7 +12,7 @@ import {
   tournamentStore,
   advanceOnBackend,
   editOnBackend,
-  ownerKeyFrom,
+  isInMyWorkspace,
 } from "@entities/ab-test/tournament/real";
 import type { TourVariant } from "@entities/ab-test/tournament/engine";
 
@@ -40,9 +40,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   if (!session || session.browseMode || !session.accessToken || !session.adAccountId || !session.pageId) {
     return NextResponse.json({ error: "Meta 광고 계정·페이지 연결이 필요해요." }, { status: 409 });
   }
-  const ownerKey = ownerKeyFrom(session.user?.email, session.accessToken);
   const existing = await tournamentStore.get(id);
-  if (!existing || existing.delivery?.ownerEmail !== ownerKey) {
+  if (!existing || !(await isInMyWorkspace(req, id))) {
     return NextResponse.json({ error: "토너먼트를 찾을 수 없어요." }, { status: 404 });
   }
 
@@ -69,6 +68,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         await editOnBackend(id, "set-challenger", { variant: b.variant });
         break;
       case "launch":
+        // 게재 승인은 팀장·팀원·게재만 (정책서 5.2). 역할은 로그인 때 서버가 정해 세션에 넣은 값이다.
+        if (session.role !== "팀장" && session.role !== "팀원·게재") {
+          return NextResponse.json(
+            { error: "게재는 팀장과 팀원·게재만 할 수 있어요. 담당 팀장에게 요청해 주세요." },
+            { status: 403 },
+          );
+        }
         // 실제 Meta 게재 — 폴러와 같은 경로여야 광고가 같은 규칙으로 만들어진다.
         await advanceOnBackend(id, "launch");
         break;

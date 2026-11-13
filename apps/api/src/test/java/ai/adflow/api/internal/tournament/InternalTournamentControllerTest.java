@@ -97,6 +97,7 @@ class InternalTournamentControllerTest {
               "champion": {"headline": "챔피언 헤드", "primaryText": "챔피언 카피"},
               "challenger": {"headline": "챌린저 헤드", "primaryText": "챌린저 카피"},
               "fastForwardDays": 0, "status": "running", "studyId": "study_2",
+              "launchedAt": "2026-07-01T00:00:00Z",
               "hypothesis": {
                 "id": "hyp_r2", "lever": "benefit", "statement": "혜택을 먼저 말하면 CTR이 오른다",
                 "predictedMetric": "CTR", "predictedDirection": "up", "rationale": "근거",
@@ -148,7 +149,10 @@ class InternalTournamentControllerTest {
   @Test
   void 스터디가_유의성을_못_내면_결산을_보류한다() throws Exception {
     seed("a@example.com", tournament("t_pending", "B", "winner"));
-    StubKpiSource.next = new TournamentKpiSource.Reading(List.of(), null, null);
+    // 노출은 채웠지만 Meta 가 아직 결과를 주지 않았다 (정책서 13.1: 다음 수집 때 다시 확인).
+    StubKpiSource.next =
+        new TournamentKpiSource.Reading(
+            List.of(new AdKpi(15000, 270, 1.8, 91911), new AdKpi(15000, 360, 2.4, 91911)), null, null);
 
     mockMvc
         .perform(post("/internal/tournaments/t_pending/settle").header("X-Internal-Secret", SECRET))

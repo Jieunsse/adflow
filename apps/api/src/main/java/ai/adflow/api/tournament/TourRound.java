@@ -258,8 +258,13 @@ public class TourRound {
   @Column(name = "launched_at")
   private String launchedAt;
 
+  /** running · settled · unjudgeable(기간이 끝났는데 노출이 모자라 판정하지 못함, 정책서 13.3). */
   @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   private String status;
+
+  /** 판정까지 모자란 소재별 노출 수. 진행 중에는 남은 수, 판정 불가면 모자란 수다. */
+  @Column(name = "impression_shortfall")
+  private Integer impressionShortfall;
 
   @Embedded private HypothesisData hypothesis;
 
@@ -298,6 +303,8 @@ public class TourRound {
   public void setLaunchedAt(String v) { this.launchedAt = v; }
   public String getStatus() { return status; }
   public void setStatus(String v) { this.status = v; }
+  public Integer getImpressionShortfall() { return impressionShortfall; }
+  public void setImpressionShortfall(Integer v) { this.impressionShortfall = v; }
   public HypothesisData getHypothesis() { return nullIfEmpty(hypothesis); }
   public void setHypothesis(HypothesisData v) { this.hypothesis = v; }
 }

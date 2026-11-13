@@ -651,6 +651,8 @@ export interface components {
             studyId?: string;
             launchedAt?: string;
             status: string;
+            /** Format: int32 */
+            impressionShortfall?: number;
             hypothesis?: components["schemas"]["HypothesisData"];
         };
         Tournament: {

@@ -4,13 +4,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { tournamentStore, ownerKeyFrom } from "@entities/ab-test/tournament/real";
+import { tournamentStore, ownerKeyFrom, isInMyWorkspace } from "@entities/ab-test/tournament/real";
 import { deriveLedger, filterByContext } from "@entities/ab-test/tournament/hypothesis";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const session = await getServerSession(authOptions);
   if (!session || session.browseMode || !session.accessToken || !session.adAccountId || !session.pageId) {
@@ -18,7 +18,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   }
   const ownerKey = ownerKeyFrom(session.user?.email, session.accessToken);
   const t = await tournamentStore.get(id);
-  if (!t || t.delivery?.ownerEmail !== ownerKey) {
+  if (!t || !(await isInMyWorkspace(req, id))) {
     return NextResponse.json({ error: "토너먼트를 찾을 수 없어요." }, { status: 404 });
   }
   const ledger = deriveLedger(await tournamentStore.listByBrandOwner(t.brandProfileId, ownerKey));

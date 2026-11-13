@@ -257,7 +257,16 @@ export default function AbTournamentDetailPage() {
         (isReal ? <RealLivePanel t={t} /> : <LivePanel t={t} />)}
 
       {beat === "auto-running" && !t.rounds.some((r) => r.status === "running") && (
-        <AutoBetweenPanel lastSettled={lastSettled} dailyBudget={t.dailyBudget} spec={spec} isReal={isReal} />
+        <AutoBetweenPanel
+          t={t}
+          lastSettled={lastSettled}
+          dailyBudget={t.dailyBudget}
+          spec={spec}
+          isReal={isReal}
+          busy={busy}
+          canLaunch={session?.role === "팀장" || session?.role === "팀원·게재"}
+          onLaunch={() => act(client.launch(t.id), "다음 실험을 게재했어요. Meta 검토가 끝나면 광고가 나가요")}
+        />
       )}
 
       {beat === "winner-handling" && (
@@ -305,12 +314,12 @@ function RealLivePanel({ t }: { t: Tournament }) {
     <div className="flex flex-col gap-4">
       <AutoBanner
         title={`라운드 ${round.index} 게재 중 — ${AXIS_LABEL[round.axis]} 비교`}
-        desc="실제 Meta 광고로 챔피언(A)·챌린저(B)를 게재하고 있어요. 서버가 충분한 데이터가 쌓일 때까지 기다렸다가 자동으로 결산해요. 브라우저를 꺼도 진행돼요."
+        desc="실제 Meta 광고로 챔피언(A)·챌린저(B)를 게재하고 있어요. 4일이 지나고 소재마다 노출이 1,000회를 넘으면 자동으로 판정해요. 이기고 있는 쪽은 판정 전까지 보여 주지 않아요."
       />
       <div className="flex items-center gap-2 py-2.5 px-4 rounded-xl bg-[var(--w-bg-elevated)] border border-[var(--w-line-normal)]">
         <Icon name="spinner" size={13} spin />
         <span className="font-semibold text-[12px] text-[var(--w-fg-neutral)]">
-          게재 {days}일째 · {remain > 0 ? `최소 ${MIN_ROUND_DAYS}일 후 결산 (약 ${remain}일 남음)` : "결산 대기 중 — 곧 승자가 가려져요"}
+          게재 {days}일째 · {waitingText(remain, round.impressionShortfall)}
         </span>
       </div>
       <div className="grid grid-cols-2 gap-4">
@@ -762,7 +771,57 @@ function SettledResult({ round, dailyBudget, spec, prohibited, isReal }: { round
 
 /* ─── auto-running (무인 라운드 전환) 🤖 ─────────────────── */
 
-function AutoBetweenPanel({ lastSettled, dailyBudget, spec, isReal }: { lastSettled: TourRound | null; dailyBudget: number; spec: TourMetricSpec; isReal: boolean }) {
+// 판정 전 진행 상태 (기능명세 3-1). 노출이 모자란 동안은 남은 노출 수를 먼저 보여 준다.
+function waitingText(remainDays: number, shortfall?: number): string {
+  if (shortfall && shortfall > 0) return `데이터 모으는 중 · 판정까지 노출 ${shortfall.toLocaleString()}회 남았어요`;
+  if (remainDays > 0) return `데이터 모으는 중 · 판정까지 약 ${remainDays}일 남았어요`;
+  return "Meta 결과를 기다리는 중 · 곧 판정해요";
+}
+
+function AutoBetweenPanel({ t, lastSettled, dailyBudget, spec, isReal, busy, canLaunch, onLaunch }: {
+  t: Tournament;
+  lastSettled: TourRound | null;
+  dailyBudget: number;
+  spec: TourMetricSpec;
+  isReal: boolean;
+  busy: boolean;
+  canLaunch: boolean;
+  onLaunch: () => void;
+}) {
+  const last = t.rounds.at(-1);
+  if (isReal && last?.status === "unjudgeable") {
+    return (
+      <DecisionBanner
+        title={`판정하지 못했어요 · 노출이 ${(last.impressionShortfall ?? 0).toLocaleString()}회 모자라요`}
+        desc="실험 기간이 끝났는데 소재마다 노출 1,000회를 채우지 못했어요. 기간을 늘리거나 하루 예산을 늘리면 다시 판정할 수 있어요. 팀장과 어느 쪽으로 할지 정해 주세요."
+      />
+    );
+  }
+  if (isReal) {
+    return (
+      <div className="flex flex-col gap-4">
+        {lastSettled && <SettledResult round={lastSettled} dailyBudget={dailyBudget} spec={spec} isReal={isReal} />}
+        {t.pendingChallenger ? (
+          <div className="flex flex-col gap-3">
+            <DecisionBanner
+              title="다음 실험 준비됐어요"
+              desc="위에서 기준 소재와 도전 소재를 확인하고 게재해 주세요. 게재하면 Meta 에 광고가 올라가고 광고비가 나가요."
+            />
+            <div className="flex items-center justify-end gap-3">
+              {!canLaunch && (
+                <span className="font-medium text-[13px] text-[var(--w-fg-neutral)]">팀장과 팀원·게재만 게재할 수 있어요.</span>
+              )}
+              <Button variant="primary" type="button" disabled={!canLaunch || busy} onClick={onLaunch}>
+                게재하기
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <AutoBanner title="다음 실험 초안을 만들고 있어요" desc="판정 결과를 바탕으로 다음 도전 소재를 준비해요. 준비되면 여기서 확인하고 게재할 수 있어요." />
+        )}
+      </div>
+    );
+  }
   return (
     <div className="flex flex-col gap-4">
       {lastSettled && <SettledResult round={lastSettled} dailyBudget={dailyBudget} spec={spec} isReal={isReal} />}

@@ -68,7 +68,9 @@ export type TourRound = {
   adSetIds?: [string, string]; // ad_studies SPLIT_TEST 셀별 AdSet(A=챔피언·B=챌린저). 데모는 미사용
   studyId?: string; // Meta ad study(SPLIT_TEST) ID — KpiSource 가 Meta verdict 를 조회하는 키. 데모는 미사용
   launchedAt?: string; // 실 게재 시각 ISO — cron 이 MIN_ROUND_DAYS 경과 판정에 사용. 데모는 fastForwardDays 사용
-  status: "running" | "settled";
+  // unjudgeable = 기간이 끝났는데 노출이 모자라 판정하지 못함 (정책서 13.3). 실 게재만 생긴다
+  status: "running" | "settled" | "unjudgeable";
+  impressionShortfall?: number; // 판정까지 모자란 소재별 노출 수 (실 게재, 폴러가 채움)
   hypothesis?: Hypothesis; // ADR-044 — 이 라운드가 검증하는 가설. 동인은 hypothesis.lever, axis 는 표시 파생 유지
 };
 

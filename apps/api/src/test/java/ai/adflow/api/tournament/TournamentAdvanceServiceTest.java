@@ -134,10 +134,45 @@ class TournamentAdvanceServiceTest {
   }
 
   @Test
-  void 부트스트랩_1라운드를_자동으로_띄운다() {
-    save("t_boot");
+  void 폴러는_다음_실험_초안만_만들고_게재하지_않는다() {
+    save("t_draft");
 
-    assertThat(advance.autoAdvance("t_boot")).isTrue();
+    assertThat(advance.autoAdvance("t_draft")).isTrue();
+
+    Tournament t = repository.findById("t_draft").orElseThrow();
+    assertThat(t.getRounds()).isEmpty();
+    assertThat(t.getPendingChallenger()).isNotNull();
+    assertThat(t.getPendingHypothesis()).isNotNull();
+    assertThat(StubLauncher.calls).isZero();
+
+    // 초안이 이미 있으면 다시 만들지 않는다.
+    assertThat(advance.autoAdvance("t_draft")).isFalse();
+  }
+
+  @Test
+  void 판정_불가_뒤에는_초안을_만들지_않는다() {
+    Tournament t = save("t_unjudgeable");
+    advance.autoAdvance("t_unjudgeable");
+    launchManually("t_unjudgeable");
+    Tournament launched = repository.findById("t_unjudgeable").orElseThrow();
+    launched.getRounds().get(0).setStatus("unjudgeable");
+    repository.saveAndFlush(launched);
+
+    assertThat(advance.autoAdvance("t_unjudgeable")).isFalse();
+    assertThat(repository.findById("t_unjudgeable").orElseThrow().getPendingChallenger()).isNull();
+  }
+
+  private void launchManually(String id) {
+    Tournament t = repository.findById(id).orElseThrow();
+    advance.launch(t);
+    repository.saveAndFlush(t);
+  }
+
+  @Test
+  void 사람이_게재하면_1라운드가_뜬다() {
+    save("t_boot");
+    advance.autoAdvance("t_boot");
+    launchManually("t_boot");
 
     Tournament t = repository.findById("t_boot").orElseThrow();
     assertThat(t.getRounds()).hasSize(1);
@@ -162,12 +197,17 @@ class TournamentAdvanceServiceTest {
   }
 
   @Test
-  void 진행_중인_라운드가_있으면_겹쳐_띄우지_않는다() {
+  void 진행_중인_라운드가_있으면_초안도_게재도_겹치지_않는다() {
     save("t_running");
     advance.autoAdvance("t_running");
+    launchManually("t_running");
     assertThat(StubLauncher.calls).isEqualTo(1);
 
     assertThat(advance.autoAdvance("t_running")).isFalse();
+    Tournament t = repository.findById("t_running").orElseThrow();
+    t.setPendingChallenger(t.getChampion());
+    org.assertj.core.api.Assertions.assertThatThrownBy(() -> advance.launch(t))
+        .hasMessageContaining("이미 진행 중인 실험");
     assertThat(StubLauncher.calls).isEqualTo(1);
   }
 
@@ -213,20 +253,14 @@ class TournamentAdvanceServiceTest {
   }
 
   @Test
-  void 게재_실패는_한국어로_박아두고_자동_진행을_멈춘다() {
-    // ADR-053 — 사전 탐지가 불가능한 거절이라 사람이 볼 수 있게 남긴다.
-    save("t_err");
-    StubLauncher.failure = new IllegalStateException("A/B 게재 예산이 부족해요.");
+  void 게재_실패로_멈춘_토너먼트에는_초안을_만들지_않는다() {
+    // ADR-053 — 사람이 resume 할 때까지 손대지 않는다.
+    Tournament t = save("t_err");
+    t.setLastError("A/B 게재 예산이 부족해요.");
+    repository.saveAndFlush(t);
 
     assertThat(advance.autoAdvance("t_err")).isFalse();
-    Tournament t = repository.findById("t_err").orElseThrow();
-    assertThat(t.getLastError()).contains("예산이 부족해요");
-    assertThat(t.getRounds()).isEmpty();
-
-    // 멈춘 뒤에는 다시 시도하지 않는다 — 사람이 resume 할 때까지.
-    StubLauncher.failure = null;
-    assertThat(advance.autoAdvance("t_err")).isFalse();
-    assertThat(repository.findById("t_err").orElseThrow().getRounds()).isEmpty();
+    assertThat(repository.findById("t_err").orElseThrow().getPendingChallenger()).isNull();
   }
 
   @Test
@@ -245,6 +279,7 @@ class TournamentAdvanceServiceTest {
     // ADR-047 — Ledger 투영이 실제로 결정에 반영되는지.
     save("t_prior");
     advance.autoAdvance("t_prior");
+    launchManually("t_prior");
     Tournament first = repository.findById("t_prior").orElseThrow();
     String refutedLever = first.getRounds().get(0).getHypothesis().getLever();
 
@@ -263,12 +298,9 @@ class TournamentAdvanceServiceTest {
     repository.saveAndFlush(first);
 
     save("t_next");
-    advance.propose(repository.findById("t_next").orElseThrow());
-    Tournament next = repository.findById("t_next").orElseThrow();
     advance.autoAdvance("t_next");
-
     String nextLever =
-        repository.findById("t_next").orElseThrow().getRounds().get(0).getHypothesis().getLever();
+        repository.findById("t_next").orElseThrow().getPendingHypothesis().getLever();
     assertThat(nextLever).isNotEqualTo(refutedLever);
   }
 
@@ -280,7 +312,7 @@ class TournamentAdvanceServiceTest {
     TournamentPoller.Cycle c = poller.runOnce();
 
     assertThat(c.scanned()).isEqualTo(1);
-    assertThat(c.advanced()).isEqualTo(1); // 결산은 안 됐지만 1라운드는 띄운다
+    assertThat(c.advanced()).isEqualTo(1); // 결산은 안 됐지만 1라운드 초안은 만든다
     assertThat(c.errors()).isEmpty();
     assertThat(cronRuns.findFirstByJobAndOkTrueOrderByFinishedAtDesc("tournament-poller"))
         .isPresent();

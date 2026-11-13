@@ -87,6 +87,7 @@ class TournamentSettlePostgresIT extends IntegrationTestBase {
     r1.setFastForwardDays(0);
     r1.setStatus("running");
     r1.setStudyId("study_1");
+    r1.setLaunchedAt(Instant.now().minus(java.time.Duration.ofDays(5)).toString()); // 판정 최소 4일
     r1.setHypothesis(hypothesis());
 
     Tournament t = new Tournament();
@@ -142,11 +143,35 @@ class TournamentSettlePostgresIT extends IntegrationTestBase {
 
     // @OrderColumn 이 붙은 KPI 두 행이 순서대로 정확히 두 개여야 한다.
     Integer kpiRows =
-        jdbc.queryForObject("select count(*) from tour_round_ad_kpis", Integer.class);
+        jdbc.queryForObject(
+            "select count(*) from tour_round_ad_kpis k join tour_rounds r on k.round_id = r.id"
+                + " where r.tournament_id = 'tourn_pg_settle'",
+            Integer.class);
     assertThat(kpiRows).isEqualTo(2);
     assertThat(found.getRounds().get(0).getAdKpis())
         .extracting(TourRound.Kpi::getClicks)
         .containsExactly(270, 360);
+  }
+
+  @Test
+  void 기간이_끝났는데_노출이_모자라면_판정_불가로_끝내고_챔피언과_가설은_그대로다() {
+    save("tourn_pg_short");
+    StubKpiSource.next =
+        new TournamentKpiSource.Reading(
+            List.of(new AdKpi(380, 9, 2.4, 3000), new AdKpi(1200, 30, 2.5, 3000)),
+            new RoundVerdict("winner", 2.4, 2.5, 0.95),
+            "B");
+
+    var outcome = settleService.settle("tourn_pg_short");
+    assertThat(outcome.status()).isEqualTo("unjudgeable");
+
+    Tournament found = repository.findById("tourn_pg_short").orElseThrow();
+    TourRound r = found.getRounds().get(0);
+    assertThat(r.getStatus()).isEqualTo("unjudgeable");
+    assertThat(r.getImpressionShortfall()).isEqualTo(620);
+    assertThat(found.getChampion().getHeadline()).isEqualTo("A");
+    assertThat(found.getSpentBudget()).isZero();
+    assertThat(r.getHypothesis().getStatus()).isEqualTo("testing");
   }
 
   @Test
@@ -171,7 +196,10 @@ class TournamentSettlePostgresIT extends IntegrationTestBase {
   @Test
   void 스터디_미확정이면_아무것도_고치지_않는다() {
     save("tourn_pg_pending");
-    StubKpiSource.next = new TournamentKpiSource.Reading(List.of(), null, null);
+    // 노출은 채웠지만 Meta 가 아직 결과를 주지 않았다 — 기간이 지나도 기다린다 (정책서 13.1).
+    StubKpiSource.next =
+        new TournamentKpiSource.Reading(
+            List.of(new AdKpi(15000, 270, 1.8, 91911), new AdKpi(15000, 360, 2.4, 91911)), null, null);
 
     assertThat(settleService.settle("tourn_pg_pending").status()).isEqualTo("insufficient");
 

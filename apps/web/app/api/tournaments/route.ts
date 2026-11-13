@@ -6,6 +6,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { withRouteHandler, ValidationError } from "@/lib/route-handler";
+import { callBackend } from "@shared/lib/backend/call";
 import { getRealTournamentRunner, tournamentStore, ownerKeyFrom } from "@entities/ab-test/tournament/real";
 import { MIN_ROUND_DAYS, type TournamentDelivery, type TourEnvelope } from "@entities/ab-test/tournament/engine";
 import type { ServerTournamentSetup } from "@entities/ab-test/tournament/server-runner";
@@ -80,11 +81,26 @@ export async function POST(req: NextRequest) {
     if (!b.linkUrl?.trim()) throw new ValidationError("랜딩 URL 을 입력해주세요.");
     if (!b.countries?.length) throw new ValidationError("타겟 지역(국가)을 최소 한 곳 선택해주세요.");
     if (!b.dailyBudget || b.dailyBudget <= 0) throw new ValidationError("일 예산을 입력해주세요.");
+    if (!b.brandProfileId) throw new ValidationError("브랜드를 먼저 골라 주세요.");
+
+    // 광고 계정·페이지는 세션이 아니라 이 브랜드의 연결에서 읽는다 (기능 10).
+    // 세션 값을 쓰면 브랜드를 바꾼 직후 다른 고객의 광고 계정으로 광고가 나갈 수 있다.
+    const brand = await callBackend(req, `/brands/${encodeURIComponent(b.brandProfileId)}`);
+    if (!brand.ok) return NextResponse.json({ error: brand.message }, { status: brand.status });
+    const conn = brand.res.ok
+      ? ((await brand.res.json()) as { adAccountId?: string; pageId?: string })
+      : {};
+    if (!conn.adAccountId || !conn.pageId) {
+      return NextResponse.json(
+        { error: "이 브랜드에 광고 계정이 아직 연결되지 않았어요. 계정 연결에서 광고 계정과 페이지를 골라 주세요." },
+        { status: 409 },
+      );
+    }
 
     const delivery: TournamentDelivery = {
       accessToken: s.accessToken,
-      adAccountId: s.adAccountId,
-      pageId: s.pageId,
+      adAccountId: conn.adAccountId,
+      pageId: conn.pageId,
       ownerEmail: s.ownerKey,
       goalId: b.goalId,
       linkUrl: b.linkUrl,
@@ -98,7 +114,7 @@ export async function POST(req: NextRequest) {
     };
 
     const setup: ServerTournamentSetup = {
-      brandProfileId: b.brandProfileId || "default",
+      brandProfileId: b.brandProfileId,
       productId: b.productId || "manual",
       productName: b.productName.trim(),
       brandDescription: b.brandDescription,

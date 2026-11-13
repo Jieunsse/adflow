@@ -8,9 +8,9 @@ import { callBackend } from "./call";
 
 type Handler = (req: NextRequest) => Promise<NextResponse>;
 
-async function proxy(req: NextRequest, path: string): Promise<NextResponse> {
+export async function proxy(req: NextRequest, path: string): Promise<NextResponse> {
   const search = req.nextUrl?.search ?? new URL(req.url).search;
-  const body = req.method === "POST" ? await req.text() : undefined;
+  const body = req.method === "POST" || req.method === "PUT" ? await req.text() : undefined;
 
   const call = await callBackend(req, `${path}${search}`, {
     method: req.method,

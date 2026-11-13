@@ -8,6 +8,7 @@ import { useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { createSyncedStore, isRealOwner, useSyncErrorToast } from "@shared/lib/store";
 import { removePersonasForProfile } from "./usePersonasStorage";
+import { ACTIVE_BRAND_EVENT } from "./brandConnection";
 import type { BrandProfile, BrandProfileEntry } from "./useBrandProfileStorage";
 
 const PROFILES_KEY = "adflow:brand-profiles:v2"; // zustand persist 봉투. 레거시 bare-array 키는 1회 흡수 후 폐기.
@@ -131,4 +132,6 @@ export function setActiveIdInStorage(id: string): void {
   try {
     localStorage.setItem(ACTIVE_ID_KEY, id);
   } catch {}
+  // 세션의 광고 계정을 새 브랜드 것으로 바꾸라는 신호 (BrandConnectionSync).
+  window.dispatchEvent(new Event(ACTIVE_BRAND_EVENT));
 }

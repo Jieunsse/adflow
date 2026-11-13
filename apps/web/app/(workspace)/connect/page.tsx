@@ -14,6 +14,8 @@ import { Card } from "@shared/ui/Card";
 import { Skeleton } from "@shared/ui/Skeleton";
 import { cn } from "@shared/lib/cn";
 import { fetchAdIdentityPages } from "@entities/page/api";
+import { getActiveId } from "@features/brand-profile/model/brandProfileStore";
+import { saveBrandConnection, type BrandConnection } from "@features/brand-profile/model/brandConnection";
 import { fetchProfilePictures, profilePicturesQueryKey } from "@entities/page/profile-pictures";
 
 type AccountInfo = { connected: boolean; accountId: string; accountName: string; currency: string };
@@ -171,13 +173,40 @@ export default function ConnectPage() {
     setPickerOpen(kind);
   };
 
+  // 바꾼 값을 먼저 지금 브랜드의 연결로 저장한다 (기능 10). 거절되면 세션도 바꾸지 않는다.
+  const saveToBrand = async (patch: BrandConnection): Promise<boolean> => {
+    const brandId = getActiveId();
+    if (!brandId) return true;
+    const failed = await saveBrandConnection(brandId, {
+      adAccountId: session?.adAccountId,
+      adAccountName: session?.adAccountName,
+      pageId: session?.pageId,
+      pageName: session?.pageName,
+      pixelId: session?.pixelId,
+      pixelName: session?.pixelName,
+      igUserId: session?.igUserId,
+      igUsername: session?.igUsername,
+      ...patch,
+    });
+    if (failed) showToast(failed);
+    return !failed;
+  };
+
   const pickAccount = async (it: PickerItem) => {
+    if (!(await saveToBrand({ adAccountId: it.id, adAccountName: it.name }))) return;
     await update?.({ adAccountId: it.id, adAccountName: it.name });
     setPickerOpen(null);
     showToast(`'${it.name}'(으)로 변경했어요`);
     accountQ.refetch();
   };
   const pickPage = async (it: PickerItem) => {
+    const page = {
+      pageId: it.id,
+      pageName: it.name,
+      igUserId: it.igUserId ?? "",
+      igUsername: it.igUsername ?? "",
+    };
+    if (!(await saveToBrand(page))) return;
     await update?.({
       pageId: it.id,
       pageName: it.name,
@@ -188,6 +217,7 @@ export default function ConnectPage() {
     showToast(`'${it.name}'(으)로 변경했어요`);
   };
   const pickPixel = async (it: PickerItem) => {
+    if (!(await saveToBrand({ pixelId: it.id, pixelName: it.name }))) return;
     await update?.({ pixelId: it.id, pixelName: it.name });
     setPickerOpen(null);
     showToast(`'${it.name}'(으)로 변경했어요`);

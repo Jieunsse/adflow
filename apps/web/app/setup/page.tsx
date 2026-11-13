@@ -6,6 +6,8 @@ import { useSearchParams } from "next/navigation";
 import Icon from "@shared/ui/Icon";
 import { Button } from "@shared/ui/Button";
 import { fetchAdIdentityPages, type AdIdentityPage } from "@entities/page/api";
+import { getActiveId } from "@features/brand-profile/model/brandProfileStore";
+import { saveBrandConnection } from "@features/brand-profile/model/brandConnection";
 
 interface AdAccount {
   id: string;
@@ -106,6 +108,7 @@ function SetupFlow() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selecting, setSelecting] = useState<string | null>(null);
+  const [account, setAccount] = useState<AdAccount | null>(null);
 
   useEffect(() => {
     fetch("/api/setup/ad-accounts")
@@ -124,6 +127,7 @@ function SetupFlow() {
   async function selectAccount(account: AdAccount) {
     setSelecting(account.id);
     setError(null);
+    setAccount(account);
     await update({ adAccountId: account.id, adAccountName: account.name });
     setLoading(true);
     try {
@@ -138,6 +142,24 @@ function SetupFlow() {
 
   async function selectPage(page: AdIdentityPage) {
     setSelecting(page.id);
+    setError(null);
+    // 브랜드가 있으면 그 브랜드의 광고 계정으로 저장한다. 첫 브랜드는 온보딩에서 만들며 저장한다.
+    const brandId = getActiveId();
+    if (brandId && account) {
+      const failed = await saveBrandConnection(brandId, {
+        adAccountId: account.id,
+        adAccountName: account.name,
+        pageId: page.id,
+        pageName: page.name,
+        igUserId: page.igUserId ?? "",
+        igUsername: page.igUsername ?? "",
+      });
+      if (failed) {
+        setError(failed);
+        setSelecting(null);
+        return;
+      }
+    }
     await update({
       pageId: page.id,
       pageName: page.name,

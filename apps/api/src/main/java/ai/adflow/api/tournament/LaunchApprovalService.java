@@ -7,7 +7,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ai.adflow.api.security.Role;
 import ai.adflow.api.workspace.Member;
+import ai.adflow.api.plan.MonthlyPlan;
+import ai.adflow.api.plan.MonthlyPlanRepository;
+import ai.adflow.api.tournament.engine.TourEngine;
+import ai.adflow.api.workspace.MemberRepository;
 import java.time.Clock;
+import java.time.Instant;
+import java.time.YearMonth;
+import java.time.ZoneId;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -17,13 +24,15 @@ import org.springframework.web.server.ResponseStatusException;
 /**
  * 게재 요청과 승인 (기능 7, 정책서 11.1·11.2). 승인 없이는 Meta 에 올리지 않는다.
  *
- * <p>shortcut: 월간 계획 예산 상한(11.4)·브랜드 규칙 검사·광고 계정 상태 검사는 아직 하지 않는다. 월간
- * 계획(기능 12)을 만들 때 approve 에 상한 검사를 넣는다.
+ * <p>shortcut: 브랜드 규칙 검사·광고 계정 상태 검사는 아직 하지 않는다. 월간 계획 상한 검사(11.4)는 고객이
+ * 있는 브랜드에만 한다.
  */
 @Service
 public class LaunchApprovalService {
 
   private static final Logger log = LoggerFactory.getLogger(LaunchApprovalService.class);
+
+  private static final ZoneId KST = ZoneId.of("Asia/Seoul");
 
   static final String PENDING = "pending";
   static final String LAUNCHING = "launching";
@@ -39,6 +48,8 @@ public class LaunchApprovalService {
   private final TransactionTemplate tx;
   private final Clock clock;
   private final Notifications notifications;
+  private final MonthlyPlanRepository plans;
+  private final MemberRepository members;
 
   public LaunchApprovalService(
       TournamentRepository repository,
@@ -46,7 +57,11 @@ public class LaunchApprovalService {
       BrandConnectionRepository brands,
       TransactionTemplate tx,
       Clock clock,
-      Notifications notifications) {
+      Notifications notifications,
+      MonthlyPlanRepository plans,
+      MemberRepository members) {
+    this.plans = plans;
+    this.members = members;
     this.repository = repository;
     this.advance = advance;
     this.brands = brands;
@@ -129,6 +144,7 @@ public class LaunchApprovalService {
             s -> {
               Tournament t = load(me, id);
               requireApprover(me, t);
+              requirePlanWithinCap(me, t);
               if (repository.moveLaunchStatus(id, List.of(PENDING, FAILED), LAUNCHING) == 0) {
                 throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 처리된 요청이에요. 화면을 새로 고쳐 주세요.");
               }
@@ -187,6 +203,48 @@ public class LaunchApprovalService {
                   "launch-failed:" + id + ":" + clock.instant()));
       throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, e.getMessage());
     }
+  }
+
+  /**
+   * 대행 브랜드는 이번 달 승인된 계획의 총예산 상한 안에서만 게재한다 (11.4). 고객이 없는 브랜드는 검사하지
+   * 않는다 — 고객 로그인이 아직 없어 모든 브랜드에 걸면 아무것도 게재할 수 없다.
+   */
+  private void requirePlanWithinCap(Member me, Tournament t) {
+    String brand = t.getBrandProfileId();
+    if (members
+        .findByWorkspaceIdAndRoleAndBrandProfileIdAndRemovedAtIsNull(me.getWorkspaceId(), Role.CLIENT, brand)
+        .isEmpty()) {
+      return;
+    }
+    YearMonth month = YearMonth.now(clock.withZone(KST));
+    MonthlyPlan plan =
+        plans
+            .findById(MonthlyPlanRepository.idOf(brand, month.toString()))
+            .filter(p -> me.getWorkspaceId().equals(p.getOwnerKey()))
+            .filter(p -> MonthlyPlan.APPROVED.equals(p.getStatus()))
+            .orElseThrow(() -> bad("이번 달 승인된 광고 계획이 없어요. 고객에게 계획 승인을 요청해 주세요."));
+
+    double expected = dailyCost(t);
+    for (Tournament other : repository.findByOwnerKeyAndBrandProfileIdOrderByCreatedAtDesc(me.getWorkspaceId(), brand)) {
+      long launchedThisMonth =
+          other.getRounds().stream()
+              .filter(r -> r.getLaunchedAt() != null)
+              .filter(r -> YearMonth.from(Instant.parse(r.getLaunchedAt()).atZone(KST)).equals(month))
+              .count();
+      expected += launchedThisMonth * dailyCost(other);
+    }
+    if (expected > plan.getBudgetCap()) {
+      throw bad("이번 달 예산 상한을 넘어요. 고객에게 상한을 늘려 달라고 요청해 주세요.");
+    }
+  }
+
+  /** 라운드 하나의 예상 광고비 = 하루 예산 × 기간. */
+  private static double dailyCost(Tournament t) {
+    int days =
+        t.getDelivery() == null || t.getDelivery().getRoundDays() == null
+            ? TourEngine.MIN_ROUND_DAYS
+            : t.getDelivery().getRoundDays();
+    return (t.getDailyBudget() == null ? 0 : t.getDailyBudget()) * days;
   }
 
   public Tournament reject(Member me, String id, String reason) {

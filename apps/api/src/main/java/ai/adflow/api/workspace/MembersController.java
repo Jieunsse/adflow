@@ -1,6 +1,7 @@
 package ai.adflow.api.workspace;
 
 import ai.adflow.api.security.Role;
+import ai.adflow.api.store.brand.BrandProfileRepository;
 import jakarta.transaction.Transactional;
 import java.time.Clock;
 import java.time.Instant;
@@ -30,20 +31,23 @@ import org.springframework.web.server.ResponseStatusException;
 @RequestMapping("/workspace/members")
 public class MembersController {
 
-  public record MemberView(String email, String role, Instant joinedAt) {
+  public record MemberView(String email, String role, Instant joinedAt, String brandProfileId) {
     static MemberView of(Member m) {
-      return new MemberView(m.getEmail(), m.getRole().displayName(), m.getJoinedAt());
+      return new MemberView(m.getEmail(), m.getRole().displayName(), m.getJoinedAt(), m.getBrandProfileId());
     }
   }
 
-  public record UpsertRequest(String email, String role) {}
+  public record UpsertRequest(String email, String role, String brandProfileId) {}
 
   private final Workspaces workspaces;
   private final MemberRepository members;
+  private final BrandProfileRepository profiles;
   private final Clock clock;
 
-  public MembersController(Workspaces workspaces, MemberRepository members, Clock clock) {
+  public MembersController(
+      Workspaces workspaces, MemberRepository members, BrandProfileRepository profiles, Clock clock) {
     this.workspaces = workspaces;
+    this.profiles = profiles;
     this.members = members;
     this.clock = clock;
   }
@@ -88,7 +92,22 @@ public class MembersController {
           HttpStatus.BAD_REQUEST, "팀장은 다른 사람에게 팀장을 넘기면 역할이 바뀌어요.");
     }
 
+    String brandId = body.brandProfileId() == null ? "" : body.brandProfileId().trim();
+    if (role == Role.CLIENT) {
+      if (brandId.isEmpty()) {
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "고객이 볼 브랜드를 골라 주세요.");
+      }
+      boolean mine =
+          profiles.findById(brandId).filter(p -> me.getWorkspaceId().equals(p.getOwnerKey())).isPresent();
+      if (!mine) {
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "이 워크스페이스의 브랜드만 고를 수 있어요.");
+      }
+    }
+
     if (role == Role.LEAD) {
+      if (inMyWorkspace && target.getRole() == Role.CLIENT) {
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "고객에게는 팀장을 넘길 수 없어요.");
+      }
       if (!inMyWorkspace) {
         throw new ResponseStatusException(
             HttpStatus.BAD_REQUEST, "팀장은 이미 함께 일하는 구성원에게만 넘길 수 있어요.");
@@ -100,6 +119,7 @@ public class MembersController {
     Member saved =
         inMyWorkspace ? target : new Member(email, me.getWorkspaceId(), role, clock.instant());
     saved.setRole(role);
+    saved.setBrandProfileId(role == Role.CLIENT ? brandId : null);
     return MemberView.of(members.save(saved));
   }
 

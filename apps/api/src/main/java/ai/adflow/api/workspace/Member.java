@@ -31,6 +31,10 @@ public class Member {
   @Column(name = "joined_at", nullable = false)
   private Instant joinedAt;
 
+  /** 고객 역할만 쓴다. 그 고객이 볼 수 있는 브랜드(브랜드 프로필 id) 하나다. */
+  @Column(name = "brand_profile_id")
+  private String brandProfileId;
+
   @Column(name = "removed_at")
   private Instant removedAt;
 
@@ -50,6 +54,8 @@ public class Member {
   public Role getRole() { return role; }
   public void setRole(Role v) { this.role = v; }
   public Instant getJoinedAt() { return joinedAt; }
+  public String getBrandProfileId() { return brandProfileId; }
+  public void setBrandProfileId(String v) { this.brandProfileId = v; }
   public Instant getRemovedAt() { return removedAt; }
   public void setRemovedAt(Instant v) { this.removedAt = v; }
 }

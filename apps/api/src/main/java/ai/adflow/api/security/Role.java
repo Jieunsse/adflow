@@ -11,7 +11,8 @@ import java.util.Arrays;
 public enum Role {
   LEAD("팀장"),
   MEMBER_PUBLISH("팀원·게재"),
-  MEMBER_REVIEW("팀원·검토");
+  MEMBER_REVIEW("팀원·검토"),
+  CLIENT("고객");
 
   private final String displayName;
 

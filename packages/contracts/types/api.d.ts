@@ -4,6 +4,38 @@
  */
 
 export interface paths {
+    "/portal/plans/{month}/cap": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["lowerCap"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/plans/{brandProfileId}/{month}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get"];
+        put: operations["save"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/learnings/{id}/sentence": {
         parameters: {
             query?: never;
@@ -324,6 +356,86 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/portal/plans/{month}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["reject"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/portal/plans/{month}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["approve"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/plans/{brandProfileId}/{month}/request": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["request"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/plans/{brandProfileId}/{month}/reopen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["reopen"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/plans/{brandProfileId}/{month}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["cancel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/notifications/read-all": {
         parameters: {
             query?: never;
@@ -459,9 +571,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get"];
+        get: operations["get_1"];
         put?: never;
-        post: operations["save"];
+        post: operations["save_1"];
         delete: operations["remove_14"];
         options?: never;
         head?: never;
@@ -539,7 +651,55 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_1"];
+        get: operations["get_2"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/portal/plans": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_14"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/portal/plans/{month}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get_3"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/plans": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_15"];
         put?: never;
         post?: never;
         delete?: never;
@@ -555,7 +715,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_14"];
+        get: operations["list_16"];
         put?: never;
         post?: never;
         delete?: never;
@@ -587,7 +747,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_15"];
+        get: operations["list_17"];
         put?: never;
         post?: never;
         delete?: never;
@@ -603,7 +763,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_2"];
+        get: operations["get_4"];
         put?: never;
         post?: never;
         delete?: never;
@@ -651,7 +811,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_16"];
+        get: operations["list_18"];
         put?: never;
         post?: never;
         delete?: never;
@@ -667,7 +827,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_3"];
+        get: operations["get_5"];
         put?: never;
         post?: never;
         delete?: never;
@@ -696,6 +856,31 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        CapRequest: {
+            /** Format: int64 */
+            budgetCap?: number;
+        };
+        MonthlyPlan: {
+            id: string;
+            brandProfileId: string;
+            month: string;
+            status: string;
+            /** Format: int64 */
+            budgetCap?: number;
+            bundles?: string;
+            messageToClient?: string;
+            requestedBy?: string;
+            requestedAt?: string;
+            decidedBy?: string;
+            decidedAt?: string;
+            rejectReason?: string;
+        };
+        SaveRequest: {
+            /** Format: int64 */
+            budgetCap?: number;
+            bundles?: string;
+            messageToClient?: string;
+        };
         SentenceRequest: {
             sentence?: string;
         };
@@ -756,12 +941,14 @@ export interface components {
         UpsertRequest: {
             email?: string;
             role?: string;
+            brandProfileId?: string;
         };
         MemberView: {
             email?: string;
             role?: string;
             /** Format: date-time */
             joinedAt?: string;
+            brandProfileId?: string;
         };
         AutoRefill: {
             /** Format: double */
@@ -1252,6 +1439,9 @@ export interface components {
         ItemsResponseAutoRelaunchState: {
             items?: components["schemas"]["AutoRelaunchState"][];
         };
+        ItemsResponseMonthlyPlan: {
+            items?: components["schemas"]["MonthlyPlan"][];
+        };
         Notification: {
             id?: string;
             kind?: string;
@@ -1280,6 +1470,82 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    lowerCap: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                month: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CapRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["MonthlyPlan"];
+                };
+            };
+        };
+    };
+    get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                brandProfileId: string;
+                month: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["MonthlyPlan"];
+                };
+            };
+        };
+    };
+    save: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                brandProfileId: string;
+                month: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["MonthlyPlan"];
+                };
+            };
+        };
+    };
     editSentence: {
         parameters: {
             query?: never;
@@ -2442,6 +2708,123 @@ export interface operations {
             };
         };
     };
+    reject: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                month: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RejectRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["MonthlyPlan"];
+                };
+            };
+        };
+    };
+    approve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                month: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["MonthlyPlan"];
+                };
+            };
+        };
+    };
+    request: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                brandProfileId: string;
+                month: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["MonthlyPlan"];
+                };
+            };
+        };
+    };
+    reopen: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                brandProfileId: string;
+                month: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["MonthlyPlan"];
+                };
+            };
+        };
+    };
+    cancel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                brandProfileId: string;
+                month: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["MonthlyPlan"];
+                };
+            };
+        };
+    };
     readAll: {
         parameters: {
             query?: never;
@@ -2682,7 +3065,7 @@ export interface operations {
             };
         };
     };
-    get: {
+    get_1: {
         parameters: {
             query: {
                 userKey: string;
@@ -2704,7 +3087,7 @@ export interface operations {
             };
         };
     };
-    save: {
+    save_1: {
         parameters: {
             query: {
                 userKey: string;
@@ -2879,7 +3262,7 @@ export interface operations {
             };
         };
     };
-    get_1: {
+    get_2: {
         parameters: {
             query?: never;
             header?: never;
@@ -2902,6 +3285,71 @@ export interface operations {
         };
     };
     list_14: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ItemsResponseMonthlyPlan"];
+                };
+            };
+        };
+    };
+    get_3: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                month: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["MonthlyPlan"];
+                };
+            };
+        };
+    };
+    list_15: {
+        parameters: {
+            query?: {
+                brandProfileId?: string;
+                month?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ItemsResponseMonthlyPlan"];
+                };
+            };
+        };
+    };
+    list_16: {
         parameters: {
             query?: never;
             header?: never;
@@ -2945,7 +3393,7 @@ export interface operations {
             };
         };
     };
-    list_15: {
+    list_17: {
         parameters: {
             query: {
                 brandProfileId: string;
@@ -2967,7 +3415,7 @@ export interface operations {
             };
         };
     };
-    get_2: {
+    get_4: {
         parameters: {
             query?: never;
             header?: never;
@@ -3036,7 +3484,7 @@ export interface operations {
             };
         };
     };
-    list_16: {
+    list_18: {
         parameters: {
             query?: never;
             header?: never;
@@ -3056,7 +3504,7 @@ export interface operations {
             };
         };
     };
-    get_3: {
+    get_5: {
         parameters: {
             query?: never;
             header?: never;

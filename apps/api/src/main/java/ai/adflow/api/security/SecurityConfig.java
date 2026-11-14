@@ -5,7 +5,9 @@ import jakarta.servlet.DispatcherType;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpMethod;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authorization.AuthorizationDecision;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.authorization.AuthorizationManager;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -30,6 +32,17 @@ public class SecurityConfig {
             new AuthorizationDecision(
                 internalSecret.matches(context.getRequest().getHeader(InternalSecret.HEADER)));
 
+    AuthorizationManager<RequestAuthorizationContext> staffOnly =
+        (authentication, context) -> {
+          Authentication a = authentication.get();
+          boolean ok =
+              a != null
+                  && a.isAuthenticated()
+                  && !(a instanceof AnonymousAuthenticationToken)
+                  && a.getAuthorities().stream().noneMatch(g -> g.getAuthority().equals("ROLE_CLIENT"));
+          return new AuthorizationDecision(ok);
+        };
+
     http
         // 브라우저가 직접 호출하지 않는다(Next.js 서버 전용). 세션도 쿠키도 쓰지 않는 무상태 API.
         .csrf(AbstractHttpConfigurer::disable)
@@ -51,8 +64,14 @@ public class SecurityConfig {
                     .hasRole("LEAD")
                     .requestMatchers(HttpMethod.DELETE, "/stores/brand-profiles", "/stores/sops")
                     .hasRole("LEAD")
+                    // 고객은 자기 브랜드 포털과 알림만 쓴다 (정책서 5.1). 서버도 거절한다 — 웹 화면만 막으면
+                    // 고객이 /stores 같은 직원 경로를 직접 부를 수 있다.
+                    .requestMatchers("/portal/**")
+                    .hasRole("CLIENT")
+                    .requestMatchers("/me", "/notifications/**")
+                    .authenticated()
                     .anyRequest()
-                    .authenticated())
+                    .access(staffOnly))
         .oauth2ResourceServer(o -> o.jwt(jwt -> jwt.jwtAuthenticationConverter(converter)));
     return http.build();
   }

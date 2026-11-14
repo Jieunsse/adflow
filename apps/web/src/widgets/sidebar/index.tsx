@@ -38,6 +38,7 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
       { href: "/campaigns", label: "캠페인", icon: "message", count: 12, countVariant: "primary" },
       { href: "/ab-tests", label: "A/B 테스트", icon: "chart" },
       { href: "/learnings", label: "광고 노하우", icon: "doc" },
+      { href: "/plans", label: "이번 달 광고 계획", icon: "clock" },
       { href: "/approvals", label: "승인 대기", icon: "clock", countVariant: "warn" },
       { href: "/library", label: "소재 라이브러리", icon: "folder" },
     ],

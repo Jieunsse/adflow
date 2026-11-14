@@ -15,6 +15,7 @@ import type { LaunchedCampaign } from "@entities/campaign/model";
 import type { PersonaEntry } from "@features/brand-profile/model/usePersonasStorage";
 import type { ProductEntry } from "@shared/lib/products";
 import type { ReferenceMaterial } from "@shared/lib/referenceMaterials";
+import type { MonthlyPlan } from "@entities/monthly-plan/model";
 import type {
   Tournament as TournamentEntity,
   TourRound as TourRoundEntity,
@@ -106,3 +107,8 @@ export type TournamentDeliveryIsCompatible = Assert<
 // 봉투·변형도 전 필드 검증된다.
 export type TourEnvelopeIsCompatible = Assert<AssignableTo<Api<"Envelope">, TourEnvelope>>;
 export type TourVariantIsCompatible = Assert<AssignableTo<Api<"Variant">, TourVariant>>;
+
+// 월간 계획 — 상태는 서버가 String 이라 문자열 유니온인 status 만 예외다(Learning·Tournament 와 같은 판단).
+export type MonthlyPlanIsCompatible = Assert<
+  AssignableTo<Omit<Api<"MonthlyPlan">, "status">, Omit<MonthlyPlan, "status">>
+>;

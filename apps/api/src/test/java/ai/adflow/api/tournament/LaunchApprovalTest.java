@@ -259,4 +259,73 @@ class LaunchApprovalTest {
         .andExpect(status().isBadRequest())
         .andExpect(jsonPath("$.error").value("도착 주소는 https://로 시작해야 해요."));
   }
+
+  private static final String MONTH =
+      java.time.YearMonth.now(java.time.ZoneId.of("Asia/Seoul")).toString();
+
+  private ResultActions plan(String lead, String brandId, String clientEmail, long cap, boolean approve)
+      throws Exception {
+    mockMvc.perform(
+        post("/workspace/members")
+            .with(as(lead, "LEAD"))
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{\"email\":\"" + clientEmail + "\",\"role\":\"고객\",\"brandProfileId\":\"" + brandId + "\"}"))
+        .andExpect(status().isOk());
+    if (cap < 0) return null;
+    mockMvc.perform(
+        put("/plans/" + brandId + "/" + MONTH)
+            .with(as(lead, "LEAD"))
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{\"budgetCap\":" + cap + "}"));
+    mockMvc.perform(post("/plans/" + brandId + "/" + MONTH + "/request").with(as(lead, "LEAD")));
+    if (!approve) return null;
+    return mockMvc.perform(post("/portal/plans/" + MONTH + "/approve").with(as(clientEmail, "CLIENT")));
+  }
+
+  @Test
+  void 고객이_없는_브랜드는_계획_없이도_승인된다() throws Exception {
+    setup("ap6@example.com", "bp_ap6", "t_ap6");
+    call("ap6@example.com", "LEAD", "t_ap6", "", null).andExpect(status().isOk());
+    call("ap6@example.com", "LEAD", "t_ap6", "/approve", null).andExpect(status().isOk());
+  }
+
+  @Test
+  void 대행_브랜드는_이번_달_승인된_계획이_없으면_승인할_수_없고_요청은_남는다() throws Exception {
+    setup("ap7@example.com", "bp_ap7", "t_ap7");
+    plan("ap7@example.com", "bp_ap7", "ap7c@example.com", -1, false);
+    call("ap7@example.com", "LEAD", "t_ap7", "", null).andExpect(status().isOk());
+
+    call("ap7@example.com", "LEAD", "t_ap7", "/approve", null)
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.error").value("이번 달 승인된 광고 계획이 없어요. 고객에게 계획 승인을 요청해 주세요."));
+    assertThat(StubLauncher.calls).isZero();
+    assertThat(repository.findById("t_ap7").orElseThrow().getLaunchRequest().getStatus()).isEqualTo("pending");
+  }
+
+  @Test
+  void 예상_광고비가_상한을_넘으면_승인할_수_없고_상한_안이면_승인된다() throws Exception {
+    // 하루 3만 원 × 4일 = 12만 원이 이번 요청의 예상 광고비다.
+    setup("ap8@example.com", "bp_ap8", "t_ap8");
+    plan("ap8@example.com", "bp_ap8", "ap8c@example.com", 100000, true);
+    call("ap8@example.com", "LEAD", "t_ap8", "", null).andExpect(status().isOk());
+    call("ap8@example.com", "LEAD", "t_ap8", "/approve", null)
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.error").value("이번 달 예산 상한을 넘어요. 고객에게 상한을 늘려 달라고 요청해 주세요."));
+    assertThat(StubLauncher.calls).isZero();
+    assertThat(repository.findById("t_ap8").orElseThrow().getLaunchRequest().getStatus()).isEqualTo("pending");
+
+    // 상한을 12만 원으로 두면 승인된다. 이미 이번 달에 게재한 라운드가 있으면 그 비용이 더해진다.
+    setup("ap9@example.com", "bp_ap9", "t_ap9");
+    plan("ap9@example.com", "bp_ap9", "ap9c@example.com", 200000, true);
+    Tournament t = repository.findById("t_ap9").orElseThrow();
+    TourRound r = new TourRound();
+    r.setIndex(1);
+    r.setStatus("running");
+    r.setLaunchedAt(Instant.now().toString());
+    t.getRounds().add(r);
+    repository.saveAndFlush(t);
+    call("ap9@example.com", "LEAD", "t_ap9", "", null);
+    // 이미 게재한 12만 원 + 이번 12만 원 = 24만 원 > 20만 원
+    call("ap9@example.com", "LEAD", "t_ap9", "/approve", null).andExpect(status().isBadRequest());
+  }
 }

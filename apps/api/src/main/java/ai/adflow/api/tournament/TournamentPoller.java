@@ -40,6 +40,7 @@ public class TournamentPoller {
   private final CronRunRepository cronRuns;
   private final Clock clock;
   private final Notifications notifications;
+  private final SpendGuard spendGuard;
 
   public TournamentPoller(
       TournamentRepository repository,
@@ -48,8 +49,10 @@ public class TournamentPoller {
       TournamentNotifier notifier,
       CronRunRepository cronRuns,
       Clock clock,
-      Notifications notifications) {
+      Notifications notifications,
+      SpendGuard spendGuard) {
     this.notifications = notifications;
+    this.spendGuard = spendGuard;
     this.repository = repository;
     this.settleService = settleService;
     this.advanceService = advanceService;
@@ -87,6 +90,8 @@ public class TournamentPoller {
         // 러닝·미확정 챔피언·봉투 브레이크는 autoAdvance 가 가드하므로 매 틱 불러도 안전하다.
         // 결산이 안 됐어도 굴려 1라운드를 띄운다.
         if (advanceService.autoAdvance(t.getId())) advanced += 1;
+        // 성과를 막 가져왔으니 광고비를 확인한다 (정책서 12.1: 수집 간격에 맞춘다).
+        spendGuard.check(t.getId());
 
         if ("settled".equals(outcome.status()) || "unjudgeable".equals(outcome.status())) {
           notifyRound(t, outcome);

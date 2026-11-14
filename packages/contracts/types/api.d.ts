@@ -4,6 +4,22 @@
  */
 
 export interface paths {
+    "/time-entries/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["update"];
+        post?: never;
+        delete: operations["remove"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/portal/plans/{month}/cap": {
         parameters: {
             query?: never;
@@ -62,7 +78,39 @@ export interface paths {
         get: operations["read"];
         put: operations["write"];
         post?: never;
-        delete: operations["remove"];
+        delete: operations["remove_1"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/clients/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get_1"];
+        put: operations["update_1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/clients/{id}/bills": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["bills"];
+        put: operations["saveBill"];
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -110,7 +158,39 @@ export interface paths {
         get: operations["list"];
         put?: never;
         post: operations["upsert"];
-        delete: operations["remove_1"];
+        delete: operations["remove_2"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/today/dismiss": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["dismiss"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/time-entries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["mine"];
+        put?: never;
+        post: operations["add"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -126,7 +206,7 @@ export interface paths {
         get: operations["list_1"];
         put?: never;
         post: operations["upsert_1"];
-        delete: operations["remove_2"];
+        delete: operations["remove_3"];
         options?: never;
         head?: never;
         patch?: never;
@@ -190,7 +270,7 @@ export interface paths {
         get: operations["list_2"];
         put?: never;
         post: operations["upsert_2"];
-        delete: operations["remove_3"];
+        delete: operations["remove_4"];
         options?: never;
         head?: never;
         patch?: never;
@@ -206,7 +286,7 @@ export interface paths {
         get: operations["list_3"];
         put?: never;
         post: operations["upsert_3"];
-        delete: operations["remove_4"];
+        delete: operations["remove_5"];
         options?: never;
         head?: never;
         patch?: never;
@@ -222,7 +302,7 @@ export interface paths {
         get: operations["list_4"];
         put?: never;
         post: operations["upsert_4"];
-        delete: operations["remove_5"];
+        delete: operations["remove_6"];
         options?: never;
         head?: never;
         patch?: never;
@@ -238,7 +318,7 @@ export interface paths {
         get: operations["list_5"];
         put?: never;
         post: operations["upsert_5"];
-        delete: operations["remove_6"];
+        delete: operations["remove_7"];
         options?: never;
         head?: never;
         patch?: never;
@@ -270,7 +350,7 @@ export interface paths {
         get: operations["list_6"];
         put?: never;
         post: operations["upsert_6"];
-        delete: operations["remove_7"];
+        delete: operations["remove_8"];
         options?: never;
         head?: never;
         patch?: never;
@@ -286,7 +366,7 @@ export interface paths {
         get: operations["list_7"];
         put?: never;
         post: operations["upsert_7"];
-        delete: operations["remove_8"];
+        delete: operations["remove_9"];
         options?: never;
         head?: never;
         patch?: never;
@@ -302,7 +382,7 @@ export interface paths {
         get: operations["list_8"];
         put?: never;
         post: operations["upsert_8"];
-        delete: operations["remove_9"];
+        delete: operations["remove_10"];
         options?: never;
         head?: never;
         patch?: never;
@@ -318,7 +398,7 @@ export interface paths {
         get: operations["list_9"];
         put?: never;
         post: operations["upsert_9"];
-        delete: operations["remove_10"];
+        delete: operations["remove_11"];
         options?: never;
         head?: never;
         patch?: never;
@@ -334,7 +414,7 @@ export interface paths {
         get: operations["list_10"];
         put?: never;
         post: operations["upsert_10"];
-        delete: operations["remove_11"];
+        delete: operations["remove_12"];
         options?: never;
         head?: never;
         patch?: never;
@@ -350,7 +430,7 @@ export interface paths {
         get: operations["list_11"];
         put?: never;
         post: operations["upsert_11"];
-        delete: operations["remove_12"];
+        delete: operations["remove_13"];
         options?: never;
         head?: never;
         patch?: never;
@@ -494,7 +574,7 @@ export interface paths {
         get: operations["list_12"];
         put?: never;
         post: operations["upsert_12"];
-        delete: operations["remove_13"];
+        delete: operations["remove_14"];
         options?: never;
         head?: never;
         patch?: never;
@@ -571,10 +651,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_1"];
+        get: operations["get_2"];
         put?: never;
         post: operations["save_1"];
-        delete: operations["remove_14"];
+        delete: operations["remove_15"];
         options?: never;
         head?: never;
         patch?: never;
@@ -606,6 +686,54 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["record"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/clients": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_14"];
+        put?: never;
+        post: operations["create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/clients/{id}/stage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["changeStage"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/clients/{id}/memos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["memos"];
+        put?: never;
+        post: operations["addMemo"];
         delete?: never;
         options?: never;
         head?: never;
@@ -644,39 +772,39 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/today": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["today"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/time-entries/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["summary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/stores/tournaments/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["get_2"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/portal/plans": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["list_14"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/portal/plans/{month}": {
         parameters: {
             query?: never;
             header?: never;
@@ -692,7 +820,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/plans": {
+    "/portal/plans": {
         parameters: {
             query?: never;
             header?: never;
@@ -708,7 +836,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/notifications": {
+    "/portal/plans/{month}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get_4"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/plans": {
         parameters: {
             query?: never;
             header?: never;
@@ -716,6 +860,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["list_16"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/notifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_17"];
         put?: never;
         post?: never;
         delete?: never;
@@ -747,7 +907,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_17"];
+        get: operations["list_18"];
         put?: never;
         post?: never;
         delete?: never;
@@ -763,7 +923,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_4"];
+        get: operations["get_5"];
         put?: never;
         post?: never;
         delete?: never;
@@ -804,6 +964,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/clients/{id}/settlement": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["settlement"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/brands": {
         parameters: {
             query?: never;
@@ -811,7 +987,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_18"];
+        get: operations["list_19"];
         put?: never;
         post?: never;
         delete?: never;
@@ -827,7 +1003,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_5"];
+        get: operations["get_6"];
         put?: never;
         post?: never;
         delete?: never;
@@ -856,6 +1032,22 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        EntryRequest: {
+            brandProfileId?: string;
+            stage?: string;
+            /** Format: int32 */
+            minutes?: number;
+        };
+        TimeEntry: {
+            id?: string;
+            workspaceId?: string;
+            memberEmail?: string;
+            brandProfileId?: string;
+            stage?: string;
+            /** Format: int32 */
+            minutes?: number;
+            workDate?: string;
+        };
         CapRequest: {
             /** Format: int64 */
             budgetCap?: number;
@@ -913,6 +1105,44 @@ export interface components {
             sentenceEditedAt?: string;
             createdAt?: string;
         };
+        Client: {
+            id: string;
+            name?: string;
+            contact?: string;
+            industry?: string;
+            inquirySource?: string;
+            stage?: string;
+            managerEmail?: string;
+            nextAction?: string;
+            nextActionDate?: string;
+            caseStudyConsent?: boolean;
+            excludedIndustry?: boolean;
+            product?: string;
+            billingType?: string;
+            /** Format: int64 */
+            monthlyPrice?: number;
+            contractStart?: string;
+            contractEnd?: string;
+            cancelNoticeDate?: string;
+            cancelDate?: string;
+            brandProfileId?: string;
+            createdAt?: string;
+        };
+        ClientBill: {
+            id?: string;
+            clientId?: string;
+            workspaceId?: string;
+            /** Format: int32 */
+            contractMonth?: number;
+            billDate?: string;
+            /** Format: int64 */
+            amount?: number;
+            /** Format: int64 */
+            discount?: number;
+            dueDate?: string;
+            paidDate?: string;
+            taxInvoiceNo?: string;
+        };
         ManagerRequest: {
             email?: string;
         };
@@ -949,6 +1179,9 @@ export interface components {
             /** Format: date-time */
             joinedAt?: string;
             brandProfileId?: string;
+        };
+        DismissRequest: {
+            key?: string;
         };
         AutoRefill: {
             /** Format: double */
@@ -1024,6 +1257,8 @@ export interface components {
             status: string;
             /** Format: int32 */
             impressionShortfall?: number;
+            /** Format: double */
+            spendToDate?: number;
             hypothesis?: components["schemas"]["HypothesisData"];
         };
         Tournament: {
@@ -1059,6 +1294,7 @@ export interface components {
             createdAt: string;
             delivery?: components["schemas"]["TournamentDelivery"];
             lastError?: string;
+            stopReason?: string;
             /** @enum {string} */
             mode: "auto";
         };
@@ -1377,6 +1613,18 @@ export interface components {
             /** Format: int32 */
             error_count?: number;
         };
+        StageRequest: {
+            stage?: string;
+        };
+        MemoRequest: {
+            body?: string;
+        };
+        ClientMemo: {
+            id?: string;
+            author?: string;
+            body?: string;
+            createdAt?: string;
+        };
         RefreshRequest: {
             refreshToken?: string;
         };
@@ -1405,6 +1653,39 @@ export interface components {
             pixelName?: string;
             igUserId?: string;
             igUsername?: string;
+        };
+        Decision: {
+            key?: string;
+            /** Format: int32 */
+            priority?: number;
+            brandProfileId?: string;
+            brandName?: string;
+            title?: string;
+            body?: string;
+            link?: string;
+            action?: string;
+            /** Format: double */
+            amount?: number;
+        };
+        PersonBrand: {
+            memberEmail?: string;
+            brandProfileId?: string;
+            /** Format: int32 */
+            minutes?: number;
+            over?: boolean;
+        };
+        Summary: {
+            weekStart?: string;
+            byMember?: {
+                [key: string]: number;
+            };
+            byBrand?: {
+                [key: string]: number;
+            };
+            byStage?: {
+                [key: string]: number;
+            };
+            byMemberAndBrand?: components["schemas"]["PersonBrand"][];
         };
         ItemsResponseTournament: {
             items?: components["schemas"]["Tournament"][];
@@ -1458,6 +1739,17 @@ export interface components {
         ItemsResponseIgMessage: {
             items?: components["schemas"]["IgMessage"][];
         };
+        ClientView: {
+            client?: components["schemas"]["Client"];
+            overdue?: boolean;
+        };
+        Settlement: {
+            effectiveEnd?: string;
+            /** Format: int32 */
+            lastContractMonth?: number;
+            /** Format: int64 */
+            clawback?: number;
+        };
         ItemsResponseBrandConnection: {
             items?: components["schemas"]["BrandConnection"][];
         };
@@ -1470,6 +1762,56 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EntryRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["TimeEntry"];
+                };
+            };
+        };
+    };
+    remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: boolean;
+                    };
+                };
+            };
+        };
+    };
     lowerCap: {
         parameters: {
             query?: never;
@@ -1626,7 +1968,7 @@ export interface operations {
             };
         };
     };
-    remove: {
+    remove_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -1648,6 +1990,104 @@ export interface operations {
                     "*/*": {
                         [key: string]: boolean;
                     };
+                };
+            };
+        };
+    };
+    get_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ClientView"];
+                };
+            };
+        };
+    };
+    update_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Client"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Client"];
+                };
+            };
+        };
+    };
+    bills: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: components["schemas"]["ClientBill"][];
+                    };
+                };
+            };
+        };
+    };
+    saveBill: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClientBill"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ClientBill"];
                 };
             };
         };
@@ -1772,7 +2212,7 @@ export interface operations {
             };
         };
     };
-    remove_1: {
+    remove_2: {
         parameters: {
             query: {
                 email: string;
@@ -1792,6 +2232,78 @@ export interface operations {
                     "*/*": {
                         [key: string]: boolean;
                     };
+                };
+            };
+        };
+    };
+    dismiss: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DismissRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: boolean;
+                    };
+                };
+            };
+        };
+    };
+    mine: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: components["schemas"]["TimeEntry"][];
+                    };
+                };
+            };
+        };
+    };
+    add: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EntryRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["TimeEntry"];
                 };
             };
         };
@@ -1844,7 +2356,7 @@ export interface operations {
             };
         };
     };
-    remove_2: {
+    remove_3: {
         parameters: {
             query: {
                 id: string;
@@ -1984,7 +2496,7 @@ export interface operations {
             };
         };
     };
-    remove_3: {
+    remove_4: {
         parameters: {
             query: {
                 id: string;
@@ -2056,7 +2568,7 @@ export interface operations {
             };
         };
     };
-    remove_4: {
+    remove_5: {
         parameters: {
             query: {
                 id: string;
@@ -2128,7 +2640,7 @@ export interface operations {
             };
         };
     };
-    remove_5: {
+    remove_6: {
         parameters: {
             query: {
                 id: string;
@@ -2198,7 +2710,7 @@ export interface operations {
             };
         };
     };
-    remove_6: {
+    remove_7: {
         parameters: {
             query: {
                 id: string;
@@ -2334,7 +2846,7 @@ export interface operations {
             };
         };
     };
-    remove_7: {
+    remove_8: {
         parameters: {
             query: {
                 id: string;
@@ -2404,7 +2916,7 @@ export interface operations {
             };
         };
     };
-    remove_8: {
+    remove_9: {
         parameters: {
             query: {
                 id: string;
@@ -2474,7 +2986,7 @@ export interface operations {
             };
         };
     };
-    remove_9: {
+    remove_10: {
         parameters: {
             query: {
                 id: string;
@@ -2544,7 +3056,7 @@ export interface operations {
             };
         };
     };
-    remove_10: {
+    remove_11: {
         parameters: {
             query: {
                 id: string;
@@ -2614,7 +3126,7 @@ export interface operations {
             };
         };
     };
-    remove_11: {
+    remove_12: {
         parameters: {
             query: {
                 id: string;
@@ -2684,7 +3196,7 @@ export interface operations {
             };
         };
     };
-    remove_12: {
+    remove_13: {
         parameters: {
             query: {
                 id: string;
@@ -2947,7 +3459,7 @@ export interface operations {
             };
         };
     };
-    remove_13: {
+    remove_14: {
         parameters: {
             query: {
                 id: string;
@@ -3065,7 +3577,7 @@ export interface operations {
             };
         };
     };
-    get_1: {
+    get_2: {
         parameters: {
             query: {
                 userKey: string;
@@ -3115,7 +3627,7 @@ export interface operations {
             };
         };
     };
-    remove_14: {
+    remove_15: {
         parameters: {
             query: {
                 userKey: string;
@@ -3214,6 +3726,128 @@ export interface operations {
             };
         };
     };
+    list_14: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: components["schemas"]["ClientView"][];
+                    };
+                };
+            };
+        };
+    };
+    create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Client"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Client"];
+                };
+            };
+        };
+    };
+    changeStage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StageRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Client"];
+                };
+            };
+        };
+    };
+    memos: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: components["schemas"]["ClientMemo"][];
+                    };
+                };
+            };
+        };
+    };
+    addMemo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MemoRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ClientMemo"];
+                };
+            };
+        };
+    };
     refresh: {
         parameters: {
             query?: never;
@@ -3262,7 +3896,51 @@ export interface operations {
             };
         };
     };
-    get_2: {
+    today: {
+        parameters: {
+            query?: {
+                brandProfileId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: components["schemas"]["Decision"][];
+                    };
+                };
+            };
+        };
+    };
+    summary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Summary"];
+                };
+            };
+        };
+    };
+    get_3: {
         parameters: {
             query?: never;
             header?: never;
@@ -3284,7 +3962,7 @@ export interface operations {
             };
         };
     };
-    list_14: {
+    list_15: {
         parameters: {
             query?: never;
             header?: never;
@@ -3304,7 +3982,7 @@ export interface operations {
             };
         };
     };
-    get_3: {
+    get_4: {
         parameters: {
             query?: never;
             header?: never;
@@ -3326,7 +4004,7 @@ export interface operations {
             };
         };
     };
-    list_15: {
+    list_16: {
         parameters: {
             query?: {
                 brandProfileId?: string;
@@ -3349,7 +4027,7 @@ export interface operations {
             };
         };
     };
-    list_16: {
+    list_17: {
         parameters: {
             query?: never;
             header?: never;
@@ -3393,7 +4071,7 @@ export interface operations {
             };
         };
     };
-    list_17: {
+    list_18: {
         parameters: {
             query: {
                 brandProfileId: string;
@@ -3415,7 +4093,7 @@ export interface operations {
             };
         };
     };
-    get_4: {
+    get_5: {
         parameters: {
             query?: never;
             header?: never;
@@ -3484,7 +4162,32 @@ export interface operations {
             };
         };
     };
-    list_18: {
+    settlement: {
+        parameters: {
+            query: {
+                noticeDate: string;
+                endDate: string;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Settlement"];
+                };
+            };
+        };
+    };
+    list_19: {
         parameters: {
             query?: never;
             header?: never;
@@ -3504,7 +4207,7 @@ export interface operations {
             };
         };
     };
-    get_5: {
+    get_6: {
         parameters: {
             query?: never;
             header?: never;

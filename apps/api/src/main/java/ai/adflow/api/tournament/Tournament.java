@@ -258,6 +258,10 @@ public class Tournament extends OwnerScoped {
   @Column(name = "last_error", length = 2000)
   private String lastError;
 
+  /** 광고비 때문에 자동으로 멈춘 이유 (정책서 12.1): spend_anomaly · monthly_cap. 멈춘 동안 lastError 에 안내 문구가 있다. */
+  @Column(name = "stop_reason")
+  private String stopReason;
+
   /**
    * 낙관적 락 (설계 §6). 폴러와 화면이 같은 토너먼트를 동시에 고칠 수 있다 — 6시간마다 무인으로 도는
    * 쪽과 사람이 누르는 쪽이라 겹치는 순간이 실제로 온다.
@@ -382,6 +386,8 @@ public class Tournament extends OwnerScoped {
   public void setCreatedAt(String v) { this.createdAt = v; }
   public TournamentDelivery getDelivery() { return delivery; }
   public void setDelivery(TournamentDelivery v) { this.delivery = v; }
+  public String getStopReason() { return stopReason; }
+  public void setStopReason(String v) { this.stopReason = v; }
   public String getLastError() { return lastError; }
   public void setLastError(String v) { this.lastError = v; }
   public Long getVersion() { return version; }

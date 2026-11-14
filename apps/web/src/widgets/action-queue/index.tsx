@@ -1,6 +1,6 @@
 "use client";
 
-// "오늘의 진단" — 효과가 큰 순서로 1·2·3. 카드 하나 = 문장 하나 + 근거 숫자 + 지금 누를 버튼.
+// "오늘의 결정" — 효과가 큰 순서로 1·2·3. 카드 하나 = 문장 하나 + 근거 숫자 + 지금 누를 버튼.
 
 import { Button } from "@shared/ui/Button";
 import { Skeleton } from "@shared/ui/Skeleton";
@@ -45,7 +45,7 @@ export function ActionQueue({ loading, items, onAction }: ActionQueueProps) {
   return (
     <div className="flex flex-col gap-3.5">
       <div className="flex items-baseline gap-2.5">
-        <h2 className="w-h2 m-0">지금 할 일</h2>
+        <h2 className="w-h2 m-0">오늘의 결정</h2>
         <span className="w-caption">우선순위대로 정리했어요</span>
       </div>
 

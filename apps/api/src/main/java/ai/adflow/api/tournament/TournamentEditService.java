@@ -22,9 +22,11 @@ public class TournamentEditService {
   public record Variant(String headline, String primaryText, String imageUrl) {}
 
   private final TournamentRepository repository;
+  private final SpendGuard spendGuard;
 
-  public TournamentEditService(TournamentRepository repository) {
+  public TournamentEditService(TournamentRepository repository, SpendGuard spendGuard) {
     this.repository = repository;
+    this.spendGuard = spendGuard;
   }
 
   @Transactional
@@ -68,11 +70,21 @@ public class TournamentEditService {
     return repository.save(t);
   }
 
-  /** ADR-053 복구 — lastError 만 지우면 다음 폴에서 자동 진행이 다시 붙는다. */
+  /**
+   * ADR-053 복구 — lastError 만 지우면 다음 폴에서 자동 진행이 다시 붙는다. 광고비 때문에 자동으로 멈췄으면
+   * Meta 캠페인도 다시 켠다. 월 예산 상한으로 멈춘 실험은 상한이 늘기 전까지 다시 시작할 수 없다 (정책서 12.1).
+   */
   @Transactional
   public Tournament resume(String id) {
     Tournament t = load(id);
     if (t.getLastError() == null) return t;
+    if (SpendGuard.MONTHLY_CAP.equals(t.getStopReason())
+        && spendGuard.capReached(t.getOwnerKey(), t.getBrandProfileId())) {
+      throw new ResponseStatusException(
+          HttpStatus.CONFLICT, "이번 달 예산 상한이 아직 그대로예요. 고객이 상한을 늘려 승인한 뒤에 다시 시작해 주세요.");
+    }
+    if (t.getStopReason() != null) spendGuard.reactivate(t);
+    t.setStopReason(null);
     t.setLastError(null);
     return repository.save(t);
   }

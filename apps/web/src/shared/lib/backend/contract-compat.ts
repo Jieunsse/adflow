@@ -82,7 +82,7 @@ export type ReferenceMaterialIsCompatible = Assert<
 // String 으로 두는 쪽을 택했다(단계 3 의 goalId·단계 4 의 ReferenceMaterial.type 과 같은 판단).
 // 값의 정확성은 골든 픽스처와 컨트롤러 왕복 테스트가 런타임으로 지킨다.
 type TourOpaque =
-  | "mode" | "status" | "championSource" | "variationIntensity" | "completionReason"
+  | "mode" | "status" | "championSource" | "variationIntensity" | "completionReason" | "stopReason"
   // rounds·pendingHypothesis·launchRequest 는 안쪽이 다시 유니온·튜플이라 통째로 뺀다(아래 TourRound 단언 참고).
   | "rounds" | "pendingHypothesis" | "launchRequest";
 export type TournamentIsCompatible = Assert<

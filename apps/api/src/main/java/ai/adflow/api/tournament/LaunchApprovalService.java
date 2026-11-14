@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ai.adflow.api.security.Role;
 import ai.adflow.api.workspace.Member;
+import ai.adflow.api.client.Billing;
 import ai.adflow.api.plan.MonthlyPlan;
 import ai.adflow.api.plan.MonthlyPlanRepository;
 import ai.adflow.api.tournament.engine.TourEngine;
@@ -49,6 +50,7 @@ public class LaunchApprovalService {
   private final Clock clock;
   private final Notifications notifications;
   private final MonthlyPlanRepository plans;
+  private final Billing billing;
   private final MemberRepository members;
 
   public LaunchApprovalService(
@@ -59,7 +61,9 @@ public class LaunchApprovalService {
       Clock clock,
       Notifications notifications,
       MonthlyPlanRepository plans,
-      MemberRepository members) {
+      MemberRepository members,
+      Billing billing) {
+    this.billing = billing;
     this.plans = plans;
     this.members = members;
     this.repository = repository;
@@ -145,6 +149,10 @@ public class LaunchApprovalService {
               Tournament t = load(me, id);
               requireApprover(me, t);
               requirePlanWithinCap(me, t);
+              // 입금이 30일 넘게 늦어진 고객사는 새 실험을 게재하지 않는다 (회계 문서 2.3). 진행 중 실험은 그대로 둔다.
+              if (billing.overdueDays(me.getWorkspaceId(), t.getBrandProfileId()) >= Billing.BLOCK_AFTER_DAYS) {
+                throw bad("입금이 30일 넘게 늦어져 새 실험을 게재할 수 없어요. 팀장에게 입금 상황을 확인해 주세요.");
+              }
               if (repository.moveLaunchStatus(id, List.of(PENDING, FAILED), LAUNCHING) == 0) {
                 throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 처리된 요청이에요. 화면을 새로 고쳐 주세요.");
               }

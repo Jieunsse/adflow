@@ -266,6 +266,10 @@ public class TourRound {
   @Column(name = "impression_shortfall")
   private Integer impressionShortfall;
 
+  /** 두 소재를 합친 지금까지 쓴 광고비. 자동 멈춤(정책서 12.1)이 쓴다. 소재별 값이 아니라 우세는 드러나지 않는다. */
+  @Column(name = "spend_to_date")
+  private Double spendToDate;
+
   @Embedded private HypothesisData hypothesis;
 
   public Integer getIndex() { return index; }
@@ -303,6 +307,8 @@ public class TourRound {
   public void setLaunchedAt(String v) { this.launchedAt = v; }
   public String getStatus() { return status; }
   public void setStatus(String v) { this.status = v; }
+  public Double getSpendToDate() { return spendToDate; }
+  public void setSpendToDate(Double v) { this.spendToDate = v; }
   public Integer getImpressionShortfall() { return impressionShortfall; }
   public void setImpressionShortfall(Integer v) { this.impressionShortfall = v; }
   public HypothesisData getHypothesis() { return nullIfEmpty(hypothesis); }

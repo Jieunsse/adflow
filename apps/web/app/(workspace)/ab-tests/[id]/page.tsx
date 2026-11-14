@@ -217,7 +217,7 @@ export default function AbTournamentDetailPage() {
         <Callout
           tone="negative"
           icon="warn"
-          title={launchFailed ? "Meta에 올리지 못했어요" : "자동 진행이 멈췄어요"}
+          title={launchFailed ? "Meta에 올리지 못했어요" : t.stopReason ? "광고비 때문에 자동으로 멈췄어요" : "자동 진행이 멈췄어요"}
           actions={
             <Button
               variant="secondary"
@@ -227,7 +227,7 @@ export default function AbTournamentDetailPage() {
                 launchFailed
                   // 승인 뒤 전송 실패는 승인 없이 다시 시도한다 (정책서 11.2).
                   ? act(client.approveLaunch(t.id), "Meta에 다시 올렸어요")
-                  : act(client.resume(t.id), "자동 진행을 재개했어요 — 다음 라운드 게재를 다시 시도해요")
+                  : act(client.resume(t.id), t.stopReason ? "실험을 다시 시작했어요" : "자동 진행을 재개했어요 — 다음 라운드 게재를 다시 시도해요")
               }
             >
               {busy ? <><Icon name="spinner" size={14} spin /> 재시도 중…</> : "다시 시도"}

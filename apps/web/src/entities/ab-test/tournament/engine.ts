@@ -71,6 +71,7 @@ export type TourRound = {
   // unjudgeable = 기간이 끝났는데 노출이 모자라 판정하지 못함 (정책서 13.3). 실 게재만 생긴다
   status: "running" | "settled" | "unjudgeable";
   impressionShortfall?: number; // 판정까지 모자란 소재별 노출 수 (실 게재, 폴러가 채움)
+  spendToDate?: number; // 두 소재 합 누적 광고비 (실 게재, 폴러가 채움)
   hypothesis?: Hypothesis; // ADR-044 — 이 라운드가 검증하는 가설. 동인은 hypothesis.lever, axis 는 표시 파생 유지
 };
 
@@ -144,6 +145,7 @@ export type Tournament = {
   completionReason?: "converged" | "budget-exhausted" | "cap-reached"; // ADR-061 — done 카드 sub-state. completed 종결 경로별 사유.
   createdAt: string;
   delivery?: TournamentDelivery; // 실 게재 봉투 (ADR-038). 데모는 undefined — 시뮬 경로
+  stopReason?: "spend_anomaly" | "monthly_cap"; // 광고비 자동 멈춤 이유 (정책서 12.1). 멈춘 동안 lastError 에 안내 문구
   lastError?: string; // ADR-053 — cron 라운드 게재 실패의 한국어 메시지. 있으면 자동 진행 중단 + 상세 배너
 };
 

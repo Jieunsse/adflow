@@ -1,7 +1,7 @@
 "use client";
 
 // 월간 계획 목록 (기능명세 12-1). 브랜드마다 이번 달·다음 달 계획 상태를 보여 준다.
-// shortcut: "첫 영업일이 지나면 오늘의 결정에 올라간다"는 오늘 화면이 없어 넣지 않았다. 오늘 화면을 만들 때 잇는다.
+// 대행 브랜드에 이번 달 승인된 계획이 없으면 오늘의 결정 2순위에도 올라간다 (/today, 기능 5).
 
 import Link from "next/link";
 import { useSession } from "next-auth/react";

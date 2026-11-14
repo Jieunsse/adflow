@@ -96,6 +96,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         await editOnBackend(id, "refill-envelope", { addBudget: b.addBudget });
         break;
       case "resume":
+        // 멈춘 실험 다시 시작은 팀장·팀원·게재만 (정책서 9.6). 월 상한 멈춤 가능 여부는 서버가 판단한다.
+        if (existing.stopReason && session.role !== "팀장" && session.role !== "팀원·게재") {
+          return NextResponse.json(
+            { error: "다시 시작은 팀장과 팀원·게재만 할 수 있어요. 담당 팀장에게 요청해 주세요." },
+            { status: 403 },
+          );
+        }
         await editOnBackend(id, "resume");
         break;
       default:

@@ -9,6 +9,7 @@
 // ADR-054 의 manual-n → auto 흡수는 Spring 이 한다(Tournament.getMode). 여기 normalize 는 없다.
 
 import { backendBaseUrl, internalSecret } from "@shared/lib/backend/client";
+import { ValidationError } from "@/lib/route-handler";
 import type { Tournament, TourRound, TourVariant } from "./engine";
 import type { TournamentStore } from "./adapters";
 
@@ -30,7 +31,11 @@ async function call(path: string, init?: { method?: string; body?: string }): Pr
     ...(init?.body === undefined ? {} : { body: init.body }),
   });
   if (!res.ok) {
-    throw new Error(`토너먼트 백엔드 호출 실패 (${res.status}) ${await res.text()}`);
+    const text = await res.text();
+    // 서버가 화면 문구({"error"})를 실었으면 그대로 보여 준다 (예: 월 상한 멈춤 다시 시작 거절).
+    const reason = (() => { try { return (JSON.parse(text) as { error?: string }).error; } catch { return undefined; } })();
+    if (reason) throw new ValidationError(reason);
+    throw new Error(`토너먼트 백엔드 호출 실패 (${res.status}) ${text}`);
   }
   return res;
 }

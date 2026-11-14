@@ -13,7 +13,7 @@ export type BackendToken = {
   refreshToken: string;
   refreshExpiresAt: string;
   // 서버가 소속에서 정한 역할(팀장 등). 화면 역할은 이 값만 쓴다.
-  role: "팀장" | "팀원·게재" | "팀원·검토";
+  role: "팀장" | "팀원·게재" | "팀원·검토" | "고객";
 };
 
 // 로그인 직후 1회. 실패해도 로그인을 깨지 않는다 — 단계 1 시점에 프론트 데이터는

@@ -85,6 +85,7 @@ public class TournamentSettleService {
             : Math.max(TourEngine.MIN_ROUND_DAYS, t.getDelivery().getRoundDays());
     Gate gate = gate(elapsedDays(r), roundDays, shortfall, reading.verdict() != null);
     r.setImpressionShortfall(shortfall);
+    if (reading.kpis() != null) r.setSpendToDate(reading.kpis().stream().mapToDouble(AdKpi::spend).sum());
     if (gate == Gate.WAIT) {
       repository.save(t);
       return Outcome.INSUFFICIENT;

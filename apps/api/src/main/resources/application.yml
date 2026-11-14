@@ -36,6 +36,12 @@ app:
   # Spring → Next 내부 호출 (설계 §6) — 챌린저 카피 생성(Gemini)과 SSE 알림 다리.
   # Meta 역위임은 단계 6 에서 사라졌다. 남은 둘은 각각 프롬프트 단일화·프로세스 메모리 때문이다.
   next-internal-url: ${ADFLOW_NEXT_INTERNAL_URL:http://localhost:3000}
+  # 메일 속 링크(인증·비밀번호 재설정)가 여는 웹 주소. 사용자가 브라우저로 여는 공개 주소다.
+  web-base-url: ${ADFLOW_WEB_BASE_URL:http://localhost:3000}
+  mail:
+    # Resend API 키와 보내는 주소. 비어 있으면 메일을 보내지 않고 링크를 로그에 남긴다(로컬 시험용).
+    resend-key: ${RESEND_API_KEY:}
+    from: ${ADFLOW_MAIL_FROM:}
   jwt:
     # HS256 서명키. 32바이트 이상. 실값은 환경변수 ADFLOW_JWT_SECRET 로만 준다.
     secret: ${ADFLOW_JWT_SECRET:}

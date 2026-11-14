@@ -113,6 +113,7 @@ export default function ClientDetailPage() {
 
       {tab === "overview" && <ClientForm key={c.id + "o"} c={c} fields="overview" onSave={(next) => run(clientsApi(`/${id}`, "PUT", next), "저장했어요")} />}
       {tab === "contract" && <ClientForm key={c.id + "c"} c={c} fields="contract" onSave={(next) => run(clientsApi(`/${id}`, "PUT", next), "저장했어요")} />}
+      {tab === "contract" && c.brandProfileId && <ClientLogins brandProfileId={c.brandProfileId} isLead={isLead} />}
       {tab === "memos" && <Memos id={id} />}
       {tab === "bills" && isLead && <Bills id={id} c={c} />}
     </div>
@@ -180,6 +181,59 @@ function ClientForm({ c, fields, onSave }: { c: Client; fields: "overview" | "co
       <div className="col-span-2 flex justify-end">
         <Button variant="primary" type="button" onClick={() => onSave(v)}>저장하기</Button>
       </div>
+    </Card>
+  );
+}
+
+type MemberView = { email: string; role: string; brandProfileId?: string };
+
+// 고객사 담당자의 로그인 이메일 (기능 11). 여기 등록한 이메일만 가입·카카오·구글로 고객 화면에 들어온다.
+// 고객사마다 3명까지다 (기능명세 11). 등록·내보내기는 팀장만 (정책서 5.2).
+function ClientLogins({ brandProfileId, isLead }: { brandProfileId: string; isLead: boolean }) {
+  const qc = useQueryClient();
+  const showToast = useToast();
+  const [email, setEmail] = useState("");
+  const q = useQuery({
+    queryKey: ["members"],
+    queryFn: async () => {
+      const res = await fetch("/api/workspace/members");
+      return res.ok ? ((await res.json()) as { items: MemberView[] }).items : [];
+    },
+  });
+  const clients = (q.data ?? []).filter((m) => m.role === "고객" && m.brandProfileId === brandProfileId);
+
+  const call = async (method: "POST" | "DELETE", body?: object, query = "", ok = "") => {
+    const res = await fetch(`/api/workspace/members${query}`, {
+      method,
+      ...(body ? { headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) } : {}),
+    });
+    const data = (await res.json().catch(() => ({}))) as { error?: string };
+    if (!res.ok) return showToast(data.error ?? "저장하지 못했어요.");
+    showToast(ok);
+    setEmail("");
+    await qc.invalidateQueries({ queryKey: ["members"] });
+  };
+
+  return (
+    <Card className="p-5 flex flex-col gap-3">
+      <h2 className="m-0 font-bold text-[15px] text-[var(--w-fg-strong)]">고객 화면 로그인</h2>
+      <p className="m-0 font-medium text-[13px] text-[var(--w-fg-neutral)]">
+        여기 등록한 이메일만 고객 화면에 들어올 수 있어요. 담당자에게 이 이메일로 가입하거나 카카오·구글로 로그인해 달라고 알려 주세요.
+      </p>
+      {clients.map((m) => (
+        <div key={m.email} className="flex items-center gap-3 font-medium text-[14px]">
+          <span className="flex-1 break-all">{m.email}</span>
+          {isLead && <Button variant="secondary" type="button" onClick={() => call("DELETE", undefined, `?email=${encodeURIComponent(m.email)}`, "로그인을 막았어요")}>내보내기</Button>}
+        </div>
+      ))}
+      {isLead && clients.length < 3 && (
+        <div className="flex gap-2">
+          <label htmlFor="client-login-email" className="sr-only">고객 이메일</label>
+          <input id="client-login-email" type="email" placeholder="고객 이메일" value={email} onChange={(e) => setEmail(e.target.value)} className={INPUT + " flex-1"} />
+          <Button variant="primary" type="button" disabled={!email.includes("@")} onClick={() => call("POST", { email, role: "고객", brandProfileId }, "", "등록했어요")}>등록하기</Button>
+        </div>
+      )}
+      {!isLead && <span className="font-medium text-[12px] text-[var(--w-fg-neutral)]">등록과 내보내기는 팀장만 할 수 있어요.</span>}
     </Card>
   );
 }

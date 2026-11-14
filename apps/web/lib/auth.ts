@@ -1,8 +1,14 @@
 import type { AuthOptions } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import FacebookProvider from "next-auth/providers/facebook"
+import GoogleProvider from "next-auth/providers/google"
+import KakaoProvider from "next-auth/providers/kakao"
 import { credentialsCache, type MetaCredentials } from "./meta-credentials"
 import { exchangeForBackendToken } from "@shared/lib/backend/exchange"
+import { callAccount } from "@shared/lib/backend/account"
+
+// 고객 로그인 방법 (정책서 3.1). 직원은 Facebook 으로만 들어온다.
+const CLIENT_PROVIDERS = new Set(["client-email", "google", "kakao"])
 
 type Providers = NonNullable<AuthOptions["providers"]>
 
@@ -62,6 +68,34 @@ function buildCommonOptions(meta?: MetaCredentials): AuthOptions {
     )
   }
 
+  if (!browseOnly) {
+    providers.push(
+      CredentialsProvider({
+        id: "client-email",
+        name: "이메일",
+        credentials: { email: { type: "email" }, password: { type: "password" } },
+        async authorize(credentials) {
+          // 잠금·인증 여부·고객 등록 확인은 서버가 한다. 실패 문구는 그대로 로그인 화면에 보인다.
+          const r = await callAccount("login", { email: credentials?.email, password: credentials?.password })
+          if (!r.ok) throw new Error(r.data.error ?? "로그인하지 못했어요. 잠시 뒤 다시 해 주세요.")
+          const email = String(r.data.email)
+          return { id: email, email, name: email }
+        },
+      }),
+    )
+    // 카카오·구글은 개발자 콘솔에 앱을 등록해 키를 넣었을 때만 켠다.
+    if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+      providers.push(
+        GoogleProvider({ clientId: process.env.GOOGLE_CLIENT_ID, clientSecret: process.env.GOOGLE_CLIENT_SECRET }),
+      )
+    }
+    if (process.env.KAKAO_CLIENT_ID && process.env.KAKAO_CLIENT_SECRET) {
+      providers.push(
+        KakaoProvider({ clientId: process.env.KAKAO_CLIENT_ID, clientSecret: process.env.KAKAO_CLIENT_SECRET }),
+      )
+    }
+  }
+
   return {
     // 명시 지정 필수 — 없으면 NextAuth가 authOptions 해시로 자체 폴백해서
     // proxy.ts(withAuth, process.env.NEXTAUTH_SECRET 직접 참조)와 세션 암호화 키가 어긋난다.
@@ -80,6 +114,16 @@ function buildCommonOptions(meta?: MetaCredentials): AuthOptions {
       signIn: "/login",
     },
     callbacks: {
+      // 카카오·구글은 그 서비스가 확인한 이메일이고, 직원이 고객으로 등록한 이메일일 때만 들어온다.
+      async signIn({ account, profile, user }) {
+        if (account?.provider !== "google" && account?.provider !== "kakao") return true
+        const p = profile as { email_verified?: boolean; kakao_account?: { email?: string; is_email_verified?: boolean } } | undefined
+        const verified = account.provider === "google" ? p?.email_verified === true : p?.kakao_account?.is_email_verified === true
+        const email = user.email ?? p?.kakao_account?.email
+        if (!verified || !email) return "/login?error=EmailNotVerified"
+        const r = await callAccount("client-check", { email })
+        return r.ok ? true : "/login?error=NotClient"
+      },
       async jwt({ token, account, trigger, session }) {
         if (account?.provider === "guest") {
           token.browseMode = true
@@ -98,6 +142,7 @@ function buildCommonOptions(meta?: MetaCredentials): AuthOptions {
           const issued = await exchangeForBackendToken({
             ownerKey: token.email,
             email: token.email,
+            client: CLIENT_PROVIDERS.has(account.provider),
             metaConnection: {
               accessToken: token.accessToken,
               igAccessToken: token.igAccessToken,
@@ -116,8 +161,9 @@ function buildCommonOptions(meta?: MetaCredentials): AuthOptions {
             token.backendTokenExpiresAt = issued.expiresAt
             token.backendRefreshToken = issued.refreshToken
             token.role = issued.role
-          } else if (!token.role) {
+          } else if (!token.role && !CLIENT_PROVIDERS.has(account.provider)) {
             // 백엔드가 없는 환경(설치 마법사·로컬)에서는 막을 서버도 없다. 예전처럼 팀장으로 둔다.
+            // 고객 로그인은 여기서 팀장이 되면 안 된다 — 역할 없이 두면 화면 가드가 막는다.
             token.role = "팀장"
           }
         }

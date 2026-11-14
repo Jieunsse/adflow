@@ -117,6 +117,11 @@ public class SpendGuard {
     return monthSpend(workspaceId, brandId, month) >= plan.get().getBudgetCap();
   }
 
+  /** 이번 달(한국 시간) 쓴 광고비. 고객 화면의 "이번 달 쓴 광고비 / 상한"이 쓴다. */
+  public double monthSpend(String workspaceId, String brandId) {
+    return monthSpend(workspaceId, brandId, YearMonth.now(clock.withZone(KST)));
+  }
+
   /** 이번 달에 게재한 라운드가 실제로 쓴 광고비 합. 판정이 끝난 라운드는 판정 때 성과, 진행 중은 마지막 수집값. */
   private double monthSpend(String workspaceId, String brandId, YearMonth month) {
     double sum = 0;

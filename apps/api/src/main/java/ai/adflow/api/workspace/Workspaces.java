@@ -45,6 +45,11 @@ public class Workspaces {
     return current(jwt.getSubject()).getWorkspaceId();
   }
 
+  /** 소속을 찾기만 한다. 없으면 만들지 않는다. 내보낸 사람은 없는 것으로 본다. */
+  public java.util.Optional<Member> find(String email) {
+    return members.findById(email.trim().toLowerCase()).filter(m -> !m.isRemoved());
+  }
+
   /** 소속이 없으면 그 사람이 팀장인 새 워크스페이스를 만든다 (정책서 5.2: 만든 사람이 팀장). */
   public Member current(String email) {
     // 로그인 제공자마다 대소문자가 달라도 같은 사람이다 (정책서 3.1: 이메일이 같으면 같은 계정).

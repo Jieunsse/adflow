@@ -436,6 +436,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/reports/share": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["share"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/portal/plans/{month}/reject": {
         parameters: {
             query?: never;
@@ -772,6 +788,102 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/account/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["verify"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/account/signup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["signup"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/account/reset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["reset_1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/account/reset-request": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["resetRequest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/account/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["login"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/account/client-check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["clientCheck"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/today": {
         parameters: {
             query?: never;
@@ -820,6 +932,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/portal/reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["reports"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/portal/reports/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["report"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/portal/plans": {
         parameters: {
             query?: never;
@@ -844,6 +988,54 @@ export interface paths {
             cookie?: never;
         };
         get: operations["get_4"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/portal/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["overview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/portal/learnings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["learnings"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/portal/experiments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["experiments"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1553,6 +1745,27 @@ export interface components {
         ItemRequestAutoRelaunchState: {
             item?: components["schemas"]["AutoRelaunchState"];
         };
+        ShareRequest: {
+            brandProfileId?: string;
+            kind?: string;
+            rangeStart?: string;
+            rangeEnd?: string;
+            metricsJson?: string;
+            reasonsJson?: string;
+            nextSteps?: string;
+        };
+        SharedReport: {
+            id: string;
+            brandProfileId?: string;
+            kind?: string;
+            rangeStart?: string;
+            rangeEnd?: string;
+            metricsJson?: string;
+            reasonsJson?: string;
+            nextSteps?: string;
+            sharedBy?: string;
+            sharedAt?: string;
+        };
         ArchiveRequest: {
             reason?: string;
         };
@@ -1640,6 +1853,7 @@ export interface components {
         ExchangeRequest: {
             ownerKey?: string;
             email?: string;
+            client?: boolean;
             metaConnection?: components["schemas"]["MetaConnectionPayload"];
         };
         MetaConnectionPayload: {
@@ -1653,6 +1867,28 @@ export interface components {
             pixelName?: string;
             igUserId?: string;
             igUsername?: string;
+        };
+        TokenRequest: {
+            token?: string;
+        };
+        SignupRequest: {
+            email?: string;
+            password?: string;
+            agreeTerms?: boolean;
+            agreePrivacy?: boolean;
+            over14?: boolean;
+            marketing?: boolean;
+        };
+        ResetRequest: {
+            token?: string;
+            password?: string;
+        };
+        EmailRequest: {
+            email?: string;
+        };
+        LoginRequest: {
+            email?: string;
+            password?: string;
         };
         Decision: {
             key?: string;
@@ -1722,6 +1958,30 @@ export interface components {
         };
         ItemsResponseMonthlyPlan: {
             items?: components["schemas"]["MonthlyPlan"][];
+        };
+        Overview: {
+            brandName?: string;
+            managerEmail?: string;
+            month?: string;
+            planStatus?: string;
+            /** Format: int64 */
+            budgetCap?: number;
+            /** Format: double */
+            monthSpend?: number;
+            /** Format: int32 */
+            runningExperiments?: number;
+            recentLearnings?: components["schemas"]["Learning"][];
+        };
+        Experiment: {
+            id?: string;
+            productName?: string;
+            hypothesis?: string;
+            axis?: string;
+            launchedAt?: string;
+            /** Format: int32 */
+            impressionShortfall?: number;
+            champion?: components["schemas"]["Variant"];
+            challenger?: components["schemas"]["Variant"];
         };
         Notification: {
             id?: string;
@@ -3220,6 +3480,30 @@ export interface operations {
             };
         };
     };
+    share: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ShareRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SharedReport"];
+                };
+            };
+        };
+    };
     reject: {
         parameters: {
             query?: never;
@@ -3896,6 +4180,162 @@ export interface operations {
             };
         };
     };
+    verify: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TokenRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: string;
+                    };
+                };
+            };
+        };
+    };
+    signup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SignupRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: boolean;
+                    };
+                };
+            };
+        };
+    };
+    reset_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResetRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: boolean;
+                    };
+                };
+            };
+        };
+    };
+    resetRequest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EmailRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: boolean;
+                    };
+                };
+            };
+        };
+    };
+    login: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LoginRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: string;
+                    };
+                };
+            };
+        };
+    };
+    clientCheck: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EmailRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: boolean;
+                    };
+                };
+            };
+        };
+    };
     today: {
         parameters: {
             query?: {
@@ -3962,6 +4402,50 @@ export interface operations {
             };
         };
     };
+    reports: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: components["schemas"]["SharedReport"][];
+                    };
+                };
+            };
+        };
+    };
+    report: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SharedReport"];
+                };
+            };
+        };
+    };
     list_15: {
         parameters: {
             query?: never;
@@ -4000,6 +4484,70 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["MonthlyPlan"];
+                };
+            };
+        };
+    };
+    overview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Overview"];
+                };
+            };
+        };
+    };
+    learnings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: components["schemas"]["Learning"][];
+                    };
+                };
+            };
+        };
+    };
+    experiments: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: components["schemas"]["Experiment"][];
+                    };
                 };
             };
         };

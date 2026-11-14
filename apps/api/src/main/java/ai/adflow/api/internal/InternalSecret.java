@@ -22,7 +22,9 @@ public class InternalSecret {
   public static final String HEADER = "X-Internal-Secret";
 
   /** 시크릿을 요구하는 경로. 잠그는 쪽(SecurityConfig)과 문서(OpenApiConfig)가 같은 목록을 본다. */
-  public static final String[] PATTERNS = {"/auth/exchange", "/auth/refresh", "/internal/**"};
+  public static final String[] PATTERNS = {
+    "/auth/exchange", "/auth/refresh", "/auth/account/**", "/internal/**"
+  };
 
   private final byte[] expected;
 

@@ -2,7 +2,8 @@
 
 // 성과 리포트 (기능명세 6-1). 성과 → 이유 → 다음 할 일 순서로 한 기간을 정리한다 (정책서 16.1).
 // 성과는 지금 브랜드의 광고 계정 숫자로만 계산하고(AI 없음), 이유는 이 기간에 확정된 배운 것만 쓴다.
-// shortcut: "고객에게 공유"는 고객 화면(/portal)이 생기면 붙인다. 다음 실험 제안은 오늘의 결정 화면에 있다.
+// "고객에게 공유"를 누르면 지금 숫자를 그대로 남겨 고객 화면에 열고, 카카오톡 채널로 보낼 링크를 복사한다.
+// 다음 실험 제안은 오늘의 결정 화면에 있다.
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
@@ -11,6 +12,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@shared/ui/Button";
 import { Card } from "@shared/ui/Card";
 import { Skeleton } from "@shared/ui/Skeleton";
+import { useToast } from "@shared/ui/Toast";
 import { useBrandProfileStorage } from "@features/brand-profile/model/useBrandProfileStorage";
 import type { AccountDailyPoint } from "@entities/insights/account-trend";
 import {
@@ -33,6 +35,8 @@ export default function ReportsPage() {
   const [today] = useState(() => new Date().toISOString().slice(0, 10));
   const ranges = useMemo(() => reportRanges(kind, today), [kind, today]);
   const real = !!session && !session.browseMode;
+  const showToast = useToast();
+  const [sharing, setSharing] = useState(false);
 
   const trend = useQuery({
     queryKey: ["report-trend"],
@@ -74,6 +78,38 @@ export default function ReportsPage() {
   })();
   const plan = (plans.data ?? []).find((p) => p.brandProfileId === activeId && p.month === nextMonth);
 
+  const share = async () => {
+    if (!activeId) return;
+    setSharing(true);
+    const nextSteps = plan
+      ? `${monthLabel(nextMonth)} 계획 · ${PLAN_STATUS_LABEL[plan.status]} · 총예산 상한 ${plan.budgetCap ? `${plan.budgetCap.toLocaleString("ko-KR")}원` : "미정"}\n` +
+        parseBundles(plan.bundles).map((b) => `· ${b.goal} / ${b.product} / ${b.axes}`).join("\n")
+      : undefined;
+    const res = await fetch("/api/reports/share", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        brandProfileId: activeId,
+        kind,
+        rangeStart: ranges.current.start,
+        rangeEnd: ranges.current.end,
+        metricsJson: JSON.stringify(metrics),
+        reasonsJson: JSON.stringify(reasons.map((l) => ({ sentence: l.sentence, tournamentId: l.tournamentId, roundIndex: l.roundIndex }))),
+        nextSteps,
+      }),
+    }).catch(() => null);
+    setSharing(false);
+    if (!res?.ok) {
+      const data = (await res?.json().catch(() => ({}))) as { error?: string } | undefined;
+      showToast(data?.error ?? "공유하지 못했어요. 잠시 뒤 다시 해 주세요.");
+      return;
+    }
+    const { id } = (await res.json()) as { id: string };
+    const link = `${window.location.origin}/portal/reports/${id}`;
+    await navigator.clipboard?.writeText(link).catch(() => undefined);
+    showToast("고객에게 공유했어요. 카카오톡 채널로 보낼 링크를 복사했어요");
+  };
+
   const downloadCsv = () => {
     const blob = new Blob(["﻿" + toReportCsv(metrics, ranges.current)], { type: "text/csv;charset=utf-8" });
     const a = document.createElement("a");
@@ -97,6 +133,7 @@ export default function ReportsPage() {
           <Button variant={kind === "weekly" ? "primary" : "secondary"} type="button" onClick={() => setKind("weekly")}>주간</Button>
           <Button variant={kind === "monthly" ? "primary" : "secondary"} type="button" onClick={() => setKind("monthly")}>월간</Button>
           <Button variant="secondary" type="button" disabled={metrics.length === 0} onClick={downloadCsv}>CSV 내려받기</Button>
+          <Button variant="primary" type="button" disabled={!real || sharing || metrics.length === 0} onClick={share}>고객에게 공유</Button>
         </div>
       </div>
 

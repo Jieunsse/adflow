@@ -102,6 +102,14 @@ public class MembersController {
       if (!mine) {
         throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "이 워크스페이스의 브랜드만 고를 수 있어요.");
       }
+      // 고객사마다 고객 계정은 3명까지다 (기능명세 11).
+      long others =
+          members.findByWorkspaceIdAndRoleAndBrandProfileIdAndRemovedAtIsNull(me.getWorkspaceId(), Role.CLIENT, brandId).stream()
+              .filter(m -> !m.getEmail().equals(email))
+              .count();
+      if (others >= 3) {
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "고객사마다 3명까지 등록할 수 있어요. 한 명을 내보낸 뒤 등록해 주세요.");
+      }
     }
 
     if (role == Role.LEAD) {

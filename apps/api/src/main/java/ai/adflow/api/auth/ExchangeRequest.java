@@ -6,6 +6,8 @@ import jakarta.validation.constraints.NotBlank;
 public record ExchangeRequest(
     @NotBlank String ownerKey,
     @NotBlank String email,
+    // 고객 로그인(이메일·카카오·구글)이면 true. 그때는 새 워크스페이스를 만들지 않고 고객으로 등록된 사람만 받는다.
+    Boolean client,
     MetaConnectionPayload metaConnection) {
 
   public record MetaConnectionPayload(

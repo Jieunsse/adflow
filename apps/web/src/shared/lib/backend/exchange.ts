@@ -4,6 +4,8 @@ import { backendBaseUrl, internalSecret } from "./client";
 export type ExchangeInput = {
   ownerKey: string;
   email: string;
+  // 고객 로그인(이메일·카카오·구글). 서버는 고객으로 등록된 사람만 받고 새 워크스페이스를 만들지 않는다.
+  client?: boolean;
   metaConnection?: Record<string, string | undefined>;
 };
 

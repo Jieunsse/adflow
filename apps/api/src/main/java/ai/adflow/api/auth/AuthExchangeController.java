@@ -48,6 +48,12 @@ public class AuthExchangeController {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "둘러보기 게스트는 토큰을 발급받지 않아요.");
     }
 
+    // 고객 로그인은 이미 고객으로 등록된 사람만 받는다. 소속이 없을 때 새 워크스페이스를 만들어 주면 아무 구글 계정이나
+    // 팀장으로 들어온다.
+    if (Boolean.TRUE.equals(request.client())
+        && workspaces.find(request.email()).filter(m -> m.getRole() == Role.CLIENT).isEmpty()) {
+      throw new ResponseStatusException(HttpStatus.FORBIDDEN, "고객으로 등록되지 않은 이메일이에요.");
+    }
     // 역할은 요청이 아니라 소속에서 정한다. 요청의 역할을 믿으면 누구나 팀장으로 들어온다.
     Role role = workspaces.current(request.email()).getRole();
     persist(request, role);

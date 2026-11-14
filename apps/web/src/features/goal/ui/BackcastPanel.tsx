@@ -83,19 +83,21 @@ export function BackcastPanel({
         )}
       </div>
 
-      <div className="flex flex-col lg:flex-row lg:items-center gap-4 lg:gap-0" style={hasLag ? undefined : { opacity: 0.45 }}>
-        <LagCard map={map} empty={!hasLag} />
-        {/* 줄기 — 목표 카드에서 가지 척추까지. 세로 가운데는 lg:items-center 가 맞춰준다. */}
-        <span className="hidden lg:block w-[38px] h-[1.5px] shrink-0" style={{ background: lineColor(hasLag) }} />
-        <div className="relative flex-1 flex flex-col gap-2.5 lg:gap-3.5 lg:pl-10">
-          {/* 척추 — 첫 줄 가운데(32px)부터 마지막 줄 가운데까지. 줄 높이가 바뀌어도 따라온다. */}
-          <span
-            className="hidden lg:block absolute left-0 top-8 bottom-8 w-[1.5px]"
-            style={{ background: lineColor(hasLag) }}
-          />
-          {map.rows.map((row) => (
-            <LeadRow key={row.kind} row={row} hasLag={hasLag} />
-          ))}
+      <div className="flex flex-1 min-h-0 items-center">
+        <div className="flex w-full flex-col gap-4 lg:flex-row lg:items-center lg:gap-0" style={hasLag ? undefined : { opacity: 0.45 }}>
+          <LagCard map={map} empty={!hasLag} />
+          {/* 줄기 — 목표 카드에서 가지 척추까지. 세로 가운데는 lg:items-center 가 맞춰준다. */}
+          <span className="hidden lg:block w-[38px] h-[1.5px] shrink-0" style={{ background: lineColor(hasLag) }} />
+          <div className="relative flex-1 flex flex-col gap-2.5 lg:gap-3.5 lg:pl-10">
+            {/* 척추 — 첫 줄 가운데(32px)부터 마지막 줄 가운데까지. 줄 높이가 바뀌어도 따라온다. */}
+            <span
+              className="hidden lg:block absolute left-0 top-8 bottom-8 w-[1.5px]"
+              style={{ background: lineColor(hasLag) }}
+            />
+            {map.rows.map((row) => (
+              <LeadRow key={row.kind} row={row} hasLag={hasLag} />
+            ))}
+          </div>
         </div>
       </div>
 

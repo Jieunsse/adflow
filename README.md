@@ -1,13 +1,8 @@
 # AdFlow
 
-Meta(Facebook·Instagram) 광고를 기획부터 게재·성과 회고까지 한 흐름으로 굴리는 마케팅 워크스페이스예요.
-**Next.js 16 (App Router) + React 19 + TypeScript strict + Tailwind 3**.
+Meta(Facebook·Instagram) 광고를 기획부터 게재·성과 회고까지 한 흐름으로 굴리는 Next.js 워크스페이스예요.
 
 ## 시작하기
-
-모노레포예요 — `apps/web`(Next.js) + `apps/api`(Spring Boot) + `packages/contracts`.
-
-**둘러보기만 볼 거라면** 프론트만 띄우면 돼요.
 
 ```bash
 pnpm install
@@ -15,19 +10,9 @@ cp apps/web/.env.example apps/web/.env.local   # NEXTAUTH_SECRET 등 필수값 �
 pnpm dev                                    # http://localhost:3000
 ```
 
-**저장 기능(실 유저 경로)까지 쓰려면** 백엔드가 필요해요. 시크릿 3종을 먼저 만들어요.
+둘러보기 모드는 별도 저장소 없이 프론트의 localStorage만 사용해요.
 
-```bash
-python3 -c "import secrets;print('ADFLOW_JWT_SECRET=' + secrets.token_urlsafe(48))"
-python3 -c "import secrets;print('ADFLOW_INTERNAL_SECRET=' + secrets.token_urlsafe(32))"
-python3 -c "import secrets,base64;print('ADFLOW_ENCRYPTION_KEY=' + base64.urlsafe_b64encode(secrets.token_bytes(24)).decode()[:32])"
-```
-
-출력 3줄을 `apps/web/.env.local` 에 붙이고 `ADFLOW_BACKEND_URL=http://localhost:8080` 도 더해요.
-`ADFLOW_ENCRYPTION_KEY` 는 **정확히 32자** 여야 해요 (`echo -n "<값>" | wc -c` 로 확인).
-**이 키를 잃으면 저장된 Meta·Notion 토큰을 복구할 수 없어요** — 재로그인으로 다시 받아야 해요.
-
-그다음 셋을 순서대로 띄워요. Spring 은 같은 값을 셸 환경변수로 받아요.
+실사용 저장 기능은 Spring 백엔드(`apps/api`)와 로컬 Postgres 가 필요해요.
 
 ```bash
 docker compose up -d postgres
@@ -60,6 +45,7 @@ Meta 앱 자격증명은 `.env.local` 대신 `/install` 마법사로 넣는 게 
 | `pnpm build` | 프로덕션 빌드 |
 | `pnpm lint` | ESLint (next/core-web-vitals + typescript) |
 | `pnpm test` | Vitest (회귀 안전망) |
+| `pnpm test:e2e` | Playwright (화면 흐름) |
 | `pnpm contracts:generate` | OpenAPI 스냅샷 + TS 타입 재생성 (**Spring 이 떠 있어야 해요**) |
 
 백엔드는 `apps/api` 에서 `./gradlew test`(H2, Docker 불필요) · `./gradlew integrationTest`(Testcontainers
@@ -82,9 +68,6 @@ lint 는 기존 위반 80건을 `apps/web/eslint-suppressions.json` 에 **기준
 
 ## 문서
 
-- [AGENTS.md](./AGENTS.md) — AI 에이전트·기여자 행동 규칙 (디자인 토큰·UX 라이팅·커밋 형식). **작업 전 필독.**
-- **`.document/` 는 git 에 없어요** — 로컬 전용 문서예요(1인 개발). 클론에는 안 따라와요.
-- [.document/CONTEXT.md](./.document/CONTEXT.md) — 도메인 어휘 단일 소스
+- [AGENTS.md](./AGENTS.md) — AI 에이전트·기여자 규칙
+- [.document/CONTEXT.md](./.document/CONTEXT.md) — 도메인 어휘
 - [.document/adr/](./.document/adr/) — 아키텍처 결정 기록
-- [.document/prd/](./.document/prd/) — 기능별 PRD
-- [apps/api](./apps/api) — Spring 백엔드. 스키마는 JPA 엔티티가 단일 소스예요 (`ddl-auto`, 로컬 전용)

@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Viewport } from "next";
 import GoalsClient from "./GoalsClient";
 
@@ -5,5 +6,9 @@ import GoalsClient from "./GoalsClient";
 export const viewport: Viewport = { width: "device-width", initialScale: 1 };
 
 export default function GoalsPage() {
-  return <GoalsClient />;
+  return (
+    <Suspense fallback={null}>
+      <GoalsClient />
+    </Suspense>
+  );
 }

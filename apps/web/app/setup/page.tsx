@@ -128,12 +128,18 @@ function SetupFlow() {
     setSelecting(account.id);
     setError(null);
     setAccount(account);
-    await update({ adAccountId: account.id, adAccountName: account.name });
-    setLoading(true);
     try {
-      setPages(await fetchAdIdentityPages());
+      setLoading(true);
+      const [, nextPages] = await Promise.all([
+        update({ adAccountId: account.id, adAccountName: account.name }),
+        fetchAdIdentityPages(),
+      ]);
+      setPages(nextPages);
     } catch {
-      setError("페이스북 페이지 목록을 불러오지 못했어요.");
+      setError("페이스북 페이지 목록을 불러오지 못했어요. 다시 시도해 주세요.");
+      setSelecting(null);
+      setLoading(false);
+      return;
     }
     setSelecting(null);
     setLoading(false);
@@ -143,7 +149,8 @@ function SetupFlow() {
   async function selectPage(page: AdIdentityPage) {
     setSelecting(page.id);
     setError(null);
-    // 브랜드가 있으면 그 브랜드의 광고 계정으로 저장한다. 첫 브랜드는 온보딩에서 만들며 저장한다.
+    // 브랜드가 있으면 그 브랜드의 광고 계정으로 저장한다 (기능 10). 첫 로그인처럼 브랜드가 아직 없으면 건너뛴다 —
+    // 첫 브랜드를 만들면 BrandConnectionSync 가 세션의 계정을 그 브랜드에 저장한다.
     const brandId = getActiveId();
     if (brandId && account) {
       const failed = await saveBrandConnection(brandId, {
@@ -160,14 +167,19 @@ function SetupFlow() {
         return;
       }
     }
-    await update({
-      pageId: page.id,
-      pageName: page.name,
-      igUserId: page.igUserId ?? "",
-      igUsername: page.igUsername ?? "",
-      browseMode: false,
-    });
-    window.location.href = nextUrl;
+    try {
+      await update({
+        pageId: page.id,
+        pageName: page.name,
+        igUserId: page.igUserId ?? "",
+        igUsername: page.igUsername ?? "",
+        browseMode: false,
+      });
+      window.location.href = nextUrl;
+    } catch {
+      setError("연결 정보를 저장하지 못했어요. 다시 시도해 주세요.");
+      setSelecting(null);
+    }
   }
 
   async function browseAround() {

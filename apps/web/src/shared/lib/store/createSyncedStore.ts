@@ -8,9 +8,9 @@
 import { useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { create, type StoreApi, type UseBoundStore } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
+import { persist, createJSONStorage, type StateStorage } from "zustand/middleware";
 import { useToastOptional } from "@shared/ui/Toast";
-import { isRealOwner } from "./ownerKey";
+import { GUEST_OWNER, isRealOwner } from "./ownerKey";
 
 // idOf 로 식별자를 뽑을 수 있으면 되므로 id 필드를 강제하지 않는다.
 // 기본값이 (i) => i.id 라 기존 store 4개는 그대로 동작한다.
@@ -59,32 +59,99 @@ export function createSyncedStore<T extends SyncedItem>(
   config: SyncedStoreConfig<T>,
 ): SyncedStore<T> {
   const idOf = config.idOf ?? ((item: T) => (item as { id: string }).id);
+  let storageOwner = GUEST_OWNER;
+  let hydrationRequest = 0;
+  const writeChains = new Map<string, Promise<void>>();
+  const writeVersions = new Map<string, number>();
+
+  const scopedStorageName = (name: string) => `${name}:${encodeURIComponent(storageOwner)}`;
+  const ownerScopedStorage: StateStorage = {
+    getItem: (name) => (typeof localStorage === "undefined" ? null : localStorage.getItem(scopedStorageName(name))),
+    setItem: (name, value) => {
+      if (typeof localStorage !== "undefined") localStorage.setItem(scopedStorageName(name), value);
+    },
+    removeItem: (name) => {
+      if (typeof localStorage !== "undefined") localStorage.removeItem(scopedStorageName(name));
+    },
+  };
+
+  function setOwner(owner: string | null): void {
+    const nextOwner = owner ?? GUEST_OWNER;
+    if (storageOwner === nextOwner) return;
+    storageOwner = nextOwner;
+    hydrationRequest += 1;
+    useStore?.setState({ items: [], status: "idle", owner });
+  }
+
+  async function fetchWithRetry(input: RequestInfo | URL, init: RequestInit): Promise<Response> {
+    try {
+      const response = await fetch(input, init);
+      if (response.status < 500 || response.ok) return response;
+      await new Promise((resolve) => setTimeout(resolve, 250));
+      return await fetch(input, init);
+    } catch (error) {
+      await new Promise((resolve) => setTimeout(resolve, 250));
+      return fetch(input, init).catch(() => { throw error; });
+    }
+  }
 
   const useStore = create<SyncedState<T>>()(
     persist(
       (set, get) => {
-        // 서버 확정. 실패를 삼키지 않는다 — 예전 동기화 코드의 .then(()=>{},()=>{}) 가
-        // persona 미러 실패를 몇 달간 숨긴 전례가 있다(설계 §5).
-        const settle = (res: Response | null, action: string) => {
-          if (res && res.ok) {
-            if (get().lastError) set({ lastError: null });
-            return;
-          }
-          const detail = res ? ` (${res.status})` : "";
-          set({ lastError: `${action}이 서버에 닿지 않았어요${detail}. 잠시 뒤 다시 시도해 주세요.` });
+        const rollback = (id: string, previous: T | undefined) => {
+          set((state) => ({
+            items: previous
+              ? state.items.map((item) => (idOf(item) === id ? previous : item))
+              : state.items.filter((item) => idOf(item) !== id),
+          }));
         };
 
-        // 게스트/미로그인은 단락 — 로컬·persist 캐시만.
-        const postItem = (item: T) => {
-          if (!isRealOwner(get().owner)) return;
-          void fetch(config.endpoint, {
-            method: "POST",
-            headers: { "content-type": "application/json" },
-            body: JSON.stringify({ item }),
-          }).then(
-            (res) => settle(res, "저장"),
-            () => settle(null, "저장"),
-          );
+        const enqueueWrite = (id: string, task: () => Promise<void>) => {
+          const previous = writeChains.get(id);
+          const current = previous ? previous.catch(() => undefined).then(task) : task();
+          writeChains.set(id, current);
+          void current.finally(() => {
+            if (writeChains.get(id) === current) writeChains.delete(id);
+          });
+        };
+
+        const syncItem = (item: T, previous: T | undefined, owner: string | null) => {
+          if (!isRealOwner(owner)) return;
+          const id = idOf(item);
+          const version = (writeVersions.get(id) ?? 0) + 1;
+          writeVersions.set(id, version);
+          enqueueWrite(id, async () => {
+            try {
+              const res = await fetchWithRetry(config.endpoint, {
+                method: "POST",
+                headers: { "content-type": "application/json" },
+                body: JSON.stringify({ item }),
+              });
+              if (!res.ok) throw new Error(`저장 (${res.status})`);
+              if (get().owner === owner && get().lastError) set({ lastError: null });
+            } catch (error) {
+              if (get().owner !== owner || writeVersions.get(id) !== version) return;
+              rollback(id, previous);
+              set({ lastError: `${error instanceof Error ? error.message : "저장"}에 실패했어요. 변경을 되돌렸어요.` });
+            }
+          });
+        };
+
+        const syncDelete = (id: string, previous: T | undefined, owner: string | null) => {
+          if (!isRealOwner(owner)) return;
+          const version = (writeVersions.get(id) ?? 0) + 1;
+          writeVersions.set(id, version);
+          enqueueWrite(id, async () => {
+            try {
+              const res = await fetchWithRetry(`${config.endpoint}?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+              if (!res.ok) throw new Error(`삭제 (${res.status})`);
+              if (get().owner === owner && get().lastError) set({ lastError: null });
+            } catch (error) {
+              if (get().owner !== owner || writeVersions.get(id) !== version) return;
+              rollback(id, previous);
+              set({ lastError: `${error instanceof Error ? error.message : "삭제"}에 실패했어요. 변경을 되돌렸어요.` });
+            }
+          });
         };
 
         return {
@@ -98,13 +165,13 @@ export function createSyncedStore<T extends SyncedItem>(
         clearError: () => set({ lastError: null }),
 
         add: (item) => {
-          // optimistic — 로컬 즉시 반영(id 중복 제거 후 prepend) 뒤 서버 확정.
+          const previous = get().items.find((x) => idOf(x) === idOf(item));
           set((s) => ({ items: [item, ...s.items.filter((x) => idOf(x) !== idOf(item))] }));
-          postItem(item);
+          syncItem(item, previous, get().owner);
         },
 
         upsert: (item) => {
-          // add 와 달리 기존 위치 보존(편집·플래그 토글용) — id 있으면 제자리 교체, 없으면 prepend.
+          const previous = get().items.find((x) => idOf(x) === idOf(item));
           set((s) => {
             const idx = s.items.findIndex((x) => idOf(x) === idOf(item));
             if (idx < 0) return { items: [item, ...s.items] };
@@ -112,22 +179,18 @@ export function createSyncedStore<T extends SyncedItem>(
             next[idx] = item;
             return { items: next };
           });
-          postItem(item);
+          syncItem(item, previous, get().owner);
         },
 
         removeById: (id) => {
+          const previous = get().items.find((x) => idOf(x) === id);
           set((s) => ({ items: s.items.filter((x) => idOf(x) !== id) }));
-          if (isRealOwner(get().owner)) {
-            void fetch(`${config.endpoint}?id=${encodeURIComponent(id)}`, {
-              method: "DELETE",
-            }).then(
-              (res) => settle(res, "삭제"),
-              () => settle(null, "삭제"),
-            );
-          }
+          syncDelete(id, previous, get().owner);
         },
 
         hydrate: async (owner) => {
+          storageOwner = owner ?? GUEST_OWNER;
+          const request = ++hydrationRequest;
           set({ owner });
           // 게스트/미로그인 → 서버 단락, persist(localStorage)만 = Tier 3 동작(ADR-033).
           if (!isRealOwner(owner)) {
@@ -137,22 +200,25 @@ export function createSyncedStore<T extends SyncedItem>(
           set({ status: "hydrating" });
           try {
             const res = await fetch(config.endpoint, { headers: { accept: "application/json" } });
+            if (request !== hydrationRequest || get().owner !== owner) return;
             if (res.ok) {
               const json = (await res.json()) as { items?: T[] };
               set({ items: json.items ?? [] });
+            } else if (res.status === 401 || res.status === 403) {
+              set({ items: [] });
             }
-            // 비-OK(401 등) → persist 캐시 유지(오프라인 폴백).
+            // 5xx 등 서버 오류·네트워크 실패는 오프라인 폴백을 위해 캐시를 유지한다.
           } catch {
-            // 네트워크 실패 → persist 캐시 유지(best-effort).
+            if (request !== hydrationRequest || get().owner !== owner) return;
           } finally {
-            set({ status: "ready" });
+            if (request === hydrationRequest && get().owner === owner) set({ status: "ready" });
           }
         },
         };
       },
       {
         name: config.name,
-        storage: createJSONStorage(() => localStorage),
+        storage: createJSONStorage(() => ownerScopedStorage),
         // SSR 가드: 첫 렌더 = default(서버 HTML 일치), mount 후 useSync 가 rehydrate(useScopedStorage 패턴 계승).
         skipHydration: true,
         // status·owner 는 런타임 상태 — 캐시 대상은 items 만.
@@ -165,7 +231,8 @@ export function createSyncedStore<T extends SyncedItem>(
     const { data: session } = useSession();
     const owner = session?.user?.email ?? null;
     useEffect(() => {
-      // persist 캐시 먼저 복원(+ 레거시 흡수) → 그 위에 서버 하이드레이션.
+      setOwner(owner);
+      // 사용자별 persist 캐시 먼저 복원 → 그 위에 서버 하이드레이션.
       rehydrate();
       void useStore.getState().hydrate(owner);
     }, [owner]);

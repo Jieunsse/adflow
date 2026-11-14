@@ -62,4 +62,5 @@ describe("requireMetaSession", () => {
   it("browseMode 플래그 passthrough", () => {
     expect(requireMetaSession(session({ browseMode: true })).browseMode).toBe(true)
   })
+
 })

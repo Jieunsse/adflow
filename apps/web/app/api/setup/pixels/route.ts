@@ -3,9 +3,11 @@ import { withMetaSession } from "@/lib/meta-session"
 
 const GRAPH = "https://graph.facebook.com/v20.0"
 
-export const GET = withMetaSession(["adAccount"], async (_req, s) => {
+export const GET = withMetaSession([], async (req, s) => {
+  const adAccountId = req.nextUrl.searchParams.get("adAccountId") ?? s.adAccountId
+  if (!adAccountId) return NextResponse.json({ error: "광고 계정을 먼저 선택해주세요." }, { status: 400 })
   const res = await fetch(
-    `${GRAPH}/${s.adAccountId}/adspixels?fields=id,name&access_token=${s.accessToken}`
+    `${GRAPH}/${adAccountId}/adspixels?fields=id,name&access_token=${s.accessToken}`
   )
   const data = (await res.json()) as {
     data?: { id: string; name: string }[]

@@ -8,7 +8,7 @@ const VALID_OUTCOMES = new Set(OBJECTIVES_ALL.map((o) => o.id))
 export async function POST(req: NextRequest) {
   return withRouteHandler(
     geminiCreative.isConfigured,
-    'GOOGLE_AI_API_KEY 가 .env.local 에 설정되지 않았어요.',
+    'Gemini API 키가 설정되지 않았어요.',
     async () => {
       const body = (await req.json()) as Partial<GenerateCreativeParams>
       const { brand, target, tone, outcome, hint, brandProfile, persona, product, hooks, variationIntensity, prohibitedWords } = body

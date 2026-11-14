@@ -2,6 +2,7 @@
   "name": "adflow-monorepo",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@10.23.0",
   "scripts": {
     "dev": "pnpm --filter adflow dev",
     "https-dev": "pnpm --filter adflow https-dev",
@@ -9,7 +10,7 @@
     "start": "pnpm --filter adflow start",
     "lint": "pnpm --filter adflow lint",
     "test": "pnpm --filter adflow test",
+    "test:e2e": "pnpm --filter adflow test:e2e",
     "contracts:generate": "pnpm --filter @adflow/contracts generate"
-  },
-  "packageManager": "pnpm@10.23.0"
+  }
 }

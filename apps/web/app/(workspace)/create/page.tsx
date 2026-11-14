@@ -1,16 +1,17 @@
 "use client";
 
-import { Suspense, useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
-import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Button } from "@shared/ui/Button";
 import { useSessionStorage } from "@shared/lib/storage/useSessionStorage";
+import { useScopedStorage } from "@shared/lib/storage/useScopedStorage";
 import { useApiMutation } from "@shared/lib/api/useApiMutation";
 import type { GenerateCreativeParams, GenerateCreativeResult, CreativeAttribution } from "@/lib/gemini-creative";
 import { INITIAL_CREATIVE_STATE, useCreativeDraft } from "@entities/creative/model";
 import { abVariantLabel, INITIAL_LAUNCH_STATE, useLaunchDraft, type AbTestAxis } from "@entities/campaign/model";
-import { loadLaunchedCampaign } from "@entities/campaign/launched-storage";
+import { campaignLaunches, loadLaunchedCampaign } from "@entities/campaign/launched-storage";
+import { buildQuickStartSettings, datesForQuickStart, latestQuickStart } from "@entities/campaign/quick-start";
 import { judgeAbTest, rowToKpi, type AdKpi } from "@entities/insights/ab-verdict";
 import type { AdInsightsRow } from "@entities/insights/types";
 import { tournamentClient } from "@entities/ab-test/tournament/client";
@@ -24,15 +25,16 @@ import { nextStepAfterBrief, shouldTriggerGenerate } from "@entities/creative/br
 import { browseCreative, browseRefinedBody } from "@entities/creative/browse/seed";
 import { refineInstruction, type RefineId } from "@entities/creative/refine-presets";
 import {
-  saveDraftToSession,
   loadDraftFromSession,
   clearDraftFromSession,
+  saveDraftToSession,
   hydrateCreativeDraft,
   hydrateLaunchDraft,
   type CreateDraftSnapshot,
+  type StudioPhase,
 } from "@entities/creative/draft-persistence";
-import { shrinkImageDataUrl } from "@shared/lib/shrink-image";
 import BriefStep from "@widgets/create-flow/BriefStep";
+import CreateFlowProgress from "@widgets/create-flow/CreateFlowProgress";
 import { savedAgoLabel } from "@widgets/create-flow/copy-diff";
 import { useStudioSession } from "@widgets/create-flow/useStudioSession";
 import { readBrandProfile, readActiveBrandProfileEntry, useBrandProfileStorage } from "@features/brand-profile/model/useBrandProfileStorage";
@@ -40,6 +42,9 @@ import { readPersonas, usePersonasStorage } from "@features/brand-profile/model/
 import { mergePersonaTargeting } from "@features/brand-profile/model/mergePersonaTargeting";
 import { useProducts } from "@shared/lib/products";
 import { selectProfileNudge, NUDGE_LABEL, type ProfileNudge, type ProfileNudgeTarget } from "@entities/creative/profile-nudge";
+import { CREATE_EVENTS, recordCreateEvent } from "@entities/creative/create-events";
+import { useCreateFlowRoute } from "@widgets/create-flow/useCreateFlowRoute";
+import { useCreateDraftPersistence } from "@widgets/create-flow/useCreateDraftPersistence";
 
 const LaunchStep = dynamic(() => import("@widgets/launch-step"));
 const GeneratingPanel = dynamic(() => import("@widgets/create-flow/GeneratingPanel"));
@@ -66,8 +71,7 @@ const BROWSE_GENERATE_MS = 1400;
 const BROWSE_REFINE_MS = 900;
 
 function CreateFlow() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
+  const { router, searchParams, step, reviewing, setStep, setReviewing, goToStep } = useCreateFlowRoute();
   const { data: session, status } = useSession();
   const creative = useCreativeDraft();
   const launch = useLaunchDraft();
@@ -75,21 +79,15 @@ function CreateFlow() {
   const library = useLibrary();
   // 둘러보기 모드 — 백엔드에 닿지 않는 시연 레이어(ADR-033). 화면 세로 중앙 배치에도 쓴다.
   const browseMode = !!session?.browseMode;
+  campaignLaunches.useSync();
+  const launchedCampaigns = campaignLaunches.useStore((s) => s.items);
   // 확정 플로우 — 0 브리프(1d) · 1 소재(1f 생성 중 → 1c 3안 비교 → 2a 이미지 3컷 → 2b 다듬기) · 2 게재(1e → 2c).
-  const [step, setStep] = useState(0);
   const studio = useStudioSession();
   // 자동 저장 pill 은 실제로 저장이 끝난 시각만 보여준다. 문구는 30초마다만 다시 계산한다.
-  const [lastSavedAt, setLastSavedAt] = useState<number | null>(null);
+  const [savedLabel, setSavedLabel] = useState<string | null>(null);
   // 둘러보기는 API 대신 시드를 쓰지만, 생성 중 화면(시안 1f)은 똑같이 지나가야 한다.
   const [browseBusy, setBrowseBusy] = useState<null | "generate" | "refine">(null);
-  const [savedLabel, setSavedLabel] = useState<string | null>(null);
-  useEffect(() => {
-    if (!lastSavedAt) return;
-    const tick = () => setSavedLabel(savedAgoLabel(lastSavedAt, Date.now()));
-    tick();
-    const id = setInterval(tick, 30_000);
-    return () => clearInterval(id);
-  }, [lastSavedAt]);
+  const [draftResolved, setDraftResolved] = useState(false);
 
   // PRD-ab-testing.md §3.3 / §8 — `?prefill=campaign:{id}` 진입 → 우세 안 자동 채움.
   const prefillRaw = searchParams.get("prefill");
@@ -134,6 +132,8 @@ function CreateFlow() {
   const [productIdRaw, setProductIdRaw] = useSessionStorage("adflow_productId", "");
   const productId = productIdRaw || null;
   const setProductId = (id: string | null) => setProductIdRaw(id ?? "");
+  const [createMode, setCreateMode] = useScopedStorage<"quick" | "detailed">("local", "adflow_create_mode", "quick");
+  const [createModeReady, setCreateModeReady] = useState(false);
   const [selectedCopyRefIds, setSelectedCopyRefIds] = useState<string[]>([]);
   const [savedId, setSavedId] = useState<string | null>(null);
   // ADR-052 — 보상 루프 상태.
@@ -151,6 +151,42 @@ function CreateFlow() {
   const refineMutation = useApiMutation<GenerateCreativeParams, GenerateCreativeResult>('/api/generate-creative');
   const generating = generateMutation.isPending || browseBusy === "generate";
   const launched = launch.state.launchedCampaign;
+  const recentQuickStart = useMemo(
+    () => latestQuickStart(launchedCampaigns, nudgeBrandProfileId, productId),
+    [launchedCampaigns, nudgeBrandProfileId, productId],
+  );
+  const appliedQuickStartRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    setCreateModeReady(true);
+  }, []);
+
+  useEffect(() => {
+    if (!createModeReady || createMode !== "quick" || !recentQuickStart) {
+      appliedQuickStartRef.current = null;
+      return;
+    }
+    if (step !== 0) return;
+    if (appliedQuickStartRef.current === recentQuickStart.campaignId) return;
+    const settings = recentQuickStart.settings;
+    const dates = datesForQuickStart(settings.durationDays);
+    setTarget(settings.target);
+    setCustomBrand(false);
+    creative.dispatch({ type: "SET_TONE", tone: settings.tone });
+    creative.dispatch({ type: "SET_OUTCOME_HINT", hint: settings.outcomeHint });
+    creative.dispatch({ type: "SET_CTA", cta: settings.cta });
+    launch.dispatch({ type: "SET_BUDGET", value: settings.dailyBudget });
+    launch.dispatch({ type: "SET_DATE_START", value: dates.start });
+    launch.dispatch({ type: "SET_DATE_END", value: dates.end });
+    launch.dispatch({ type: "SET_AGE_RANGE", min: settings.ageMin, max: settings.ageMax });
+    launch.dispatch({ type: "SET_GENDER", value: settings.gender });
+    launch.dispatch({ type: "SET_COUNTRIES", value: settings.countries });
+    launch.dispatch({ type: "SET_PERSONA_LOCATION", value: settings.personaLocation });
+    launch.dispatch({ type: "SET_LANDING_URL", value: settings.landingUrl });
+    launch.dispatch({ type: "SET_DELIVERY", value: settings.delivery });
+    launch.dispatch({ type: "SET_PLATFORMS", platforms: settings.platforms });
+    appliedQuickStartRef.current = recentQuickStart.campaignId;
+  }, [step, createModeReady, createMode, recentQuickStart, creative.dispatch, launch.dispatch, setTarget]);
 
   useEffect(() => {
     setSavedId(null);
@@ -353,18 +389,45 @@ function CreateFlow() {
   // P0 초안 영속화 — 재진입 시 이어하기 배너. prefill·라이브러리 재활용 진입은 각자 흐름이 우선.
   const [resumeDraft, setResumeDraft] = useState<CreateDraftSnapshot | null>(null);
   useEffect(() => {
-    if (prefillRaw || channelInsightsFrom || hookParam || loadedFromLibraryRef.current) return;
+    if (prefillRaw || channelInsightsFrom || hookParam || loadedFromLibraryRef.current) {
+      setDraftResolved(true);
+      return;
+    }
     const draft = loadDraftFromSession();
-    if (draft) setResumeDraft(draft);
+    if (draft && searchParams.get("stage")) {
+      hydrateCreativeDraft(creative.dispatch, draft.creative);
+      hydrateLaunchDraft(launch.dispatch, draft.launch);
+      studio.restore(draft.studio);
+    } else if (draft) {
+      setResumeDraft(draft);
+    }
+    setDraftResolved(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const { lastSavedAt } = useCreateDraftPersistence({
+    step,
+    creative: creative.state,
+    launch: launch.state,
+    studio: studio.snapshot,
+    resumeDraft,
+    draftResolved,
+  });
+
+  useEffect(() => {
+    if (!lastSavedAt) return;
+    const tick = () => setSavedLabel(savedAgoLabel(lastSavedAt, Date.now()));
+    tick();
+    const id = setInterval(tick, 30_000);
+    return () => clearInterval(id);
+  }, [lastSavedAt]);
 
   const handleResumeDraft = () => {
     if (!resumeDraft) return;
     hydrateCreativeDraft(creative.dispatch, resumeDraft.creative);
     hydrateLaunchDraft(launch.dispatch, resumeDraft.launch);
     studio.restore(resumeDraft.studio);
-    setStep(resumeDraft.step);
+    goToStep(resumeDraft.step);
     setResumeDraft(null);
   };
 
@@ -372,38 +435,6 @@ function CreateFlow() {
     clearDraftFromSession();
     setResumeDraft(null);
   };
-
-  // 초안 미러링 — debounce 800ms. 이어하기 배너 응답 전에는 저장하지 않아 기존 초안을 지키고,
-  // 게재 완료 시 초안 삭제. 빈 상태(목표·생성물 없음)는 저장하지 않는다.
-  useEffect(() => {
-    if (resumeDraft) return;
-    if (launch.state.launchedCampaign) {
-      clearDraftFromSession();
-      return;
-    }
-    const meaningful = step > 0 || creative.state.outcome !== null || studio.snapshot.displayedHeadlines !== null;
-    if (!meaningful) return;
-    const timer = setTimeout(() => {
-      void (async () => {
-        const img = launch.state.imageDataUrl ? await shrinkImageDataUrl(launch.state.imageDataUrl) : null;
-        const finalImg = launch.state.finalImageDataUrl ? await shrinkImageDataUrl(launch.state.finalImageDataUrl) : null;
-        saveDraftToSession(
-          step,
-          creative.state,
-          { ...launch.state, imageDataUrl: img, finalImageDataUrl: finalImg },
-          studio.snapshot,
-        );
-        setLastSavedAt(Date.now());
-      })();
-    }, 800);
-    return () => clearTimeout(timer);
-  }, [
-    step,
-    creative.state,
-    launch.state,
-    studio.snapshot,
-    resumeDraft,
-  ]);
 
   // productId 변경 시 제품의 targetUrl → landingUrl 자동 프리필 (비어있을 때만)
   useEffect(() => {
@@ -472,6 +503,7 @@ function CreateFlow() {
     const { params, bp, bpEntry, isCustomBrandMode, personaEntry } = buildGenerateContext(personaIdOverride);
 
     const applyGenerated = (data: GenerateCreativeResult) => {
+      recordCreateEvent(CREATE_EVENTS.creativeGenerated);
       studio.applyGenerated(data);
       setAttribution(data.attribution ?? null);
       // ADR-052 — 빈 필드 보상 넛지. 프로필 모드에서만(직접입력·무프로필은 프로필 채울 대상 없음).
@@ -619,13 +651,20 @@ function CreateFlow() {
     setAddedTarget(null);
     setBeforeAfter(null);
     setCustomBrand(false);
-    setStep(0);
+    appliedQuickStartRef.current = null;
+    setReviewing(false);
+    goToStep(0);
   };
 
   // 브리프 → 소재. boost_post 는 소재 단계를 건너뛰고 바로 게재로 간다(nextStepAfterBrief).
   const startGenerate = () => {
+    if (!productId && !brand.trim() && !nudgeBrandProfileId) {
+      showToast("홍보할 브랜드나 제품을 입력해주세요");
+      return;
+    }
+    recordCreateEvent(CREATE_EVENTS.started);
     const next = nextStepAfterBrief(creative.state.outcome);
-    setStep(next);
+    goToStep(next);
     studio.setPhase("compare");
     if (next !== 1) return;
     if (!shouldTriggerGenerate(!!studio.headlines, studio.generatedForOutcome, creative.state.outcome)) return;
@@ -660,7 +699,9 @@ function CreateFlow() {
         launch.dispatch({ type: "SET_PERSONA_LOCATION", value: pe.location ?? [] });
       }
     }
-    setStep(2);
+    setReviewing(false);
+    recordCreateEvent(CREATE_EVENTS.deliveryEntered);
+    goToStep(2);
   };
 
   // 3안 카드 하나를 고르면 헤드라인·본문·부제가 같은 인덱스로 함께 움직인다.
@@ -672,9 +713,16 @@ function CreateFlow() {
     if (selected.primaryText) creative.dispatch({ type: "SET_PRIMARY_TEXT", primaryText: selected.primaryText });
   };
 
+  // URL 단계 전환으로 페이지가 다시 마운트돼도 소재 내부 단계가 이전 초안으로 되돌아가지 않게 즉시 저장한다.
+  const persistStudioPhase = (nextPhase: StudioPhase) => {
+    studio.setPhase(nextPhase);
+    saveDraftToSession(step, creative.state, launch.state, { ...studio.snapshot, phase: nextPhase });
+  };
+
 
   return (
-    <div className={`px-12 py-9 pb-16 max-w-[1280px] w-full mx-auto flex flex-col gap-7 min-h-[calc(100vh-64px)]${browseMode ? " justify-center" : ""}`} data-screen-label="광고 만들기">
+    <div className={`px-12 py-9 pb-16 max-w-[1280px] w-full mx-auto flex flex-col gap-7 min-h-[calc(100vh-64px)]${browseMode && step !== 0 ? " justify-center" : ""}`} data-screen-label="광고 만들기">
+      {!launched && <CreateFlowProgress current={reviewing ? 3 : step as 0 | 1 | 2} />}
       {prefillBanner && (
         <div className="flex items-center gap-3 p-[14px] bg-[var(--w-primary-soft)] rounded-xl">
           <Icon name="sparkles" size={16} />
@@ -724,6 +772,9 @@ function CreateFlow() {
           setPersonaId={setPersonaId}
           customBrand={customBrand}
           setCustomBrand={setCustomBrand}
+          mode={createMode}
+          setMode={setCreateMode}
+          quickStart={recentQuickStart?.settings ?? null}
           onGenerate={startGenerate}
         />
       )}
@@ -740,11 +791,15 @@ function CreateFlow() {
           selectedIdx={studio.headlineIdx}
           onSelect={handleSelectVersion}
           imageUrl={launch.state.finalImageDataUrl ?? launch.state.imageDataUrl}
+          browseMode={browseMode}
           personaId={personaId}
           regenerating={generating}
           onRegenerate={() => handleGenerate()}
-          onEditBrief={() => setStep(0)}
-          onNext={() => studio.setPhase("image")}
+          onEditBrief={() => goToStep(0)}
+          onNext={() => {
+            handleSelectVersion(studio.headlineIdx);
+            persistStudioPhase("image");
+          }}
           attribution={attribution}
           nudge={nudge}
           onNudgeAdd={handleNudgeAdd}
@@ -763,8 +818,8 @@ function CreateFlow() {
           setImageDataUrl={(v) => launch.dispatch({ type: "SET_IMAGE_DATA_URL", value: v })}
           finalImageDataUrl={launch.state.finalImageDataUrl}
           setFinalImageDataUrl={(v) => launch.dispatch({ type: "SET_FINAL_IMAGE_DATA_URL", value: v })}
-          onBackToCompare={() => studio.setPhase("compare")}
-          onNext={() => studio.setPhase("refine")}
+          onBackToCompare={() => persistStudioPhase("compare")}
+          onNext={() => persistStudioPhase("refine")}
         />
       )}
 
@@ -796,9 +851,19 @@ function CreateFlow() {
         <LaunchStep
           onNext={() => {}}
           goSettings={() => router.push("/setup")}
-          goCreative={() => { setStep(1); studio.setPhase("refine"); }}
+          goCreative={() => { goToStep(1); studio.setPhase("refine"); }}
           brandName={brand ? brand.slice(0, 20) : undefined}
+          quickStart={buildQuickStartSettings(creative.state, launch.state, {
+            brandProfileId: nudgeBrandProfileId ?? undefined,
+            productId: productId ?? undefined,
+            target,
+          })}
+          preferQuickTargeting={createMode === "quick" && !!recentQuickStart}
           onRestart={handleRestart}
+          onReview={() => goToStep(2, true)}
+          reviewing={reviewing}
+          onBackReview={() => goToStep(2)}
+          onEditBrief={() => goToStep(0)}
         />
       )}
 

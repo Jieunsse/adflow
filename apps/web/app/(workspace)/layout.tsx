@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import WorkspaceNav from "@widgets/sidebar/WorkspaceNav";
 import NotificationStreamMount from "@shared/ui/NotificationStreamMount";
+import { PageContainer } from "@shared/ui/PageContainer";
 import OnboardingGuard from "@widgets/onboarding-guard";
 import BrandConnectionSync from "@features/brand-profile/ui/BrandConnectionSync";
 
@@ -22,7 +23,9 @@ export default async function WorkspaceLayout({ children }: { children: React.Re
       <BrandConnectionSync />
       <div className="grid grid-cols-1 lg:grid-cols-[248px_1fr] min-h-screen bg-[var(--w-bg-alternative)]">
         <WorkspaceNav />
-        <main className="min-w-0">{children}</main>
+        <main className="min-w-0 p-6">
+          <PageContainer>{children}</PageContainer>
+        </main>
       </div>
     </div>
   );

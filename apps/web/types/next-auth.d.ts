@@ -20,10 +20,6 @@ declare module "next-auth" {
 
 declare module "next-auth/jwt" {
   interface JWT {
-    // Spring 백엔드 토큰. 서버 전용 — Session 에 노출하지 않는다(설계 §4).
-    backendToken?: string
-    backendTokenExpiresAt?: string
-    backendRefreshToken?: string
     accessToken?: string
     igAccessToken?: string
     adAccountId?: string

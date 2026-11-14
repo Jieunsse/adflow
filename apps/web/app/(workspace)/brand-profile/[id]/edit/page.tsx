@@ -6,6 +6,7 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Icon from "@shared/ui/Icon";
 import { Button } from "@shared/ui/Button";
+import { FormField } from "@shared/ui/FormField";
 import { useToast } from "@shared/ui/Toast";
 import { cn } from "@shared/lib/cn";
 import {
@@ -42,19 +43,7 @@ const TABS: Tab[] = ["style", "policy", "persona", "products", "materials"];
 const TEXTAREA_CLS =
   "w-full px-[14px] py-3 border border-[var(--w-line-normal)] rounded-xl bg-[var(--w-bg-elevated)] font-medium text-[14px] leading-[1.6] tracking-[0.004em] text-[var(--w-fg-strong)] outline-none transition-[border-color,box-shadow] duration-[120ms] placeholder:text-[var(--w-fg-alternative)] focus:border-[var(--w-primary-normal)] focus:shadow-[0_0_0_4px_rgba(0,102,255,0.14)] resize-y";
 
-function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
-  return (
-    <div className="flex flex-col gap-1.5">
-      <label className="font-semibold text-[14px] leading-[1.3] tracking-[-0.008em] text-[var(--w-fg-strong)]">
-        {label}
-      </label>
-      {hint && (
-        <p className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)] m-0">{hint}</p>
-      )}
-      {children}
-    </div>
-  );
-}
+const Field = FormField;
 
 function ReadField({ label, value }: { label: string; value?: string }) {
   return (

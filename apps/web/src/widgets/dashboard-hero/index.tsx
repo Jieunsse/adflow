@@ -29,7 +29,7 @@ export function DashboardHero({ loading, narrative, rangeLabel, periodLabel, onS
 
   return (
     <section
-      className="rounded-[20px] px-11 py-10 grid gap-12 items-center grid-cols-1 lg:grid-cols-[1.35fr_1fr]"
+      className="rounded-[var(--w-radius-20)] p-7 sm:p-8 grid gap-8 lg:gap-10 items-center grid-cols-1 lg:grid-cols-[1.35fr_1fr]"
       style={{ background: "var(--w-surface-narrative)", color: "var(--w-on-narrative)" }}
     >
       <div className="flex flex-col gap-4">
@@ -66,7 +66,7 @@ export function DashboardHero({ loading, narrative, rangeLabel, periodLabel, onS
 
         {supportLine && (
           <p
-            className="w-body m-0 max-w-[520px]"
+            className="w-body-reading m-0 max-w-[520px]"
             style={{ color: "var(--w-on-narrative-neutral)" }}
           >
             {supportLine}
@@ -79,7 +79,7 @@ export function DashboardHero({ loading, narrative, rangeLabel, periodLabel, onS
         style={{ background: "var(--w-surface-narrative-raised)" }}
       >
         <div className={ROW}>
-          <span className="font-medium text-[13px]" style={{ color: "var(--w-on-narrative-alternative)" }}>
+        <span className="w-caption" style={{ color: "var(--w-on-narrative-alternative)" }}>
             공헌이익
           </span>
           {contribution != null ? (
@@ -102,7 +102,7 @@ export function DashboardHero({ loading, narrative, rangeLabel, periodLabel, onS
         <div className="h-px" style={{ background: "var(--w-surface-narrative-line)" }} />
 
         <div className={ROW}>
-          <span className="font-medium text-[13px]" style={{ color: "var(--w-on-narrative-alternative)" }}>
+          <span className="w-caption" style={{ color: "var(--w-on-narrative-alternative)" }}>
             ROAS {bep != null && "· 손익분기"}
           </span>
           <span className="font-bold text-[16px]">
@@ -128,7 +128,7 @@ export function DashboardHero({ loading, narrative, rangeLabel, periodLabel, onS
         )}
 
         <div className={ROW}>
-          <span className="font-medium text-[13px]" style={{ color: "var(--w-on-narrative-alternative)" }}>
+          <span className="w-caption" style={{ color: "var(--w-on-narrative-alternative)" }}>
             전환수 · CPA
           </span>
           <span className="font-bold text-[16px] [font-variant-numeric:tabular-nums]">
@@ -166,7 +166,7 @@ export function DashboardHeroNoConversion({
 
   return (
     <section
-      className="rounded-[20px] px-11 py-10 grid gap-12 items-center grid-cols-1 lg:grid-cols-[1.35fr_1fr]"
+      className="rounded-[var(--w-radius-20)] p-7 sm:p-8 grid gap-8 lg:gap-10 items-center grid-cols-1 lg:grid-cols-[1.35fr_1fr]"
       style={{ background: "var(--w-surface-narrative)", color: "var(--w-on-narrative)" }}
     >
       <div className="flex flex-col gap-4">
@@ -181,7 +181,7 @@ export function DashboardHeroNoConversion({
           <br />
           <span style={{ color: "var(--w-on-narrative-alternative)" }}>매출은 아직 알 수 없어요.</span>
         </h1>
-        <p className="w-body m-0 max-w-[520px]" style={{ color: "var(--w-on-narrative-neutral)" }}>
+        <p className="w-body-reading m-0 max-w-[520px]" style={{ color: "var(--w-on-narrative-neutral)" }}>
           전환을 측정하는 캠페인이 없어서 손익을 계산하지 못했어요. 전환 측정을 설정하면 이 자리에 남긴 금액을 보여드려요.
         </p>
       </div>
@@ -197,7 +197,7 @@ export function DashboardHeroNoConversion({
           <div key={label} className="flex flex-col gap-3.5">
             {i > 0 && <div className="h-px" style={{ background: "var(--w-surface-narrative-line)" }} />}
             <div className={ROW}>
-              <span className="font-medium text-[13px]" style={{ color: "var(--w-on-narrative-alternative)" }}>
+              <span className="w-caption" style={{ color: "var(--w-on-narrative-alternative)" }}>
                 {label}
               </span>
               <span className="font-bold text-[16px] [font-variant-numeric:tabular-nums]">{value}</span>

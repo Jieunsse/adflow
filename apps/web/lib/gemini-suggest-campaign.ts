@@ -23,10 +23,8 @@ export interface SuggestCampaignResult {
   suggestions: [CampaignSuggestion, CampaignSuggestion, CampaignSuggestion];
 }
 
-const isConfigured = isGeminiConfigured();
-
 async function suggest(params: SuggestCampaignParams): Promise<SuggestCampaignResult> {
-  const genAI = new GoogleGenerativeAI(requireGeminiKey());
+  const genAI = new GoogleGenerativeAI(await requireGeminiKey());
   const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
 
   const brandCtx = [
@@ -95,4 +93,9 @@ ${objectiveList}
   return { suggestions };
 }
 
-export const geminiSuggestCampaign = { isConfigured, suggest };
+export const geminiSuggestCampaign = {
+  get isConfigured() {
+    return isGeminiConfigured();
+  },
+  suggest,
+};

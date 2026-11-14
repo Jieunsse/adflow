@@ -1,6 +1,6 @@
 "use client";
 
-// "오늘의 결정" — 효과가 큰 순서로 1·2·3. 카드 하나 = 문장 하나 + 근거 숫자 + 지금 누를 버튼.
+// "오늘의 결정" (기능 5) — 사람이 해야 하는 일(서버)을 먼저, 성과에서 주목할 항목을 뒤에. 3개까지.
 
 import { Button } from "@shared/ui/Button";
 import { Skeleton } from "@shared/ui/Skeleton";
@@ -39,43 +39,62 @@ export type ActionQueueProps = {
   loading: boolean;
   items: ActionItem[];
   onAction: (button: ActionButton) => void;
+  onViewAll: () => void;
 };
 
-export function ActionQueue({ loading, items, onAction }: ActionQueueProps) {
+export function ActionQueue({ loading, items, onAction, onViewAll }: ActionQueueProps) {
   return (
-    <div className="flex flex-col gap-3.5">
-      <div className="flex items-baseline gap-2.5">
+    <div className="flex flex-col gap-5">
+      <div className="flex items-baseline gap-3">
         <h2 className="w-h2 m-0">오늘의 결정</h2>
         <span className="w-caption">우선순위대로 정리했어요</span>
       </div>
 
       {loading ? (
-        <>
+        <div className="grid grid-cols-1 gap-3.5">
           <Skeleton className="h-[220px] rounded-2xl" />
           <Skeleton className="h-[160px] rounded-2xl" />
-        </>
+        </div>
       ) : items.length === 0 ? (
-        <Card className="rounded-2xl flex items-center gap-3.5 shadow-[var(--w-shadow-card)]">
+        <Card className="rounded-[var(--w-radius-12)] flex items-center gap-3.5">
           <span className="grid place-items-center w-8 h-8 shrink-0 rounded-full bg-[var(--w-status-positive-soft)] text-[var(--w-status-positive)]">
             <Icon name="check" size={17} />
           </span>
           <div>
-            <div className="w-h4">지금 손볼 게 없어요</div>
+            <div className="w-h4">현재 우선 확인할 이슈가 없어요</div>
             <div className="w-caption mt-1">
-              새는 곳도, 급하게 올릴 곳도 안 보여요. 이대로 지켜봐도 괜찮아요.
+              세부 성과가 궁금하면 상세 분석에서 기간과 캠페인을 비교해볼 수 있어요.
             </div>
+            <Button className="mt-3" variant="secondary" size="sm" type="button" onClick={onViewAll}>상세 분석 보기</Button>
           </div>
         </Card>
       ) : (
-        items.map((item, i) => <ActionCard key={item.id} item={item} rank={i + 1} onAction={onAction} />)
+        <div className="grid grid-cols-1 gap-3.5">
+          {items.map((item, i) => (
+            <ActionCard
+              key={item.id}
+              item={item}
+              rank={i + 1}
+              onAction={onAction}
+            />
+          ))}
+        </div>
       )}
     </div>
   );
 }
 
-function ActionCard({ item, rank, onAction }: { item: ActionItem; rank: number; onAction: (b: ActionButton) => void }) {
+function ActionCard({
+  item,
+  rank,
+  onAction,
+}: {
+  item: ActionItem;
+  rank: number;
+  onAction: (b: ActionButton) => void;
+}) {
   return (
-    <Card className="rounded-2xl py-[26px] px-7 flex gap-5 shadow-[var(--w-shadow-card)] transition-shadow duration-150 hover:shadow-[var(--w-shadow-strong)]">
+    <Card className="rounded-[var(--w-radius-12)] p-6 flex gap-5 h-full transition-colors duration-150 hover:border-[var(--w-line-strong)]">
       <span
         className="shrink-0 grid place-items-center w-8 h-8 rounded-full font-bold text-[15px] leading-none"
         style={{ background: RANK_BG[item.accent], color: RANK_FG[item.accent] }}
@@ -85,19 +104,19 @@ function ActionCard({ item, rank, onAction }: { item: ActionItem; rank: number; 
 
       <div className="flex-1 min-w-0 flex flex-col gap-2.5">
         <h3
-          className="w-h4 m-0 max-w-[52ch]"
+          className="w-h3 m-0 max-w-[52ch]"
           style={{ textWrap: "pretty" }}
         >
           {item.title}
         </h3>
-        <p className="w-body m-0 max-w-[72ch]" style={{ textWrap: "balance" }}>
+        <p className="w-body-reading m-0 max-w-[66ch]" style={{ textWrap: "balance" }}>
           {item.body}
         </p>
 
         {item.stats.length > 0 && (
           <div
             className={cn(
-              "w-fit max-w-full rounded-xl py-3.5 px-4 flex gap-5",
+              "w-full rounded-xl py-3.5 px-4 flex gap-5",
               item.stats.length === 1 ? "items-center gap-3.5 flex-wrap" : "items-stretch",
             )}
             style={{ background: STAT_BG[item.accent] }}
@@ -129,7 +148,7 @@ function ActionCard({ item, rank, onAction }: { item: ActionItem; rank: number; 
           </div>
         )}
 
-        <div className="flex gap-2 mt-0.5 flex-wrap">
+        <div className="flex gap-2 mt-auto pt-0.5 flex-wrap">
           {item.buttons.map((b) => (
             <Button key={b.label} variant={b.variant} size="md" type="button" onClick={() => onAction(b)}>
               {b.label}

@@ -50,9 +50,9 @@ export async function POST(req: NextRequest) {
     return new Response(JSON.stringify({ error: '프롬프트 또는 레퍼런스 이미지를 입력해주세요.' }), { status: 400 })
   }
 
-  // 이미지 생성은 둘러보기(browse)에서도 실제 Gemini 를 탄다 — mock 단락 없음. (GOOGLE_AI_API_KEY 필요)
-  if (!geminiImage.isConfigured) {
-    return new Response(JSON.stringify({ error: 'GOOGLE_AI_API_KEY 가 .env.local 에 설정되지 않았어요.' }), { status: 503 })
+  // 이미지 생성은 둘러보기(browse)에서도 실제 Gemini 를 탄다 — mock 단락 없음.
+  if (!(await geminiImage.isConfigured)) {
+    return new Response(JSON.stringify({ error: 'Gemini API 키가 설정되지 않았어요.' }), { status: 503 })
   }
 
   return sseStream((emit) => geminiImage.generateStream(params, emit))

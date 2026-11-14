@@ -22,8 +22,8 @@ import org.springframework.web.server.ResponseStatusException;
 @Component
 public class FileStore {
 
-  /** 설계 §5 의 버킷 2개. 이 목록 밖은 받지 않는다. */
-  private static final Set<String> BUCKETS = Set.of("product-images", "reference-materials");
+  /** 설계 §5 의 버킷 2개와 인스타그램 게시용 공개 미디어. 이 목록 밖은 받지 않는다. */
+  private static final Set<String> BUCKETS = Set.of("product-images", "reference-materials", "published-media");
 
   private static final Pattern SEGMENT = Pattern.compile("[A-Za-z0-9._-]{1,128}");
 

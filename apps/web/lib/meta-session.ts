@@ -55,6 +55,12 @@ export function requireMetaSession(
   }
 }
 
+// 광고 계정·페이지는 지금 고른 브랜드의 연결을 따른다(기능 10). 브랜드를 바꾸면 BrandConnectionSync 가 세션을
+// 그 브랜드 값으로 맞추므로, 여기서 다른 저장소의 값으로 덮지 않는다. 호출부가 많아 이름과 모양은 그대로 둔다.
+export async function getWorkspaceSession(session: Session | null): Promise<Session | null> {
+  return session
+}
+
 export interface MetaSessionOptions {
   // browse 세션일 때 route 고유 mock 페이로드를 반환(guard 는 payload 를 소유하지 않음).
   // 없으면 browse 세션은 real-only 로 간주 → requireMetaSession 이 401.
@@ -75,7 +81,8 @@ export function withMetaSession<C = unknown>(
       if (session?.browseMode && opts.onBrowse) {
         return opts.onBrowse(session, req)
       }
-      const s = requireMetaSession(session, requires)
+      const workspaceSession = await getWorkspaceSession(session)
+      const s = requireMetaSession(workspaceSession, requires)
       return handler(req, s, ctx)
     })
 }

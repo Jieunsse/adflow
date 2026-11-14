@@ -156,7 +156,7 @@ export default function ImageConceptStep(p: Props) {
   // StrictMode 가 흉내내는 언마운트→재마운트에서 useMutation 옵저버가 새로 만들어지면서
   // 날아간 요청의 onSuccess 가 통째로 유실됐다(3컷이 영영 "잡는 중"에 머물던 원인).
   const suggestAndGenerate = async (moodId: MoodId = mood) => {
-    if (!state.primaryText?.trim()) {
+    if (!browseMode && !state.primaryText?.trim()) {
       showToast("카피를 먼저 골라주세요");
       return;
     }
@@ -204,7 +204,7 @@ export default function ImageConceptStep(p: Props) {
   useEffect(() => {
     if (autoRanRef.current) return;
     if (images?.some(Boolean)) return;
-    if (!state.primaryText?.trim()) return;
+    if (!browseMode && !state.primaryText?.trim()) return;
     autoRanRef.current = true;
     // 첫 페인트 뒤로 미룬다 — 이펙트 안에서 곧바로 setState 하면 렌더가 한 번 더 돈다.
     // cleanup 에서 플래그를 되돌리므로 StrictMode 의 가짜 언마운트에도 정확히 한 번만 발사된다.
@@ -214,7 +214,7 @@ export default function ImageConceptStep(p: Props) {
       autoRanRef.current = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.primaryText]);
+  }, [state.primaryText, browseMode]);
 
   // 베이스 컷이 바뀌면 위에 구워 둔 텍스트는 무효 — 이중 인쇄 방지.
   const pick = (src: string) => {

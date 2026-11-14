@@ -231,7 +231,7 @@ export const geminiImage = {
   ): Promise<void> {
     const { variants, common } = normalizeVariants(params);
     const preserve = !!params.preserveReference;
-    const apiKey = requireGeminiKey();
+    const apiKey = await requireGeminiKey();
     const ai = new GoogleGenAI({ apiKey });
 
     let hasAny = false;
@@ -257,7 +257,7 @@ export const geminiImage = {
   async generate(params: GenerateImageParams): Promise<GenerateImageResult> {
     const { variants, common } = normalizeVariants(params);
     const preserve = !!params.preserveReference;
-    const apiKey = requireGeminiKey();
+    const apiKey = await requireGeminiKey();
     const ai = new GoogleGenAI({ apiKey });
 
     const results = await Promise.all(

@@ -61,11 +61,11 @@ if (port !== FIRST_PORT) {
   console.log(`  Meta 콘솔에 등록된 redirect_uri 가 ${FIRST_PORT} 라서요.\n`)
 }
 
-// 사용자가 준 플래그는 그대로 넘긴다 — 삼키면 `pnpm dev <플래그>` 가 조용히 무시된다.
+// 사용자가 준 플래그는 그대로 넘긴다 — 삼키면 `pnpm dev -- <플래그>` 가 조용히 무시된다.
 const nextArgs = ["next", "dev", "--turbopack", ...extraArgs]
 if (!hasPortFlag(extraArgs)) nextArgs.push("-p", String(port))
 
-const child = spawn("npx", nextArgs, {
+const child = spawn("pnpm", ["exec", ...nextArgs], {
   stdio: "inherit",
   env: { ...process.env, NEXTAUTH_URL: origin, PORT: String(port) },
 })

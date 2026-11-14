@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import { useLaunchDraft, type LaunchedCampaign } from "@entities/campaign/model";
 import { saveLaunchedCampaign } from "@entities/campaign/launched-storage";
 import { useApiMutation } from "@shared/lib/api/useApiMutation";
+import { campaignKeys } from "@entities/campaign/api";
 import { useToast } from "@shared/ui/Toast";
 import { type LaunchResponse } from "@entities/campaign/model";
 import { COUNTRIES } from "@shared/lib/geo-options";
@@ -40,7 +41,9 @@ export default function BoostPostFlow({ onNext }: Props) {
   const { state, dispatch } = useLaunchDraft();
   const { data: session } = useSession();
   const browseMode = !!session?.browseMode;
-  const boostMutation = useApiMutation<object, LaunchResponse>("/api/boost-post");
+  const boostMutation = useApiMutation<object, LaunchResponse>("/api/boost-post", {
+    invalidateKeys: [campaignKeys.all],
+  });
   const showToast = useToast();
 
   const [boostGoal, setBoostGoal] = useState<'engagement' | 'profile' | 'website' | 'message'>('engagement');

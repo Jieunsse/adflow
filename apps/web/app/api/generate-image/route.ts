@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
   }
   return withRouteHandler(
     geminiImage.isConfigured,
-    'GOOGLE_AI_API_KEY 가 .env.local 에 설정되지 않았어요.',
+    'Gemini API 키가 설정되지 않았어요.',
     async () => {
       // 비스트림 경로(인스타 포스트 이미지)는 단일 prompt × count — variants 통일 계약으로 흡수.
       const body = (await req.json()) as { prompt?: unknown; count?: unknown; referenceImages?: unknown }

@@ -94,9 +94,9 @@ function ConversationRow({
       type="button"
       onClick={onClick}
       className={cn(
-        "w-full flex items-center gap-3 py-3 px-3.5 rounded-xl border text-left cursor-pointer transition-colors",
+        "relative w-full flex items-center gap-3 py-3 px-3.5 rounded-lg border border-transparent text-left cursor-pointer transition-colors",
         active
-          ? "border-[var(--w-primary-normal)] bg-[var(--w-primary-tint)]"
+          ? "bg-[var(--w-primary-soft)] before:absolute before:inset-y-3 before:left-0 before:w-0.5 before:rounded-r-full before:bg-[var(--w-primary-normal)]"
           : "border-transparent bg-transparent hover:bg-[var(--w-bg-alternative)]",
       )}
     >
@@ -253,7 +253,7 @@ function Composer({
         value={text}
         onChange={(e) => setText(e.target.value)}
         onKeyDown={onKeyDown}
-        placeholder="메시지를 입력하세요."
+        placeholder="메시지 보내기"
         rows={1}
         className="flex-1 resize-none outline-none rounded-2xl py-2.5 px-3.5 bg-[var(--w-bg-alternative)] border border-transparent focus:border-[var(--w-primary-normal)] focus:bg-[var(--w-bg-normal)] transition-colors"
         style={{
@@ -363,9 +363,9 @@ function ThreadView({
   }, [thread.messages.length, conversationId]);
 
   return (
-    <div className="flex-1 flex flex-col" style={{ minHeight: 480 }}>
-      <div className="h-14 flex-none flex items-center gap-3 px-4 border-b border-[var(--w-line-alternative)]">
-        <Avatar handle={thread.participantHandle} size={32} />
+    <div className="flex-1 flex flex-col" style={{ minHeight: 520 }}>
+      <div className="h-16 flex-none flex items-center gap-3 px-5 border-b border-[var(--w-line-alternative)]">
+        <Avatar handle={thread.participantHandle} size={36} />
         <div className="flex flex-col">
           <span
             style={{
@@ -381,7 +381,7 @@ function ThreadView({
               color: "var(--w-fg-neutral)",
             }}
           >
-            메시지 {thread.messages.length}건
+            Instagram DM · 메시지 {thread.messages.length}건
           </span>
         </div>
       </div>
@@ -469,33 +469,24 @@ export default function Messages() {
 
   const inbox = inboxQ.data;
   const conversations = inbox.conversations;
-  const selectedConv = conversations.find((c) => c.id === selected) ?? null;
+  const selectedConv = conversations.find((c) => c.id === selected) ?? conversations[0] ?? null;
 
   return (
     <div className="flex flex-col gap-3">
-      {inbox.mock && <MessagesPermissionBanner />}
+      {inbox.mock && !session?.browseMode && <MessagesPermissionBanner />}
       <Card className="p-0 overflow-hidden">
         <div className="flex" style={{ minHeight: 520 }}>
-          <div className="w-[340px] flex-none border-r border-[var(--w-line-alternative)] flex flex-col">
-            <div className="h-14 flex-none px-4 border-b border-[var(--w-line-alternative)] flex items-center justify-between">
-              <span
-                style={{
-                  font: "600 13.5px/1.3 var(--w-font-sans)",
-                  color: "var(--w-fg-strong)",
-                }}
-              >
-                메시지함
-              </span>
-              <span
-                style={{
-                  font: "500 11.5px/1 var(--w-font-sans)",
-                  color: "var(--w-fg-neutral)",
-                }}
-              >
-                {conversations.length}건
-              </span>
+          <div className="w-[340px] flex-none border-r border-[var(--w-line-alternative)] flex flex-col bg-[var(--w-bg-alternative)]">
+            <div className="h-16 flex-none px-5 border-b border-[var(--w-line-alternative)] flex items-center justify-between bg-[var(--w-bg-elevated)]">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg grid place-items-center bg-[var(--w-primary-soft)] text-[var(--w-primary-normal)]">
+                  <Icon name="send" size={14} />
+                </div>
+                <span className="w-body-strong">DM</span>
+              </div>
+              <span className="w-caption text-[var(--w-fg-neutral)]">{conversations.length}개 대화</span>
             </div>
-            <div className="flex-1 overflow-y-auto py-2 px-2 flex flex-col gap-1">
+            <div className="flex-1 overflow-y-auto py-2 px-2 flex flex-col gap-1 bg-[var(--w-bg-elevated)]">
               {conversations.length === 0 ? (
                 <div
                   className="flex-1 grid place-items-center text-center px-4 text-[var(--w-fg-neutral)]"
@@ -508,7 +499,7 @@ export default function Messages() {
                   <ConversationRow
                     key={c.id}
                     c={c}
-                    active={selected === c.id}
+                    active={selectedConv?.id === c.id}
                     onClick={() => setSelected(c.id)}
                   />
                 ))
@@ -516,7 +507,7 @@ export default function Messages() {
             </div>
           </div>
           <ThreadPanel
-            conversationId={selected}
+            conversationId={selectedConv?.id ?? null}
             participantId={selectedConv?.participantId ?? ""}
           />
         </div>

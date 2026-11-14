@@ -83,7 +83,7 @@ export default function BrandProfileViewPage() {
   const refCount = entry.copyReferences?.length ?? 0;
 
   return (
-    <div className="px-12 py-9 pb-20 max-w-[1180px] w-full mx-auto">
+    <div className="px-12 py-9 pb-20 max-w-[1180px] w-full mx-auto" data-screen-label="브랜드 프로필 상세">
       {/* 뒤로가기 */}
       <Link
         href="/brand-profile"

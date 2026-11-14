@@ -12,7 +12,7 @@ type Body = {
 export async function POST(req: NextRequest) {
   return withRouteHandler(
     geminiPostSuggest.isConfigured,
-    "GOOGLE_AI_API_KEY 가 .env.local 에 설정되지 않았어요.",
+    "Gemini API 키가 설정되지 않았어요.",
     async () => {
       const body = (await req.json()) as Body;
       const hint = (body.hint ?? "").trim();

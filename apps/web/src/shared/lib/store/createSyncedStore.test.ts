@@ -150,8 +150,8 @@ describe("createSyncedStore", () => {
     await useStore.getState().hydrate("real@x.com");
     useStore.getState().add({ id: "a", v: 1 });
     await vi.waitFor(() => expect(useStore.getState().lastError).toBeTruthy());
-    // 로컬 값은 그대로 남는다 — 저장은 실패해도 사용자가 쓴 내용을 지우지 않는다.
-    expect(useStore.getState().items).toHaveLength(1);
+    // 서버 저장 실패 시 optimistic 변경을 되돌린다.
+    expect(useStore.getState().items).toHaveLength(0);
   });
 
   it("네트워크가 끊겨도 lastError 로 드러나요", async () => {
@@ -205,6 +205,7 @@ describe("createSyncedStore", () => {
     useStore.getState().removeById("c1");
     expect(useStore.getState().items).toHaveLength(0);
     // DELETE 쿼리도 campaignId 로 나가야 한다.
+    await vi.waitFor(() => expect(fetchMock.mock.calls.some((c) => c[1]?.method === "DELETE")).toBe(true));
     const deleteCall = fetchMock.mock.calls.find((c) => c[1]?.method === "DELETE");
     expect(deleteCall?.[0]).toBe("/api/test-keyed?id=c1");
   });

@@ -30,7 +30,8 @@ export async function saveBrandConnection(brandId: string, c: BrandConnection): 
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(c),
   }).catch(() => null);
-  if (res?.ok) return null;
+  // 가드가 다른 화면으로 돌려보내면 fetch 는 그 HTML 을 200 으로 받는다. 저장된 것으로 보면 안 된다.
+  if (res?.ok && !res.redirected) return null;
   const data = (await res?.json().catch(() => ({}))) as { error?: string } | undefined;
   return (
     data?.error ??
@@ -43,6 +44,6 @@ export async function saveBrandConnection(brandId: string, c: BrandConnection): 
 export async function fetchBrandConnection(brandId: string): Promise<BrandConnection | null> {
   const res = await fetch(`/api/brands/${encodeURIComponent(brandId)}`).catch(() => null);
   if (res?.status === 404) return {};
-  if (!res?.ok) return null;
+  if (!res?.ok || res.redirected) return null;
   return (await res.json()) as BrandConnection;
 }

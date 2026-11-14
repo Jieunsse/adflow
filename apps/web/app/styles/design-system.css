@@ -212,6 +212,7 @@
   --w-fg-inverse:       #ffffff;
 
   --w-line-normal:      rgba(112,115,124,0.22);
+  --w-line-container:   rgba(112,115,124,0.30);
   --w-line-neutral:     rgba(112,115,124,0.16);
   --w-line-alternative: rgba(112,115,124,0.08);
   --w-line-strong:      rgba(46,47,51,0.88);
@@ -332,6 +333,7 @@
   --w-fg-inverse:       #171719;
 
   --w-line-normal:      rgba(255,255,255,0.22);
+  --w-line-container:   rgba(255,255,255,0.30);
   --w-line-neutral:     rgba(255,255,255,0.16);
   --w-line-alternative: rgba(255,255,255,0.08);
   --w-line-strong:      rgba(255,255,255,0.88);
@@ -350,6 +352,16 @@
   --w-shadow-card:      0 1px 2px rgba(0,0,0,0.4), 0 4px 12px rgba(0,0,0,0.45);
   /* 페이지 배경(#171719)보다 한 단 더 깊게 — 다크에서도 히어로가 판으로 떠 보이게. */
   --w-surface-narrative: #0f0f10;
+}
+
+.adflow .w-page-container {
+  --w-line-normal: var(--w-line-container);
+}
+
+.adflow .w-page-container > [data-screen-label] {
+  max-width: none;
+  margin-inline: 0;
+  padding-inline: var(--w-space-7);
 }
 
 .adflow .w-display-1 {

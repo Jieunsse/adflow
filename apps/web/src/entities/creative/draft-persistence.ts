@@ -27,14 +27,14 @@ export type StudioSnapshot = {
 };
 
 export type CreateDraftSnapshot = {
-  step: number;
+  step: 0 | 1 | 2;
   creative: CreativeState;
   launch: LaunchState;
   studio: StudioSnapshot;
   savedAt: number;
 };
 
-export function serializeDraft(step: number, creative: CreativeState, launch: LaunchState, studio: StudioSnapshot): string {
+export function serializeDraft(step: 0 | 1 | 2, creative: CreativeState, launch: LaunchState, studio: StudioSnapshot): string {
   const snapshot: CreateDraftSnapshot = { step, creative, launch, studio, savedAt: Date.now() };
   return JSON.stringify(snapshot);
 }
@@ -42,7 +42,7 @@ export function serializeDraft(step: number, creative: CreativeState, launch: La
 export function parseDraft(raw: string): CreateDraftSnapshot | null {
   try {
     const parsed = JSON.parse(raw) as Partial<CreateDraftSnapshot>;
-    if (!parsed || typeof parsed !== "object" || !parsed.creative || !parsed.launch || !parsed.studio) return null;
+    if (!parsed || typeof parsed !== "object" || !parsed.creative || !parsed.launch || !parsed.studio || ![0, 1, 2].includes(parsed.step as number)) return null;
     return parsed as CreateDraftSnapshot;
   } catch {
     return null;
@@ -54,7 +54,7 @@ function withoutImages(launch: LaunchState): LaunchState {
   return { ...launch, imageDataUrl: null, finalImageDataUrl: null };
 }
 
-export function saveDraftToSession(step: number, creative: CreativeState, launch: LaunchState, studio: StudioSnapshot): void {
+export function saveDraftToSession(step: 0 | 1 | 2, creative: CreativeState, launch: LaunchState, studio: StudioSnapshot): void {
   if (typeof window === "undefined") return;
   try {
     sessionStorage.setItem(DRAFT_STORAGE_KEY, serializeDraft(step, creative, launch, studio));

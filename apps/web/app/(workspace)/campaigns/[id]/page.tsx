@@ -29,11 +29,13 @@ import { getMockCampaignAdIds, seedMockAdRows } from "@/lib/mock-campaigns";
 import { CTAS } from "@entities/creative/options";
 import { DEMO_AD_IMAGES } from "@/lib/demo/mock-images";
 import type { CampaignSummary, InsightsPeriod } from "@/lib/meta-ads";
-import type { AdInsightsRow } from "@entities/insights/types";
+import { updateCampaignAdSet, replaceCampaignCreative } from "@entities/campaign/api";
+import { campaignDetailKeys, fetchCampaignDetail, fetchCampaignInsights, type CampaignDetailInsights } from "@entities/campaign/detail-api";
 import { Button, buttonVariants } from "@shared/ui/Button";
 import { Card } from "@shared/ui/Card";
 import { Callout } from "@shared/ui/Callout";
 import { Chip, type ChipVariant } from "@shared/ui/Chip";
+import { ErrorState } from "@shared/ui/ErrorState";
 import { Skeleton } from "@shared/ui/Skeleton";
 import { SegControl } from "@shared/ui/SegControl";
 import { cn } from "@shared/lib/cn";
@@ -48,14 +50,7 @@ const AbTestResultCard = dynamic(() => import("@widgets/performance-step/AbTestR
 
 type Period = "all" | InsightsPeriod;
 // PRD-ab-testing.md §7.2 — Insights 응답에 광고별 row 추가 가능.
-type Insights = {
-  impressions: number;
-  clicks: number;
-  ctr: number;
-  spend: number;
-  daily: { date: string; clicks: number; ctr: number; spend: number }[];
-  ads?: [AdInsightsRow, AdInsightsRow];
-};
+type Insights = CampaignDetailInsights;
 type ControlParams = { campaignId: string; adSetId?: string; adId?: string; action: "pause" | "resume" | "set-daily-budget"; dailyBudget?: number };
 type ControlResult = { ok: true };
 
@@ -76,14 +71,6 @@ type AutoPilotUi = {
   onDisable: () => void;
 };
 
-async function fetchJson<T>(url: string, notFoundIs401Msg = "광고 계정을 먼저 연결해주세요."): Promise<T> {
-  const res = await fetch(url);
-  const data = await res.json();
-  if (res.status === 401) throw Object.assign(new Error(data?.error ?? notFoundIs401Msg), { code: 401 });
-  if (!res.ok) throw new Error(data?.error ?? "불러오지 못했어요");
-  return data as T;
-}
-
 function CampaignDetailFlow() {
   const router = useRouter();
   const params = useParams<{ id: string }>();
@@ -92,11 +79,18 @@ function CampaignDetailFlow() {
   const { data: session } = useSession();
   const showToast = useToast();
 
-  const initialPeriod = (searchParams.get("period") ?? "all") as Period;
-  const [period, setPeriod] = useState<Period>(initialPeriod === "7d" || initialPeriod === "30d" ? initialPeriod : "all");
+  const rawPeriod = searchParams.get("period");
+  const period: Period = rawPeriod === "7d" || rawPeriod === "30d" ? rawPeriod : "all";
   const rawTab = searchParams.get("tab");
-  const initialTab = rawTab === "performance" ? "performance" : "info";
-  const [activeTab, setActiveTab] = useState<"info" | "performance">(initialTab);
+  const activeTab = rawTab === "performance" ? "performance" : "info";
+
+  const updateViewParam = (key: "period" | "tab", value?: string) => {
+    const next = new URLSearchParams(searchParams.toString());
+    if (value) next.set(key, value);
+    else next.delete(key);
+    const query = next.toString();
+    router.replace(`/campaigns/${id}${query ? `?${query}` : ""}`, { scroll: false });
+  };
 
   // ADR-033 — Browse Mode 성과 탭: 기간 토글 대신 좋은/나쁜 성과 예시 토글.
   const [quality, setQuality] = useState<BrowseQuality>("good");
@@ -175,7 +169,7 @@ function CampaignDetailFlow() {
     return () => window.removeEventListener(BROWSE_CHANGE_EVENT, reload);
   }, [id]);
 
-  const metaQ = useQuery({ queryKey: ["campaign-meta", id], queryFn: () => fetchJson<{ campaign: CampaignSummary }>(`/api/campaign/${id}`).then((d) => d.campaign), enabled: !browseCamp });
+  const metaQ = useQuery({ queryKey: campaignDetailKeys.detail(id), queryFn: () => fetchCampaignDetail(id), enabled: !browseCamp });
 
   const browseSummary = useMemo(() => (browseCamp ? browseCampaignToSummary(browseCamp) : null), [browseCamp]);
   const c = browseSummary ?? metaQ.data;
@@ -200,9 +194,15 @@ function CampaignDetailFlow() {
     return null;
   }, [launchedSnapshot, c, id]);
 
-  const adIdsParam = abInfo ? `&adIds=${abInfo.adIds[0]},${abInfo.adIds[1]}` : "";
-  const insQ = useQuery({ queryKey: ["insights", id, period, abInfo?.adIds?.join(",")], queryFn: () => fetchJson<Insights>(`/api/insights/${id}?period=${period}${adIdsParam}`), enabled: !browseCamp });
-  const control = useApiMutation<ControlParams, ControlResult>("/api/campaign/control");
+  const insightAdIds = abInfo?.adIds;
+  const insQ = useQuery({
+    queryKey: campaignDetailKeys.insights(id, period, insightAdIds),
+    queryFn: () => fetchCampaignInsights(id, period, insightAdIds),
+    enabled: !browseCamp,
+  });
+  const control = useApiMutation<ControlParams, ControlResult>("/api/campaign/control", {
+    invalidateKeys: [campaignDetailKeys.detail(id), campaignDetailKeys.insights(id, period, insightAdIds)],
+  });
 
   // ADR-033 — Browse Mode: 성과는 buildBrowseInsights(fastForwardDays) 로, 로딩·에러는 API 대신 즉시 해소.
   const insData = browseCamp ? (buildBrowseInsights(browseCamp, quality) as Insights) : insQ.data;
@@ -220,7 +220,7 @@ function CampaignDetailFlow() {
 
   const applyControl = (p: Omit<ControlParams, "campaignId">, msg: string) => {
     control.mutate({ campaignId: id, ...p }, {
-      onSuccess: () => { showToast(msg); metaQ.refetch(); insQ.refetch(); },
+      onSuccess: () => showToast(msg),
       onError: (e) => showToast(e instanceof Error ? e.message : "적용에 실패했어요"),
     });
   };
@@ -281,14 +281,14 @@ function CampaignDetailFlow() {
       </div>
 
       <div className="inline-flex gap-0.5 p-[3px] bg-[var(--w-bg-alternative)] rounded-[10px] mb-4">
-        <button type="button" className={cn("border-none px-3.5 py-2 rounded-lg font-semibold text-[13px] leading-none cursor-pointer transition-[background,color] duration-[120ms]", activeTab === "info" ? "bg-[var(--w-bg-elevated)] text-[var(--w-fg-strong)] shadow-[0_1px_2px_rgba(23,23,23,0.08)]" : "bg-transparent text-[var(--w-fg-neutral)]")} onClick={() => setActiveTab("info")}>캠페인 정보</button>
-        <button type="button" className={cn("border-none px-3.5 py-2 rounded-lg font-semibold text-[13px] leading-none cursor-pointer transition-[background,color] duration-[120ms]", activeTab === "performance" ? "bg-[var(--w-bg-elevated)] text-[var(--w-fg-strong)] shadow-[0_1px_2px_rgba(23,23,23,0.08)]" : "bg-transparent text-[var(--w-fg-neutral)]")} onClick={() => setActiveTab("performance")}>성과</button>
+        <button type="button" className={cn("border-none px-3.5 py-2 rounded-lg font-semibold text-[13px] leading-none cursor-pointer transition-[background,color] duration-[120ms]", activeTab === "info" ? "bg-[var(--w-bg-elevated)] text-[var(--w-fg-strong)] shadow-[0_1px_2px_rgba(23,23,23,0.08)]" : "bg-transparent text-[var(--w-fg-neutral)]")} onClick={() => updateViewParam("tab")}>캠페인 정보</button>
+        <button type="button" className={cn("border-none px-3.5 py-2 rounded-lg font-semibold text-[13px] leading-none cursor-pointer transition-[background,color] duration-[120ms]", activeTab === "performance" ? "bg-[var(--w-bg-elevated)] text-[var(--w-fg-strong)] shadow-[0_1px_2px_rgba(23,23,23,0.08)]" : "bg-transparent text-[var(--w-fg-neutral)]")} onClick={() => updateViewParam("tab", "performance")}>성과</button>
       </div>
 
       {metaUnauthorized ? (
-        <DetailErrorCard icon="link" title="광고 계정을 먼저 연결해주세요" reason="Meta 광고 계정과 페이지를 연결해야 캠페인을 볼 수 있어요." ctaLabel="계정 연결로 가기" onAction={() => router.push("/setup")} />
+        <ErrorState icon="link" title="광고 계정을 먼저 연결해주세요" reason="Meta 광고 계정과 페이지를 연결해야 캠페인을 볼 수 있어요." ctaLabel="계정 연결로 가기" onAction={() => router.push("/setup")} />
       ) : !browseCamp && metaQ.isError ? (
-        <DetailErrorCard title="캠페인 정보를 불러오지 못했어요" reason={metaQ.error instanceof Error ? metaQ.error.message : "잠시 후 다시 시도해 주세요"} ctaLabel="다시 시도" onAction={() => metaQ.refetch()} />
+        <ErrorState title="캠페인 정보를 불러오지 못했어요" reason={metaQ.error instanceof Error ? metaQ.error.message : "잠시 후 다시 시도해 주세요"} ctaLabel="다시 시도" onAction={() => metaQ.refetch()} />
       ) : activeTab === "info" ? (
         <CampaignConfigurationTab c={c} isLoading={metaLoading} campaignId={id} onRefetch={metaQ.refetch} isAbCampaign={abInfo !== null} />
       ) : (
@@ -323,7 +323,7 @@ function CampaignDetailFlow() {
               ) : (
                 <SegControl
                   value={period}
-                  onChange={setPeriod}
+                  onChange={(value) => updateViewParam("period", value === "all" ? undefined : value)}
                   options={[{ value: "all", label: "전체" }, { value: "7d", label: "최근 7일" }, { value: "30d", label: "최근 30일" }]}
                 />
               )}
@@ -336,7 +336,7 @@ function CampaignDetailFlow() {
               <div className="font-semibold text-[14px] leading-[1.3] text-[var(--w-fg-strong)]">성과를 불러오는 중…</div>
             </Card>
           ) : insError ? (
-            <DetailErrorCard title="성과를 불러오지 못했어요" reason={insQ.error instanceof Error ? insQ.error.message : "Meta API 응답 오류 — 잠시 후 다시 시도해 주세요"} ctaLabel="다시 시도" onAction={() => insQ.refetch()} />
+            <ErrorState title="성과를 불러오지 못했어요" reason={insQ.error instanceof Error ? insQ.error.message : "Meta API 응답 오류 — 잠시 후 다시 시도해 주세요"} ctaLabel="다시 시도" onAction={() => insQ.refetch()} />
           ) : !c ? null : c.status === "review" || !insData || insData.daily.length === 0 ? (
             <Card className="py-10 px-8 flex flex-col items-center gap-3 text-center">
               <div style={{ width: 56, height: 56, borderRadius: "50%", background: "var(--w-primary-soft)", color: "var(--w-primary-press)", display: "grid", placeItems: "center" }}><Icon name="clock" size={24} /></div>
@@ -677,17 +677,6 @@ function OptCard({ icon, good, title, lines, children }: { icon: IconName; good:
   );
 }
 
-function DetailErrorCard({ icon = "warn", title, reason, ctaLabel, onAction }: { icon?: IconName; title: string; reason: string; ctaLabel: string; onAction: () => void }) {
-  return (
-    <Card className="py-10 px-8 flex flex-col items-center gap-3 text-center">
-      <div style={{ width: 56, height: 56, borderRadius: "50%", background: "var(--w-status-negative-soft)", color: "var(--w-status-negative)", display: "grid", placeItems: "center" }}><Icon name={icon} size={24} /></div>
-      <div className="font-bold text-[17px] leading-[1.3] text-[var(--w-fg-strong)]">{title}</div>
-      <div className="font-medium text-[13px] leading-[1.5] text-[var(--w-fg-neutral)]" style={{ maxWidth: 380 }}>{reason}</div>
-      <Button variant="secondary" type="button" style={{ marginTop: 8 }} onClick={onAction}>{ctaLabel}</Button>
-    </Card>
-  );
-}
-
 const CTA_LABELS: Record<string, string> = {
   LEARN_MORE: "자세히 알아보기", SHOP_NOW: "지금 구매", SIGN_UP: "가입하기",
   DOWNLOAD: "다운로드", MESSAGE_PAGE: "메시지 보내기", CALL_NOW: "전화하기",
@@ -745,13 +734,7 @@ function CampaignConfigurationTab({ c, isLoading, campaignId, onRefetch, isAbCam
 
     setSaving(true);
     try {
-      const res = await fetch(`/api/campaign/${campaignId}/update`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ adSet: payload }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error((data as { error?: string }).error ?? "수정에 실패했어요");
+      await updateCampaignAdSet(campaignId, payload);
       showToast("일정·예산을 수정했어요");
       setEditingSchedule(false);
       onRefetch();
@@ -788,13 +771,7 @@ function CampaignConfigurationTab({ c, isLoading, campaignId, onRefetch, isAbCam
     };
     setSavingTargeting(true);
     try {
-      const res = await fetch(`/api/campaign/${campaignId}/update`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ adSet: { targeting: payload } }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error((data as { error?: string }).error ?? "수정에 실패했어요");
+      await updateCampaignAdSet(campaignId, { targeting: payload });
       showToast("타겟팅을 수정했어요");
       setEditingTargeting(false);
       onRefetch();
@@ -835,13 +812,7 @@ function CampaignConfigurationTab({ c, isLoading, campaignId, onRefetch, isAbCam
     adSet.placements = placementMode === "auto" ? { mode: "auto" } : { mode: "manual", positions: placementPositions };
     setSavingBid(true);
     try {
-      const res = await fetch(`/api/campaign/${campaignId}/update`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ adSet }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error((data as { error?: string }).error ?? "수정에 실패했어요");
+      await updateCampaignAdSet(campaignId, adSet);
       showToast("입찰·배치를 수정했어요");
       setEditingBid(false);
       onRefetch();
@@ -894,13 +865,7 @@ function CampaignConfigurationTab({ c, isLoading, campaignId, onRefetch, isAbCam
       } else if (imageDataUrl) {
         body.imageDataUrl = imageDataUrl;
       }
-      const res = await fetch(`/api/campaign/${campaignId}/replace-creative`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error((data as { error?: string }).error ?? "소재 교체에 실패했어요");
+      await replaceCampaignCreative(campaignId, body as Parameters<typeof replaceCampaignCreative>[1]);
       showToast("소재를 교체했어요. Meta 검토 후 게재돼요.");
       setEditingCreative(false);
       setShowCreativeConfirm(false);

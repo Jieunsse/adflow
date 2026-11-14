@@ -1,4 +1,4 @@
-const GRAPH = "https://graph.facebook.com/v20.0"
+import { GRAPH, MetaGraphError, getPageToken, graphErrorMessage, graphStatus, hasGraphError, readGraphBody } from "./instagram-graph"
 
 export type FbPost = {
   id: string
@@ -57,49 +57,42 @@ export const FB_MOCK_POOR: FbPageInsights = {
 
 const DAY_MS = 24 * 60 * 60 * 1000
 
-async function getPageToken(pageId: string, userToken: string): Promise<string | null> {
-  try {
-    const res = await fetch(`${GRAPH}/${pageId}?fields=access_token&access_token=${userToken}`)
-    const data = await res.json() as { access_token?: string }
-    return data.access_token ?? null
-  } catch {
-    return null
-  }
-}
-
 export async function getFacebookInsights(
   pageId: string | undefined,
   userToken: string | undefined,
 ): Promise<FbPageInsights> {
-  if (!pageId || !userToken) return FB_MOCK_GOOD
-  try {
-    const pageToken = await getPageToken(pageId, userToken)
-    if (!pageToken) return FB_MOCK_GOOD
+  if (!pageId || !userToken) throw new MetaGraphError("Facebook 페이지가 연결되지 않았어요.", 401, { code: "missing_credentials" })
+  const pageToken = await getPageToken(pageId, userToken)
+  if (!pageToken) throw new MetaGraphError("Facebook Page token을 확인할 수 없어요.", 502, { code: "missing_page_token" })
 
-    const [pageRes, postsRes] = await Promise.all([
-      fetch(`${GRAPH}/${pageId}?fields=followers_count,name,username&access_token=${pageToken}`),
-      fetch(`${GRAPH}/${pageId}/posts?fields=id,message,full_picture,reactions.summary(total_count),comments.summary(total_count),shares,created_time&limit=25&access_token=${pageToken}`),
-    ])
+  const [pageRes, postsRes] = await Promise.all([
+      fetch(`${GRAPH}/${pageId}?fields=followers_count,name,username&access_token=${pageToken}`, { cache: "no-store" }),
+      fetch(`${GRAPH}/${pageId}/posts?fields=id,message,full_picture,reactions.summary(total_count),comments.summary(total_count),shares,created_time&limit=25&access_token=${pageToken}`, { cache: "no-store" }),
+  ])
+  const pageData = await readGraphBody(pageRes) as {
+    followers_count?: number; name?: string; username?: string; error?: { message?: string }
+  }
+  const postsData = await readGraphBody(postsRes) as {
+    data?: Array<{
+      id: string
+      message?: string
+      full_picture?: string
+      reactions?: { summary?: { total_count?: number } }
+      comments?: { summary?: { total_count?: number } }
+      shares?: { count?: number }
+      created_time?: string
+    }>
+    error?: { message?: string }
+  }
 
-    // page 가 실패하면 FB 페이지 식별 자체가 안 된 거라 mock 으로 떨어뜨림. posts 만 실패는 부분 데이터 유지 (followers·name 은 실데이터).
-    if (!pageRes.ok) return FB_MOCK_GOOD
+  if (!pageRes.ok || hasGraphError(pageData)) {
+    throw new MetaGraphError(graphErrorMessage(pageData, "Facebook 페이지 조회 실패"), graphStatus(pageRes.status, pageData), pageData)
+  }
+  if (!postsRes.ok || hasGraphError(postsData)) {
+    throw new MetaGraphError(graphErrorMessage(postsData, "Facebook 게시물 조회 실패"), graphStatus(postsRes.status, postsData), postsData)
+  }
 
-    const pageData = await pageRes.json() as {
-      followers_count?: number; name?: string; username?: string
-    }
-    const postsData = await postsRes.json() as {
-      data?: Array<{
-        id: string
-        message?: string
-        full_picture?: string
-        reactions?: { summary?: { total_count?: number } }
-        comments?: { summary?: { total_count?: number } }
-        shares?: { count?: number }
-        created_time?: string
-      }>
-    }
-
-    const allPosts = postsData.data ?? []
+  const allPosts = postsData.data ?? []
 
     // 최근 28일 게시물 카운트
     const now = Date.now()
@@ -134,17 +127,14 @@ export async function getFacebookInsights(
       timestamp: p.created_time ?? "",
     }))
 
-    return {
-      followers,
-      postCount28d,
-      avgReactions,
-      engagementRate,
-      pageName: pageData.name,
-      pageUsername: pageData.username,
-      posts,
-      mock: false,
-    }
-  } catch {
-    return FB_MOCK_GOOD
+  return {
+    followers,
+    postCount28d,
+    avgReactions,
+    engagementRate,
+    pageName: pageData.name,
+    pageUsername: pageData.username,
+    posts,
+    mock: false,
   }
 }

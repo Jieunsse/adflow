@@ -55,6 +55,9 @@ public class SecurityConfig {
                     .permitAll()
                     .requestMatchers("/actuator/**", "/v3/api-docs/**", "/swagger-ui/**")
                     .permitAll()
+                    // 인스타그램이 게시할 사진·영상을 직접 가져가는 주소. Meta 는 로그인 없이 부른다.
+                    .requestMatchers(HttpMethod.GET, "/public/media/**")
+                    .permitAll()
                     // 교환·갱신은 JWT 를 받기 전/재발급 단계고, cron·Meta webhook 은 세션 없이 도는
                     // 기계 호출이라 JWT 를 실을 수 없다. 여는 것이 아니라 자물쇠를 바꾸는 것이다.
                     .requestMatchers(InternalSecret.PATTERNS)

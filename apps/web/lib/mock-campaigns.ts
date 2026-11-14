@@ -418,6 +418,53 @@ export function getMockCampaign(id: string): CampaignSummary | null {
   return MOCK_CAMPAIGN_SUMMARIES.find((c) => c.id === id) ?? null
 }
 
+export type BrowseDashboardExample = 'good' | 'poor'
+
+const GOOD_DASHBOARD_CAMPAIGN_IDS = new Set([
+  'cmp_demo_120207641834',
+  'cmp_demo_120207643012',
+])
+
+// 대시보드 둘러보기는 한 상황의 숫자와 진단이 함께 움직여야 한다.
+// 목록용 전체 mock 과 분리해 좋은/나쁜 성과를 각각 한 사례로 보여준다.
+export function getBrowseDashboardCampaigns(example: BrowseDashboardExample): CampaignSummary[] {
+  const good = MOCK_CAMPAIGN_SUMMARIES.filter((campaign) => GOOD_DASHBOARD_CAMPAIGN_IDS.has(campaign.id))
+  if (example === 'good') return good
+
+  return good.map((campaign) => {
+    if (campaign.objective === 'OUTCOME_SALES') {
+      return {
+        ...campaign,
+        id: 'cmp_demo_dashboard_poor_sales',
+        name: '그린루틴 — 여름 세일 — 비건 세트 구매 전환',
+        headline: '여름 세일 — 비건 세트 구매 전환',
+        impressions: 76500,
+        clicks: 612,
+        ctr: 0.8,
+        spend: 612000,
+        linkClick: 551,
+        landingPageView: 231,
+        purchaseCount: 25,
+        purchaseValue: 600000,
+        roas: 0.98,
+      }
+    }
+
+    return {
+      ...campaign,
+      id: 'cmp_demo_dashboard_poor_landing',
+      name: '그린루틴 — 여름 수분 충전 — 데일리 수분 크림',
+      headline: '여름 수분 충전 — 데일리 수분 크림',
+      impressions: 56706,
+      clicks: 1191,
+      ctr: 2.1,
+      spend: 482000,
+      linkClick: 1072,
+      landingPageView: 150,
+    }
+  })
+}
+
 // PRD-ab-testing.md §4.4 / §7.5 — 사용자 생성 캠페인의 fake adIds (`mock_ad_{campaignId}_a/b`) 와 동일 prefix.
 // mock 시연 캠페인이 abTestEnabled 면 동일 형식의 adIds 자동 도출 — getMockInsights 가 광고별 시드 진입에 사용.
 export function getMockCampaignAdIds(id: string): [string, string] | null {

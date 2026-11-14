@@ -29,6 +29,8 @@ export type IconName =
   | "trend-down"
   | "pause"
   | "play"
+  | "story"
+  | "reels"
   | "info"
   | "warn"
   | "lock"
@@ -303,6 +305,20 @@ export default function Icon({
       return (
         <svg {...props}>
           <path d="M6 4l14 8-14 8z" />
+        </svg>
+      );
+    case "story":
+      return (
+        <svg {...props}>
+          <circle cx="12" cy="12" r="8" />
+          <path d="M10 9l5 3-5 3z" />
+        </svg>
+      );
+    case "reels":
+      return (
+        <svg {...props}>
+          <rect x="3" y="5" width="18" height="15" rx="2" />
+          <path d="m3 9 5-4 4 4 4-4 5 4M10 13l5 3-5 3z" />
         </svg>
       );
     case "info":

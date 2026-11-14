@@ -58,9 +58,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         await editOnBackend(id, "confirm-champion", { variant: b.variant });
         break;
       case "regenerate-champion": {
-        // 카피 생성만 여기서(Gemini). 확정 전에만 허용하는 판단은 Spring 이 한다.
+        // 카피 생성만 여기서(Gemini). 확정 전에만 허용하는 판단은 저장 계층이 한다.
         const champion = await getRealTournamentRunner().regenerateChampion(existing);
-        await editOnBackend(id, "replace-champion", { variant: champion });
+        if (champion) await editOnBackend(id, "replace-champion", { variant: champion });
         break;
       }
       case "propose-challenger":

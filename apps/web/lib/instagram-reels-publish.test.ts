@@ -3,8 +3,11 @@ import { publishReel } from "./instagram-reels-publish"
 
 const fetchMock = vi.fn()
 
-function jsonResponse(body: object, ok = true, status = 200) {
-  return { ok, status, json: async () => body }
+function jsonResponse(body: object, _ok = true, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "Content-Type": "application/json" },
+  })
 }
 
 const BASE_SESSION = {
@@ -83,7 +86,7 @@ describe("publishReel", () => {
   it("폴링이 계속 IN_PROGRESS 면 타임아웃으로 ok:false 를 반환한다", async () => {
     fetchMock
       .mockResolvedValueOnce(jsonResponse({ id: "container_1" }))
-      .mockResolvedValue(jsonResponse({ status_code: "IN_PROGRESS" }))
+      .mockImplementation(() => Promise.resolve(jsonResponse({ status_code: "IN_PROGRESS" })))
 
     const resultPromise = publishReel(BASE_SESSION, BASE_INPUT)
     await vi.runAllTimersAsync()
@@ -100,6 +103,13 @@ describe("publishReel", () => {
     const result = await publishReel({}, BASE_INPUT)
 
     expect(result.ok).toBe(false)
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it("공개 video URL이 아니면 API를 호출하지 않는다", async () => {
+    const result = await publishReel({}, { ...BASE_INPUT, videoUrl: "file:///tmp/video.mp4" })
+
+    expect(result).toEqual({ ok: false, error: "videoUrl 은 http(s) 로 시작하는 공개 URL 이어야 해요." })
     expect(fetchMock).not.toHaveBeenCalled()
   })
 })

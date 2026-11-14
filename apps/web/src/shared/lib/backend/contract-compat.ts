@@ -82,8 +82,8 @@ export type ReferenceMaterialIsCompatible = Assert<
 // 값의 정확성은 골든 픽스처와 컨트롤러 왕복 테스트가 런타임으로 지킨다.
 type TourOpaque =
   | "mode" | "status" | "championSource" | "variationIntensity" | "completionReason"
-  // rounds·pendingHypothesis 는 안쪽이 다시 유니온·튜플이라 통째로 뺀다(아래 TourRound 단언 참고).
-  | "rounds" | "pendingHypothesis";
+  // rounds·pendingHypothesis·launchRequest 는 안쪽이 다시 유니온·튜플이라 통째로 뺀다(아래 TourRound 단언 참고).
+  | "rounds" | "pendingHypothesis" | "launchRequest";
 export type TournamentIsCompatible = Assert<
   AssignableTo<Omit<Api<"Tournament">, TourOpaque>, Omit<TournamentEntity, TourOpaque>>
 >;

@@ -51,6 +51,7 @@ class TournamentSettlePostgresIT extends IntegrationTestBase {
   @Autowired private TournamentRepository repository;
   @Autowired private TournamentSettleService settleService;
   @Autowired private JdbcTemplate jdbc;
+  @Autowired private ai.adflow.api.learning.LearningRepository learnings;
 
   private static Tournament.Variant variant(String headline, String primaryText) {
     Tournament.Variant v = new Tournament.Variant();
@@ -140,6 +141,10 @@ class TournamentSettlePostgresIT extends IntegrationTestBase {
     assertThat(found.getRounds().get(0).getStatus()).isEqualTo("settled");
     assertThat(found.getRounds().get(0).getVerdict().getConfidence()).isEqualTo(0.97);
     assertThat(found.getRounds().get(0).getHypothesis().getVerdict()).isEqualTo("confirmed");
+    // 판정이 끝나면 배운 것 초안이 생긴다 (정책서 14.1).
+    var learning = learnings.findById("tourn_pg_settle_r1").orElseThrow();
+    assertThat(learning.getStatus()).isEqualTo("draft");
+    assertThat(learning.getResult()).isEqualTo("challenger_won");
 
     // @OrderColumn 이 붙은 KPI 두 행이 순서대로 정확히 두 개여야 한다.
     Integer kpiRows =

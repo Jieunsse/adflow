@@ -153,6 +153,13 @@ class LaunchApprovalTest {
         .andExpect(jsonPath("$.launchRequest.status").value("pending"));
     assertThat(StubLauncher.calls).isZero();
 
+    // 승인할 수 있는 사람에게 알림이 서버에 남는다 (정책서 17.1).
+    mockMvc
+        .perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/notifications").with(as("ap1@example.com", "LEAD")))
+        .andExpect(jsonPath("$.items[0].kind").value("launch-request"))
+        .andExpect(jsonPath("$.items[0].link").value("/ab-tests/t_ap1"))
+        .andExpect(jsonPath("$.items[0].readAt").doesNotExist());
+
     call("ap1@example.com", "LEAD", "t_ap1", "/approve", null).andExpect(status().isOk());
     assertThat(StubLauncher.calls).isEqualTo(1);
 
@@ -161,6 +168,14 @@ class LaunchApprovalTest {
         .andExpect(status().isConflict())
         .andExpect(jsonPath("$.error").value("이미 처리된 요청이에요. 화면을 새로 고쳐 주세요."));
     assertThat(StubLauncher.calls).isEqualTo(1);
+
+    mockMvc
+        .perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/notifications").with(as("ap1@example.com", "LEAD")))
+        .andExpect(jsonPath("$.items[0].kind").value("launch-approved"));
+    mockMvc.perform(post("/notifications/read-all").with(as("ap1@example.com", "LEAD"))).andExpect(status().isOk());
+    mockMvc
+        .perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/notifications").with(as("ap1@example.com", "LEAD")))
+        .andExpect(jsonPath("$.items[0].readAt").exists());
 
     Tournament t = repository.findById("t_ap1").orElseThrow();
     assertThat(t.getRounds()).hasSize(1);

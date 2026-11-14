@@ -1,5 +1,7 @@
 package ai.adflow.api.tournament;
 
+import ai.adflow.api.learning.LearningRepository;
+import ai.adflow.api.learning.Learnings;
 import ai.adflow.api.meta.MetaSplitTestLauncher;
 import ai.adflow.api.tournament.engine.Hypothesis;
 import ai.adflow.api.tournament.engine.LedgerContext;
@@ -9,6 +11,8 @@ import ai.adflow.api.tournament.engine.TourVariant;
 import jakarta.transaction.Transactional;
 import java.time.Clock;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,16 +34,19 @@ public class TournamentAdvanceService {
   private final ChallengerCopyClient copy;
   private final TournamentRoundLauncher launcher;
   private final Clock clock;
+  private final LearningRepository learnings;
 
   public TournamentAdvanceService(
       TournamentRepository repository,
       ChallengerCopyClient copy,
       TournamentRoundLauncher launcher,
-      Clock clock) {
+      Clock clock,
+      LearningRepository learnings) {
     this.repository = repository;
     this.copy = copy;
     this.launcher = launcher;
     this.clock = clock;
+    this.learnings = learnings;
   }
 
   /** 새 초안을 만들었으면 true. 이미 초안이 있거나 게이트에 막혔거나 카피 생성이 실패하면 false. */
@@ -133,22 +140,34 @@ public class TournamentAdvanceService {
     t.setPendingHypothesis(null);
   }
 
-  /** ADR-047 — 같은 워크스페이스의 같은 브랜드 토너먼트에서 resolved 가설을 평탄화한다. */
+  /**
+   * ADR-047 — 같은 워크스페이스의 같은 브랜드 토너먼트에서 resolved 가설을 평탄화한다. 다음 가설에는 사람이
+   * 확정한 배운 것만 쓴다 (정책서 14.2·14.4). 초안이나 보관한 기록의 라운드는 넘기지 않는다.
+   */
   private List<Hypothesis> ledgerFor(Tournament t) {
     String ownerKey = t.getOwnerKey();
     if (ownerKey == null) return List.of();
 
+    List<Tournament> siblings =
+        repository.findByOwnerKeyAndBrandProfileIdOrderByCreatedAtDesc(ownerKey, t.getBrandProfileId());
+    Set<String> confirmed = new HashSet<>();
+    learnings
+        .findByTournamentIdInAndStatus(siblings.stream().map(Tournament::getId).toList(), Learnings.CONFIRMED)
+        .forEach(l -> confirmed.add(l.getId()));
+
     List<List<Hypothesis>> byTournament = new ArrayList<>();
-    for (Tournament other :
-        repository.findByOwnerKeyAndBrandProfileIdOrderByCreatedAtDesc(ownerKey, t.getBrandProfileId())) {
+    for (Tournament other : siblings) {
       List<Hypothesis> rounds = new ArrayList<>();
       for (TourRound r : other.getRounds()) {
-        if (r.getHypothesis() != null) rounds.add(TourStates.hypothesisOf(r.getHypothesis()));
+        if (r.getHypothesis() != null && confirmed.contains(other.getId() + "_r" + r.getIndex())) {
+          rounds.add(TourStates.hypothesisOf(r.getHypothesis()));
+        }
       }
       byTournament.add(rounds);
     }
     return TourHypothesis.deriveLedger(byTournament);
   }
+
 
   private static boolean hasRunningRound(Tournament t) {
     return t.getRounds().stream().anyMatch(r -> "running".equals(r.getStatus()));

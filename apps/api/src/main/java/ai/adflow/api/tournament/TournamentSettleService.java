@@ -1,5 +1,6 @@
 package ai.adflow.api.tournament;
 
+import ai.adflow.api.learning.Learnings;
 import ai.adflow.api.tournament.engine.AdKpi;
 import ai.adflow.api.tournament.engine.Hypothesis;
 import ai.adflow.api.tournament.engine.RoundVerdict;
@@ -52,12 +53,17 @@ public class TournamentSettleService {
   private final TournamentRepository repository;
   private final TournamentKpiSource kpiSource;
   private final Clock clock;
+  private final Learnings learnings;
 
   public TournamentSettleService(
-      TournamentRepository repository, TournamentKpiSource kpiSource, Clock clock) {
+      TournamentRepository repository,
+      TournamentKpiSource kpiSource,
+      Clock clock,
+      Learnings learnings) {
     this.repository = repository;
     this.kpiSource = kpiSource;
     this.clock = clock;
+    this.learnings = learnings;
   }
 
   @Transactional
@@ -88,6 +94,7 @@ public class TournamentSettleService {
       r.setAdKpis(toEntity(reading.kpis()));
       r.setStatus("unjudgeable");
       repository.save(t);
+      learnings.record(t, r, Learnings.UNJUDGEABLE);
       return new Outcome("unjudgeable", r, null, null, false);
     }
     RoundVerdict verdict = reading.verdict();
@@ -106,6 +113,12 @@ public class TournamentSettleService {
     }
 
     boolean winnerIsB = "B".equals(rawWinner);
+    learnings.record(
+        t,
+        r,
+        !RoundVerdict.WINNER.equals(verdict.state())
+            ? Learnings.NO_DIFFERENCE
+            : winnerIsB ? Learnings.CHALLENGER_WON : Learnings.CHAMPION_WON);
     t.setChampion(winnerIsB ? r.getChallenger() : r.getChampion());
     t.setChampionCtr(winnerIsB ? verdict.ctrB() : verdict.ctrA());
     t.setAxisCursor(nz(t.getAxisCursor()) + 1);

@@ -1,5 +1,6 @@
 package ai.adflow.api.tournament;
 
+import ai.adflow.api.notification.Notifications;
 import ai.adflow.api.internal.cron.CronRun;
 import ai.adflow.api.internal.cron.CronRunRepository;
 import java.time.Clock;
@@ -38,6 +39,7 @@ public class TournamentPoller {
   private final TournamentNotifier notifier;
   private final CronRunRepository cronRuns;
   private final Clock clock;
+  private final Notifications notifications;
 
   public TournamentPoller(
       TournamentRepository repository,
@@ -45,7 +47,9 @@ public class TournamentPoller {
       TournamentAdvanceService advanceService,
       TournamentNotifier notifier,
       CronRunRepository cronRuns,
-      Clock clock) {
+      Clock clock,
+      Notifications notifications) {
+    this.notifications = notifications;
     this.repository = repository;
     this.settleService = settleService;
     this.advanceService = advanceService;
@@ -84,6 +88,9 @@ public class TournamentPoller {
         // 결산이 안 됐어도 굴려 1라운드를 띄운다.
         if (advanceService.autoAdvance(t.getId())) advanced += 1;
 
+        if ("settled".equals(outcome.status()) || "unjudgeable".equals(outcome.status())) {
+          notifyRound(t, outcome);
+        }
         if (!"settled".equals(outcome.status())) continue;
 
         // 알림은 최신 상태로 — autoAdvance 가 status 를 바꿨을 수 있다.
@@ -96,6 +103,27 @@ public class TournamentPoller {
 
     record(startedAt, active.size(), settled, advanced, errors);
     return new Cycle(active.size(), settled, advanced, errors);
+  }
+
+  /** 판정 끝남 → 실험 만든 사람 (정책서 17.1). 알림이 실패해도 폴러를 멈추지 않는다. */
+  private void notifyRound(Tournament t, TournamentSettleService.Outcome outcome) {
+    try {
+      int index = outcome.round().getIndex();
+      String name = Notifications.name(t.getProductName());
+      String message =
+          "settled".equals(outcome.status())
+              ? "'" + name + "' 실험 " + index + "의 판정이 끝났어요. 배운 것을 확인해 주세요."
+              : "'" + name + "' 실험 " + index + "은 노출이 모자라 판정하지 못했어요.";
+      notifications.send(
+          List.of(t.getDelivery().getOwnerEmail()),
+          t.getOwnerKey(),
+          "round-" + outcome.status(),
+          message,
+          "/ab-tests/" + t.getId(),
+          "round:" + t.getId() + ":" + index);
+    } catch (RuntimeException e) {
+      log.warn("판정 알림을 저장하지 못했어요: {} — {}", t.getId(), e.getMessage());
+    }
   }
 
   /**

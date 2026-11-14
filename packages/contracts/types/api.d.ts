@@ -4,6 +4,22 @@
  */
 
 export interface paths {
+    "/learnings/{id}/sentence": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["editSentence"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/files/{bucket}/{brandProfileId}/{name}": {
         parameters: {
             query?: never;
@@ -308,6 +324,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/notifications/read-all": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["readAll"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/learnings/{id}/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["confirm"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/learnings/{id}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["archive"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/internal/tournaments": {
         parameters: {
             query?: never;
@@ -484,6 +548,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/notifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_14"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/me": {
         parameters: {
             query?: never;
@@ -492,6 +572,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["me"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/learnings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_15"];
         put?: never;
         post?: never;
         delete?: never;
@@ -555,7 +651,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_14"];
+        get: operations["list_16"];
         put?: never;
         post?: never;
         delete?: never;
@@ -600,6 +696,38 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        SentenceRequest: {
+            sentence?: string;
+        };
+        Learning: {
+            id: string;
+            brandProfileId?: string;
+            tournamentId?: string;
+            productName?: string;
+            /** Format: int32 */
+            roundIndex?: number;
+            axis?: string;
+            hypothesis?: string;
+            result?: string;
+            /** Format: double */
+            ctrA?: number;
+            /** Format: double */
+            ctrB?: number;
+            /** Format: double */
+            confidence?: number;
+            /** Format: int32 */
+            impressionShortfall?: number;
+            /** Format: double */
+            spend?: number;
+            sentence?: string;
+            status?: string;
+            archiveReason?: string;
+            decidedBy?: string;
+            decidedAt?: string;
+            sentenceEditedBy?: string;
+            sentenceEditedAt?: string;
+            createdAt?: string;
+        };
         ManagerRequest: {
             email?: string;
         };
@@ -1002,6 +1130,9 @@ export interface components {
         ItemRequestAutoRelaunchState: {
             item?: components["schemas"]["AutoRelaunchState"];
         };
+        ArchiveRequest: {
+            reason?: string;
+        };
         Outcome: {
             status?: string;
             round?: components["schemas"]["TourRound"];
@@ -1121,6 +1252,19 @@ export interface components {
         ItemsResponseAutoRelaunchState: {
             items?: components["schemas"]["AutoRelaunchState"][];
         };
+        Notification: {
+            id?: string;
+            kind?: string;
+            message?: string;
+            link?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            readAt?: string;
+        };
+        ItemsResponseLearning: {
+            items?: components["schemas"]["Learning"][];
+        };
         ItemsResponseIgMessage: {
             items?: components["schemas"]["IgMessage"][];
         };
@@ -1136,6 +1280,32 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    editSentence: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SentenceRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Learning"];
+                };
+            };
+        };
+    };
     read: {
         parameters: {
             query?: never;
@@ -2272,6 +2442,76 @@ export interface operations {
             };
         };
     };
+    readAll: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: boolean;
+                    };
+                };
+            };
+        };
+    };
+    confirm: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Learning"];
+                };
+            };
+        };
+    };
+    archive: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ArchiveRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Learning"];
+                };
+            };
+        };
+    };
     list_12: {
         parameters: {
             query?: {
@@ -2661,6 +2901,28 @@ export interface operations {
             };
         };
     };
+    list_14: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: components["schemas"]["Notification"][];
+                    };
+                };
+            };
+        };
+    };
     me: {
         parameters: {
             query?: never;
@@ -2679,6 +2941,28 @@ export interface operations {
                     "*/*": {
                         [key: string]: string;
                     };
+                };
+            };
+        };
+    };
+    list_15: {
+        parameters: {
+            query: {
+                brandProfileId: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ItemsResponseLearning"];
                 };
             };
         };
@@ -2752,7 +3036,7 @@ export interface operations {
             };
         };
     };
-    list_14: {
+    list_16: {
         parameters: {
             query?: never;
             header?: never;

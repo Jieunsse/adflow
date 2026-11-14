@@ -76,6 +76,7 @@ class TournamentAdvanceServiceTest {
   @Autowired private TournamentRepository repository;
   @Autowired private TournamentPoller poller;
   @Autowired private CronRunRepository cronRuns;
+  @Autowired private ai.adflow.api.learning.LearningRepository learnings;
 
   @BeforeEach
   void reset() {
@@ -296,6 +297,18 @@ class TournamentAdvanceServiceTest {
     r.getHypothesis().setStatus("resolved");
     r.getHypothesis().setVerdict("refuted");
     repository.saveAndFlush(first);
+    // 사람이 확정한 배운 것만 다음 가설에 쓴다 (정책서 14.4).
+    ai.adflow.api.learning.Learning l = new ai.adflow.api.learning.Learning();
+    l.setId("t_prior_r1");
+    l.setOwnerKey("u@x.com");
+    l.setUpdatedAt(Instant.now());
+    l.setBrandProfileId("bp_1");
+    l.setTournamentId("t_prior");
+    l.setRoundIndex(1);
+    l.setResult("champion_won");
+    l.setStatus("confirmed");
+    l.setCreatedAt(Instant.now().toString());
+    learnings.save(l);
 
     save("t_next");
     advance.autoAdvance("t_next");

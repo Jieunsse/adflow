@@ -3,7 +3,7 @@
 // 목표 세우기 — 한 화면 한 질문. 답할 때마다 위쪽 문장이 채워지고 오른쪽 역산 지도가 같이 그려진다.
 // 스텝 4개(이름·후행 목표·목표값·추적 기간) + 마지막 확인 + 저장 완료.
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import type { Goal, GoalMetric } from "@entities/insights/goal";
 import { bepRoas } from "@entities/insights/profit";
 import { clearGoalDraft, loadGoalDraft, saveGoalDraft } from "@features/goal/model/goal-draft";
@@ -91,6 +91,8 @@ export type GoalWizardProps = {
   onOpenTracker: (goalId: string) => void;
 };
 
+const subscribeNever = () => () => {};
+
 export function GoalWizard({
   goal,
   step,
@@ -113,16 +115,19 @@ export function GoalWizard({
   const [targetDraft, setTargetDraft] = useState(initialTargetDraft);
   const [periodDays, setPeriodDays] = useState(initialPeriodDays);
   const [savedGoal, setSavedGoal] = useState<Goal | null>(null);
-  const [hydrated, setHydrated] = useState(false);
-
-  useEffect(() => {
+  // 임시 저장한 초안은 브라우저에만 있다. 서버 렌더와 어긋나지 않게 브라우저에서 한 번, 목표가 바뀔 때마다 다시 불러온다.
+  // 효과(effect) 안에서 setState 하면 한 번 더 그리게 되어, 렌더 중에 이전 값과 비교해 맞추는 방식을 쓴다.
+  const inBrowser = useSyncExternalStore(subscribeNever, () => true, () => false);
+  const [restoredFor, setRestoredFor] = useState<{ goalId: string | null } | null>(null);
+  if (inBrowser && (restoredFor === null || restoredFor.goalId !== goalId)) {
     const draft = loadGoalDraft(goalId);
+    setRestoredFor({ goalId });
     setName(draft?.name ?? initialName);
     setMetric(draft?.metric ?? initialMetric);
     setTargetDraft(draft?.targetDraft ?? initialTargetDraft);
     setPeriodDays(draft?.periodDays ?? initialPeriodDays);
-    setHydrated(true);
-  }, [goalId, initialMetric, initialName, initialPeriodDays, initialTargetDraft]);
+  }
+  const hydrated = restoredFor?.goalId === goalId;
 
   useEffect(() => {
     if (!hydrated || savedGoal) return;

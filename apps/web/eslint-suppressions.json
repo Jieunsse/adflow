@@ -29,11 +29,6 @@
       "count": 7
     }
   },
-  "app/(workspace)/goals/page.tsx": {
-    "react-hooks/set-state-in-effect": {
-      "count": 1
-    }
-  },
   "app/(workspace)/instagram/comments/page.tsx": {
     "react-hooks/set-state-in-effect": {
       "count": 1
@@ -99,14 +94,6 @@
     }
   },
   "src/features/creator-pipeline/OutreachDraftModal.tsx": {
-    "react-hooks/set-state-in-effect": {
-      "count": 1
-    }
-  },
-  "src/features/goal/ui/GoalSetupForm.tsx": {
-    "@next/next/no-html-link-for-pages": {
-      "count": 1
-    },
     "react-hooks/set-state-in-effect": {
       "count": 1
     }

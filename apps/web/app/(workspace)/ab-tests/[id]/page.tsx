@@ -158,6 +158,7 @@ export default function AbTournamentDetailPage() {
   }
 
   const beat = deriveBeat(t);
+  const launchFailed = t.launchRequest?.status === "failed";
   const spec = tourMetricSpec(t.objective);
   const settledRounds = t.rounds.filter((r) => r.status === "settled");
   const lastSettled = settledRounds.at(-1) ?? null;
@@ -216,13 +217,18 @@ export default function AbTournamentDetailPage() {
         <Callout
           tone="negative"
           icon="warn"
-          title="자동 진행이 멈췄어요"
+          title={launchFailed ? "Meta에 올리지 못했어요" : t.stopReason ? "광고비 때문에 자동으로 멈췄어요" : "자동 진행이 멈췄어요"}
           actions={
             <Button
               variant="secondary"
               type="button"
               disabled={busy}
-              onClick={() => act(client.resume(t.id), "자동 진행을 재개했어요 — 다음 라운드 게재를 다시 시도해요")}
+              onClick={() =>
+                launchFailed
+                  // 승인 뒤 전송 실패는 승인 없이 다시 시도한다 (정책서 11.2).
+                  ? act(client.approveLaunch(t.id), "Meta에 다시 올렸어요")
+                  : act(client.resume(t.id), t.stopReason ? "실험을 다시 시작했어요" : "자동 진행을 재개했어요 — 다음 라운드 게재를 다시 시도해요")
+              }
             >
               {busy ? <><Icon name="spinner" size={14} spin /> 재시도 중…</> : "다시 시도"}
             </Button>
@@ -257,7 +263,18 @@ export default function AbTournamentDetailPage() {
         (isReal ? <RealLivePanel t={t} /> : <LivePanel t={t} />)}
 
       {beat === "auto-running" && !t.rounds.some((r) => r.status === "running") && (
-        <AutoBetweenPanel lastSettled={lastSettled} dailyBudget={t.dailyBudget} spec={spec} isReal={isReal} />
+        <AutoBetweenPanel
+          t={t}
+          lastSettled={lastSettled}
+          dailyBudget={t.dailyBudget}
+          spec={spec}
+          isReal={isReal}
+          busy={busy}
+          canApprove={session?.role === "팀장" || session?.role === "팀원·게재"}
+          onRequest={() => act(client.requestLaunch(t.id), "게재를 요청했어요. 승인하면 Meta에 올라가요")}
+          onApprove={() => act(client.approveLaunch(t.id), "승인했어요. Meta 검토가 끝나면 광고가 나가요")}
+          onReject={(reason) => act(client.rejectLaunch(t.id, reason), "반려했어요")}
+        />
       )}
 
       {beat === "winner-handling" && (
@@ -305,12 +322,12 @@ function RealLivePanel({ t }: { t: Tournament }) {
     <div className="flex flex-col gap-4">
       <AutoBanner
         title={`라운드 ${round.index} 게재 중 — ${AXIS_LABEL[round.axis]} 비교`}
-        desc="실제 Meta 광고로 챔피언(A)·챌린저(B)를 게재하고 있어요. 서버가 충분한 데이터가 쌓일 때까지 기다렸다가 자동으로 결산해요. 브라우저를 꺼도 진행돼요."
+        desc="실제 Meta 광고로 챔피언(A)·챌린저(B)를 게재하고 있어요. 4일이 지나고 소재마다 노출이 1,000회를 넘으면 자동으로 판정해요. 이기고 있는 쪽은 판정 전까지 보여 주지 않아요."
       />
       <div className="flex items-center gap-2 py-2.5 px-4 rounded-xl bg-[var(--w-bg-elevated)] border border-[var(--w-line-normal)]">
         <Icon name="spinner" size={13} spin />
         <span className="font-semibold text-[12px] text-[var(--w-fg-neutral)]">
-          게재 {days}일째 · {remain > 0 ? `최소 ${MIN_ROUND_DAYS}일 후 결산 (약 ${remain}일 남음)` : "결산 대기 중 — 곧 승자가 가려져요"}
+          게재 {days}일째 · {waitingText(remain, round.impressionShortfall)}
         </span>
       </div>
       <div className="grid grid-cols-2 gap-4">
@@ -762,7 +779,53 @@ function SettledResult({ round, dailyBudget, spec, prohibited, isReal }: { round
 
 /* ─── auto-running (무인 라운드 전환) 🤖 ─────────────────── */
 
-function AutoBetweenPanel({ lastSettled, dailyBudget, spec, isReal }: { lastSettled: TourRound | null; dailyBudget: number; spec: TourMetricSpec; isReal: boolean }) {
+// 판정 전 진행 상태 (기능명세 3-1). 노출이 모자란 동안은 남은 노출 수를 먼저 보여 준다.
+function waitingText(remainDays: number, shortfall?: number): string {
+  if (shortfall && shortfall > 0) return `데이터 모으는 중 · 판정까지 노출 ${shortfall.toLocaleString()}회 남았어요`;
+  if (remainDays > 0) return `데이터 모으는 중 · 판정까지 약 ${remainDays}일 남았어요`;
+  return "Meta 결과를 기다리는 중 · 곧 판정해요";
+}
+
+function AutoBetweenPanel({ t, lastSettled, dailyBudget, spec, isReal, busy, canApprove, onRequest, onApprove, onReject }: {
+  t: Tournament;
+  lastSettled: TourRound | null;
+  dailyBudget: number;
+  spec: TourMetricSpec;
+  isReal: boolean;
+  busy: boolean;
+  canApprove: boolean;
+  onRequest: () => void;
+  onApprove: () => void;
+  onReject: (reason: string) => void;
+}) {
+  const last = t.rounds.at(-1);
+  if (isReal && last?.status === "unjudgeable") {
+    return (
+      <DecisionBanner
+        title={`판정하지 못했어요 · 노출이 ${(last.impressionShortfall ?? 0).toLocaleString()}회 모자라요`}
+        desc="실험 기간이 끝났는데 소재마다 노출 1,000회를 채우지 못했어요. 기간을 늘리거나 하루 예산을 늘리면 다시 판정할 수 있어요. 팀장과 어느 쪽으로 할지 정해 주세요."
+      />
+    );
+  }
+  if (isReal) {
+    return (
+      <div className="flex flex-col gap-4">
+        {lastSettled && <SettledResult round={lastSettled} dailyBudget={dailyBudget} spec={spec} isReal={isReal} />}
+        {t.pendingChallenger ? (
+          <LaunchRequestPanel
+            t={t}
+            busy={busy}
+            canApprove={canApprove}
+            onRequest={onRequest}
+            onApprove={onApprove}
+            onReject={onReject}
+          />
+        ) : (
+          <AutoBanner title="다음 실험 초안을 만들고 있어요" desc="판정 결과를 바탕으로 다음 도전 소재를 준비해요. 준비되면 여기서 확인하고 게재할 수 있어요." />
+        )}
+      </div>
+    );
+  }
   return (
     <div className="flex flex-col gap-4">
       {lastSettled && <SettledResult round={lastSettled} dailyBudget={dailyBudget} spec={spec} isReal={isReal} />}
@@ -772,6 +835,97 @@ function AutoBetweenPanel({ lastSettled, dailyBudget, spec, isReal }: { lastSett
           ? "AI 가 우세 안을 챔피언으로 올리고 다음 챌린저를 자동으로 붙여요. 서버가 다음 라운드를 게재하면 여기서 이어볼 수 있어요."
           : "AI 가 우세 안을 챔피언으로 올리고 다음 챌린저를 자동으로 붙여요. 하단 발표자 빨리감기 +7일로 다음 라운드를 굴려보세요."}
       />
+    </div>
+  );
+}
+
+// 다음 실험 게재 요청과 승인 (기능 7). 요청과 승인은 따로 누르는 두 단계다 (정책서 11.2).
+// 승인 버튼은 화면 힌트일 뿐이고, 담당 직원 여부까지 서버가 다시 검사한다.
+function LaunchRequestPanel({ t, busy, canApprove, onRequest, onApprove, onReject }: {
+  t: Tournament;
+  busy: boolean;
+  canApprove: boolean;
+  onRequest: () => void;
+  onApprove: () => void;
+  onReject: (reason: string) => void;
+}) {
+  const [rejecting, setRejecting] = useState(false);
+  const [reason, setReason] = useState("");
+  const r = t.launchRequest;
+  const days = t.delivery?.roundDays ?? MIN_ROUND_DAYS;
+  const total = t.dailyBudget * days;
+  const won = (n: number) => `${Math.round(n).toLocaleString("ko-KR")}원`;
+
+  if (r?.status === "launching" || r?.status === "failed") {
+    // failed 는 위쪽 오류 안내의 "다시 시도"가 맡는다.
+    return r.status === "launching" ? <AutoBanner title="Meta에 올리는 중이에요" desc="광고를 꺼진 상태로 만든 뒤, 모두 만들어지면 켜요." /> : null;
+  }
+
+  if (r?.status !== "pending") {
+    return (
+      <div className="flex flex-col gap-3">
+        {r?.status === "rejected" ? (
+          <DecisionBanner
+            title="반려됐어요"
+            desc={`${r.rejectReason ?? ""} — 도전 소재를 고친 뒤 다시 요청해 주세요.`}
+          />
+        ) : (
+          <DecisionBanner
+            title="다음 실험 준비됐어요"
+            desc="위에서 기준 소재와 도전 소재를 확인하고 게재를 요청해 주세요. 승인하면 Meta 에 광고가 올라가요."
+          />
+        )}
+        <div className="flex justify-end">
+          <Button variant="primary" type="button" disabled={busy} onClick={onRequest}>
+            {r?.status === "rejected" ? "다시 요청하기" : "게재 요청하기"}
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-3">
+      <DecisionBanner
+        title="승인 대기"
+        desc={`${r.requestedBy ?? "팀원"}님이 게재를 요청했어요. 두 소재와 예상 비용을 확인하고 승인해 주세요.`}
+      />
+      <div className="flex items-center justify-between gap-3 py-3 px-4 rounded-xl border border-[var(--w-line-normal)]">
+        <span className="font-medium text-[13px] text-[var(--w-fg-neutral)]">
+          예상 총비용 · 하루 {won(t.dailyBudget)} × {days}일
+        </span>
+        <span className="font-bold text-[16px] text-[var(--w-fg-strong)]">{won(total)}</span>
+      </div>
+      {!canApprove ? (
+        <span className="self-end font-medium text-[13px] text-[var(--w-fg-neutral)]">이 브랜드의 담당 직원과 팀장이 승인해요.</span>
+      ) : rejecting ? (
+        <div className="flex flex-col gap-2">
+          <label htmlFor="reject-reason" className="font-semibold text-[13px] text-[var(--w-fg-strong)]">반려 이유 (10자 이상)</label>
+          <textarea
+            id="reject-reason"
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            rows={3}
+            className="w-full rounded-lg border border-[var(--w-line-normal)] p-3 text-[13px] text-[var(--w-fg-strong)] bg-[var(--w-bg-elevated)]"
+          />
+          <div className="flex justify-end gap-2">
+            <Button variant="secondary" type="button" onClick={() => setRejecting(false)}>취소</Button>
+            <Button
+              variant="primary"
+              type="button"
+              disabled={busy || reason.trim().length < 10}
+              onClick={() => onReject(reason.trim())}
+            >
+              반려하기
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <div className="flex justify-end gap-2">
+          <Button variant="secondary" type="button" disabled={busy} onClick={() => setRejecting(true)}>반려하기</Button>
+          <Button variant="primary" type="button" disabled={busy} onClick={onApprove}>승인하고 게재하기</Button>
+        </div>
+      )}
     </div>
   );
 }

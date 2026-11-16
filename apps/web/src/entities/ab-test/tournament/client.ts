@@ -81,7 +81,10 @@ export interface TournamentClient {
   confirmChampion(id: string, edited?: TourVariant): Promise<Tournament | null>;
   proposeChallenger(id: string): Promise<Tournament | null>;
   setChallenger(id: string, v: TourVariant): Promise<Tournament | null>;
-  launch(id: string): Promise<Tournament | null>;
+  // 다음 실험 게재 (기능 7) — 요청과 승인은 따로 누르는 두 단계다. 승인하면 바로 Meta 에 올린다.
+  requestLaunch(id: string): Promise<Tournament | null>;
+  approveLaunch(id: string): Promise<Tournament | null>;
+  rejectLaunch(id: string, reason: string): Promise<Tournament | null>;
   end(id: string): Promise<Tournament | null>;
   refillEnvelope(id: string, addBudget?: number): Promise<Tournament | null>;
   // ADR-053 복구 — 게재 실패로 멈춘 토너먼트(lastError)를 사람이 확인 후 재시도.
@@ -124,9 +127,19 @@ function demoClient(): TournamentClient {
       setManualChallenger(id, v);
       return snap(id);
     },
-    async launch(id) {
+    async requestLaunch(id) {
+      const t = getTournament(id);
+      if (t) upsertTournament({ ...t, launchRequest: { status: "pending", requestedAt: new Date().toISOString() } });
+      return snap(id);
+    },
+    async approveLaunch(id) {
       const { tournament } = await demoMutate(id, { action: "launch" });
       return tournament;
+    },
+    async rejectLaunch(id, reason) {
+      const t = getTournament(id);
+      if (t) upsertTournament({ ...t, launchRequest: { status: "rejected", rejectReason: reason } });
+      return snap(id);
     },
     async end(id) {
       endTournament(id);
@@ -172,7 +185,9 @@ function realClient(): TournamentClient {
     confirmChampion: (id, edited) => act(id, { action: "confirm-champion", variant: edited }),
     proposeChallenger: (id) => act(id, { action: "propose-challenger" }),
     setChallenger: (id, v) => act(id, { action: "set-challenger", variant: v }),
-    launch: (id) => act(id, { action: "launch" }),
+    requestLaunch: (id) => act(id, { action: "request-launch" }),
+    approveLaunch: (id) => act(id, { action: "approve-launch" }),
+    rejectLaunch: (id, reason) => act(id, { action: "reject-launch", reason }),
     async end(id) {
       await apiJson(`/api/tournaments/${id}`, { method: "DELETE" });
       return get(id);

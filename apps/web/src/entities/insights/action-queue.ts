@@ -1,4 +1,4 @@
-// 대시보드 "오늘의 진단" — 효과가 큰 순서로 정렬한 액션 큐(최대 3건).
+// 대시보드 "오늘의 결정" — 효과가 큰 순서로 정렬한 액션 큐(최대 3건).
 // 저자 = 룰(결정적·무료·즉시). 새 숫자 0 — isFakePerformance·deriveConversionSummary·profit 의
 // 기존 파생값만 문장으로 엮는다. ADR-031 — 실측 수치만 인용하고, 근거가 없으면 그 카드를 아예 내지 않는다.
 
@@ -18,7 +18,13 @@ export type ActionButton = {
   label: string;
   variant: "primary" | "danger" | "ghost" | "secondary";
   // 클릭 시 이동/실행은 화면이 정한다. 여기서는 "무엇을 가리키는지"만.
-  target: { kind: "campaign"; id: string } | { kind: "campaigns" } | { kind: "measurement" } | { kind: "margin" };
+  target:
+    | { kind: "campaign"; id: string }
+    | { kind: "campaigns" }
+    | { kind: "measurement" }
+    | { kind: "margin" }
+    | { kind: "link"; href: string } // 서버가 준 오늘의 결정 (사람이 해야 하는 일)
+    | { kind: "dismiss"; key: string }; // "나중에" — 같은 근거로 7일 동안 다시 보이지 않음
 };
 
 export type ActionItem = {
@@ -184,6 +190,36 @@ function coverageItem(campaigns: CampaignSummary[], conversion: ConversionSummar
     stats: [],
     buttons: [{ label: "측정 스크립트 받기", variant: "secondary", target: { kind: "measurement" } }],
   };
+}
+
+/** 서버가 준 오늘의 결정 1·2순위 (정책서 15.1). 1순위는 미룰 수 없다. */
+export type ServerDecision = {
+  key: string;
+  priority: number;
+  brandName: string;
+  title: string;
+  body: string;
+  link: string;
+  action: string;
+};
+
+export function fromServerDecisions(decisions: ServerDecision[]): ActionItem[] {
+  return decisions.map((d) => ({
+    id: `srv-${d.key}`,
+    accent: d.priority === 1 ? "negative" : "primary",
+    title: `${d.brandName} · ${d.title}`,
+    body: d.body,
+    stats: [],
+    buttons: [
+      { label: d.action, variant: d.priority === 1 ? "danger" : "primary", target: { kind: "link", href: d.link } },
+      ...(d.priority === 1 ? [] : [{ label: "나중에", variant: "ghost" as const, target: { kind: "dismiss" as const, key: d.key } }]),
+    ],
+  }));
+}
+
+/** 사람이 해야 하는 일(서버)을 먼저 채우고, 성과 규칙 카드(3순위 이하)를 뒤에 붙여 3개까지. */
+export function mergeDecisions(server: ActionItem[], rules: ActionItem[]): ActionItem[] {
+  return [...server, ...rules].slice(0, MAX_ITEMS);
 }
 
 export function deriveActionQueue(input: ActionQueueInput): ActionItem[] {

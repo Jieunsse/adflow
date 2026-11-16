@@ -24,7 +24,7 @@ export function withRouteHandler(
       if (err instanceof QuotaExceededError) {
         return NextResponse.json({ error: err.message }, { status: 429 })
       }
-      // Supabase 등 일부 라이브러리는 Error 인스턴스가 아닌 plain object({ message, code })를 throw 한다.
+      // 일부 라이브러리는 Error 인스턴스가 아닌 plain object({ message, code })를 throw 한다.
       // instanceof 만 보면 메시지가 "알 수 없는 오류"로 뭉개지므로 객체의 message 도 surface 한다.
       const message =
         err instanceof Error

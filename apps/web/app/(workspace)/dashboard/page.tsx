@@ -22,7 +22,15 @@ import {
   toCampaignTableRow,
   type CampaignTableRow,
 } from "@entities/insights/period-kpis";
-import { deriveActionQueue, deriveHeroNarrative, type ActionButton, type ActionItem } from "@entities/insights/action-queue";
+import {
+  deriveActionQueue,
+  deriveHeroNarrative,
+  fromServerDecisions,
+  mergeDecisions,
+  type ActionButton,
+  type ActionItem,
+  type ServerDecision,
+} from "@entities/insights/action-queue";
 import { deriveAccountVerdict, deriveCampaignVerdicts, type AccountVerdictCampaign } from "@entities/insights/account-verdict";
 import { buildRecent7Report, serializeReportText, toCampaignsCsv, type Recent7Report } from "@entities/insights/report";
 import { listBrowse, BROWSE_CHANGE_EVENT } from "@entities/campaign/browse/store";
@@ -150,7 +158,18 @@ export default function DashboardPage() {
     [conversion, marginRate, periodKpis.clicks.deltaPct, periodKpis.cpc.deltaPct],
   );
 
-  const actionItems = useMemo(() => {
+  // 오늘의 결정 1·2순위 — 멈춘 실험·승인 대기·판정 불가·확정 안 된 기록·계획 없음·입금 지연 (기능 5).
+  const decisionsQ = useQuery({
+    queryKey: ["today", brandActiveId],
+    queryFn: async () => {
+      const res = await fetch(`/api/today${brandActiveId ? `?brandProfileId=${encodeURIComponent(brandActiveId)}` : ""}`);
+      return res.ok ? ((await res.json()) as { items: ServerDecision[] }).items : [];
+    },
+    enabled: !!session && !session.browseMode,
+  });
+
+  // 성과에서 주목할 항목 (3순위 이하). 원인 확인은 상세 분석 화면으로 넘긴다.
+  const ruleItems = useMemo(() => {
     const items = deriveActionQueue({
         campaigns: allCampaigns,
         marginRate,
@@ -167,6 +186,10 @@ export default function DashboardPage() {
       };
     });
   }, [allCampaigns, marginRate, periodKpis.spend.value, revenueRoas.roasApprox]);
+  const actionItems = useMemo(
+    () => mergeDecisions(fromServerDecisions(decisionsQ.data ?? []), ruleItems),
+    [decisionsQ.data, ruleItems],
+  );
 
   const report7dKpis = periodKpis;
   const report7dVerdict = useMemo(() => deriveAccountVerdict(campaigns.map(toVerdictCampaign)), [campaigns]);
@@ -195,8 +218,20 @@ export default function DashboardPage() {
 
   const goMeasurement = () => router.push("/settings#measurement");
   const onAction = (b: ActionButton) => {
-    const campaign = b.target.kind === "campaign" ? `&campaignId=${encodeURIComponent(b.target.id)}` : "";
-    router.push(`/analysis?period=7d${campaign}`);
+    switch (b.target.kind) {
+      case "link":
+        return router.push(b.target.href);
+      case "dismiss":
+        return void fetch("/api/today/dismiss", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ key: b.target.key }),
+        }).then(() => decisionsQ.refetch());
+      default: {
+        const campaign = b.target.kind === "campaign" ? `&campaignId=${encodeURIComponent(b.target.id)}` : "";
+        router.push(`/analysis?period=7d${campaign}`);
+      }
+    }
   };
 
   const rangeLabel = heroRangeLabel(dailyCurrent.map((d) => d.date));

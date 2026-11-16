@@ -6,7 +6,8 @@ import { synthAccountDaily } from '@entities/insights/account-trend'
 
 function parseDays(v: string | null): number {
   const n = Number(v)
-  return n === 14 || n === 60 ? n : 14
+  // 95 = 성과 리포트(월간) — 지난달과 그 전 달, 이번 달 지난 날까지 (기능 6)
+  return n === 14 || n === 60 || n === 95 ? n : 14
 }
 
 function parseBrowseExample(v: string | null): BrowseDashboardExample | null {

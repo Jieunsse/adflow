@@ -12,7 +12,6 @@ import type { Session } from 'next-auth'
 import { authOptions } from './auth'
 import { resolveAccessToken, resolveAdAccountId } from './env'
 import { AuthError, withRouteHandler } from './route-handler'
-import { getWorkspaceMetaTarget } from './workspace-meta-target'
 
 // accessToken 은 baseline(모든 가드 라우트 필요). 아래는 추가 요구 tier.
 export type SessionRequirement = 'adAccount' | 'page' | 'ig'
@@ -56,23 +55,10 @@ export function requireMetaSession(
   }
 }
 
+// 광고 계정·페이지는 지금 고른 브랜드의 연결을 따른다(기능 10). 브랜드를 바꾸면 BrandConnectionSync 가 세션을
+// 그 브랜드 값으로 맞추므로, 여기서 다른 저장소의 값으로 덮지 않는다. 호출부가 많아 이름과 모양은 그대로 둔다.
 export async function getWorkspaceSession(session: Session | null): Promise<Session | null> {
-  if (!session || session.browseMode) return session
-
-  const target = await getWorkspaceMetaTarget()
-  const igTargetChanged = target.igUserId !== undefined && target.igUserId !== session.igUserId
-  return {
-    ...session,
-    adAccountId: target.adAccountId ?? session.adAccountId,
-    adAccountName: target.adAccountName ?? session.adAccountName,
-    pageId: target.pageId ?? session.pageId,
-    pageName: target.pageName ?? session.pageName,
-    pixelId: target.pixelId ?? session.pixelId,
-    pixelName: target.pixelName ?? session.pixelName,
-    igUserId: target.igUserId ?? session.igUserId,
-    igUsername: target.igUsername ?? session.igUsername,
-    igAccessToken: igTargetChanged ? undefined : session.igAccessToken,
-  }
+  return session
 }
 
 export interface MetaSessionOptions {

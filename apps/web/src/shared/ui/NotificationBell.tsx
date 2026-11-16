@@ -20,6 +20,7 @@ const TYPE_ICON: Record<string, IconName> = {
   weekly: "doc",
   "ad-status": "bell",
   "auto-relaunch-ready": "sparkles",
+  server: "bell",
 };
 
 export default function NotificationBell() {
@@ -31,7 +32,10 @@ export default function NotificationBell() {
   const router = useRouter();
 
   const handleNotifClick = (n: Notification) => {
-    if (n.type === "ad-status" && n.campaignId) {
+    if (n.type === "server" && n.link) {
+      setOpen(false);
+      router.push(n.link);
+    } else if (n.type === "ad-status" && n.campaignId) {
       setOpen(false);
       router.push(`/campaigns/${n.campaignId}`);
     } else if (n.type === "auto-relaunch-ready" && n.campaignId) {

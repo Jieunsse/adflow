@@ -1,0 +1,81 @@
+package ai.adflow.api.security;
+
+import ai.adflow.api.internal.InternalSecret;
+import jakarta.servlet.DispatcherType;
+import org.springframework.context.annotation.Bean;
+import org.springframework.http.HttpMethod;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.authorization.AuthorizationDecision;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.authorization.AuthorizationManager;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.intercept.RequestAuthorizationContext;
+
+@Configuration
+@EnableMethodSecurity
+public class SecurityConfig {
+
+  @Bean
+  SecurityFilterChain filterChain(
+      HttpSecurity http, JwtAuthenticationConverter converter, InternalSecret internalSecret)
+      throws Exception {
+    // 시크릿 검사를 컨트롤러가 아니라 여기서 한다. 컨트롤러마다 손으로 부르면 새로 생긴 하나가
+    // 빼먹는 순간 조용히 열린다 — 매칭 규칙 옆에 두면 경로를 여는 것과 잠그는 것이 한 줄 차이다.
+    AuthorizationManager<RequestAuthorizationContext> hasInternalSecret =
+        (authentication, context) ->
+            new AuthorizationDecision(
+                internalSecret.matches(context.getRequest().getHeader(InternalSecret.HEADER)));
+
+    AuthorizationManager<RequestAuthorizationContext> staffOnly =
+        (authentication, context) -> {
+          Authentication a = authentication.get();
+          boolean ok =
+              a != null
+                  && a.isAuthenticated()
+                  && !(a instanceof AnonymousAuthenticationToken)
+                  && a.getAuthorities().stream().noneMatch(g -> g.getAuthority().equals("ROLE_CLIENT"));
+          return new AuthorizationDecision(ok);
+        };
+
+    http
+        // 브라우저가 직접 호출하지 않는다(Next.js 서버 전용). 세션도 쿠키도 쓰지 않는 무상태 API.
+        .csrf(AbstractHttpConfigurer::disable)
+        .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+        .authorizeHttpRequests(
+            auth ->
+                // 컨트롤러가 던진 4xx 는 ERROR 디스패치로 /error 를 다시 탄다. 이걸 열어두지 않으면
+                // 시큐리티가 그 재진입을 막아 400 이 401 로 뒤바뀐다(MockMvc 는 재현 못 하는 실환경 동작).
+                auth.dispatcherTypeMatchers(DispatcherType.ERROR)
+                    .permitAll()
+                    .requestMatchers("/actuator/**", "/v3/api-docs/**", "/swagger-ui/**")
+                    .permitAll()
+                    // 인스타그램이 게시할 사진·영상을 직접 가져가는 주소. Meta 는 로그인 없이 부른다.
+                    .requestMatchers(HttpMethod.GET, "/public/media/**")
+                    .permitAll()
+                    // 교환·갱신은 JWT 를 받기 전/재발급 단계고, cron·Meta webhook 은 세션 없이 도는
+                    // 기계 호출이라 JWT 를 실을 수 없다. 여는 것이 아니라 자물쇠를 바꾸는 것이다.
+                    .requestMatchers(InternalSecret.PATTERNS)
+                    .access(hasInternalSecret)
+                    // 브랜드 프로필·브랜드 규칙을 고치는 일은 팀장만 (정책서 5.2, 확정).
+                    .requestMatchers(HttpMethod.POST, "/stores/brand-profiles", "/stores/sops")
+                    .hasRole("LEAD")
+                    .requestMatchers(HttpMethod.DELETE, "/stores/brand-profiles", "/stores/sops")
+                    .hasRole("LEAD")
+                    // 고객은 자기 브랜드 포털과 알림만 쓴다 (정책서 5.1). 서버도 거절한다 — 웹 화면만 막으면
+                    // 고객이 /stores 같은 직원 경로를 직접 부를 수 있다.
+                    .requestMatchers("/portal/**")
+                    .hasRole("CLIENT")
+                    .requestMatchers("/me", "/notifications/**")
+                    .authenticated()
+                    .anyRequest()
+                    .access(staffOnly))
+        .oauth2ResourceServer(o -> o.jwt(jwt -> jwt.jwtAuthenticationConverter(converter)));
+    return http.build();
+  }
+}

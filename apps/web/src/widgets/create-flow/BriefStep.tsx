@@ -65,6 +65,12 @@ export default function BriefStep(p: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
   const [briefStage, setBriefStage] = useState<1 | 2 | 3>(1);
+  // 만들기 방식이 바뀌거나 목표가 비면 첫 단계로 돌아간다. 효과 안에서 setState 하지 않고 렌더 중에 이전 값과 비교한다.
+  const [stageFor, setStageFor] = useState({ mode: p.mode, outcome });
+  if (stageFor.mode !== p.mode || stageFor.outcome !== outcome) {
+    setStageFor({ mode: p.mode, outcome });
+    if (stageFor.mode !== p.mode || !outcome) setBriefStage(1);
+  }
 
   const hasBrandProfile = !!bp.brandDescription;
   const isProfileMode = hasBrandProfile && !p.customBrand;
@@ -84,13 +90,6 @@ export default function BriefStep(p: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, browseMode, hasBrandProfile]);
 
-  useEffect(() => {
-    if (!outcome) setBriefStage(1);
-  }, [outcome]);
-
-  useEffect(() => {
-    setBriefStage(1);
-  }, [p.mode]);
 
   const handleFiles = async (files: FileList | null) => {
     if (!files?.length) return;

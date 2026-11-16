@@ -14,7 +14,7 @@ declare module "next-auth" {
     igUserId?: string
     igUsername?: string
     browseMode?: boolean
-    role?: "팀장" | "팀원·게재" | "팀원·검토"
+    role?: "팀장" | "팀원·게재" | "팀원·검토" | "고객"
   }
 }
 
@@ -31,6 +31,6 @@ declare module "next-auth/jwt" {
     igUserId?: string
     igUsername?: string
     browseMode?: boolean
-    role?: "팀장" | "팀원·게재" | "팀원·검토"
+    role?: "팀장" | "팀원·게재" | "팀원·검토" | "고객"
   }
 }

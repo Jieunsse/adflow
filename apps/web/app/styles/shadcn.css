@@ -1,0 +1,54 @@
+/* shadcn/ui 색 변수 — 새 디자인 시스템(docs/planning/DesignSystem-adflow.md) 값.
+   shadcn 이름(--border, --accent 등)이 레거시 :root 변수와 겹치므로 .adflow 안에만 둔다.
+   Radix 포털도 .adflow 안에 붙인다 (src/shared/ui/Dialog.tsx 의 adflowContainer). */
+.adflow {
+  --background: 0 0% 100%; /* bg/surface #FFFFFF */
+  --foreground: 232.5 7.8% 20%; /* fg/default #2F3037 */
+  --card: 0 0% 100%;
+  --card-foreground: 232.5 7.8% 20%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 232.5 7.8% 20%;
+  --primary: 235.3 47.1% 52.5%; /* primary/default #4D56BF */
+  --primary-foreground: 0 0% 100%;
+  --primary-hover: 235.2 45.9% 42.7%; /* primary/hover #3B439F */
+  --primary-pressed: 236.2 47.3% 32.7%; /* primary/pressed #2C317B */
+  --secondary-hover: 227 92% 95.1%; /* primary/soft-hover #E7ECFE */
+  --secondary: 229.1 100% 97.8%; /* primary/soft #F4F6FF */
+  --secondary-foreground: 235.2 45.9% 42.7%; /* primary/soft-fg #3B439F */
+  --muted: 230 27.3% 95.7%; /* bg/subtle #F1F2F7 */
+  --muted-foreground: 226.7 4.4% 39.8%; /* fg/muted #61636A */
+  --accent: 230 27.3% 95.7%; /* 마우스 올림 바탕 = bg/subtle */
+  --accent-foreground: 231.4 12.3% 11.2%; /* fg/strong #191A20 */
+  --destructive: 3.2 42.3% 43.5%; /* status/blocked/solid #9E4540 */
+  --destructive-foreground: 0 0% 100%;
+  --border: 228 9.8% 90%; /* line/default #E3E4E8 */
+  --input: 229.1 11.8% 81.8%; /* line/strong #CBCDD6 */
+  --ring: 230.7 82.1% 73.7%; /* focus/ring #8596F3 */
+  --chart-1: 235.3 47.1% 52.5%; /* chart/series-1 #4D56BF = 주 색 */
+  --chart-2: 21.7 73.5% 55.7%; /* #E1773B */
+  --chart-3: 326.8 51.8% 39%; /* #973069 */
+  --chart-4: 60.6 71.8% 29.2%; /* #7F8015 */
+  --chart-5: 286.2 35.9% 40.4%; /* #7B428C */
+
+  /* 상태 색 5가지 (Design-adflow.md 5.1): fg 글자, bg 바탕, line 테두리, solid 진한 색 */
+  --status-blocked-fg: 2.2 46.9% 34.7%;
+  --status-blocked-bg: 4.6 100% 97.5%;
+  --status-blocked-line: 6.1 80.3% 88%;
+  --status-blocked-solid: 3.2 42.3% 43.5%;
+  --status-waiting-fg: 37 100% 22%;
+  --status-waiting-bg: 34.3 70% 96.1%;
+  --status-waiting-line: 31.8 56.3% 82.9%;
+  --status-waiting-solid: 35.8 81.6% 29.8%;
+  --status-progress-fg: 200 68.6% 27.5%;
+  --status-progress-bg: 203.1 76.5% 96.7%;
+  --status-progress-line: 202.3 55.8% 84.9%;
+  --status-progress-solid: 200.6 57.4% 35.9%;
+  --status-done-fg: 146.2 51.6% 24.3%;
+  --status-done-bg: 135 40% 96.1%;
+  --status-done-line: 139.3 31.8% 82.7%;
+  --status-done-solid: 144.9 42.7% 32.2%;
+  --status-quiet-fg: 232.5 5.4% 29%;
+  --status-quiet-bg: 230 27.3% 95.7%;
+  --status-quiet-line: 228 9.8% 90%;
+  --status-quiet-solid: 226.7 4.4% 39.8%;
+}

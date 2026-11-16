@@ -1,19 +1,34 @@
 import { describe, expect, it, vi } from "vitest";
 import { fetchAccount, fetchPickerList, fetchWorkspaceTarget } from "./api";
 
+const ls = new Map<string, string>();
+function stubBrowser() {
+  vi.stubGlobal("window", { dispatchEvent: () => true });
+  vi.stubGlobal("localStorage", {
+    getItem: (k: string) => ls.get(k) ?? null,
+    setItem: (k: string, v: string) => { ls.set(k, v); },
+    removeItem: (k: string) => { ls.delete(k); },
+    clear: () => { ls.clear(); },
+  });
+}
+
 describe("workspace API", () => {
-  it("워크스페이스 연결 대상을 읽는다", async () => {
+  it("연결 대상은 지금 고른 브랜드의 연결이다", async () => {
+    stubBrowser();
+    localStorage.setItem("adflow:brand-profile:active-id", "bp_1");
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
       ok: true,
-      json: async () => ({ target: { adAccountId: "act_1" }, lastChange: null }),
+      status: 200,
+      json: async () => ({ adAccountId: "act_1", pageId: "pg_1" }),
     }));
 
     await expect(fetchWorkspaceTarget()).resolves.toEqual({
-      target: { adAccountId: "act_1" },
+      target: { adAccountId: "act_1", pageId: "pg_1" },
       lastChange: null,
     });
-    expect(fetch).toHaveBeenCalledWith("/api/workspace/meta-target");
+    expect(fetch).toHaveBeenCalledWith("/api/brands/bp_1");
     vi.unstubAllGlobals();
+    ls.clear();
   });
 
   it("계정 인증 만료를 401 code로 전달한다", async () => {

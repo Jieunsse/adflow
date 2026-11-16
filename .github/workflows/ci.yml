@@ -22,19 +22,21 @@ jobs:
         working-directory: apps/web
     steps:
       - uses: actions/checkout@v4
+      # 버전은 루트 package.json 의 packageManager 를 따른다.
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
+          cache: pnpm
       # 워크스페이스라 lockfile 은 루트 하나뿐이다 (단계 7 에서 중첩 lockfile 제거).
-      - run: npm ci
+      - run: pnpm install --frozen-lockfile
         working-directory: .
-      - run: npx tsc --noEmit
+      - run: pnpm exec tsc --noEmit
       # vitest 는 CI 환경변수를 보고 watch 를 끈다.
-      - run: npm test
+      - run: pnpm test
       # 기존 위반 80건은 eslint-suppressions.json 에 기준선으로 박혀 있다 — 여기서 깨지는 것은
       # **새 위반**이다. 경고 67건은 실패시키지 않는다(--max-warnings 없음).
-      - run: npm run lint
+      - run: pnpm lint
 
   api:
     name: api — gradlew test (골든 픽스처 · OpenAPI 스냅샷)

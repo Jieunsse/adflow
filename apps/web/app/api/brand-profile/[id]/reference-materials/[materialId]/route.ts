@@ -1,18 +1,36 @@
+// ADR-023 Reference Material 삭제 — 단계 4 에서 Spring 으로 재배선.
+// 외부 계약 동결: 실패해도 204 로 조용히 끝난다(화면은 로컬에서도 지운다).
+
 import { NextResponse, type NextRequest } from "next/server";
-import { getSupabaseServer } from "@shared/lib/supabase/server";
-import { getSupabaseOwner } from "@shared/lib/supabase/auth";
+import { callBackend } from "@shared/lib/backend/call";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string; materialId: string }> }) {
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string; materialId: string }> },
+) {
   const { id, materialId } = await params;
-  const owner = await getSupabaseOwner(req);
-  const sb = getSupabaseServer();
-  if (!owner || !sb) return NextResponse.json({ error: "로그인이 필요해요." }, { status: 401 });
-  const { data } = await sb.from("reference_materials").select("storage_path").eq("id", materialId).eq("brand_profile_id", id).eq("user_email", owner).maybeSingle();
-  if (data?.storage_path) await sb.storage.from("reference-materials").remove([data.storage_path]);
-  const { error } = await sb.from("reference_materials").delete().eq("id", materialId).eq("brand_profile_id", id).eq("user_email", owner);
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  // 항목을 지우기 전에 경로를 읽어야 한다 — 지운 뒤엔 어느 파일이었는지 알 길이 없다.
+  const list = await callBackend(
+    req,
+    `/stores/reference-materials?brandProfileId=${encodeURIComponent(id)}`,
+  );
+  if (list.ok && list.res.ok) {
+    const { items } = (await list.res.json()) as {
+      items: Array<{ id: string; storageUrl: string }>;
+    };
+    const path = items.find((m) => m.id === materialId)?.storageUrl;
+    if (path && !path.startsWith("data:") && !path.startsWith("http")) {
+      await callBackend(req, `/files/${path}`, { method: "DELETE" });
+    }
+  }
+
+  await callBackend(req, `/stores/reference-materials?id=${encodeURIComponent(materialId)}`, {
+    method: "DELETE",
+  });
+
   return new NextResponse(null, { status: 204 });
 }

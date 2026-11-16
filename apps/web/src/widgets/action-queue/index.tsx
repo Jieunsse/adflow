@@ -1,6 +1,6 @@
 "use client";
 
-// 주간 리포트의 주목 항목 — 원인 확인은 상세 분석으로 넘긴다.
+// "오늘의 결정" (기능 5) — 사람이 해야 하는 일(서버)을 먼저, 성과에서 주목할 항목을 뒤에. 3개까지.
 
 import { Button } from "@shared/ui/Button";
 import { Skeleton } from "@shared/ui/Skeleton";
@@ -46,7 +46,7 @@ export function ActionQueue({ loading, items, onAction, onViewAll }: ActionQueue
   return (
     <div className="flex flex-col gap-5">
       <div className="flex items-baseline gap-3">
-        <h2 className="w-h2 m-0">주목할 항목</h2>
+        <h2 className="w-h2 m-0">오늘의 결정</h2>
         <span className="w-caption">우선순위대로 정리했어요</span>
       </div>
 

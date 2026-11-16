@@ -1,9 +1,9 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { getToken } from "next-auth/jwt"
 import { Client } from "@notionhq/client"
-import { deleteNotionConnection, getWorkspaceNotionOwner, saveNotionConnection, setWorkspaceNotionOwner } from "@shared/lib/notion-store"
+import { saveNotionConnection } from "@shared/lib/notion-store"
 
-// ADR-043 — Notion OAuth callback. code → oauth.token() 교환 → Supabase 서버 영속.
+// ADR-043 — Notion OAuth callback. code → oauth.token() 교환 → 서버 영속(단계 7 에서 Spring 으로 넘어갔다).
 export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl
   const code = searchParams.get("code")
@@ -31,10 +31,8 @@ export async function GET(req: NextRequest) {
   const jwtToken = await getToken({ req })
   const userKey = (jwtToken?.sub ?? jwtToken?.email ?? jwtToken?.jti) as string | undefined
   if (!userKey) return fail("no_session")
-  if (!jwtToken || jwtToken.role !== "팀장") return fail("not_authorized")
 
   try {
-    const previousOwner = await getWorkspaceNotionOwner()
     const notion = new Client()
     const token = await notion.oauth.token({
       grant_type: "authorization_code",
@@ -51,8 +49,6 @@ export async function GET(req: NextRequest) {
       workspaceName: token.workspace_name ?? undefined,
       workspaceIcon: token.workspace_icon ?? undefined,
     })
-    await setWorkspaceNotionOwner(userKey, (jwtToken.email ?? jwtToken.name ?? userKey) as string)
-    if (previousOwner && previousOwner !== userKey) await deleteNotionConnection(previousOwner)
 
     const res = NextResponse.redirect(new URL("/connect?notionLinked=1", req.url))
     res.cookies.delete("adflow_notion_state")

@@ -1,3 +1,5 @@
+import { getActiveId } from "@features/brand-profile/model/brandProfileStore";
+import { fetchBrandConnection } from "@features/brand-profile/model/brandConnection";
 import { fetchAdIdentityPages } from "@entities/page/api";
 
 export type WorkspaceTarget = {
@@ -41,10 +43,16 @@ export const workspaceKeys = {
   picker: (kind: PickerKind, adAccountId?: string) => ["workspace-picker", kind, adAccountId ?? null] as const,
 };
 
+/**
+ * 연결 관리 화면의 "지금 연결 대상" — 지금 고른 브랜드의 광고 계정·페이지·픽셀 (기능 10). 브랜드마다 광고 계정
+ * 1개라서 워크스페이스 하나의 값이 아니다. lastChange 는 아직 기록하지 않는다(변경 이력 기능 때 채운다).
+ */
 export async function fetchWorkspaceTarget(): Promise<WorkspaceTargetResponse> {
-  const res = await fetch("/api/workspace/meta-target");
-  if (!res.ok) throw new Error("워크스페이스 연결 정보를 불러오지 못했어요.");
-  return (await res.json()) as WorkspaceTargetResponse;
+  const brandId = getActiveId();
+  if (!brandId) return { target: {}, lastChange: null };
+  const conn = await fetchBrandConnection(brandId);
+  if (!conn) throw new Error("브랜드 연결 정보를 불러오지 못했어요.");
+  return { target: conn, lastChange: null };
 }
 
 export async function fetchAccount(): Promise<AccountInfo> {

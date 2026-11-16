@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import { signIn, useSession } from "next-auth/react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Icon from "@shared/ui/Icon";
 import { Button } from "@shared/ui/Button";
 
@@ -14,6 +14,8 @@ const ERROR_MESSAGES: Record<string, string> = {
   OAuthCallback: "Meta 앱 연결 중 오류가 발생했어요. Meta 개발자 계정이 일시 정지됐을 수 있어요.",
   OAuthAccountNotLinked: "이미 다른 방식으로 가입된 계정이에요.",
   AccessDenied: "앱 접근이 거부됐어요. 테스터로 등록된 계정인지 확인해주세요.",
+  NotClient: "고객으로 등록되지 않은 이메일이에요. 담당자에게 이 이메일을 등록해 달라고 요청해 주세요.",
+  EmailNotVerified: "이메일이 확인되지 않은 계정이에요. 이메일 인증을 마친 계정으로 로그인해 주세요.",
   Default: "로그인 중 문제가 발생했어요. 잠시 후 다시 시도해주세요.",
 };
 
@@ -28,12 +30,29 @@ function LoginStat({ k, v }: { k: string; v: string }) {
 
 function LoginContent() {
   const searchParams = useSearchParams();
-  const { status: sessionStatus } = useSession();
+  const router = useRouter();
   const errorCode = searchParams.get("error");
   const errorMessage = errorCode ? (ERROR_MESSAGES[errorCode] ?? ERROR_MESSAGES.Default) : null;
   const [loading, setLoading] = useState(false);
+  const { status: sessionStatus } = useSession();
   const [facebookAvailable, setFacebookAvailable] = useState<boolean | null>(null);
   const [loginError, setLoginError] = useState<string | null>(null);
+  const [clientEmail, setClientEmail] = useState("");
+  const [clientPassword, setClientPassword] = useState("");
+  const [clientError, setClientError] = useState<string | null>(null);
+  const [social, setSocial] = useState<{ google: boolean; kakao: boolean }>({ google: false, kakao: false });
+
+  async function handleClientLogin() {
+    setLoading(true);
+    setClientError(null);
+    const r = await signIn("client-email", { email: clientEmail, password: clientPassword, redirect: false });
+    if (r?.ok && !r.error) {
+      router.replace("/portal");
+      return;
+    }
+    setLoading(false);
+    setClientError(r?.error && r.error !== "CredentialsSignin" ? r.error : "이메일이나 비밀번호가 맞지 않아요. 다시 확인해 주세요.");
+  }
 
   useEffect(() => {
     const prev = document.documentElement.getAttribute("data-theme");
@@ -46,7 +65,11 @@ function LoginContent() {
   useEffect(() => {
     fetch("/api/auth/providers", { cache: "no-store" })
       .then((res) => res.ok ? res.json() : {})
-      .then((providers: Record<string, unknown>) => setFacebookAvailable(!!providers.facebook))
+      .then((providers: Record<string, unknown>) => {
+        setFacebookAvailable(!!providers.facebook);
+        // 카카오·구글은 키를 넣었을 때만 켜진다. 켜진 것만 버튼을 보여 준다.
+        setSocial({ google: !!providers.google, kakao: !!providers.kakao });
+      })
       .catch(() => setFacebookAvailable(false));
   }, []);
 
@@ -176,6 +199,31 @@ function LoginContent() {
                   광고 계정 관리 · 페이지 정보 · 광고 게재 권한을 사용해요.<br />
                   필요한 권한 외에는 요청하지 않아요.
                 </p>
+
+                {/* 고객 로그인 (정책서 3.1) — 대행 고객사 담당자. 직원은 위 Facebook 로그인을 쓴다. */}
+                <div className="mt-8 pt-6 border-t border-[var(--w-line-normal)] flex flex-col gap-3">
+                  <h2 className="m-0 font-bold text-[15px] text-[var(--w-fg-strong)]">고객사 담당자이신가요?</h2>
+                  {clientError && (
+                    <div role="alert" className="rounded-lg px-3.5 py-3 font-medium text-[13px] bg-[var(--w-status-negative-soft)] text-[var(--w-status-negative)]">{clientError}</div>
+                  )}
+                  <label htmlFor="client-email" className="sr-only">이메일</label>
+                  <input id="client-email" type="email" autoComplete="email" placeholder="이메일" value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} className="w-full rounded-lg border border-[var(--w-line-normal)] p-3 text-[14px] font-medium" />
+                  <label htmlFor="client-password" className="sr-only">비밀번호</label>
+                  <input id="client-password" type="password" autoComplete="current-password" placeholder="비밀번호" value={clientPassword} onChange={(e) => setClientPassword(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") void handleClientLogin(); }} className="w-full rounded-lg border border-[var(--w-line-normal)] p-3 text-[14px] font-medium" />
+                  <Button variant="primary" size="lg" block type="button" onClick={handleClientLogin} disabled={loading || !clientEmail || !clientPassword}>
+                    이메일로 로그인
+                  </Button>
+                  {social.kakao && (
+                    <Button variant="secondary" size="lg" block type="button" disabled={loading} onClick={() => signIn("kakao", { callbackUrl: "/portal" })}>카카오로 계속하기</Button>
+                  )}
+                  {social.google && (
+                    <Button variant="secondary" size="lg" block type="button" disabled={loading} onClick={() => signIn("google", { callbackUrl: "/portal" })}>구글로 계속하기</Button>
+                  )}
+                  <div className="flex justify-between font-medium text-[13px] text-[var(--w-fg-neutral)]">
+                    <Link href="/signup" className="underline">회원가입하기</Link>
+                    <Link href="/reset-password" className="underline">비밀번호를 잊었어요</Link>
+                  </div>
+                </div>
               </>
             )}
 

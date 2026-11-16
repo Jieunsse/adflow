@@ -6,7 +6,8 @@ import { useSearchParams } from "next/navigation";
 import Icon from "@shared/ui/Icon";
 import { Button } from "@shared/ui/Button";
 import { fetchAdIdentityPages, type AdIdentityPage } from "@entities/page/api";
-import { saveWorkspaceTarget } from "@shared/lib/workspace-meta-target-client";
+import { getActiveId } from "@features/brand-profile/model/brandProfileStore";
+import { saveBrandConnection } from "@features/brand-profile/model/brandConnection";
 
 interface AdAccount {
   id: string;
@@ -107,6 +108,7 @@ function SetupFlow() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selecting, setSelecting] = useState<string | null>(null);
+  const [account, setAccount] = useState<AdAccount | null>(null);
 
   useEffect(() => {
     fetch("/api/setup/ad-accounts")
@@ -125,16 +127,16 @@ function SetupFlow() {
   async function selectAccount(account: AdAccount) {
     setSelecting(account.id);
     setError(null);
+    setAccount(account);
     try {
       setLoading(true);
-      const [, , nextPages] = await Promise.all([
-        saveWorkspaceTarget({ adAccountId: account.id, adAccountName: account.name }),
+      const [, nextPages] = await Promise.all([
         update({ adAccountId: account.id, adAccountName: account.name }),
         fetchAdIdentityPages(),
       ]);
       setPages(nextPages);
     } catch {
-      setError("연결 정보를 저장하거나 페이스북 페이지 목록을 불러오지 못했어요.");
+      setError("페이스북 페이지 목록을 불러오지 못했어요. 다시 시도해 주세요.");
       setSelecting(null);
       setLoading(false);
       return;
@@ -147,13 +149,25 @@ function SetupFlow() {
   async function selectPage(page: AdIdentityPage) {
     setSelecting(page.id);
     setError(null);
-    try {
-      await saveWorkspaceTarget({
+    // 브랜드가 있으면 그 브랜드의 광고 계정으로 저장한다 (기능 10). 첫 로그인처럼 브랜드가 아직 없으면 건너뛴다 —
+    // 첫 브랜드를 만들면 BrandConnectionSync 가 세션의 계정을 그 브랜드에 저장한다.
+    const brandId = getActiveId();
+    if (brandId && account) {
+      const failed = await saveBrandConnection(brandId, {
+        adAccountId: account.id,
+        adAccountName: account.name,
         pageId: page.id,
         pageName: page.name,
         igUserId: page.igUserId ?? "",
         igUsername: page.igUsername ?? "",
       });
+      if (failed) {
+        setError(failed);
+        setSelecting(null);
+        return;
+      }
+    }
+    try {
       await update({
         pageId: page.id,
         pageName: page.name,
@@ -163,7 +177,7 @@ function SetupFlow() {
       });
       window.location.href = nextUrl;
     } catch {
-      setError("연결 정보를 저장하지 못했어요. 다시 시도해주세요.");
+      setError("연결 정보를 저장하지 못했어요. 다시 시도해 주세요.");
       setSelecting(null);
     }
   }

@@ -68,8 +68,20 @@ export type TourRound = {
   adSetIds?: [string, string]; // ad_studies SPLIT_TEST 셀별 AdSet(A=챔피언·B=챌린저). 데모는 미사용
   studyId?: string; // Meta ad study(SPLIT_TEST) ID — KpiSource 가 Meta verdict 를 조회하는 키. 데모는 미사용
   launchedAt?: string; // 실 게재 시각 ISO — cron 이 MIN_ROUND_DAYS 경과 판정에 사용. 데모는 fastForwardDays 사용
-  status: "running" | "settled";
+  // unjudgeable = 기간이 끝났는데 노출이 모자라 판정하지 못함 (정책서 13.3). 실 게재만 생긴다
+  status: "running" | "settled" | "unjudgeable";
+  impressionShortfall?: number; // 판정까지 모자란 소재별 노출 수 (실 게재, 폴러가 채움)
+  spendToDate?: number; // 두 소재 합 누적 광고비 (실 게재, 폴러가 채움)
   hypothesis?: Hypothesis; // ADR-044 — 이 라운드가 검증하는 가설. 동인은 hypothesis.lever, axis 는 표시 파생 유지
+};
+
+export type LaunchRequest = {
+  status: "pending" | "launching" | "failed" | "rejected";
+  requestedBy?: string;
+  requestedAt?: string;
+  decidedBy?: string;
+  decidedAt?: string;
+  rejectReason?: string;
 };
 
 // ADR-054 — 완전 무인화: manual-n 폐기, auto 단일. 와이어 형태 동결이라 필드는 유지하되 값은 항상 auto
@@ -119,6 +131,8 @@ export type Tournament = {
   championSourceName?: string; // existing 일 때 원본 캠페인명 (provenance 표기용)
   championConfirmed?: boolean; // 출발 광고 승인 결정 지점 통과 여부
   pendingChallenger?: TourVariant; // 결정 대기 중인 챌린저 제안 (게재 전)
+  // 다음 실험 게재 요청과 승인 (기능 7). 게재에 성공하면 초안과 함께 사라진다
+  launchRequest?: LaunchRequest;
   pendingHypothesis?: Hypothesis; // ADR-044 — pendingChallenger 와 짝인 가설 (게재 시 라운드로 이동)
   prohibitedWords?: string[]; // ADR-054 — 브랜드 금칙어. 챌린저 생성 Gemini 프롬프트에 주입해 구조 차단(브레이크 X)
   brandDescription?: string; // 셋업 시 고른 브랜드 컨텍스트 — 라운드별 Gemini 주입
@@ -131,6 +145,7 @@ export type Tournament = {
   completionReason?: "converged" | "budget-exhausted" | "cap-reached"; // ADR-061 — done 카드 sub-state. completed 종결 경로별 사유.
   createdAt: string;
   delivery?: TournamentDelivery; // 실 게재 봉투 (ADR-038). 데모는 undefined — 시뮬 경로
+  stopReason?: "spend_anomaly" | "monthly_cap"; // 광고비 자동 멈춤 이유 (정책서 12.1). 멈춘 동안 lastError 에 안내 문구
   lastError?: string; // ADR-053 — cron 라운드 게재 실패의 한국어 메시지. 있으면 자동 진행 중단 + 상세 배너
 };
 

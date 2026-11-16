@@ -9,6 +9,7 @@ import Icon, { type IconName } from "@shared/ui/Icon";
 import { useTheme, type ThemeChoice } from "@shared/lib/useTheme";
 import { usePresenterConsole } from "@shared/lib/usePresenterConsole";
 import NotificationBell from "@shared/ui/NotificationBell";
+import TimeLogButton from "./TimeLogButton";
 import LogoutButton from "@shared/ui/LogoutButton";
 import { campaignKeys, fetchCampaigns } from "@entities/campaign/api";
 import { fetchWorkspaceTarget, workspaceKeys } from "@entities/workspace/api";
@@ -49,6 +50,10 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
           { href: "/library", label: "소재 라이브러리", icon: "folder" },
         ],
       },
+      { href: "/learnings", label: "광고 노하우", icon: "doc" },
+      { href: "/reports", label: "성과 리포트", icon: "trend-up" },
+      { href: "/plans", label: "이번 달 광고 계획", icon: "calendar" },
+      { href: "/clients", label: "고객사 관리", icon: "users" },
     ],
   },
   {
@@ -453,6 +458,7 @@ export default function Sidebar() {
               )}
             </div>
           </Link>
+          <TimeLogButton />
           <NotificationBell />
           <LogoutButton />
         </div>

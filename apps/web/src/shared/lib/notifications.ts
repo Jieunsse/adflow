@@ -1,9 +1,10 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import type { WinnerEvidence } from "@entities/insights/winner-types";
 
 export type { WinnerEvidence };
 
-export type NotifType = "launch" | "opt" | "perf" | "weekly" | "ad-status" | "auto-relaunch-ready";
+// server = 서버에 저장한 알림 (정책서 17.2). 승인 요청·판정 끝남처럼 화면을 닫아 둔 동안 생긴 일도 남는다.
+export type NotifType = "launch" | "opt" | "perf" | "weekly" | "ad-status" | "auto-relaunch-ready" | "server";
 
 export interface Notification {
   id: string;
@@ -14,6 +15,7 @@ export interface Notification {
   campaignId?: string;
   transition?: string;
   evidence?: WinnerEvidence;
+  link?: string; // server 알림 — 누르면 가는 화면
 }
 
 export type NotifSettings = {
@@ -65,7 +67,12 @@ const TYPE_TO_SETTING: Record<NotifType, keyof NotifSettings> = {
   weekly: "weekly",
   "ad-status": "adStatus",
   "auto-relaunch-ready": "autoRelaunch",
+  server: "launch",
 };
+
+type ServerItem = { id: string; message: string; link?: string; createdAt: string; readAt?: string };
+
+const SERVER_POLL_MS = 60_000;
 
 export function addNotification(notif: Omit<Notification, "id" | "ts"> & { id?: string; ts?: number }) {
   const settings = loadNotifSettings();
@@ -86,32 +93,54 @@ export function addNotification(notif: Omit<Notification, "id" | "ts"> & { id?: 
 }
 
 export function useNotifications() {
-  const [notifs, setNotifs] = useState<Notification[]>([]);
-  const [readSet, setReadSet] = useState<Set<string>>(new Set());
+  const [local, setLocal] = useState<Notification[]>([]);
+  const [localRead, setLocalRead] = useState<Set<string>>(new Set());
+  const [server, setServer] = useState<Notification[]>([]);
+  const [serverRead, setServerRead] = useState<Set<string>>(new Set());
+  // 둘러보기·백엔드 없는 환경은 401/503 이다. 그때는 다시 묻지 않는다.
+  const serverOff = useRef(false);
 
   const reload = useCallback(() => {
-    setNotifs(loadNotifs());
-    setReadSet(loadReadIds());
+    setLocal(loadNotifs());
+    setLocalRead(loadReadIds());
+  }, []);
+
+  const loadServer = useCallback(async () => {
+    if (serverOff.current) return;
+    const res = await fetch("/api/notifications").catch(() => null);
+    if (res && (res.status === 401 || res.status === 503)) serverOff.current = true;
+    if (!res?.ok) return;
+    const { items } = (await res.json()) as { items: ServerItem[] };
+    setServer(items.map((i) => ({ id: `srv-${i.id}`, type: "server", message: i.message, ts: Date.parse(i.createdAt), link: i.link })));
+    setServerRead(new Set(items.filter((i) => i.readAt).map((i) => `srv-${i.id}`)));
   }, []);
 
   useEffect(() => {
     reload();
-    window.addEventListener("adflow:notification", reload);
-    window.addEventListener("adflow:notification:read", reload);
+    void loadServer();
+    const onNew = () => { reload(); void loadServer(); };
+    window.addEventListener("adflow:notification", onNew);
+    window.addEventListener("adflow:notification:read", onNew);
+    const timer = window.setInterval(() => void loadServer(), SERVER_POLL_MS);
     return () => {
-      window.removeEventListener("adflow:notification", reload);
-      window.removeEventListener("adflow:notification:read", reload);
+      window.removeEventListener("adflow:notification", onNew);
+      window.removeEventListener("adflow:notification:read", onNew);
+      window.clearInterval(timer);
     };
-  }, [reload]);
+  }, [reload, loadServer]);
 
   const markAllRead = useCallback(() => {
     try {
       const ids = loadNotifs().map((n) => n.id);
       localStorage.setItem(READ_KEY, JSON.stringify(ids));
     } catch {}
-    window.dispatchEvent(new CustomEvent("adflow:notification:read"));
+    void fetch("/api/notifications/read-all", { method: "POST" })
+      .catch(() => null)
+      .finally(() => window.dispatchEvent(new CustomEvent("adflow:notification:read")));
   }, []);
 
+  const notifs = [...server, ...local].sort((a, b) => b.ts - a.ts);
+  const readSet = new Set([...localRead, ...serverRead]);
   const unreadCount = notifs.filter((n) => !readSet.has(n.id)).length;
 
   return { notifs, readSet, unreadCount, markAllRead };
